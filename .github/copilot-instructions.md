@@ -25,28 +25,50 @@ Project-specific patterns to follow
 - Plugins: place reusable hooks/operators in `plugins/` to be discovered by Airflow. The compose mounts this folder to `/opt/airflow/plugins` in containers; follow existing plugin layout (module with Python entry-points).
 - Configuration edits: prefer environment-variable overrides (docker-compose `.env`) rather than editing `config/airflow.cfg` directly. `airflow-init` in compose will initialize DB and copy config into containers.
 
-Integration & runtime notes
-- Executor: CeleryExecutor with Redis broker and Postgres metadata DB. Workers run `celery worker` in compose services (`airflow-worker`).
-- API server: `airflow-apiserver` exposes FastAPI endpoints on port 8080 (mapped in compose). Use it to trigger runs or inspect DAGs.
-- Logs & volumes: `dags/`, `logs/`, `plugins/` and `config/` are mounted into containers; editing them locally updates containers (watch for uid/permission issues on non-Linux hosts).
+```markdown
+## Quick orientation for AI coding agents
 
-Examples to reference in edits
-- To add a DAG: create `dags/my_new_dag.py` with only import-safe code at top-level and tasks/operators defined inside functions or DAG context; don't run heavy training steps during import.
-- To add an operator plugin: add `plugins/my_op.py` exporting a class deriving from `airflow.models.BaseOperator` (or using TaskFlow decorators) and restart `airflow-scheduler`/`airflow-worker`.
+This repo is an Airflow-based ML/data platform with a small API and dashboard. Development is intended to run inside the Docker Compose stack in the repository root.
 
-Testing, debugging & troubleshooting
-- To inspect scheduler logs: check `logs/dag_processor/` or use `docker compose logs airflow-scheduler`.
-- If DAGs aren't discovered, ensure `dags/` is mounted and `dags_are_paused_at_creation` or `load_examples` settings in `config/airflow.cfg` are not hiding the new DAGs.
-- Common Windows Docker pitfall: file ownership/permission issues. Use `.env` to set `AIRFLOW_UID` per the docker-compose comments if you see root-owned files.
+Key components (what to open first)
+- `docker-compose.yaml` — single dev stack (Airflow scheduler, worker, redis, postgres, api, etc.).
+- `dags/` — project DAGs (mount into Airflow containers). Add new DAGs here and keep top-level import-safe.
+- `plugins/` — local Airflow plugins (operators/hooks) mounted to `/opt/airflow/plugins`.
+- `config/airflow.cfg` — runtime Airflow settings (prefer env overrides via `.env`).
+- `api/` and `dashboard/` — small services; `api/main.py` and `dashboard/app.py` are the likely entrypoints.
+- `requirements.txt` and per-service requirement files: `airflow/requirements.txt`, `api/requirements.txt`, `dashboard/requirements.txt`, `mlflow-server/requirements.txt`.
 
-When editing code
-- Keep changes descriptive, stable and runnable inside the compose environment. Prefer adding small unit tests where possible. If touching requirements, note the long install time; prefer creating a new container image for CI rather than `pip install` on container start.
-- Preserve backwards compatibility of DAGs/operators: changing DAG ids, task ids, or serialization shape may affect running/serialized DAGs in the DB.
+Quick, copy-paste dev commands (PowerShell)
+- Start full dev environment (recommended):
+  - docker compose up --build
+- Validate compose interpolation:
+  - docker compose config
+- Run API locally (optional):
+  - uvicorn api.main:app --reload --port 8000
+  (useful for quick endpoint checks without the full stack)
+- Install Python deps locally (heavy):
+  - python -m pip install -r requirements.txt
 
-Files to inspect first for context
-- `docker-compose.yaml`, `requirements.txt`, `config/airflow.cfg`, `dags/`, `plugins/`, `api/`, `dashboard/`, `README.md`.
+Project conventions and actionable rules (do these)
+- DAGs: keep heavy work out of module import. Define operators/tasks inside the DAG or factory functions. Example: create `dags/my_new_dag.py` and define tasks inside the DAG context.
+- Plugins: put reusable operators and hooks in `plugins/` (module with Python entrypoints). Restart scheduler/workers after changes.
+- Config edits: prefer environment-variable overrides (place values in `.env` used by docker compose) rather than editing `config/airflow.cfg` directly. The compose `airflow-init` step initializes DB/config.
 
-If anything is unclear
-- Ask the human: local dev workflow (do they run via compose or on-host?), expected CI/CD, secrets management (where `.env` values come from), and whether the `api/` and `dashboard/` folders are active services.
+Integration points to be aware of
+- Executor: CeleryExecutor with Redis broker and Postgres metadata DB (see `docker-compose.yaml`). Workers run as `airflow-worker` and `celery worker` processes.
+- API server: `airflow-apiserver` exposes FastAPI endpoints (mapped to port 8080 in compose). Use it to trigger DAGs or inspect state.
+- MLflow: `mlflow-server/` and `mlruns/` are present; MLflow artifacts may be produced by DAGs or notebooks. `mlflow-server` has its own Dockerfile and requirements.
 
-End of file.
+Repo-specific examples and files to inspect
+- Example feature repo: `features/feature_repo/` (contains `feature_store.yaml` and `test_workflow.py`) — use this as a template for feature store workflows.
+- Tests: `features/feature_repo/test_workflow.py` is an example test; run `pytest` targeting that file to validate changes locally.
+- Logs: `logs/` and `logs/dag_processor/` contain scheduler/dag parsing logs from local runs.
+
+Common pitfalls seen here
+- Windows file ownership: mounted volumes can create root-owned files inside containers. Set `AIRFLOW_UID` in `.env` (mentioned in compose comments) to avoid permission friction.
+- Long dependency installs: `requirements.txt` installs are heavy (Airflow/Torch). Prefer running inside the compose-built containers or build a new image for CI.
+
+If you need clarification
+- Ask which service you plan to change (DAG, plugin, API, dashboard, mlflow) and whether you run via `docker compose` or on-host. Also confirm `.env` value sources / secrets handling.
+
+``` 

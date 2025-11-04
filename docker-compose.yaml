@@ -21,6 +21,8 @@ x-airflow-common-env: &airflow-common-env
   AIRFLOW_API_HOST: "0.0.0.0"
   AIRFLOW_API_PORT: "8080"
 
+  # AUTHENTICATION AND SECURITY
+
 x-airflow-common: &airflow-common
   image: apache/airflow:3.1.0
   environment: *airflow-common-env
@@ -33,6 +35,8 @@ x-airflow-common: &airflow-common
     - ./config/airflow.cfg:/opt/airflow/airflow.cfg:ro
     - ./dependencies:/opt/airflow/requirements.txt:ro
   restart: unless-stopped
+  networks:
+      - backend
 
 # SERVICES CONFIGURATION
 services:
@@ -41,17 +45,32 @@ services:
 
   # POSTGRES DB SERVICE
   postgres:
-    image: postgres:15
+    image: postgres:16
+    container_name: postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-airflow}
       POSTGRES_DB: airflow
     volumes:
       - postgres_db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
       interval: 5s
       retries: 5
+    networks:
+      - backend
+    
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - backend
 
   # REDIS DB SERVICE
   redis:
@@ -176,6 +195,8 @@ services:
       - airflow-webserver
       - airflow-init
     restart: unless-stopped
+    networks:
+      - backend
 
   # PLOTLY DASHBOARD SERVICE CONTAINER
   dashboard:
@@ -191,20 +212,27 @@ services:
       - api
     restart: unless-stopped
 
-  feast:
-    build:
-        context: ./feast
-    env_file:
-      - .env
-    volumes:
-      - ./feast:/app:cached
-    ports:
-      - "6566:6566"
-      - "6570:6570"
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
+
+#  feast:
+#    build:
+#        context: ./feast
+#    env_file:
+#      - .env
+#    volumes:
+#      - ./feast:/app:cached
+#    ports:
+#      - "6566:6566"
+#      - "6570:6570"
+#    depends_on:
+#      - postgres
+#      - redis
+#    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
 
 volumes:
   postgres_db:
