@@ -8,17 +8,28 @@ from app.utils.utils import debug_type
 # Result.scalars - return _asdict(), _fields(), _mapping(), 
 
 # Criando uma entrada de um modelo orm com classe pydantic associada e seus dados correspondentes
-async def create_entry(db: AsyncSession, orm_model: Type, data: BaseModel):
-    "docstring"
-    
-    obj = orm_model(**data.dict(exclude_unset=True))
+async def create_entry(db: AsyncSession, orm_model: Type, data: BaseModel | dict):
+    """Create an ORM entry from a Pydantic model or plain dict.
+
+    Accept both a BaseModel instance (with .dict()) or a plain dict so caller
+    logic can construct payloads that map to ORM column names.
+    """
+
+    if hasattr(data, "dict"):
+        payload = data.dict(exclude_unset=True)
+    elif isinstance(data, dict):
+        payload = data
+    else:
+        raise TypeError("data must be a pydantic BaseModel or a dict")
+
+    obj = orm_model(**payload)
     db.add(obj)
 
     debug_type(obj)
-    
+
     await db.commit()
     await db.refresh(obj)
-    
+
     return obj
 
 # Resgatando uma entrada de um modelo orm com classe pydantic
@@ -46,15 +57,22 @@ async def get_all_entries(db: AsyncSession, orm_model: Type) -> List:
     return all_entries
 
 # Atualizando todas as entradas de um modelo orm específico
-async def update_entry(db: AsyncSession, orm_model: Type, entry_id: int, data: BaseModel):
-    "docstring"
-    
+async def update_entry(db: AsyncSession, orm_model: Type, entry_id: int, data: BaseModel | dict):
+    """Update an ORM entry by id with data from a BaseModel or dict."""
+
     obj = await get_entry(db, orm_model, entry_id)
 
     if not obj:
         return None
     
-    for field, value in data.dict(exclude_unset=True).items():
+    if hasattr(data, "dict"):
+        updates = data.dict(exclude_unset=True)
+    elif isinstance(data, dict):
+        updates = data
+    else:
+        raise TypeError("data must be a pydantic BaseModel or a dict")
+
+    for field, value in updates.items():
         setattr(obj, field, value)
 
     

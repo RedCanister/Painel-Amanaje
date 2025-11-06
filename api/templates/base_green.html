@@ -1,11 +1,223 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{% extends "base_template.html" %}
+
+{% block title %}Model Operations - Painel Amanajé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .model-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
+    .model-section h3 { color: #2a9d8f; margin-top: 0; }
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .model-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; }
+    .metrics-display { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.9em; }
+    .parameter-group { margin: 1rem 0; }
+    .parameter-row { display: flex; align-items: center; margin: 0.5rem 0; }
+    .parameter-label { flex: 1; }
+    .parameter-input { flex: 2; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="model-operations">
+    <!-- Training Section -->
+    <section class="model-section" id="trainingSection">
+        <h3>Model Training</h3>
+        <form id="trainingForm">
+            <div class="parameter-group">
+                <h4>Training Configuration</h4>
+                <!-- TODO - Selects model to train and dataset as reference. Gets saved as trained object model 
+                 with a unique mlflow experiment to record the training and study runs, parameters, as history log. --> 
+                <div class="parameter-row">
+                    <label for="modelType" class="parameter-label">Model Type:</label>
+                    <select id="modelType" name="modelType" class="parameter-input" required>
+                        <option value="regression">Regression</option>
+                        <option value="classification">Classification</option>
+                        <option value="clustering">Clustering</option>
+                    </select>
+                </div>
+                <div class="parameter-row">
+                    <label for="datasetId" class="parameter-label">Training Dataset:</label>
+                    <select id="datasetId" name="datasetId" class="parameter-input" required>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="parameter-row">
+                    <label for="operationId" class="parameter-label">Operation ID:</label>
+                    <input type="number" id="operationId" name="operationId" min="1" value="1" class="parameter-input" required>
+                </div>
+            </div>
+
+            <div class="parameter-group">
+                <h4>Hyperparameters</h4>
+                <!-- TODO - Must be able to select an object of parameters to populate stored and based per dataset 
+                 Will save new parameters object if inserted manually-->
+                <div id="hyperparameters">
+                    <!-- Dynamically populated based on model type -->
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Start Training</button>
+        </form>
+        <div id="trainingResult"></div>
+    </section>
+
+    <!-- Optimization Section -->
+    <section class="model-section" id="optimizationSection">
+        <!-- TODO - Automatically performs an optuna study to generate a new parameter object based on the data
+         The user can optimize the study with manual hyperparemeters. Gets added to history log. -->
+        <h3>Model Optimization</h3>
+        <div class="optimization-controls">
+            <select id="modelSelect">
+                <option value="">Select Model</option>
+            </select>
+            <button onclick="startOptimization()" class="btn">Optimize</button>
+        </div>
+        <div class="metrics-display" id="optimizationMetrics">
+            <!-- Optimization metrics will be shown here -->
+        </div>
+    </section>
+
+    <!-- ONNX Export Section -->
+    <section class="model-section" id="onnxSection">
+        <h3>ONNX Model Management</h3>
+        <!-- TODO - Serves to run tests and produce a graph on a model converted to the ONNX format
+        To be considered as the pytorch model editing in the future -->
+        <div class="onnx-controls">
+            <button onclick="exportONNX()" class="btn">Export to ONNX</button>
+            <button onclick="validateONNX()" class="btn">Validate ONNX Model</button>
+        </div>
+        <div id="onnxResults"></div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Training form handling
+const trainingForm = document.getElementById('trainingForm');
+const modelType = document.getElementById('modelType');
+const datasetId = document.getElementById('datasetId');
+const hyperparameters = document.getElementById('hyperparameters');
+
+// Hyperparameter templates by model type
+const hyperparameterTemplates = {
+    regression: [
+        { name: 'learning_rate', type: 'number', default: 0.01, min: 0.0001, max: 1 },
+        { name: 'epochs', type: 'number', default: 100, min: 1 },
+        { name: 'batch_size', type: 'number', default: 32, min: 1 }
+    ],
+    classification: [
+        { name: 'learning_rate', type: 'number', default: 0.01, min: 0.0001, max: 1 },
+        { name: 'epochs', type: 'number', default: 100, min: 1 },
+        { name: 'num_classes', type: 'number', default: 2, min: 2 }
+    ],
+    clustering: [
+        { name: 'n_clusters', type: 'number', default: 3, min: 2 },
+        { name: 'max_iter', type: 'number', default: 300, min: 1 }
+    ]
+};
+
+// TODO - Users should be able to input their own custom hyperparameters based on the model they choose
+// TODO - Every model must have a parameters json dict that contains the usable parameters to
+// to be assigned and recovered with orm object.
+// Update hyperparameters when model type changes
+modelType.addEventListener('change', () => {
+    const params = hyperparameterTemplates[modelType.value] || [];
+    hyperparameters.innerHTML = params.map(param => `
+        <div class="parameter-row">
+            <label for="${param.name}" class="parameter-label">${param.name}:</label>
+            <input type="${param.type}" 
+                   id="${param.name}"
+                   name="${param.name}"
+                   value="${param.default}"
+                   min="${param.min}"
+                   ${param.max ? `max="${param.max}"` : ''}
+                   class="parameter-input"
+                   required>
+        </div>
+    `).join('');
+});
+
+// Load available datasets
+async function loadDatasets() {
+    try {
+        const response = await fetch('/features');
+        const datasets = await response.json();
+        datasetId.innerHTML = `
+            <option value="">Select Dataset</option>
+            ${datasets.map(ds => `
+                <option value="${ds.id}">${ds.name}</option>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('Error loading datasets:', error);
+    }
+}
+
+// Handle form submission
+trainingForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(trainingForm);
+    const operationId = formData.get('operationId');
     
-</body>
-</html>
+    try {
+        const response = await fetch(`/training/${operationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+        const result = await response.json();
+        document.getElementById('trainingResult').innerHTML = 
+            `<div class="alert ${response.ok ? 'alert-success' : 'alert-error'}">
+                ${JSON.stringify(result, null, 2)}
+            </div>`;
+    } catch (error) {
+        document.getElementById('trainingResult').innerHTML = 
+            `<div class="alert alert-error">Training failed: ${error.message}</div>`;
+    }
+});
+
+// Optimization functions
+async function startOptimization() {
+    const modelId = document.getElementById('modelSelect').value;
+    if (!modelId) return;
+
+    try {
+        const response = await fetch(`/optimization/${modelId}`);
+        const results = await response.json();
+        document.getElementById('optimizationMetrics').innerHTML = 
+            Object.entries(results.metrics || {})
+                .map(([key, value]) => `
+                    <div class="metric-item">
+                        <strong>${key}:</strong> ${value}
+                    </div>
+                `).join('');
+    } catch (error) {
+        console.error('Optimization error:', error);
+    }
+}
+
+// ONNX functions
+async function exportONNX() {
+    const modelId = document.getElementById('modelSelect').value;
+    if (!modelId) return;
+
+    try {
+        const response = await fetch(`/onnx/${modelId}`, { method: 'POST' });
+        const result = await response.json();
+        document.getElementById('onnxResults').innerHTML = 
+            `<div class="alert alert-success">Model exported successfully</div>`;
+    } catch (error) {
+        document.getElementById('onnxResults').innerHTML = 
+            `<div class="alert alert-error">Export failed: ${error.message}</div>`;
+    }
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadDatasets();
+    modelType.dispatchEvent(new Event('change')); // Initialize hyperparameters
+});
+</script>
+{% endblock %}

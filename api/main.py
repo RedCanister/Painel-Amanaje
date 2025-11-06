@@ -60,9 +60,9 @@ cur_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(cur_dir, "static")
 templates_dir = os.path.join(cur_dir, "templates")
     
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory="templates")
 
-#app.mount("/static", StaticFiles(directory=static_dir), name="static")
-#templates = Jinja2Templates(directory="templates")
 
 @app.on_event("startup")
 async def startup_event():
@@ -71,13 +71,6 @@ async def startup_event():
 
     ModelRegistry.register_model(DatasetModel, DatasetORM)
     ModelRegistry.register_model(LearningModel, LearningORM)
-
-    print("DatasetModel registered:", ModelRegistry.get_orm(DatasetModel))
-    print("LearningModel registered:", ModelRegistry.get_orm(LearningModel))
-
-    registry = ModelRegistry._registry
-    print("Tipo da var", type(registry))
-    print("Registry:", registry) 
 
     async with engine.begin() as conn:
        print("Creating tables...")
@@ -98,16 +91,19 @@ async def health(request: Request):
 
     print("Home")
 
+
     try:
-        return JSONResponse(
-            content={"status": "ok"},
-            status_code=200
+        return templates.TemplateResponse(
+            request=request,
+            name="base_template.html",
+            context= {"status": "loaded"}
         )
     except Exception as e:
         return JSONResponse(
             content={"error": str(e)},
             status_code=500
         )
+
 
 # Data endpoints - Global variables: Date, Version / Experiment, Path, Size, Types,
 
@@ -138,9 +134,19 @@ async def get_upload(request: Request):
     """Holder"""
 
     
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_red.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
-@app.post("/upload/{operation_id}")
+@app.post("/upload/{operation_id}", response_class=JSONResponse)
 async def post_upload(operation_id: int,
                       file: UploadFile = File(...),
                       db: AsyncSession = Depends(get_db), ): 
@@ -203,7 +209,8 @@ async def post_upload(operation_id: int,
 
 # Rota de feature store
 @app.get("/features", response_model=List[DatasetModel])
-async def get_features(db: AsyncSession = Depends(get_db)): 
+async def get_features(request: Request,
+                       db: AsyncSession = Depends(get_db)): 
     # TODO - Essa rota extende de base_red.html e é utilizada para exibir todos os dados da aplicação, por par de classe orm
 
     # TODO - A interface deve permitir a seleção e visualização de todos os modelos com os objetos associados, tendo como referência o ObjectORM
@@ -236,9 +243,10 @@ async def get_features(db: AsyncSession = Depends(get_db)):
     print("Got data:", get_data)
 
     try:
-        return JSONResponse(
-            content=get_data,
-            status_code=500
+        return templates.TemplateResponse(
+            request=request,
+            name="base_red.html",
+            context= {"status": "loaded"}
         )
     except Exception as e:
         return JSONResponse(
@@ -247,7 +255,7 @@ async def get_features(db: AsyncSession = Depends(get_db)):
         )
 
 
-@app.post("/features/{feature_id}")
+@app.post("/features/{feature_id}", response_class=JSONResponse)
 async def post_features(feature_id): 
     # TODO - Essa rota é uma função post e ela serve para realizar a construção de novos datasets a partir de features únicas
 
@@ -263,13 +271,22 @@ async def post_features(feature_id):
     # Atualizando histórico e metadados após o armazenamento das features <HistoryModel>
     """Holder"""
 
-    return feature_id
+    try:
+        return JSONResponse(
+                content={"status": "ok"},
+                status_code=200
+            )
+    except Exception as e:
+        return JSONResponse(
+                content={"error": str(e)},
+                status_code=500
+            )
 
 
 
 # Rota de análise exploratória de dados
-@app.get("/analysis") 
-async def get_analysis():
+@app.get("/analysis", response_class=HTMLResponse) 
+async def get_analysis(request: Request):
     # TODO - Essa rota extende de base_red.html e é utilizada para criar visualizações de datasets utilizando plotly dash para selecionar os dados e exibir os gráficos
 
 
@@ -282,15 +299,24 @@ async def get_analysis():
     # Criando visualizações interativas para análise exploratória de dados <DashboardConfig>
     """Holder"""
 
-    return {"status": "ok"}
-
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_red.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
 
 # Model endpoints - Parameters, Metrics, Artifacts, Experiments, Versions, Graphs, Models
 
 # Rota para treinamento de modelos
-@app.get("/training")
-async def get_training(): # MLFlow, ONNX, Feast, Optuna
+@app.get("/training", response_class=HTMLResponse)
+async def get_training(request: Request): # MLFlow, ONNX, Feast, Optuna
     # TODO - Essa rota extende de base_green.html e é utilizada para treinar modelos com dados salvos no banco de dados
 
     # TODO - O usuário deve conseguir selecionar um modelo salvo, um conjunto de dados compatível, selecionar as variáveis de entrada e saída, os parâmetros e as configurações do treinamento
@@ -313,9 +339,20 @@ async def get_training(): # MLFlow, ONNX, Feast, Optuna
     # Resgatando histórico do modelo utilizado no treinamento (Métricas, Parâmetros, Artefatos, Tempo de execução, ) <HistoryModel>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_green.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
-@app.post("/training/{operation_id}")
+
+@app.post("/training/{operation_id}", response_class=JSONResponse)
 async def post_training(operation_id): # MLFlow, ONNX, Feast, Optuna
     # TODO - Essa rota é uma função post e ela serve para confirmar o treinamento, os dados, as métricas, os parâmetros e retornar á get_training
 
@@ -331,12 +368,21 @@ async def post_training(operation_id): # MLFlow, ONNX, Feast, Optuna
     # Atualizando histórico e metadados após o modelo treinado <LearningModel> || <HistoryModel>
     """Holder"""    
 
-    return {"status": "ok"}
+    try:
+        return JSONResponse(
+                content={"status": "ok"},
+                status_code=200
+            )
+    except Exception as e:
+        return JSONResponse(
+                content={"error": str(e)},
+                status_code=500
+            )
 
 
 # Rota para otimização de modelos
-@app.get("/optimization")
-async def get_optimization(): # MLFlow, ONNX, Optuna
+@app.get("/optimization", response_class=HTMLResponse)
+async def get_optimization(request: Request): # MLFlow, ONNX, Optuna
     # TODO - Essa rota extende de base_green.html e é utilizada para otimizar modelos com estudos do optuna
 
     # TODO - O usuário deve ser capaz de selecionar um modelo e um conjunto de dados para treinar com a biblioteca optuna. 
@@ -355,10 +401,23 @@ async def get_optimization(): # MLFlow, ONNX, Optuna
     # Exibindo visualização de comparação entre estudos realizados ao longo do tempo (Métricas por Custos) <DashboardConfig>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_green.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
-@app.get("/optimization/{operation_id}")
-async def post_optimization(operation_id): # MLFlow, ONNX, Optuna
+
+@app.get("/optimization/{operation_id}", response_class=HTMLResponse)
+async def post_optimization(request: Request, 
+                            operation_id
+                            ): # MLFlow, ONNX, Optuna
     # TODO - Essa rota é uma função post e ela serve para confirmar o estudo, salvar os melhores parâmetros e atualizar os modelos e os dados
     
     # TODO - Ela pode seguir a mesma lógica de envio do treinamento de um modelo para o processamento, mas deve retornar os parâmetros do estudo para o banco de dados
@@ -372,12 +431,23 @@ async def post_optimization(operation_id): # MLFlow, ONNX, Optuna
     # Atualizando e enviando histórico e metadados após o estudo de otimização <HistoryModel>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_green.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
+
 
 
 # Rota para produção com inferência de modelos
-@app.get("/production")
-async def get_production(): # Plotly, ONNX, MLFlow, 
+@app.get("/production", response_class=HTMLResponse)
+async def get_production(request: Request): # Plotly, ONNX, MLFlow, 
     # TODO - Essa rota extende de base_green.html e é utilizada para ver modelos implementados em um ambiente de produção
 
     # TODO - Ela deve servir como a última página no workflow do usuário, servindo para colocar modelos com configurações e condições reais após o treinamento
@@ -394,9 +464,20 @@ async def get_production(): # Plotly, ONNX, MLFlow,
     # Exibindo dados de previsão do modelo em produção (Predições por regressão, classificação, clusterização, etc) <DashboardConfig>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_green.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
-@app.post("/production/{operation_id}")
+
+@app.post("/production/{operation_id}", response_class=JSONResponse)
 async def post_production(operation_id): # Plotly, ONNX, MLFlow, 
     # TODO - Essa rota é uma função post e ela serve para abrir uma rota e recursos dedicados para um modelo que realiza inferência a nível de produção
 
@@ -413,14 +494,23 @@ async def post_production(operation_id): # Plotly, ONNX, MLFlow,
     # Adicionado e atualizando históricos de monitoramento do modelo em produção <HistoryModel>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return JSONResponse(
+                content={"status": "ok"},
+                status_code=200
+            )
+    except Exception as e:
+        return JSONResponse(
+                content={"error": str(e)},
+                status_code=500
+            )
 
 
 # Development endpoints
 
 # Rota de criação e validação de modelos ONNX e PyTorch
-@app.get("/onnx")
-async def get_onnx(): # ONNX, PyTorch,
+@app.get("/onnx", response_class=HTMLResponse)
+async def get_onnx(request: Request): # ONNX, PyTorch,
     # TODO - Essa rota extende de base_blue.html e é utilizada para criar, visualizar, importar e exportar modelos onnx
 
     # TODO - O usuário deve ser capaz de editar modelos onnx e de visualizar o gráfico resultante do formato. A rota deve ser usada pra realizar a validação dos modelos
@@ -445,9 +535,20 @@ async def get_onnx(): # ONNX, PyTorch,
     # Exibindo gráfico do modelo selecionado <DashboardConfig>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="base_blue.html",
+            context= {"status": "loaded"}
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
 
-@app.post("/onnx/{operation_id}")
+
+@app.post("/onnx/{operation_id}", response_class=JSONResponse)
 async def post_onnx(operation_id): 
     # TODO - Essa rota é uma função post e ela serve para confirmar a criação, atualização e operação sobre modelos onnx
 
@@ -465,7 +566,16 @@ async def post_onnx(operation_id):
     # Enviando modelo e dados para validação <ReportModel>
     """Holder"""
 
-    return {"status": "ok"}
+    try:
+        return JSONResponse(
+                content={"status": "ok"},
+                status_code=200
+            )
+    except Exception as e:
+        return JSONResponse(
+                content={"error": str(e)},
+                status_code=500
+            )
 
 
 @app.get("/airflow")

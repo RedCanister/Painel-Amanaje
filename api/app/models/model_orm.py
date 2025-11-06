@@ -31,6 +31,7 @@ class DatasetORM(ObjectORM):
     
     id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
 
+    name = Column(String, nullable=False)
     dataset_type = Column(String(50))
     has_features = Column(Boolean, nullable=True)
     features_list = Column(JSONB, nullable=True)

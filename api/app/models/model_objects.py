@@ -5,10 +5,11 @@ from .model_schemas import AsyncCRUDMixin
 
 # Modelo pydantic básico para construção das colunas principais
 class ObjectModel(AsyncCRUDMixin):
+
     id:  int
     name: str                               # Model name
     description: Optional[str] = None       # Model description
-    source_type: str
+    object_type: str
     size: float                             # Size in MB
     path: str                               # File path to the model
     date: datetime = Field(default_factory=datetime.now().isoformat())                               # Date of model creation or training
@@ -19,6 +20,7 @@ class ObjectModel(AsyncCRUDMixin):
 # Data models - Entities: Datasets, Features, Samples, Templates. Using postgres and redis for storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database 
 class DatasetModel(ObjectModel):   
+
     dataset_type: str
     has_features: Optional[bool] = None                      # Whether dataset has features
     features_list: Optional[List[str]] = None  # List of feature names
@@ -27,6 +29,7 @@ class DatasetModel(ObjectModel):
 # Machine Learning Models - Entities: Learning Models, ONNX Models, Template Models. Using ./mlflow-server for model management. Or ./mlruns for run storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database | Train | Study | Deploy |
 class LearningModel(ObjectModel):
+    
     model_type: str
     parameters: dict                        # Model parameters
     metrics: dict                           # Model performance metrics

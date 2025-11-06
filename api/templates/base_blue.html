@@ -1,11 +1,194 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
-</html>
+{% extends "base_template.html" %}
+
+{% block title %}MLOps - Painel Amanajé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
+    .mlops-section h3 { color: #0077b6; margin-top: 0; }
+    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
+    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
+    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
+    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+    .status-active { background-color: #2ecc71; }
+    .status-warning { background-color: #f1c40f; }
+    .status-error { background-color: #e74c3c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mlops-operations">
+    <!-- Production Monitoring -->
+    <section class="mlops-section" id="productionSection">
+        <h3>Production Monitoring</h3>
+        <div class="monitoring-grid">
+            <div class="metric-card">
+                <h4>Model Health</h4>
+                <div class="status-indicator status-active"></div>
+                <span>Active</span>
+                <div class="metric-value" id="modelHealth">100%</div>
+            </div>
+            <div class="metric-card">
+                <h4>Requests/min</h4>
+                <div class="metric-value" id="requestRate">0</div>
+            </div>
+            <div class="metric-card">
+                <h4>Avg Response Time</h4>
+                <div class="metric-value" id="responseTime">0ms</div>
+            </div>
+            <div class="metric-card">
+                <h4>Error Rate</h4>
+                <div class="metric-value" id="errorRate">0%</div>
+            </div>
+        </div>
+
+        <div class="production-controls">
+            <h4>Model Controls</h4>
+            <button onclick="startProduction()" class="btn btn-primary">Start</button>
+            <button onclick="stopProduction()" class="btn btn-danger">Stop</button>
+            <button onclick="restartProduction()" class="btn">Restart</button>
+        </div>
+    </section>
+
+    <!-- Airflow Integration -->
+    <section class="mlops-section" id="airflowSection">
+        <h3>Airflow DAGs</h3>
+        <div class="dag-controls">
+            <select id="dagSelect">
+                <option value="">Select DAG</option>
+            </select>
+            <button onclick="triggerDag()" class="btn">Trigger DAG</button>
+            <button onclick="refreshDags()" class="btn">Refresh</button>
+        </div>
+        <div class="log-display" id="dagLogs">
+            <!-- DAG logs will be shown here -->
+        </div>
+    </section>
+
+    <!-- MLflow Integration -->
+    <section class="mlops-section" id="mlflowSection">
+        <h3>MLflow Experiments</h3>
+        <div class="experiment-controls">
+            <select id="experimentSelect">
+                <option value="">Select Experiment</option>
+            </select>
+            <button onclick="viewExperiment()" class="btn">View Details</button>
+        </div>
+        <div id="experimentResults">
+            <!-- MLflow experiment details will be shown here -->
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Production monitoring
+let monitoringInterval;
+
+function updateMetrics() {
+    // Simulated metrics update - replace with real API calls
+    document.getElementById('requestRate').textContent = 
+        Math.floor(Math.random() * 100);
+    document.getElementById('responseTime').textContent = 
+        Math.floor(Math.random() * 200) + 'ms';
+    document.getElementById('errorRate').textContent = 
+        (Math.random() * 2).toFixed(2) + '%';
+}
+
+async function startProduction() {
+    try {
+        const response = await fetch('/production/start', { method: 'POST' });
+        const result = await response.json();
+        if (response.ok) {
+            monitoringInterval = setInterval(updateMetrics, 5000);
+        }
+    } catch (error) {
+        console.error('Failed to start production:', error);
+    }
+}
+
+function stopProduction() {
+    clearInterval(monitoringInterval);
+    fetch('/production/stop', { method: 'POST' })
+        .catch(error => console.error('Failed to stop production:', error));
+}
+
+// Airflow integration
+async function loadDags() {
+    try {
+        const response = await fetch('/airflow/dags');
+        const dags = await response.json();
+        const dagSelect = document.getElementById('dagSelect');
+        dagSelect.innerHTML = `
+            <option value="">Select DAG</option>
+            ${dags.map(dag => `
+                <option value="${dag.id}">${dag.name}</option>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('Failed to load DAGs:', error);
+    }
+}
+
+async function triggerDag() {
+    const dagId = document.getElementById('dagSelect').value;
+    if (!dagId) return;
+
+    try {
+        const response = await fetch(`/airflow/dags/${dagId}/trigger`, {
+            method: 'POST'
+        });
+        const result = await response.json();
+        const logDisplay = document.getElementById('dagLogs');
+        logDisplay.innerHTML += `\n[${new Date().toISOString()}] Triggered DAG ${dagId}: ${result.status}`;
+        logDisplay.scrollTop = logDisplay.scrollHeight;
+    } catch (error) {
+        console.error('Failed to trigger DAG:', error);
+    }
+}
+
+// MLflow integration
+async function loadExperiments() {
+    try {
+        const response = await fetch('/mlflow/experiments');
+        const experiments = await response.json();
+        const experimentSelect = document.getElementById('experimentSelect');
+        experimentSelect.innerHTML = `
+            <option value="">Select Experiment</option>
+            ${experiments.map(exp => `
+                <option value="${exp.id}">${exp.name}</option>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('Failed to load experiments:', error);
+    }
+}
+
+async function viewExperiment() {
+    const experimentId = document.getElementById('experimentSelect').value;
+    if (!experimentId) return;
+
+    try {
+        const response = await fetch(`/mlflow/experiments/${experimentId}`);
+        const experiment = await response.json();
+        document.getElementById('experimentResults').innerHTML = `
+            <div class="experiment-details">
+                <h4>${experiment.name}</h4>
+                <p>Artifact Location: ${experiment.artifact_location}</p>
+                <pre>${JSON.stringify(experiment.tags, null, 2)}</pre>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Failed to load experiment details:', error);
+    }
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadDags();
+    loadExperiments();
+});
+</script>
+{% endblock %}

@@ -1,11 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{% extends "base_template.html" %}
+
+{% block title %}Data Operations - Painel Amanajé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; }
+    .form-section h3 { color: #e63946; margin-top: 0; }
+    .upload-area { border: 2px dashed #ccc; padding: 2rem; text-align: center; margin: 1rem 0; }
+    .upload-area.dragover { border-color: #e63946; background: #fff5f5; }
+    .feature-list { list-style: none; padding: 0; }
+    .feature-item { padding: 0.5rem; border-bottom: 1px solid #eee; }
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="data-operations">
+    <!-- Upload Section -->
+    <section class="form-section" id="uploadSection">
+        <h3>Data Upload</h3>
+        
+         <!-- TODO - The form must have the option of choice between the upload of a model and of a dataset -->
+         <!-- TODO - The toggle between the model and dataset form is based on OperationID. 1 for dataset, 2 for model -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Operation ID:</label>
+                <input type="number" id="operationId" name="operationId" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+                <label>Dataset Name:</label>
+                <input type="text" id="datasetName" name="datasetName" required>
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea id="description" name="description"></textarea>
+            </div>
+            <div class="upload-area" id="dropZone">
+                <p>Drag files here or click to select</p>
+                <input type="file" id="fileInput" name="file" hidden>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload Dataset</button>
+            <!-- TODO - Having uploaded the dataset, the user must have feedback on the operation -->
+        </form>
+        <div id="uploadResult"></div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="form-section" id="featuresSection">
+        <h3>Feature Management</h3>
+        <div class="feature-controls">
+            <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
+
+            <!-- TODO - Extracting features will break down datasets into individual columns and stored for later use -->
+            <button onclick="extractFeatures()" class="btn">Extract Features</button>
+
+            <!-- TODO - Create a createFeatures() method to form a dataset based on selected features -->
+            <!-- <button onclick="createFeatures()" class="btn">Create Features</button> -->
+        </div>
+        <div class="feature-list" id="featureList">
+            <!-- Features will be populated here -->
+        </div>
+    </section>
+
+    <!-- Analysis Section -->
+    <section class="form-section" id="analysisSection">
+        <h3>Data Analysis</h3>
+        <div class="analysis-controls">
+            <select id="datasetSelect">
+                <option value="">Select Dataset</option>
+            </select>
+
+            <!-- TODO - The analyzeData() method will return visualizations from a plotly dash route with options
+             on which columns to select, and which plots to use -->
+            <button onclick="analyzeData()" class="btn">Analyze</button>
+        </div>
+        <div id="analysisResults" class="data-grid">
+            <!-- Analysis results will be shown here -->
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Upload handling
+const uploadForm = document.getElementById('uploadForm');
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    fileInput.files = e.dataTransfer.files;
+});
+
+uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
     
-</body>
-</html>
+    try {
+        const operationId = document.getElementById('operationId').value;
+        const response = await fetch(`/upload/${operationId}`, {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        document.getElementById('uploadResult').innerHTML = 
+            `<div class="alert ${response.ok ? 'alert-success' : 'alert-error'}">
+                ${JSON.stringify(result, null, 2)}
+            </div>`;
+    } catch (error) {
+        document.getElementById('uploadResult').innerHTML = 
+            `<div class="alert alert-error">Upload failed: ${error.message}</div>`;
+    }
+});
+
+// Feature management
+async function refreshFeatures() {
+    try {
+        const response = await fetch('/features');
+        const features = await response.json();
+        const featureList = document.getElementById('featureList');
+        featureList.innerHTML = features.map(feature => `
+            <div class="feature-item">
+                <h4>${feature.name}</h4>
+                <p>${feature.description || 'No description'}</p>
+                <small>Version: ${feature.version}</small>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error fetching features:', error);
+    }
+}
+
+// Analysis functions
+async function analyzeData() {
+    const datasetId = document.getElementById('datasetSelect').value;
+    if (!datasetId) return;
+
+    try {
+        const response = await fetch(`/analysis?dataset_id=${datasetId}`);
+        const results = await response.json();
+        document.getElementById('analysisResults').innerHTML = 
+            `<pre>${JSON.stringify(results, null, 2)}</pre>`;
+    } catch (error) {
+        console.error('Analysis error:', error);
+    }
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    refreshFeatures();
+});
+</script>
+{% endblock %}

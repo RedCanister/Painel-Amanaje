@@ -90,7 +90,8 @@ class ModelRegistry:
     
 
     # Gerando rotas CRUD automaticamente a partir de schemas pares 
-
+    # TODO - generate_router() must have a base_purple.html simply for visualizing the objects in the 
+    # database in a simple interface.
     @classmethod
     def generate_router(cls, pydantic_model: Type[BaseModel], prefix: str = None) -> APIRouter:
         """Traduzindo funções de operação no banco de dados para rotas do FastAPI"""
@@ -166,4 +167,4 @@ class ModelRegistry:
         
         return routers
     
-    # Gerando modelos pares novos automaticamente
+    # Gerando modelos pares novos automaticamente 

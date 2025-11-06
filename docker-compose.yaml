@@ -189,6 +189,8 @@ services:
       - .env
     volumes:
       - ./api:/app:cached
+      - ./data:/data
+      - ./models:/models
     ports:
       - "8000:8000"
     depends_on:
