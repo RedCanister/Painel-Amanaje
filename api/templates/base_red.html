@@ -21,25 +21,86 @@
         <h3>Data Upload</h3>
         
          <!-- TODO - The form must have the option of choice between the upload of a model and of a dataset -->
-         <!-- TODO - The toggle between the model and dataset form is based on OperationID. 1 for dataset, 2 for model -->
+         <!-- TODO - The toggle between the model and dataset form is based on OperationID. first is dataset, second is model -->
         <form id="uploadForm" enctype="multipart/form-data">
+
             <div class="form-group">
                 <label>Operation ID:</label>
-                <input type="number" id="operationId" name="operationId" min="1" value="1" required>
+                <select id="operationId" name="operationId">
+                    <!-- TODO - Use <ToggleFormOptions> here, with Datasets and Models-->
+                    <option value="datasets"> Datasets </option>
+                    <option value="models"> Models </option>
+                </select>
             </div>
-            <div class="form-group">
-                <label>Dataset Name:</label>
-                <input type="text" id="datasetName" name="datasetName" required>
+            
+            <!-- Dataset Form fields -->
+            <div id="datasetFields">
+                <div class="form-group">
+                    <label>Dataset Name:</label>
+                    <input type="text" id="objectName" name="objectName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Dataset type:</label>
+                    <select id="datasetType" name="datasetType">
+                        <option value="numerical"> Numerical </option>
+                        <option value="categorical"> Categorical </option>
+                        <option value="time-series"> Time-Series </option>
+                        <option value="image"> Image </option>
+                        <option value="videoAudio"> Video-Audio </option>
+                        <option value="text"> Text </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Connection String</label>
+                    <textarea id="connectionString" name="connectionString"></textarea>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Description:</label>
-                <textarea id="description" name="description"></textarea>
+
+            <!-- Model Form Fields -->
+            <div id="modelFields", style="display: none;">
+                <div class="form-group">
+                    <label>Model Name:</label>
+                    <input type="text" id="objectName" name="objectName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Model type:</label>
+                    <select id="modelType" name="modelType">
+                        <option value="numerical"> Numerical </option>
+                        <option value="categorical"> Categorical </option>
+                        <option value="time-series"> Time-Series </option>
+                        <option value="image"> Image </option>
+                        <option value="videoAudio"> Video-Audio </option>
+                        <option value="text"> Text </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Parameters:</label>
+                    <textarea id="parameters" name="parameters"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Metrics:</label>
+                    <textarea id="metrics" name="metrics"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Reference data:</label>
+                    <textarea id="referenceData" name="referenceData"></textarea>
+                </div>
             </div>
+
+            <!-- Drag and drop file upload zone -->
             <div class="upload-area" id="dropZone">
                 <p>Drag files here or click to select</p>
                 <input type="file" id="fileInput" name="file" hidden>
             </div>
-            <button type="submit" class="btn btn-primary">Upload Dataset</button>
+            <button type="submit" class="btn btn-primary">Upload</button>
             <!-- TODO - Having uploaded the dataset, the user must have feedback on the operation -->
         </form>
         <div id="uploadResult"></div>
@@ -47,7 +108,7 @@
 
     <!-- Features Section -->
     <section class="form-section" id="featuresSection">
-        <h3>Feature Management</h3>
+        <h3>Upload History</h3>
         <div class="feature-controls">
             <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
 
@@ -83,6 +144,7 @@
 
 {% block extra_js %}
 <script>
+
 // Upload handling
 const uploadForm = document.getElementById('uploadForm');
 const dropZone = document.getElementById('dropZone');
@@ -105,11 +167,35 @@ dropZone.addEventListener('drop', (e) => {
     fileInput.files = e.dataTransfer.files;
 });
 
+
 uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
+    // Append file and additional metadata fields to the multipart form
+    const file = fileInput.files[0];
+    if (!file) {
+        document.getElementById('uploadResult').innerHTML = `<div class="alert alert-error">No file selected</div>`;
+        return;
+    }
+
+    const operationId = document.getElementById('operationId').value;
+
+    formData.append('file', file);
+    formData.append('operationId', document.getElementById('operationId').value);
+    formData.append('objectName', document.getElementById('objectName').value);
+    formData.append('description', document.getElementById('description').value);
+
+    if (operationId == "dataset"){
+        formData.append('datasetType', document.getElementById('datasetType').value);
+        formData.append('connectionString', document.getElementById('connectionString').value);
+    } else if (operationId == "model"){
+        formData.append('modelType', document.getElementById('modelType').value);
+        formData.append('parameters', document.getElementById('parameters').value);
+        formData.append('metrics', document.getElementById('metrics').value);
+        formData.append('referenceData', document.getElementById('referenceData').value);   
+    }
     
+
     try {
         const operationId = document.getElementById('operationId').value;
         const response = await fetch(`/upload/${operationId}`, {
@@ -117,9 +203,13 @@ uploadForm.addEventListener('submit', async (e) => {
             body: formData
         });
         const result = await response.json();
+        // Provide clean feedback: status and returned id/path
+        const ok = response.ok;
         document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert ${response.ok ? 'alert-success' : 'alert-error'}">
-                ${JSON.stringify(result, null, 2)}
+            `<div class="alert ${ok ? 'alert-success' : 'alert-error'}">
+                <strong>Status:</strong> ${result.status || (ok ? 'ok' : 'error')}<br/>
+                <strong>ID:</strong> ${result.id || 'n/a'}<br/>
+                <strong>Path:</strong> ${result.path || ''}
             </div>`;
     } catch (error) {
         document.getElementById('uploadResult').innerHTML = 
@@ -127,17 +217,46 @@ uploadForm.addEventListener('submit', async (e) => {
     }
 });
 
+// TODO - I would like this function to be standardized to be used in all templates.
+// To fit and scale any back-end database object, in the pydantic or sqlaclhemy-postgres format.
+// TODO - I'd like to be simply call it <ToggleFormOptions>
+uploadForm.addEventListener('DOMContentLoaded', function () {
+    const operationIdSelect = uploadForm.getElementById('operationId');
+    const datasetFields = uploadForm.getElementById('datasetFields');
+    const modelFields = uploadForm.getElementById('modelFields');
+
+    function toggleFormFields() {
+        if (operationIdSelect.value == 'datasets') {
+            datasetFields.style.display = 'none';
+            modelFields.style.display = 'block';
+        } else if (operationIdSelect.value == 'models') {
+            datasetFields.style.display = 'block';
+            modelFields.style.display = 'none';
+        }
+    }
+
+    toggleFormFields();
+
+    operationIdSelect.addEventListener('change', toggleFormFields)
+});
+
+// TODO - I need a function to use as a template when I would like to
+// populate a selection box in a scalable and modular manner.
+// Made to fit back-end database object, in the pydantic or sqlaclhemy-postgres format.
+// TODO - I would like to call it <PopulateListObjects>. It needs to have back and foward data sense.
+
 // Feature management
 async function refreshFeatures() {
     try {
-        const response = await fetch('/features');
+        const response = await fetch('/datasetmodel/list');
         const features = await response.json();
         const featureList = document.getElementById('featureList');
         featureList.innerHTML = features.map(feature => `
             <div class="feature-item">
                 <h4>${feature.name}</h4>
                 <p>${feature.description || 'No description'}</p>
-                <small>Version: ${feature.version}</small>
+                <small>Dataset type: <b>${feature.dataset_type} </b>  </small> |
+                <small>Size: ${feature.size}MB</small>
             </div>
         `).join('');
     } catch (error) {

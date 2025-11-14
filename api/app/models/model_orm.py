@@ -36,6 +36,7 @@ class DatasetORM(ObjectORM):
     has_features = Column(Boolean, nullable=True)
     features_list = Column(JSONB, nullable=True)
     connection_string = Column(String, nullable=True)
+    # TODO - Implement shape into the dataset
 
     __mapper_args__ = {
         "polymorphic_identity": "dataset",

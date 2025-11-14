@@ -115,6 +115,13 @@ function stopProduction() {
         .catch(error => console.error('Failed to stop production:', error));
 }
 
+function restartProduction() {
+    // Restart is a convenience: stop then start. In production this should be
+    // an orchestrator call that performs a rolling restart.
+    stopProduction();
+    setTimeout(() => startProduction(), 1000);
+}
+
 // Airflow integration
 async function loadDags() {
     try {
@@ -130,6 +137,11 @@ async function loadDags() {
     } catch (error) {
         console.error('Failed to load DAGs:', error);
     }
+}
+
+function refreshDags() {
+    // UI convenience wrapper to reload DAG list
+    loadDags().catch(err => console.error('refreshDags failed', err));
 }
 
 async function triggerDag() {

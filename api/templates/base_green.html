@@ -27,31 +27,51 @@
                 <!-- TODO - Selects model to train and dataset as reference. Gets saved as trained object model 
                  with a unique mlflow experiment to record the training and study runs, parameters, as history log. --> 
                 <div class="parameter-row">
-                    <label for="modelType" class="parameter-label">Model Type:</label>
+                    <label for="modelType" class="parameter-label">Model:</label>
                     <select id="modelType" name="modelType" class="parameter-input" required>
-                        <option value="regression">Regression</option>
-                        <option value="classification">Classification</option>
-                        <option value="clustering">Clustering</option>
+                        <!-- TODO - Use <ToggleFormOptions> here With LearningModel-->
                     </select>
                 </div>
                 <div class="parameter-row">
                     <label for="datasetId" class="parameter-label">Training Dataset:</label>
                     <select id="datasetId" name="datasetId" class="parameter-input" required>
-                        <!-- Populated dynamically -->
+                        <!-- TODO - Use <PopulateListOptions> here with DatasetObject-->
                     </select>
                 </div>
                 <div class="parameter-row">
-                    <label for="operationId" class="parameter-label">Operation ID:</label>
+                    <label for="operationId" class="parameter-label">Input features:</label>
+                    <!-- TODO - These input features need to be selected from the columns of the dataset -->
                     <input type="number" id="operationId" name="operationId" min="1" value="1" class="parameter-input" required>
                 </div>
             </div>
 
+            <div class="parameter-row">
+                <label for="InputType" class="parameter-label">Input type:</label>
+                <select id="InputType" name="InputType" class="parameter-input" required>
+                    <!-- <ToggleFormOptions> here, between Manual and Study -->
+                    <option value="Manual">Manual</option>
+                    <option value="Study">Study</option>
+                </select>
+            </div>
+            
+            <div class="parameter-row">
+                <label for="StudyObject" class="parameter-label">Study :</label>
+                <select id="StudyObject" name="StudyObject" class="parameter-input" required>
+                    <!-- Dynamically populated based on study object -->
+                    <!-- TODO - Use <PopulateListOptions> here with StudyObject -->
+                </select>
+            </div>
+            
+            
             <div class="parameter-group">
-                <h4>Hyperparameters</h4>
-                <!-- TODO - Must be able to select an object of parameters to populate stored and based per dataset 
-                 Will save new parameters object if inserted manually-->
+                <h4>Hyperparameters </h4>
+                <!-- Select this option to fine-tune the select model and dataset  -->
+                <!-- TODO - Must be able to select a study object to populate stored hyperparameters
+                    Will create new study if inserted manually. New trials will be added to existing study
+                -->
                 <div id="hyperparameters">
                     <!-- Dynamically populated based on model type -->
+                     <!-- TODO - Use PopulateListOptions here with <StudyObject> Params -->
                 </div>
             </div>
 

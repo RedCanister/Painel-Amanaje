@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .model_registry import ModelRegistry
@@ -32,3 +32,4 @@ class AsyncCRUDMixin(BaseModel):
         orm_model = ModelRegistry.get_orm(cls)
         return await delete_entry(db, orm_model, entry_id)
     
+    model_config = ConfigDict(from_attributes=True)

@@ -27,12 +27,16 @@ app = FastAPI(title="Painel Amanajé API", version="0.1")
 
 # Templates and static
 cur_dir = os.path.dirname(os.path.abspath(__file__))
+# repo_root points to the repository root (one level up from api/)
+repo_root = os.path.abspath(os.path.join(cur_dir, ".."))
 static_dir = os.path.join(cur_dir, "static")
 templates_dir = os.path.join(cur_dir, "templates")
 
-# Ensure static and templates directories exist (templates exist already in repo)
+# Ensure static directory exists locally (templates are already present in repo)
 os.makedirs(static_dir, exist_ok=True)
 
+# Mount static files and configure Jinja2 templates. Using absolute paths keeps
+# behaviour consistent when running inside Docker or on-host.
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 templates = Jinja2Templates(directory=templates_dir)
 
@@ -44,6 +48,11 @@ async def startup_event():
     ModelRegistry.register_model(DatasetModel, DatasetORM)
     ModelRegistry.register_model(LearningModel, LearningORM)
 
+    # Generating FastAPI routes for objects in model registry
+    model_routers = ModelRegistry.generate_all_routers()
+    for router in model_routers:
+        app.include_router(router)
+
     # Create DB tables if not present
     try:
         await init_models()
@@ -52,114 +61,130 @@ async def startup_event():
         # In some dev environments init_models may require DB available; print and continue
         print("init_models error (db may not be reachable during dev):", e)
         print(f"Error string (strerror): {traceback.format_tb(e.__traceback__)}")
+        
 
-
-@app.get("/home", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Render index with navigation to other pages"""
     return templates.TemplateResponse("base_template.html", {"request": request})
 
 
 @app.get("/upload", response_class=HTMLResponse)
-async def get_upload(request: Request):
-    # TODO - Needs to accept both LearningModel and DatasetModel as pydantic forms for 
-    # the user to input data
+async def page_upload(request: Request):
+    # Render upload page. The upload POST endpoint accepts multipart/form-data
+    # and decides where to store the uploaded file based on operationId. The
+    # form in `base_red.html` includes operationId, datasetName and description.
     return templates.TemplateResponse("base_red.html", {"request": request})
 
 
+# NOTE - What if the user sends more than one file at a time?
 @app.post("/upload/{operation_id}", response_class=JSONResponse)
-async def post_upload(operation_id: int,
-                      file: UploadFile = File(...),
+async def post_upload(operation_id: str,
+                      request: Request,
                       db: AsyncSession = Depends(get_db)):
-    
-    """Receive uploaded file, store it under data/uploads, and create a DB entry."""    
+    """Receive uploaded file, store it under data/<datasets|models>, and create a DB entry.
 
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    print("Base directory:", base_dir)
-    
-    # TODO - When operation_id == 1, the post function will send the file to the datasets folder.
-    # When operation_id == 2, the post function will send the file to the models folder. 
-    upload_dir = os.path.join(base_dir, "..", "data", "datasets")
-    print("Base directory:", upload_dir)
-    
-    file_path = os.path.abspath(upload_dir)
-    print("Base directory:", file_path)
+    This endpoint accepts multipart/form-data. The form fields expected by the
+    current templates are: operationId, datasetName, description and file (UploadFile).
 
-    os.makedirs(file_path, exist_ok=True)
+    Operation mapping:
+      - 1 => dataset (stored under data/datasets)
+      - 2 => model   (stored under models/)
 
-    #os.chmod(base_dir, 0o755)
-    #os.chmod(file_path, 0o755)
+    For scaling: payloads are kept flexible and the ORM creation will choose
+    DatasetORM vs LearningORM depending on operation_id.
+    """
 
-    # TODO - Everytime the user uploads a file, the data he passes on serves to create a folder if that is the first upload
-    # TODO - Every subsequent file in the same description goes to that folder.
-    # Save file
-    
-    async with aiofiles.open(file_path + "/" + file.filename, "wb") as f:
-        contents = await file.read()
-        await f.write(contents)
+    form = await request.form()
+    upload_file = form.get('file')  # starlette UploadFile
+    # Fallback when JS posts without the file key
+    if upload_file is None:
+        return JSONResponse({"status": "error", "detail": "no file provided"}, status_code=400)
 
-    # compute sizes
-    _, size_mb = get_file_size(file_path)
+    # Extract form fields (templates provide these names)
+    object_name = form.get('objectName') or getattr(upload_file, 'filename', 'unnamed')
+    description = form.get('description') or ''
 
-    file_name = file.filename
+    # Normalize operation id (prefer path param, but accept form override)
+    try:
+        operation_id = str(form.get('operationId') or operation_id)
+    except Exception:
+        operation_id = str(operation_id)
+
+    # Determine storage directory based on operation_id
+    if operation_id == "models":
+        upload_dir = os.path.join(repo_root, 'models')
+    elif operation_id == "datasets":
+        # default dataset
+        upload_dir = os.path.join(repo_root, 'data', 'datasets')
+
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filename = getattr(upload_file, 'filename', 'uploaded.bin')
+    dest_path = os.path.join(upload_dir, filename)
+
+    # Save file to disk asynchronously
+    try:
+        contents = await upload_file.read()
+        async with aiofiles.open(dest_path, 'wb') as out_f:
+            await out_f.write(contents)
+    except Exception as e:
+        return JSONResponse({"status": "error", "detail": f"write failed: {e}"}, status_code=500)
+
+    # Compute file size (MB) from bytes written -- fast and accurate per-file
+    size_mb = round(len(contents) / (1024 * 1024), 4)
     now = datetime.now()
 
-    # Time Series data:          Ticker - Interval - Source 
-    # Classification data:       Object - DataType - Source   
-    
-    # TODO - The dict variables "name", "description", "object_type", "connection_string"
-    # all need to come in from the formData in base_red.html
-    # Build a payload that maps to the DatasetORM column names
-    object_payload = {
-        "name": file_name,
-        "description": f"Uploaded file {file_name}",
-        "object_type": "dataset",
+    # Build common payload (ObjectORM shape)
+    common_payload = {
+        "name": object_name,
+        "description": description or f"Uploaded file {filename}",
+        "object_type": "dataset" if operation_id != "models" else "learning_model",
         "size": size_mb,
-        "path": file_path + "/" + file_name,
+        "path": dest_path,
         "date": now,
         "version": 1,
         "history": [{"operation": "upload", "when": now.isoformat()}],
     }
 
-    # TODO - In the interface, the user can choose if the file he is uploading is
-    # a model or a dataset. When this post function is requested, operation_id == 1 will
-    # return the dataset form, and the operation_id == 2 will return de learning_model form.
-    # The payload represents the extra formulary that comtains the specific data for each
-    # object type.
-
-    #if operation_id == 1:
-    option_payload = {
-            "has_features": False,
-            "features_list": None,
-            "connection_string": None,
+    # Add type-specific options
+    if operation_id == "models":
+        # Learning model metadata
+        payload = {
+            **common_payload,
+            "model_type": form.get('modelType') or 'unknown',
+            "parameters": {},
+            "metrics": {},
+            "reference_data": form.get('referenceData') or None,
+            "input_features": form.get('inputFeatures') or None, # To be updated in training
+            "output_features": form.get('outputFeatures') or None, # To be updated in training
+            "is_trained": False, # After being trained once
+            "is_tested": False, # After being studied or validated
+            "is_deployed": False, # After being deploy, or removed from it
         }
-    
-    # TODO - Make new form for the parameters on the uploaded dataset, or extract from file
-    # If pre-made download __dict__ from template class
-    
-    # elif operation_id == 2:
-    option_payload2 = {
-            "model_type": "model_type",
-            "parameters": "class __dict__",
-            "metrics": ["MAE", "Precision", "etc",],
-            "reference_data": "Related dataset",
-            "input_features": "input_features",
-            "output_features": "output_features",
-            "is_trained": False,
-            "is_tested": False,
-            "is_deployed": False,
+        try:
+            obj = await create_entry(db, LearningORM, payload)
+        except Exception as e:
+            return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
+    elif operation_id == "datasets":
+        # Dataset metadata
+        payload = {
+            **common_payload,
+            "dataset_type": form.get('datasetType') or None,
+            "has_features": False, # To be updated in a @app.put
+            "features_list": None, # Only added features can be shown here. 
+            "connection_string": None, # TODO - A page to receive and update data on a dataset. 
         }
+        try:
+            obj = await create_entry(db, DatasetORM, payload)
+        except Exception as e:
+            return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
-    try:
-        obj = await create_entry(db, DatasetORM, object_payload | option_payload)
-    except Exception as e:
-        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
-
-    return JSONResponse({"status": "ok", "id": getattr(obj, "id", None)})
+    return JSONResponse({"status": "ok", "id": getattr(obj, "id", None), "path": dest_path})
 
 
-@app.get("/training", response_class=HTMLResponse)
-async def training_page(request: Request, db: AsyncSession = Depends(get_db)):
+@app.get("/features", response_class=HTMLResponse)
+async def features_page(request: Request, db: AsyncSession = Depends(get_db)):
     # For simplicity render a page showing JSON list of datasets
     objs = await get_all_entries(db, DatasetORM)
     list_data = [obj.__dict__ for obj in objs]
@@ -168,26 +193,39 @@ async def training_page(request: Request, db: AsyncSession = Depends(get_db)):
 
 @app.post("/training/{operation_id}", response_class=JSONResponse)
 async def post_training(operation_id: int,
+                        request: Request,
                         db: AsyncSession = Depends(get_db)):
-    # Placeholder for training orchestration — create a simple LearningORM entry to register training request
+    """Start a training job (lightweight orchestration placeholder).
+
+    This endpoint accepts a JSON payload (the template JS posts a JSONified
+    FormData). The function records a LearningORM entry and returns the id.
+    In future this will enqueue a worker job (Celery/RQ/Kubernetes Job).
+    """
+    payload_json = {}
+    try:
+        payload_json = await request.json()
+    except Exception:
+        # If no JSON was provided, keep payload empty
+        payload_json = {}
+
     now = datetime.now()
 
+    # Merge incoming parameters into the stored payload for traceability.
     payload = {
-        "name": f"training-{operation_id}",
-        "description": f"Training job {operation_id}",
-        "object_type": "object",
-        "model_type": "training_job",
+        "name": payload_json.get('name') or f"training-{operation_id}",
+        "description": payload_json.get('description') or f"Training job {operation_id}",
+        "object_type": "learning_model",
+        "model_type": payload_json.get('modelType') or 'training_job',
         "size": 0.0,
         "path": "",
         "date": now,
         "version": 1,
         "history": [{"operation": "training_requested", "when": now.isoformat()}],
-        
-        "parameters": {},
+        "parameters": payload_json.get('parameters') or {k: v for k, v in payload_json.items() if k not in ['name', 'description', 'modelType']},
         "metrics": {},
-        "reference_data": None,
-        "input_features": None,
-        "output_features": None,
+        "reference_data": payload_json.get('datasetId') or None,
+        "input_features": payload_json.get('inputFeatures') or None,
+        "output_features": payload_json.get('outputFeatures') or None,
         "is_trained": False,
         "is_tested": False,
         "is_deployed": False,
@@ -198,13 +236,79 @@ async def post_training(operation_id: int,
     except Exception as e:
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
-    # Kick off asynchronous training task here if desired (omitted)
+    # In a real system we'd enqueue a background worker here and return a job id.
     return JSONResponse({"status": "ok", "id": getattr(obj, "id", None)})
+
+# NOTE - @app.get('/features)-list_features returns a JSON of the chosen object as a list
+# NOTE - Validate and test. If there's an incompatible object
+# with a different __tablename__, /features will not open
+@app.get('/features', response_class=JSONResponse)
+async def list_features(db: AsyncSession = Depends(get_db)):
+    """Return a JSON list of datasets/features for UI population."""
+    objs = await get_all_entries(db, DatasetORM)
+    return JSONResponse([{
+        'id': getattr(o, 'id', None),
+        'name': getattr(o, 'name', None),
+        'description': getattr(o, 'description', None),
+        'dataset_type': getattr(o, 'dataset_type', None),
+        'size': getattr(o, 'size', None),
+    } for o in objs])
+
+
+@app.get('/analysis', response_class=JSONResponse)
+async def analysis(dataset_id: int = None):
+    """Return a small analysis placeholder for the selected dataset.
+
+    In the future this will proxy to a Dash/Plotly service or generate server-side
+    plots. For now return synthetic stats to wire the UI.
+    """
+    # Minimal placeholder response
+    return JSONResponse({
+        'dataset_id': dataset_id,
+        'summary': {
+            'rows': 1000,
+            'columns': 12,
+            'missing_values': 5
+        }
+    })
+
+
+@app.get('/airflow/dags', response_class=JSONResponse)
+async def airflow_list_dags():
+    """Return a minimal DAG list. Replace with actual Airflow API integration later."""
+    return JSONResponse([{"id": "example_dag", "name": "Example DAG"}])
+
+
+@app.post('/airflow/dags/{dag_id}/trigger', response_class=JSONResponse)
+async def airflow_trigger_dag(dag_id: str):
+    # In a real deploy we would call Airflow's REST API; here we return a stubbed response.
+    return JSONResponse({"status": "triggered", "dag_id": dag_id})
+
+
+@app.get('/mlflow/experiments', response_class=JSONResponse)
+async def mlflow_list_experiments():
+    return JSONResponse([{"id": "exp_1", "name": "Example Experiment"}])
+
+
+@app.get('/mlflow/experiments/{exp_id}', response_class=JSONResponse)
+async def mlflow_get_experiment(exp_id: str):
+    return JSONResponse({"id": exp_id, "name": "Example Experiment", "artifact_location": "/mlruns/1", "tags": {}})
 
 
 @app.get("/production", response_class=HTMLResponse)
 async def get_production(request: Request):
     return templates.TemplateResponse("base_blue.html", {"request": request})
+
+
+@app.post('/production/start', response_class=JSONResponse)
+async def production_start():
+    # Start/activate production model — in production this may hit an orchestrator
+    return JSONResponse({"status": "started"})
+
+
+@app.post('/production/stop', response_class=JSONResponse)
+async def production_stop():
+    return JSONResponse({"status": "stopped"})
 
 
 # Generic exception handlers

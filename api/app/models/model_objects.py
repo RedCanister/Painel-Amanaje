@@ -17,6 +17,7 @@ class ObjectModel(AsyncCRUDMixin):
     history: Optional[List[dict]] = None    # History of model training runs
 
 
+
 # Data models - Entities: Datasets, Features, Samples, Templates. Using postgres and redis for storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database 
 class DatasetModel(ObjectModel):   
@@ -25,6 +26,7 @@ class DatasetModel(ObjectModel):
     has_features: Optional[bool] = None                      # Whether dataset has features
     features_list: Optional[List[str]] = None  # List of feature names
     connection_string: Optional[str] = None # For database connections  
+    # Implement shape into the set
 
 # Machine Learning Models - Entities: Learning Models, ONNX Models, Template Models. Using ./mlflow-server for model management. Or ./mlruns for run storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database | Train | Study | Deploy |
