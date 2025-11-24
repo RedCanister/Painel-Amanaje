@@ -42,7 +42,7 @@ async def get_entry(db: AsyncSession, orm_model:Type, entry_id: int):
     result = await db.execute(select(orm_model).where(orm_model.id == entry_id))
     first_entry = result.scalars().first()
     
-    debug_type(result)
+    # debug_type(result)
     debug_type(first_entry)
 
     return first_entry
@@ -63,11 +63,11 @@ async def get_all_entries(db: AsyncSession, orm_model: Type) -> List:
 async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int, data: BaseModel | dict):
     """Update an ORM entry by id with data from a BaseModel or dict."""
 
-    debug_type(data)
+    #debug_type(data)
 
     obj = await get_entry(db, orm_model, entry_id)
     
-    debug_type(obj)
+    #debug_type(obj)
 
     if not obj:
         return None

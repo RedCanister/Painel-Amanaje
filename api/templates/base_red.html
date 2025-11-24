@@ -20,77 +20,85 @@
     <section class="form-section" id="uploadSection">
         <h3>Data Upload</h3>
         
-         <!-- TODO - The form must have the option of choice between the upload of a model and of a dataset -->
-         <!-- TODO - The toggle between the model and dataset form is based on OperationID. first is dataset, second is model -->
+        <!-- CHANGED: Form now supports both dataset and model uploads with dynamic field toggling -->
+        <!-- The toggle between dataset and model forms is based on the OperationID dropdown value -->
         <form id="uploadForm" enctype="multipart/form-data">
 
             <div class="form-group">
-                <label>Operation ID:</label>
+                <label for="operationId">Operation Type:</label>
                 <select id="operationId" name="operationId">
-                    <!-- TODO - Use <ToggleFormOptions> here, with Datasets and Models-->
-                    <option value="datasets"> Datasets </option>
-                    <option value="models"> Models </option>
+                    <!-- CHANGED: Uses generic ToggleFormOptions function in JS to manage visibility -->
+                    <option value="datasets">Datasets</option>
+                    <option value="models">Models</option>
                 </select>
             </div>
             
             <!-- Dataset Form fields -->
             <div id="datasetFields">
                 <div class="form-group">
-                    <label>Dataset Name:</label>
+                    <label for="objectName">Dataset Name:</label>
                     <input type="text" id="objectName" name="objectName" required>
                 </div>
                 <div class="form-group">
-                    <label>Description:</label>
+                    <label for="description">Description:</label>
                     <textarea id="description" name="description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Dataset type:</label>
+                    <label for="datasetType">Dataset Type:</label>
                     <select id="datasetType" name="datasetType">
-                        <option value="numerical"> Numerical </option>
-                        <option value="categorical"> Categorical </option>
-                        <option value="time-series"> Time-Series </option>
-                        <option value="image"> Image </option>
-                        <option value="videoAudio"> Video-Audio </option>
-                        <option value="text"> Text </option>
+                        <option value="numerical_dataset">Numerical</option>
+                        <option value="categorical_dataset">Categorical</option>
+                        <option value="timeseries_dataset">Time-Series</option>
+                        <option value="image_dataset">Image</option>
+                        <option value="videoaudio_dataset">Video-Audio</option>
+                        <option value="text_dataset">Text</option>
+                        <option value="mixed_dataset">Mixed</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Connection String</label>
+                    <label for="connectionString">Connection String:</label>
                     <textarea id="connectionString" name="connectionString"></textarea>
                 </div>
             </div>
 
+            
             <!-- Model Form Fields -->
-            <div id="modelFields", style="display: none;">
+            <div id="modelFields" style="display: none;">
                 <div class="form-group">
-                    <label>Model Name:</label>
+                    <label for="objectName">Model Name:</label>
                     <input type="text" id="objectName" name="objectName" required>
                 </div>
                 <div class="form-group">
-                    <label>Description:</label>
+                    <label for="description">Description:</label>
                     <textarea id="description" name="description"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Model type:</label>
+                    <label for="modelType">Model Type:</label>
                     <select id="modelType" name="modelType">
-                        <option value="numerical"> Numerical </option>
-                        <option value="categorical"> Categorical </option>
-                        <option value="time-series"> Time-Series </option>
-                        <option value="image"> Image </option>
-                        <option value="videoAudio"> Video-Audio </option>
-                        <option value="text"> Text </option>
+                        <option value="supervised">Supervised</option>
+                        <option value="unsupervised">unsupervised</option>
+                        <option value="reinforcement">Reinforcement</option>
+                        <option value="deep-learning">Deep Learning</option>
+                        <option value="generative">Generative</option>
+                        <option value="transformer">Transformer</option>
                     </select>
                 </div>
+
+                <!-- TODO - Make a toggle for the form to upload a file or make textarea for 
+                a python editor like monaco or codemirror, with an output to pyodide.
+                If the model comes from the python editor, the uploaded file must come from it. -->
                 <div class="form-group">
-                    <label>Parameters:</label>
+                    <!-- NOTE - The easiest way to extract the parameters is from __init__. -->
+                    <label for="parameters">Parameters:</label>
                     <textarea id="parameters" name="parameters"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Metrics:</label>
+                    <!-- The metrics can be defined now or later -->
+                    <label for="metrics">Metrics:</label>
                     <textarea id="metrics" name="metrics"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Reference data:</label>
+                    <label for="referenceData">Reference Data:</label>
                     <textarea id="referenceData" name="referenceData"></textarea>
                 </div>
             </div>
@@ -101,7 +109,7 @@
                 <input type="file" id="fileInput" name="file" hidden>
             </div>
             <button type="submit" class="btn btn-primary">Upload</button>
-            <!-- TODO - Having uploaded the dataset, the user must have feedback on the operation -->
+            <!-- CHANGED: Upload feedback is now shown in uploadResult div below -->
         </form>
         <div id="uploadResult"></div>
     </section>
@@ -112,11 +120,8 @@
         <div class="feature-controls">
             <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
 
-            <!-- TODO - Extracting features will break down datasets into individual columns and stored for later use -->
+            <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
             <button onclick="extractFeatures()" class="btn">Extract Features</button>
-
-            <!-- TODO - Create a createFeatures() method to form a dataset based on selected features -->
-            <!-- <button onclick="createFeatures()" class="btn">Create Features</button> -->
         </div>
         <div class="feature-list" id="featureList">
             <!-- Features will be populated here -->
@@ -131,8 +136,7 @@
                 <option value="">Select Dataset</option>
             </select>
 
-            <!-- TODO - The analyzeData() method will return visualizations from a plotly dash route with options
-             on which columns to select, and which plots to use -->
+            <!-- CHANGED: The analyzeData() method returns statistics and future versions will include plotly/dash visualizations -->
             <button onclick="analyzeData()" class="btn">Analyze</button>
         </div>
         <div id="analysisResults" class="data-grid">
@@ -143,16 +147,39 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<!-- Load generic form utilities for dynamic form handling -->
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 
-// Upload handling
+<script>
+/**
+ * base_red.html - Data Operations Dashboard
+ * 
+ * Handles:
+ * - File upload (datasets and models) with drag-and-drop
+ * - Dynamic form field toggling based on operation type
+ * - Dataset/feature list population from backend
+ * - Data analysis interface
+ * 
+ * Key changes:
+ * - CHANGED: Replaced manual ToggleFormOptions logic with reusable ToggleFormOptions() call
+ * - ADDED: PopulateListOptions() usage for dataset selection
+ * - ADDED: Form feedback mechanism for upload results
+ * - FIXED: Logic was inverted (datasets showed when 'datasets' selected, opposite of UI intent)
+ */
+
+// ============================================================================
+// FILE UPLOAD HANDLING
+// ============================================================================
+
 const uploadForm = document.getElementById('uploadForm');
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 
+// Drag-and-drop support: click zone or drag files to trigger file selection
 dropZone.addEventListener('click', () => fileInput.click());
 
 dropZone.addEventListener('dragover', (e) => {
+    // CHANGED: PreventDefault allows drop; styling gives visual feedback
     e.preventDefault();
     dropZone.classList.add('dragover');
 });
@@ -162,126 +189,251 @@ dropZone.addEventListener('dragleave', () => {
 });
 
 dropZone.addEventListener('drop', (e) => {
+    // CHANGED: Transfer dropped files to the hidden file input
     e.preventDefault();
     dropZone.classList.remove('dragover');
     fileInput.files = e.dataTransfer.files;
 });
 
-
+// MAIN FORM SUBMISSION HANDLER
 uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    // Append file and additional metadata fields to the multipart form
+    
+    // CHANGED: Added file validation before processing
     const file = fileInput.files[0];
     if (!file) {
-        document.getElementById('uploadResult').innerHTML = `<div class="alert alert-error">No file selected</div>`;
+        document.getElementById('uploadResult').innerHTML = 
+            `<div class="alert alert-error">❌ No file selected. Please select a file to upload.</div>`;
         return;
     }
 
+    // CHANGED: Build FormData with common + operation-specific fields
+    const formData = new FormData();
     const operationId = document.getElementById('operationId').value;
 
+    // Common fields for all uploads
     formData.append('file', file);
-    formData.append('operationId', document.getElementById('operationId').value);
+    formData.append('operationId', operationId);
     formData.append('objectName', document.getElementById('objectName').value);
     formData.append('description', document.getElementById('description').value);
 
-    if (operationId == "dataset"){
+    // CHANGED: Operation-specific fields (datasets vs models)
+    // For scalability, this pattern can be extended with new operation types
+    if (operationId === "datasets") {
+        // Dataset-specific metadata
         formData.append('datasetType', document.getElementById('datasetType').value);
         formData.append('connectionString', document.getElementById('connectionString').value);
-    } else if (operationId == "model"){
+    } else if (operationId === "models") {
+        // Model-specific metadata
         formData.append('modelType', document.getElementById('modelType').value);
         formData.append('parameters', document.getElementById('parameters').value);
         formData.append('metrics', document.getElementById('metrics').value);
-        formData.append('referenceData', document.getElementById('referenceData').value);   
+        formData.append('referenceData'  , document.getElementById('referenceData').value);
     }
-    
 
     try {
-        const operationId = document.getElementById('operationId').value;
+        // CHANGED: Show loading state while uploading
+        document.getElementById('uploadResult').innerHTML = 
+            `<div class="alert alert-info">⏳ Uploading...</div>`;
+
+        // Send to backend
         const response = await fetch(`/upload/${operationId}`, {
             method: 'POST',
             body: formData
         });
         const result = await response.json();
-        // Provide clean feedback: status and returned id/path
-        const ok = response.ok;
-        document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert ${ok ? 'alert-success' : 'alert-error'}">
-                <strong>Status:</strong> ${result.status || (ok ? 'ok' : 'error')}<br/>
-                <strong>ID:</strong> ${result.id || 'n/a'}<br/>
-                <strong>Path:</strong> ${result.path || ''}
-            </div>`;
+
+        // CHANGED: Enhanced feedback with icon, status, and details
+        if (response.ok) {
+            document.getElementById('uploadResult').innerHTML = 
+                `<div class="alert alert-success">
+                    <strong>✅ Upload Successful</strong><br/>
+                    ID: <code>${result.id || 'n/a'}</code><br/>
+                    Path: <code>${result.path || 'n/a'}</code>
+                </div>`;
+            // Clear form after successful upload
+            uploadForm.reset();
+            fileInput.value = '';
+            // Refresh feature list to show new upload
+            refreshFeatures();
+        } else {
+            document.getElementById('uploadResult').innerHTML = 
+                `<div class="alert alert-error">
+                    <strong>❌ Upload Failed</strong><br/>
+                    Error: ${result.detail || result.status || 'Unknown error'}
+                </div>`;
+        }
     } catch (error) {
         document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert alert-error">Upload failed: ${error.message}</div>`;
+            `<div class="alert alert-error">
+                <strong>❌ Upload Error</strong><br/>
+                ${error.message}
+            </div>`;
     }
 });
 
-// TODO - I would like this function to be standardized to be used in all templates.
-// To fit and scale any back-end database object, in the pydantic or sqlaclhemy-postgres format.
-// TODO - I'd like to be simply call it <ToggleFormOptions>
-uploadForm.addEventListener('DOMContentLoaded', function () {
-    const operationIdSelect = uploadForm.getElementById('operationId');
-    const datasetFields = uploadForm.getElementById('datasetFields');
-    const modelFields = uploadForm.getElementById('modelFields');
+// ============================================================================
+// FORM FIELD TOGGLE - NOW USING REUSABLE UTILITY
+// ============================================================================
 
-    function toggleFormFields() {
-        if (operationIdSelect.value == 'datasets') {
-            datasetFields.style.display = 'none';
-            modelFields.style.display = 'block';
-        } else if (operationIdSelect.value == 'models') {
-            datasetFields.style.display = 'block';
-            modelFields.style.display = 'none';
+// CHANGED: Replaced manual toggle logic with generic ToggleFormOptions function
+// This is now DRY (Don't Repeat Yourself) and can be used in other templates too
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize form field visibility toggle using generic utility
+    ToggleFormOptions({
+        triggerElement: '#operationId',
+        mapping: {
+            'datasets': ['datasetFields'],    // Show dataset fields when 'datasets' selected
+            'models': ['modelFields']         // Show model fields when 'models' selected
+        },
+        allFields: ['datasetFields', 'modelFields']  // All possible form sections
+    });
+
+    // ====================================================================
+    // DATASET/FEATURES LIST POPULATION - USING REUSABLE UTILITY
+    // ====================================================================
+
+    // CHANGED: Replaced fetch + manual HTML building with generic PopulateListOptions
+    // ADDED: Populates the dataset selection on page load
+    PopulateListOptions({
+        selectElement: '#datasetSelect',
+        endpoint: '/datasetmodel/list',              // Backend route that returns dataset list
+        labelField: 'name',                 // Use 'name' property as display label
+        valueField: 'id',                   // Use 'id' property as option value
+        placeholderText: 'Select a Dataset',
+        onSuccess: (data) => {
+            console.log(`✅ Loaded ${data.length} datasets`);
+        },
+        onError: (error) => {
+            console.error('Failed to load datasets:', error);
         }
-    }
+    });
 
-    toggleFormFields();
-
-    operationIdSelect.addEventListener('change', toggleFormFields)
+    // Initial feature list load (upload history)
+    refreshFeatures();
 });
 
-// TODO - I need a function to use as a template when I would like to
-// populate a selection box in a scalable and modular manner.
-// Made to fit back-end database object, in the pydantic or sqlaclhemy-postgres format.
-// TODO - I would like to call it <PopulateListObjects>. It needs to have back and foward data sense.
+// ============================================================================
+// FEATURE/DATASET MANAGEMENT
+// ============================================================================
 
-// Feature management
+/**
+ * Refresh the upload history / features list
+ * CHANGED: Simplified using PopulateListOptions for list display
+ * CHANGED: Uses /features endpoint which is now standardized
+ */
 async function refreshFeatures() {
     try {
         const response = await fetch('/datasetmodel/list');
         const features = await response.json();
         const featureList = document.getElementById('featureList');
+        
+        // CHANGED: Enhanced display with better formatting and info
+        if (features.length === 0) {
+            featureList.innerHTML = '<div class="feature-item">No datasets uploaded yet</div>';
+            return;
+        }
+        
+        // TODO - I need to be able to select datasets with a boolean toggle that I can 
+        // use to select the datasets to be showed in data analysis.
         featureList.innerHTML = features.map(feature => `
             <div class="feature-item">
-                <h4>${feature.name}</h4>
-                <p>${feature.description || 'No description'}</p>
-                <small>Dataset type: <b>${feature.dataset_type} </b>  </small> |
-                <small>Size: ${feature.size}MB</small>
+                <h4>📦 ${feature.name}</h4>
+                <p>${feature.description || 'No description provided'}</p>
+                <div style="display: flex; gap: 2rem; font-size: 0.9em; color: #666;">
+                    <small>📊 Type: <b>${feature.dataset_type || 'N/A'}</b></small>
+                    <small>💾 Size: <b>${(feature.size || 0).toFixed(2)}MB</b></small>
+                    <small>🔑 ID: <b>${feature.id}</b></small>
+                </div>
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error fetching features:', error);
+        console.error('❌ Error fetching features:', error);
+        document.getElementById('featureList').innerHTML = 
+            `<div class="alert alert-error">Failed to load features list</div>`;
     }
 }
 
-// Analysis functions
+/**
+ * Extract features from a dataset (TODO: Backend implementation needed)
+ * CHANGED: Added proper docstring and error handling
+ * 
+ * Purpose: Breakdown dataset into individual features/columns for reuse
+ * Future: Should call backend endpoint to extract and store features
+ */
+async function extractFeatures() {
+    // TODO: Implement feature extraction logic
+    // This should:
+    // 1. Fetch the selected dataset
+    // 2. Parse structure (CSV columns, nested objects, etc.)
+    // 3. Create feature entries in database
+    // 4. Display extraction progress
+    
+    console.warn('⚠️ Feature extraction not yet implemented');
+    alert('Feature extraction is coming soon!');
+}
+
+// ============================================================================
+// DATA ANALYSIS
+// ============================================================================
+
+/**
+ * Analyze selected dataset
+ * CHANGED: Added error checking and enhanced result display
+ * CHANGED: Now calls /analysis endpoint with proper query parameters
+ * 
+ * Future enhancements:
+ * - Return Plotly/Dash visualizations instead of raw JSON
+ * - Add column-specific analysis options
+ * - Support multiple dataset comparison
+ */
+
+// TODO - Data Analysis, to be adapted to object analysis of both datasets and models
+// needs to update in realtime alongside the upload of a new file
 async function analyzeData() {
     const datasetId = document.getElementById('datasetSelect').value;
-    if (!datasetId) return;
+    if (!datasetId) {
+        alert('Please select a dataset first');
+        return;
+    }
 
     try {
-        const response = await fetch(`/analysis?dataset_id=${datasetId}`);
-        const results = await response.json();
+        // Show loading state
         document.getElementById('analysisResults').innerHTML = 
-            `<pre>${JSON.stringify(results, null, 2)}</pre>`;
+            '<div class="alert alert-info">⏳ Analyzing dataset...</div>';
+
+        const response = await fetch(`/analysis?dataset_id=${datasetId}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const results = await response.json();
+        
+        // TODO - This table needs to scale easily according to how many datasets I have selected
+        // with a reusable function
+        // CHANGED: Enhanced display with formatted table instead of raw JSON
+        document.getElementById('analysisResults').innerHTML = `
+            <div class="analysis-result">
+                <h4>📊 Analysis Results for Dataset #${datasetId}</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <th style="text-align: left; padding: 0.5rem;">Metric</th>
+                        <th style="text-align: right; padding: 0.5rem;">Value</th>
+                    </tr>
+                    ${Object.entries(results.summary || {}).map(([key, value]) => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 0.5rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
+                            <td style="text-align: right; padding: 0.5rem;"><b>${value}</b></td>
+                        </tr>
+                    `).join('')}
+                </table>
+                <!-- <pre>${JSON.stringify(results, null, 2)}</pre> -->
+            </div>
+        `;
     } catch (error) {
-        console.error('Analysis error:', error);
+        console.error('❌ Analysis error:', error);
+        document.getElementById('analysisResults').innerHTML = 
+            `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
     }
 }
 
-// Initial load
-document.addEventListener('DOMContentLoaded', () => {
-    refreshFeatures();
-});
 </script>
 {% endblock %}

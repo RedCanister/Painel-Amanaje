@@ -17,12 +17,13 @@ class ObjectModel(AsyncCRUDMixin):
     history: Optional[List[dict]] = None    # History of model training runs
 
 
-
 # Data models - Entities: Datasets, Features, Samples, Templates. Using postgres and redis for storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database 
 class DatasetModel(ObjectModel):   
 
+    name: str
     dataset_type: str
+    shape: List[int]
     has_features: Optional[bool] = None                      # Whether dataset has features
     features_list: Optional[List[str]] = None  # List of feature names
     connection_string: Optional[str] = None # For database connections  

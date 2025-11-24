@@ -156,8 +156,6 @@ class ModelRegistry:
         async def update_item(item_id: int, data: pydantic_model, db: AsyncSession = Depends(get_db)):
             """Rota para atualização e inserção de objeto pydantic no banco de dados postgres"""
 
-            debug_type(data)
-
             updated = await update_entry(db, orm_model, item_id, data)
 
             debug_type(updated)

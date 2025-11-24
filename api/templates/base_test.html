@@ -1,0 +1,185 @@
+{% extends "base_template.html" %}
+
+{% block title %}MLOps - Painel Amanajé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
+    .mlops-section h3 { color: #0077b6; margin-top: 0; }
+    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
+    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
+    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
+    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+    .status-active { background-color: #2ecc71; }
+    .status-warning { background-color: #f1c40f; }
+    .status-error { background-color: #e74c3c; }
+</style>
+{% endblock %}
+
+
+{% block extra_script %}
+
+<!-- CodeMirror -->
+<link rel="stylesheet" href="https://cdnjs.clouflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+
+<!-- Monaco -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+
+<!-- Pyodide -->
+ <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+
+<style>
+    body { font-family: sans-serif; }
+    .tabs { display: flex; margin-bottom: 10px; }
+    .tab {padding: 10px; cursor: pointer; border: 1px solid #ccc; }
+    .tab.active {background: #e1e1e1; }
+    .tab-content {display: none; border: 1px solid #ccc; padding: 10px; }
+    .tab-content.active {display: block; }
+    #monaco { width: 100%; height: 300px; border: 1px solid #ccc; }
+    #output { white-space: pre-wrap; background: #f5f5f5; padding:10px; margin-top: 10px;}
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="tabs">
+    <div class="tab active" data-tab="editor"> Editor </div>
+    <div class="tab" data-tab="parameters"> Parameters </div>
+    <div class="tab" data-tab="saved"> Saved Models </div>
+</div>
+
+<!-- Editor Tab -->
+<div id="editor" class="tab-content active">
+    <h3>Write your Model code</h3>
+    <div id="monaco"></div>
+    <textarea id="codemirror"></textarea>
+    <br>
+    <button onClick="runMonaco()"> Run Monaco Code </button>
+    <button onClick="runCodeMirror()"> Run CodeMirror Code </button>
+    <button onClick="saveModel()"> Save Model </button>
+    <div id="output"></div>
+</div> 
+
+<!-- Parameters Tab -->
+<div id="parameters" class="tab-content">
+    <h3> Model Parameters </h3>
+    <pre id="paramsOutput"> Run code to see parameters here.</pre>
+</div>
+
+<!-- Saved Models Tab -->
+<div id="saved" class="tab-content">
+    <h3> Saved Models </h3>
+    <ul id="savedList"></ul>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+    // Tab switching
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(('.tab-content').forEach(c => c.classList.remove("active")));
+            tab.classList.add("active");
+            document.getElementById(tab.dataset.tab).classList.add("active");
+        });
+    });
+
+
+    // Pyodide init
+    let pyodide;
+    async function initPyodide() {
+        pyodide = await loadPyodide();
+        await pyodide.loadPackage("scikit-learn");
+    }
+    initPyodide();
+
+
+    // Monaco setup
+    require.config({ paths: {'vs': 'https://cdnjs.cloudfare.com/ajax/libs/monaco-editor/0.34.1/min/vs'}});
+    require(["vs/editor/editor.main"], function () {
+        window.monacoEditor = monaco.editor.create(document.getElementById("monaco"), {
+            value: "impot sklearan.linear model as lm \n model = lm.LogisticRegression() \n print(model)",
+            language: "python",
+            theme: "vs-dark"
+        });
+    });
+
+    // CodeMirror setup
+    var codeMirrorEditor = CodeMirror.fromTextArea(document.getElementById("codemirror"), {
+        lineNumbers:true,
+        mode: "python"
+    });
+    codeMirrorEditor.setValue("import sklearn.tree as tree \n model = tree.DecisiontreeClassifier() \n print(model)");
+
+    // Run code from Monaco
+    async function runMonaco() {
+        const code = window.monacoEditor.getValue();
+        await runCode(code);
+    }
+
+    // Run code from CodeMirror
+    async function runCodeMirror() {
+        const code = codeMirrorEditor.getValue();
+        await runCode(code);
+    }
+
+    // Generic runner
+    async function runCode(code) {
+        try {
+            let result = await pyodide.runPythonAsync(code);
+            document.getElementById("output").textContent = result || "Executed successfully!";
+
+            // Try to extract parameters
+            let params = await pyodide.runPythonAsync(`
+                try:
+                    model.get_params()
+                except Exception as e:
+                    str(e)
+                
+            `);
+            document.getElementById("paramsOutput").textContent = JSON.stringify(params, null, 2);
+        } catch(err) {
+            document.getElementById("output").text.textContent = "Error: " + err;
+        }
+    }
+
+    // Save model locally and to backend
+    async function saveModel() {
+        try{
+            await pyodide.runPythonAsync(`
+                import joblib
+                joblib.dump(model, "/tmp/model.pkl")
+            `);
+            const data = pyodide.FS.readFile("/tmp/model.pkl");
+            const blob = new Blob([data], {type: "application/octet-stream "});
+            const url = URL.createdObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "model.pkl";
+            a.click();
+
+            // Send to backend
+            fetch("/upload_model", {
+                method: "POST",
+                body: blob
+            }).then(res => res.json())
+              .then(data => {
+                document.getElementById("savedList").innerHTML += `<li>${data.filename}</li>`
+              });
+        } catch (err) {
+            document.getElementById("output").textContent = "Error saving model: " + err;
+        }
+    }
+
+</script>
+
+{% endblock %}

@@ -1,5 +1,4 @@
 
-
 x-airflow-common-env: &airflow-common-env
   
   # CORE AIRFLOW ENVIRONMENT VARIABLES
