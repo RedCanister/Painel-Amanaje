@@ -1,0 +1,924 @@
+{% extends "base_template.html" %}
+
+{% block title %}Model Registry - CRUD Management - Painel Amanajé{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registry-container { max-width: 1400px; margin: 0 auto; padding: 2rem 0; }
+    
+    .registry-header {
+        background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .registry-header h2 { margin: 0 0 0.5rem 0; font-size: 2em; }
+    .registry-header p { margin: 0; opacity: 0.9; }
+    
+    .tabs-container {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e5e7eb;
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        padding: 1rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .tab-button.active {
+        color: #9945ff;
+        border-bottom-color: #9945ff;
+    }
+    
+    .tab-button:hover {
+        color: #7c3aed;
+    }
+    
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Create Form Styles */
+    .form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #9945ff;
+        box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(153, 69, 255, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+    
+    .btn-edit {
+        background: #3b82f6;
+        color: white;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .btn-edit:hover {
+        background: #2563eb;
+    }
+    
+    /* List Styles */
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .item-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .item-card:hover {
+        border-color: #9945ff;
+        box-shadow: 0 4px 12px rgba(153, 69, 255, 0.1);
+    }
+    
+    .item-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: #9945ff;
+        font-size: 1.25rem;
+    }
+    
+    .item-meta {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    
+    .item-description {
+        color: #374151;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    
+    .item-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .item-actions .btn {
+        flex: 1;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        text-align: center;
+    }
+    
+    /* Table Styles */
+    .table-wrapper {
+        overflow-x: auto;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    thead {
+        background: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        color: #6b7280;
+    }
+    
+    tr:hover {
+        background: #f9fafb;
+    }
+    
+    /* Detail View Styles */
+    .detail-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .detail-section h3 {
+        margin: 0 0 1rem 0;
+        color: #9945ff;
+        border-bottom: 2px solid #f3e8ff;
+        padding-bottom: 0.5rem;
+    }
+    
+    .detail-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .detail-value {
+        color: #6b7280;
+        word-break: break-all;
+    }
+    
+    .detail-value.json {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+    }
+    
+    /* Status & Message Styles */
+    .alert {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+    
+    .alert-error {
+        background: #fee2e2;
+        color: #7f1d1d;
+        border: 1px solid #fca5a5;
+    }
+    
+    .alert-info {
+        background: #dbeafe;
+        color: #0c2340;
+        border: 1px solid #93c5fd;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #9945ff;
+    }
+    
+    .loading::after {
+        content: "...";
+        animation: dots 1.5s steps(4, end) infinite;
+    }
+    
+    @keyframes dots {
+        0%, 20% { content: "."; }
+        40% { content: ".."; }
+        60%, 100% { content: "..."; }
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #9ca3af;
+    }
+    
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Edit Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 2rem;
+        position: relative;
+    }
+    
+    .modal-header {
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h2 {
+        margin: 0;
+        color: #9945ff;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #9ca3af;
+    }
+    
+    .modal-close:hover {
+        color: #374151;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="registry-container">
+    <!-- Header -->
+    <div class="registry-header">
+        <h2>Model Registry - CRUD Management</h2>
+        <p>Create, Read, Update, and Delete models registered in the Painel Amanajé system</p>
+    </div>
+    
+    <!-- Status Messages -->
+    <div id="alertContainer"></div>
+    
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-button active" onclick="switchTab('create')">➕ Create</button>
+        <button class="tab-button" onclick="switchTab('list')">📋 List All</button>
+        <button class="tab-button" onclick="switchTab('table')">📊 Table View</button>
+        <button class="tab-button" onclick="switchTab('search')">🔍 Search & Detail</button>
+    </div>
+    
+    <!-- CREATE TAB -->
+    <div id="create" class="tab-content active">
+        <div class="form-section">
+            <h3>Create New Model Entry</h3>
+            <p>Register a new model or datasetmodel object in the system</p>
+            
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="modelType">Model Type *</label>
+                    <select id="modelType" name="modelType" required onchange="updateFieldsForType()">
+                        <option value="">Select a type...</option>
+                        <option value="DatasetModel">Dataset</option>
+                        <option value="LearningModel">Learning Model</option>
+                    </select>
+                </div>
+                
+                <div id="commonFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="objectName">Name *</label>
+                            <input type="text" id="objectName" name="objectName" required placeholder="e.g., iris_dataset">
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <input type="text" id="description" name="description" placeholder="Brief description">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dataset-specific fields -->
+                <div id="datasetFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="datasetType">Dataset Type</label>
+                            <select id="datasetType" name="datasetType">
+                                <option value="">Auto-detect</option>
+                                <option value="csv">CSV File</option>
+                                <option value="json">JSON</option>
+                                <option value="database">Database</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="connectionString">Connection String / Path</label>
+                            <input type="text" id="connectionString" name="connectionString" placeholder="File path or DB connection">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="schema">Schema (JSON)</label>
+                        <textarea id="schema" name="schema" placeholder='{"columns": ["col1", "col2"], "types": ["int", "str"]}'></textarea>
+                    </div>
+                </div>
+                
+                <!-- Learning Model-specific fields -->
+                <div id="modelFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="framework">Framework</label>
+                            <select id="framework" name="framework">
+                                <option value="">Select framework</option>
+                                <option value="sklearn">scikit-learn</option>
+                                <option value="pytorch">PyTorch</option>
+                                <option value="tensorflow">TensorFlow</option>
+                                <option value="xgboost">XGBoost</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="modelType">Model Type (e.g., LogisticRegression)</label>
+                            <input type="text" id="modelTypeName" name="modelTypeName" placeholder="e.g., RandomForest">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="hyperparameters">Hyperparameters (JSON)</label>
+                        <textarea id="hyperparameters" name="hyperparameters" placeholder='{"n_estimators": 100, "max_depth": 10}'></textarea>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Create Entry</button>
+                    <button type="reset" class="btn btn-secondary">Clear Form</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- LIST TAB (Grid) -->
+    <div id="list" class="tab-content">
+        <h3>All Registered Models</h3>
+        <div id="listLoading" class="loading" style="display: none;"></div>
+        <div id="listContainer" class="items-grid"></div>
+    </div>
+    
+    <!-- TABLE VIEW TAB -->
+    <div id="table" class="tab-content">
+        <h3>Table View - All Models</h3>
+        <div id="tableLoading" class="loading" style="display: none;"></div>
+        <div id="tableContainer" class="table-wrapper"></div>
+    </div>
+    
+    <!-- SEARCH & DETAIL TAB -->
+    <div id="search" class="tab-content">
+        <div class="form-section">
+            <h3>Search Model Entry</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="searchType">Type</label>
+                    <select id="searchType" onchange="loadSearchList()">
+                        <option value="">All Types</option>
+                        <option value="DatasetModel">Datasets</option>
+                        <option value="LearningModel">Learning Models</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="searchId">Select Entry or Enter ID</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="searchSelect" style="flex: 1;" onchange="loadDetail()"></select>
+                        <button onclick="loadDetailById()" class="btn btn-primary" style="flex: 0 0 auto;">Load</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detail View -->
+        <div id="detailContainer"></div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Entry</h2>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <form id="editForm">
+            <div id="editFormContent"></div>
+            <div class="button-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // CHANGED: Tab switching functionality
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+        
+        // Load data for specific tabs
+        if (tabName === 'list') loadList();
+        if (tabName === 'table') loadTable();
+        if (tabName === 'search') loadSearchList();
+    }
+
+    // CHANGED: Update form fields based on model type selection
+    function updateFieldsForType() {
+        const type = document.getElementById('modelType').value;
+        document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
+        document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+    }
+
+    // CHANGED: Show alert message
+    function showAlert(message, type = 'info') {
+        const container = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        container.appendChild(alert);
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+    // CHANGED: Create new entry - POST to appropriate registry endpoint
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const modelType = document.getElementById('modelType').value;
+        const endpoint = modelType === 'DatasetModel' ? '/datasetmodel/create' : '/learningmodel/create';
+        
+        const formData = new FormData(document.getElementById('createForm'));
+        const data = Object.fromEntries(formData);
+        
+        // Parse JSON fields if present
+        if (data.schema) data.schema = JSON.parse(data.schema || '{}');
+        if (data.hyperparameters) data.hyperparameters = JSON.parse(data.hyperparameters || '{}');
+        
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+                showAlert(`✓ Entry created successfully (ID: ${result.id})`, 'success');
+                document.getElementById('createForm').reset();
+            } else {
+                showAlert(`✗ Error: ${result.detail || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            showAlert(`✗ Request failed: ${error.message}`, 'error');
+        }
+    });
+
+    // CHANGED: Load and display all entries in grid format
+    async function loadList() {
+        const container = document.getElementById('listContainer');
+        const loading = document.getElementById('listLoading');
+        
+        loading.style.display = 'block';
+        container.innerHTML = '';
+        
+        try {
+            // CHANGED: Fetch from both datasetmodel and learningmodel endpoints
+            const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+            const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+            
+            const allEntries = [
+                ...datasets.map(d => ({ ...d, type: 'Dataset' })),
+                ...models.map(m => ({ ...m, type: 'Learning Model' }))
+            ];
+            
+            if (allEntries.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No entries found. Create one using the Create tab.</p></div>';
+                loading.style.display = 'none';
+                return;
+            }
+            
+            allEntries.forEach(entry => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <h3>${entry.objectName || entry.name || 'Unnamed'}</h3>
+                    <div class="item-meta">Type: ${entry.type} | ID: ${entry.id}</div>
+                    <div class="item-description">${entry.description || 'No description'}</div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.type}')">View</button>
+                        <button class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.type}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteEntry(${entry.id}, '${entry.type}')">Delete</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        } catch (error) {
+            showAlert(`Failed to load entries: ${error.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    // CHANGED: Load and display all entries in table format
+    async function loadTable() {
+        const container = document.getElementById('tableContainer');
+        const loading = document.getElementById('tableLoading');
+        
+        loading.style.display = 'block';
+        container.innerHTML = '';
+        
+        try {
+            const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+            const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+            
+            const allEntries = [
+                ...datasets.map(d => ({ ...d, type: 'Dataset' })),
+                ...models.map(m => ({ ...m, type: 'Learning Model' }))
+            ];
+            
+            if (allEntries.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No entries found.</p></div>';
+                loading.style.display = 'none';
+                return;
+            }
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            allEntries.forEach(entry => {
+                tableHTML += `
+                    <tr>
+                        <td>#${entry.id}</td>
+                        <td>${entry.objectName || entry.name || 'Unnamed'}</td>
+                        <td>${entry.type}</td>
+                        <td>${(entry.description || '').substring(0, 50)}...</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.type}')">View</button>
+                            <button class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.type}')">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+        } catch (error) {
+            showAlert(`Failed to load table: ${error.message}`, 'error');
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    // CHANGED: Load search list dropdown
+    async function loadSearchList() {
+        const select = document.getElementById('searchSelect');
+        const type = document.getElementById('searchType').value;
+        select.innerHTML = '<option value="">Loading...</option>';
+        
+        try {
+            let entries = [];
+            if (!type || type === 'DatasetModel') {
+                const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+                entries = [...entries, ...datasets.map(d => ({ ...d, type: 'Dataset' }))];
+            }
+            if (!type || type === 'LearningModel') {
+                const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+                entries = [...entries, ...models.map(m => ({ ...m, type: 'Learning Model' }))];
+            }
+            
+            select.innerHTML = '<option value="">Select an entry...</option>';
+            entries.forEach(entry => {
+                const option = document.createElement('option');
+                option.value = `${entry.id}|${entry.type}`;
+                option.textContent = `${entry.objectName || entry.name} (ID: ${entry.id})`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            showAlert(`Failed to load entries: ${error.message}`, 'error');
+        }
+    }
+
+    // CHANGED: Load detail view for selected entry
+    async function loadDetail() {
+        const select = document.getElementById('searchSelect');
+        const [id, type] = select.value.split('|');
+        if (!id) return;
+        
+        const endpoint = type === 'Dataset' ? `/datasetmodel/get/${id}` : `/learningmodel/get/${id}`;
+        
+        try {
+            const data = await fetch(endpoint).then(r => r.json());
+            displayDetail(data, type, id);
+        } catch (error) {
+            showAlert(`Failed to load detail: ${error.message}`, 'error');
+        }
+    }
+
+    // CHANGED: Load detail by ID number
+    async function loadDetailById() {
+        const select = document.getElementById('searchSelect');
+        loadDetail();
+    }
+
+    // CHANGED: Display detailed view of an entry
+    function displayDetail(data, type, id) {
+        const container = document.getElementById('detailContainer');
+        let html = `<div class="detail-section">
+            <h3>${type === 'Dataset' ? '📊 Dataset' : '🤖 Learning Model'} Details</h3>
+            <div class="detail-row">
+                <div class="detail-label">ID</div>
+                <div class="detail-value">${data.id}</div>
+            </div>`;
+        
+        Object.entries(data).forEach(([key, value]) => {
+            if (key === 'id') return;
+            
+            let displayValue = value;
+            if (typeof value === 'object') {
+                displayValue = `<pre style="margin: 0;">${JSON.stringify(value, null, 2)}</pre>`;
+            }
+            
+            html += `
+                <div class="detail-row">
+                    <div class="detail-label">${key}</div>
+                    <div class="detail-value">${displayValue}</div>
+                </div>
+            `;
+        });
+        
+        html += `
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button class="btn btn-primary" onclick="editEntry(${id}, '${type}')">✏️ Edit</button>
+                <button class="btn btn-danger" onclick="deleteEntry(${id}, '${type}')">🗑️ Delete</button>
+            </div>
+        </div>`;
+        
+        container.innerHTML = html;
+    }
+
+    // CHANGED: Edit entry - opens modal with pre-filled data
+    async function editEntry(id, type) {
+        const endpoint = type === 'Dataset' ? `/datasetmodel/get/${id}` : `/learningmodel/get/${id}`;
+        
+        try {
+            const data = await fetch(endpoint).then(r => r.json());
+            
+            let formHTML = '';
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === 'id') return;
+                
+                const inputType = typeof value === 'number' ? 'number' : 'text';
+                const inputValue = typeof value === 'object' ? JSON.stringify(value) : value;
+                
+                formHTML += `
+                    <div class="form-group">
+                        <label for="edit_${key}">${key}</label>
+                        <input type="${inputType}" id="edit_${key}" name="${key}" value="${inputValue}" />
+                    </div>
+                `;
+            });
+            
+            document.getElementById('editFormContent').innerHTML = formHTML;
+            document.getElementById('editForm').onsubmit = async (e) => {
+                e.preventDefault();
+                
+                const updateEndpoint = type === 'Dataset' ? `/datasetmodel/update/${id}` : `/learningmodel/update/${id}`;
+                const formData = new FormData(document.getElementById('editForm'));
+                const updateData = Object.fromEntries(formData);
+                
+                try {
+                    const response = await fetch(updateEndpoint, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    if (response.ok) {
+                        showAlert('✓ Entry updated successfully', 'success');
+                        closeEditModal();
+                        loadList(); // Refresh list
+                    } else {
+                        showAlert('✗ Update failed', 'error');
+                    }
+                } catch (error) {
+                    showAlert(`✗ Error: ${error.message}`, 'error');
+                }
+            };
+            
+            document.getElementById('editModal').classList.add('active');
+        } catch (error) {
+            showAlert(`Failed to load entry: ${error.message}`, 'error');
+        }
+    }
+
+    // CHANGED: Delete entry with confirmation
+    async function deleteEntry(id, type) {
+        if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+        
+        const endpoint = type === 'Dataset' ? `/datasetmodel/delete/${id}` : `/learningmodel/delete/${id}`;
+        
+        try {
+            const response = await fetch(endpoint, { method: 'DELETE' });
+            if (response.ok) {
+                showAlert('✓ Entry deleted successfully', 'success');
+                loadList();
+            } else {
+                showAlert('✗ Deletion failed', 'error');
+            }
+        } catch (error) {
+            showAlert(`✗ Error: ${error.message}`, 'error');
+        }
+    }
+
+    // CHANGED: Close edit modal
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+    }
+
+    // CHANGED: View detail (same as displayDetail but triggered from button)
+    function viewDetail(id, type) {
+        document.getElementById('searchType').value = type === 'Dataset' ? 'DatasetModel' : 'LearningModel';
+        loadSearchList();
+        // Select the entry after list loads
+        setTimeout(() => {
+            const select = document.getElementById('searchSelect');
+            select.value = `${id}|${type}`;
+            loadDetail();
+        }, 500);
+    }
+</script>
+{% endblock %}

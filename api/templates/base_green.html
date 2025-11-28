@@ -39,15 +39,17 @@
                     </select>
                 </div>
                 
+                <!-- TODO - Apply the MultiObjectSelector here as interactive way to select the columns in
+                 inputFeatures and outputFeatures -->
                 <div class="parameter-row">
                     <label for="inputFeatures" class="parameter-label">Input Features:</label>
                     <!-- CHANGED: Input features can be selected from dataset columns (future: dynamic column selection) -->
-                    <input type="number" id="operationId" name="operationId" min="1" value="1" class="parameter-input" required>
+                    <input type="number" id="inputFeaturesId" name="inputTarget" min="1" value="1" class="parameter-input" required>
                 </div>
                 <div class="parameter-row">
                     <label for="outputFeatures" class="parameter-label">Output Features:</label>
                     <!-- CHANGED: Input features can be selected from dataset columns (future: dynamic column selection) -->
-                    <input type="number" id="operationId" name="operationId" min="1" value="1" class="parameter-input" required>
+                    <input type="number" id="outputFeaturesId" name="inputTarget" min="1" value="1" class="parameter-input" required>
                 </div>
 
             </div>

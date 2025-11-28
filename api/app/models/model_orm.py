@@ -108,7 +108,6 @@ class MixedDatasetORM(DatasetORM):
 
 
 
-
 # Classe de modelos de aprendizado ORM
 class LearningORM(ObjectORM):
     __tablename__ = "learning_models"
@@ -129,6 +128,61 @@ class LearningORM(ObjectORM):
         "polymorphic_identity": "learning_model",
         "polymorphic_on": model_type,
     }
+
+class SupervisedModelORM(LearningORM):
+
+    algorithm = Column(String, nullable=True)
+    target_variable = Column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "supervised_model"
+    }
+
+class UnsupervisedModelORM(LearningORM):
+
+    label = Column(String, nullable=True)
+    clustering_method = Column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "unsupervised_model"
+    }
+
+class ReinforcementModelORM(LearningORM):
+
+    environment = Column(String, nullable=True)
+    policy_type = Column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "reinforcement_model"
+    }
+
+class DeepLearningModelORM(LearningORM):
+
+    architecture = Column(String, nullable=True)
+    framework = Column(String, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "deep_learning_model"
+    }
+
+class GenerativeModelORM(LearningORM):
+
+    model_variant = Column(String, nullable=True)
+    latent_space_dim = Column(Integer, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "generative_model"
+    }
+
+class TransformativeModelORM(LearningORM):
+
+    transformer_type = Column(String, nullable=True)
+    num_layers = Column(Integer, nullable=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "transformative_model"
+    }       
+
 
 
 classes = """

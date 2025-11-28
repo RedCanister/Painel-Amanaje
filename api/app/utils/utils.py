@@ -1,21 +1,17 @@
 import os
 import inspect
+import aiofiles
 import json
-
-#import torch
-#import tensorflow as tf
 
 from typing import Dict, Type, Any, Optional
 from sqlalchemy import Column, Integer, String, Float, Boolean, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeMeta
 from pydantic import create_model, BaseModel
-from pydantic import BaseModel
-
-import onnx
 
 from app.database.db_session import Base # Reorganizer
 
+# File functions
 def get_file_size(file_path):
     raw_size = os.path.getsize(file_path)
     
@@ -29,6 +25,14 @@ def get_file_size(file_path):
 
     return kb_size, mb_size
 
+# CHANGED: Helper function to save file to disk
+async def save_file_to_disk(file, dest_path: str) -> int:
+    """Save file and return size in MB"""
+    contents = await file.read()
+    async with aiofiles.open(dest_path, 'wb') as out_f:
+        await out_f.write(contents)
+    return round(len(contents) / (1024 * 1024), 4)
+
 def get_file_extension(file_path):
     ext = os.path.splitext(file_path)[-1].lower()
 
@@ -39,32 +43,11 @@ def recover_model_params(file_path):
     params = {}
 
     try:
-        # # Keras/ Tensorflow
-        # if ext in [".h5", ".keras"]:
-        #     model = tf.keras.model.load_model(file_path)
-        #     params["framework"] = "tensorflow/keras"
-        #     params["layers"] = [layer.__class__.__name__ for layer in model.layers]
-        #     params["input_shape"] = model.input_shape
-        #     params["output_shape"] = model.output_shape
-
-        # if ext in [".pt", ".pth"]:
-        #     state_dict = torch.load(file_path, map_location="cpu")
-        #     params["framework"] = "pytorch"
-        #     params["keys"] = list(state_dict.keys())[:10]
-
-        #     config_path = os.path.join(os.path.dirname(file_path), "config.json")
-        #     if os.path.exists(config_path):
-        #         with open(config_path) as f:
-        #             params.update(json.load(f))
-        
-        # ONNX
-        # elif ext == ".onnx":
-        #     model = onnx.load(file_path)
-        #     params["framework"] = "onnx"
-        #     params["inputs"] = [inp.name for inp in model.graph.input]
-        #     params["outputs"] = [out.name for out in model.graph.output]
-
-        # JSON/YAML
+        # CHANGED: Support for JSON/YAML config files
+        # Future extensions can add support for different model formats:
+        # - Keras/TensorFlow: .h5, .keras models
+        # - PyTorch: .pt, .pth model state dicts with optional config.json
+        # - ONNX: .onnx models with input/output inspection
         if ext == ".json":
             with open(file_path) as f:
                 params = json.load(f)
@@ -77,59 +60,119 @@ def recover_model_params(file_path):
     
     return params
 
+
+# Debug function
+def _get_object_name(obj):
+    """CHANGED: Helper to extract object name safely"""
+    try:
+        return getattr(obj, '__name__', None) or obj.__class__.__name__
+    except Exception:
+        return "Unknown"
+
+def _get_object_repr(obj):
+    """CHANGED: Helper to get object representation safely"""
+    try:
+        return repr(obj)
+    except Exception:
+        return "Error getting representation"
+
+def _get_object_dict(obj):
+    """CHANGED: Helper to get __dict__ safely"""
+    try:
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+    except Exception:
+        pass
+    return None
+
+def _get_pydantic_dump(obj):
+    """CHANGED: Helper to dump Pydantic model safely"""
+    if isinstance(obj, BaseModel):
+        try:
+            return obj.model_dump()
+        except Exception:
+            return None
+    return None
+
+def _get_object_attributes(obj):
+    """CHANGED: Helper to get object attributes safely"""
+    try:
+        return dir(obj)
+    except Exception:
+        return []
+
+def _get_function_signature(obj):
+    """CHANGED: Helper to get function signature safely"""
+    if inspect.isfunction(obj) or inspect.ismethod(obj):
+        try:
+            return inspect.signature(obj)
+        except Exception:
+            pass
+    return None
+
+def _get_module_file(obj):
+    """CHANGED: Helper to get module file safely"""
+    if inspect.ismodule(obj):
+        try:
+            return obj.__file__
+        except Exception:
+            return "Built-in or no __file__"
+    return None
+
 def debug_type(obj):
+    """
+    CHANGED: Refactored debug function to reduce cognitive complexity
+    by extracting helper functions for each inspection type
+    
+    Purpose: Print comprehensive debugging information about any Python object
+    Displays:
+    - Type and class name
+    - String representation
+    - Instance attributes (__dict__)
+    - Pydantic model dump (if applicable)
+    - Available attributes/methods
+    - Function signature (if function/method)
+    - Module information (if module)
+    
+    This is useful for development/debugging to understand object structure
+    """
     print("\n" + "-" * 40)
     print("🔍 Debugging object")
 
-    # Tipo do objeto
-    print("📦 Tipo:", type(obj))
+    # Object type
+    print("📦 Type:", type(obj))
 
-    # Nome do objeto (se aplicável)
-    try:
-        obj_name = getattr(obj, '__name__', None) or obj.__class__.__name__
-        print("🧩 Nome:", obj_name, "\n")
-    except Exception as e:
-        print("⚠️ Erro ao obter nome:", e)
+    # Object name
+    obj_name = _get_object_name(obj)
+    print("🧩 Name:", obj_name, "\n")
 
-    # Representação básica
-    try:
-        print("🪞 Representação:", repr(obj), "\n")
-    except Exception as e:
-        print("⚠️ Erro ao representar:", e)
+    # Object representation
+    obj_repr = _get_object_repr(obj)
+    print("🪞 Representation:", obj_repr, "\n")
 
-    # Atributos __dict__ (se houver)
-    try:
-        if hasattr(obj, '__dict__'):
-            print("📚 __dict__:", obj.__dict__, "\n")
-    except Exception as e:
-        print("⚠️ Erro ao acessar __dict__:", e)
+    # Object __dict__
+    obj_dict = _get_object_dict(obj)
+    if obj_dict:
+        print("📚 __dict__:", obj_dict, "\n")
 
-    # Pydantic model_dump
-    if isinstance(obj, BaseModel):
-        try:
-            print("🧬 Pydantic model_dump:", obj.model_dump())
-        except Exception as e:
-            print("⚠️ Erro ao usar model_dump:", e)
+    # Pydantic dump
+    pydantic_dump = _get_pydantic_dump(obj)
+    if pydantic_dump:
+        print("🧬 Pydantic model_dump:", pydantic_dump, "\n")
 
-    # Listagem de atributos
-    try:
-        print("🔧 Atributos disponíveis:", dir(obj))
-    except Exception as e:
-        print("⚠️ Erro ao listar atributos:", e)
+    # Available attributes
+    attrs = _get_object_attributes(obj)
+    if attrs:
+        print("🔧 Attributes available:", len(attrs), "items")
 
-    # Inspeção de assinatura (se for função ou método)
-    if inspect.isfunction(obj) or inspect.ismethod(obj):
-        try:
-            sig = inspect.signature(obj)
-            print("📝 Assinatura:", sig)
-        except Exception as e:
-            print("⚠️ Erro ao inspecionar assinatura:", e)
+    # Function signature
+    sig = _get_function_signature(obj)
+    if sig:
+        print("📝 Signature:", sig)
 
-    # Inspeção de módulo
-    if inspect.ismodule(obj):
-        try:
-            print("📦 Módulo:", obj.__file__)
-        except Exception:
-            print("📦 Módulo embutido ou sem __file__")
+    # Module file
+    mod_file = _get_module_file(obj)
+    if mod_file:
+        print("📦 Module:", mod_file)
 
     print("-" * 40 + "\n")

@@ -3,7 +3,7 @@ import tracemalloc
 import aiofiles
 
 import asyncio
-import traceback
+import traceback, subprocess, tempfile, os, joblib
 from datetime import datetime
 from typing import List
 
@@ -21,7 +21,7 @@ from app.models.model_registry import ModelRegistry
 
 from app.database.db_utils import create_entry, get_all_entries
 from app.database.db_session import get_db, init_models, engine
-from app.utils.utils import get_file_size, debug_type
+from app.utils.utils import get_file_size, debug_type, save_file_to_disk
 
 # Start tracemalloc for debugging memory if needed
 tracemalloc.start()
@@ -30,6 +30,7 @@ app = FastAPI(title="Painel Amanajé API", version="0.1")
 
 # Templates and static
 cur_dir = os.path.dirname(os.path.abspath(__file__))
+
 # repo_root points to the repository root (one level up from api/)
 repo_root = os.path.abspath(os.path.join(cur_dir, ".."))
 static_dir = os.path.join(cur_dir, "static")
@@ -82,9 +83,7 @@ async def home(request: Request):
     """
     return templates.TemplateResponse("base_template.html", {"request": request})
 
-@app.get('/optimization', response_class=HTMLResponse)
-async def code_prompt_test(request: Request,):
-    return templates.TemplateResponse("base_test.html", {"request": request, })
+
 
 @app.get("/upload", response_class=HTMLResponse)
 async def page_upload(request: Request):
@@ -139,6 +138,8 @@ async def post_upload(operation_id: str,
     # CHANGED: Extract and validate form data
     form = await request.form()
     upload_file = form.get('file')
+
+    #debug_type(upload_file)
     
     if upload_file is None:
         return JSONResponse({"status": "error", "detail": "no file provided"}, status_code=400)
@@ -155,14 +156,6 @@ async def post_upload(operation_id: str,
         else:  # Default to datasets
             return os.path.join(repo_root, 'data', 'datasets')
 
-    # CHANGED: Helper function to save file to disk
-    async def save_file_to_disk(file, dest_path: str) -> int:
-        """Save file and return size in MB"""
-        contents = await file.read()
-        async with aiofiles.open(dest_path, 'wb') as out_f:
-            await out_f.write(contents)
-        return round(len(contents) / (1024 * 1024), 4)
-
     # CHANGED: Helper function to build operation-specific payload
     # To consider extensions: .pkl, .onnx, .ph, etc...
     def build_payload_model(common: dict, form_data, ) -> dict:
@@ -170,8 +163,7 @@ async def post_upload(operation_id: str,
 
         return {
             **common,
-            "model_type": form_data.get('modelType') or 'unknown',
-            "extension": form_data.get('modelExtension') or None,
+            "model_type": form_data.get('modelType') or 'learning_model',
             "parameters": {},
             "metrics": {},
             "reference_data": form_data.get('referenceData'),
@@ -185,10 +177,13 @@ async def post_upload(operation_id: str,
     async def build_payload_data(common: dict, form_data, uploaded_file) -> tuple:
         
         from io import StringIO
+        debug_type(uploaded_file)
         await uploaded_file.seek(0)
         content = await uploaded_file.read()
 
         s = StringIO(content.decode('UTF-8'))
+
+        print("s", s)
 
         df = pd.read_csv(s, header=0)
 
@@ -244,6 +239,43 @@ async def post_upload(operation_id: str,
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
 
+# TODO - Align the code in base_test.html to fit this endpoint.
+# TODO - Find the simplest reproducible way to properly parse and format all the data 
+# involved in this endpoint
+# NOTE - The /create endpoint serves as another measure for the user to input a file
+# in the amanaje app. Instead of uploading a file, the user can write his own code, but
+# I must have a proper way to parse and save the model created in the code.
+@app.post("/create", response_class=JSONResponse)
+async def post_create(operation_id: str,
+                      request: Request,
+                      db: AsyncSession = Depends(get_db)):
+    
+    data = await request.json()
+    code = data.get("code", "")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as f:
+        f.write(code.encode('utf-8'))
+        f.flush()
+        filename = f.name
+
+    result = subprocess.run(["python", filename], capture_output=True, text=True)
+    os.remove(filename)
+
+    params = None
+    try:
+        if os.path.exists("/tmp/model.pkl"):
+            model = joblib.load("/tmp/model.pkl")
+            if hasattr(model, "__init__"):
+                params = model.__init__.__code__.co_varnames
+    except Exception as e:
+        params = str(e)
+    
+    return JSONResponse({
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "returncode": result.returncode,
+        "params": params
+    })
 
 @app.get("/features", response_class=HTMLResponse)
 async def features_page(request: Request, db: AsyncSession = Depends(get_db)):
@@ -294,10 +326,6 @@ async def post_training(operation_id: int,
     - id: database training record ID
     """
 
-    # TODO - Running post_training() on a model for the first time creates
-    # a mlflow experiment with it's name. All future runs are stored there
-    # It should function as it's operational history.
-    
     payload_json = {}
     try:
         payload_json = await request.json()
@@ -414,6 +442,7 @@ async def analysis(dataset_id: int = None, db: AsyncSession = Depends(get_db)):
     # 7. Cache results for repeated queries
     
     dataset = await DatasetModel.read(db, dataset_id)
+    debug_type(dataset)
 
     df_path = dataset.path
     df = pd.read_csv(df_path)
@@ -430,11 +459,35 @@ async def analysis(dataset_id: int = None, db: AsyncSession = Depends(get_db)):
         }
     })
 
-@app.get('/test', response_class=JSONResponse)
+@app.get('/optimization', response_class=HTMLResponse)
 async def code_prompt_test(request: Request,):
-    return templates.TemplateResponse("base_green.html", {"request": request, "datasets": list_data})
+    return templates.TemplateResponse("base_test.html", {"request": request, })
 
+@app.get("/registry", response_class=HTMLResponse)
+async def model_registry_view(request: Request):
+    """
+    Model Registry CRUD Interface
     
+    CHANGED: Implemented the TODO from model_registry.py to provide base_purple.html
+    
+    Serves base_purple.html which provides a comprehensive interface for:
+    - CREATE: Register new datasets or learning models with custom fields
+    - READ: View all entries in grid or table format
+    - UPDATE: Edit existing model entries via modal forms
+    - DELETE: Remove entries with confirmation
+    - SEARCH: Find and view detailed information about specific entries
+    
+    This template utilizes the auto-generated CRUD routes from ModelRegistry.generate_router()
+    which creates endpoints like:
+    - /dataset/create, /dataset/list, /dataset/get/{id}, /dataset/update/{id}, /dataset/delete/{id}
+    - /learning/create, /learning/list, /learning/get/{id}, /learning/update/{id}, /learning/delete/{id}
+    
+    The interface is fully generic and works with any models registered via:
+    ModelRegistry.register_model(PydanticModel, ORMModel)
+    
+    Users can easily manage the entire data model ecosystem without writing queries.
+    """
+    return templates.TemplateResponse("base_purple.html", {"request": request})
 
 @app.get('/airflow/dags', response_class=JSONResponse)
 async def airflow_list_dags():

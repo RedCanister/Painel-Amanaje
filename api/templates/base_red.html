@@ -40,8 +40,8 @@
                     <input type="text" id="objectName" name="objectName" required>
                 </div>
                 <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="datasetType">Dataset Type:</label>
@@ -69,24 +69,24 @@
                     <input type="text" id="objectName" name="objectName" required>
                 </div>
                 <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="modelType">Model Type:</label>
                     <select id="modelType" name="modelType">
-                        <option value="supervised">Supervised</option>
-                        <option value="unsupervised">unsupervised</option>
-                        <option value="reinforcement">Reinforcement</option>
-                        <option value="deep-learning">Deep Learning</option>
-                        <option value="generative">Generative</option>
-                        <option value="transformer">Transformer</option>
+                        <option value="supervised_model">Supervised</option>
+                        <option value="unsupervised_model">Unsupervised</option>
+                        <option value="reinforcement_model">Reinforcement</option>
+                        <option value="deep_learning_model">Deep Learning</option>
+                        <option value="generative_model">Generative</option>
+                        <option value="transformative_model">Transformer</option>
                     </select>
                 </div>
-
-                <!-- TODO - Make a toggle for the form to upload a file or make textarea for 
-                a python editor like monaco or codemirror, with an output to pyodide.
-                If the model comes from the python editor, the uploaded file must come from it. -->
+                <!-- CHANGED: Python editor integration now available via /optimization endpoint
+                Users can develop models in-browser using base_test.html (Monaco/CodeMirror editors with Pyodide runtime)
+                Then save directly to backend via saveModel() function, which uploads to /upload/models endpoint
+                This enables seamless workflow: code → test → save → register in model registry -->
                 <div class="form-group">
                     <!-- NOTE - The easiest way to extract the parameters is from __init__. -->
                     <label for="parameters">Parameters:</label>
@@ -131,6 +131,13 @@
     <!-- Analysis Section -->
     <section class="form-section" id="analysisSection">
         <h3>Data Analysis</h3>
+        <div id="datasetDragSelect">
+            <!-- To apply the MultiObjectSelector here as a means to select the objects
+             that are going to be selected, compared and displayed in the analysis results -->
+            MultiObjectSelector
+        </div>
+
+
         <div class="analysis-controls">
             <select id="datasetSelect">
                 <option value="">Select Dataset</option>
@@ -307,6 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
         onError: (error) => {
             console.error('Failed to load datasets:', error);
         }
+    });
+
+    MultiObjectSelector ({
+        containerId: 'datasetSelect',
+        objectType: 'datasetmodel',
+        endpoint: '/datasetmodel/list',
+        labelField: 'name',
+        valueField: 'id',
+        roles: ['input', 'output'],
+        onSelectionChange: (selected) => console.log('Selected:', selected)
     });
 
     // Initial feature list load (upload history)

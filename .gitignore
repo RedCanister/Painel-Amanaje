@@ -179,3 +179,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+temp/base_red.html.before
+temp/base_green.html.before
+temp/base_blue.html.before
+errors.txt
+temp/main_alt1.py
+temp/main_alt2.py
+temp/main_app.py.before

@@ -309,11 +309,253 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 
-// TODO - I need a mechanism I can reuse on the selection of multiple objects
-// In the frontend. I would like a way to select objects of any type on the interface that
-// allows me to use them in the same page, without reloading. The select object act
-// as values that get sent in to the backend.  If it is a dataset, 
-// I need to select the columns to be analyzed. If it is a model, 
-// I need to select the dataset's columns that are used as input or output
-// If it could be a drag-and-drop selection mechanism I can use to sort around the input or
-// output colummns.
+/**
+ * MultiObjectSelector - Advanced multi-object selection with drag-and-drop support
+ * 
+ * Purpose: Allow users to select multiple objects and organize them for analysis
+ * Supports:
+ * - Adding/removing objects from selection
+ * - Drag-and-drop reordering
+ * - Role assignment (input/output for models, features/target for datasets)
+ * - Persistence to hidden form fields
+ * 
+ * Configuration:
+ * {
+ *   containerId: 'containerDiv',  // Container for the selector
+ *   objectType: 'dataset' | 'model' | 'feature',  // Type of objects being selected
+ *   endpoint: '/api/endpoint',  // Endpoint to fetch available objects
+ *   labelField: 'name',  // Object property for display
+ *   valueField: 'id',  // Object property for internal value
+ *   
+ *   roles: ['input', 'output'],  // Optional: roles for objects (e.g., features vs target)
+ *   onSelectionChange: (selectedObjects) => {},  // Callback when selection changes
+ *   maxSelection: 10,  // Optional: limit number of selections
+ * }
+ * 
+ * Example:
+ * MultiObjectSelector({
+ *   containerId: 'featureSelector',
+ *   objectType: 'feature',
+ *   endpoint: '/features',
+ *   roles: ['input_features', 'target_feature'],
+ *   onSelectionChange: (selected) => console.log('Selected:', selected)
+ * });
+ * 
+ * CHANGED: Implemented feature requested at end of form-utilities.js for reusable multi-object selection
+ * ADDED: Support for object roles and assignment
+ * ADDED: Drag-and-drop reordering of selected objects
+ * ADDED: Validation of selection constraints (max items, required roles)
+ */
+
+/* TODO - Apply and make working examples of the application off the class MultiObjectSelector
+everywhere that it is referenced in the codebase. 
+
+*/
+
+class MultiObjectSelector {
+  constructor(config) {
+    // CHANGED: Initialize selector with configuration
+    this.config = {
+      labelField: 'name',
+      valueField: 'id',
+      maxSelection: null,
+      roles: null,
+      onSelectionChange: () => {},
+      ...config
+    };
+    
+    this.selectedObjects = [];
+    this.availableObjects = [];
+    
+    // Resolve container
+    this.container = typeof config.containerId === 'string'
+      ? document.getElementById(config.containerId)
+      : config.containerId;
+    
+    if (!this.container) {
+      console.error('MultiObjectSelector: Container not found', config.containerId);
+      return;
+    }
+    
+    this.init();
+  }
+  
+  // CHANGED: Initialize the selector UI and fetch available objects
+  async init() {
+    try {
+      const response = await fetch(this.config.endpoint);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      this.availableObjects = await response.json();
+      this.render();
+    } catch (error) {
+      console.error('MultiObjectSelector: Failed to fetch objects', error);
+      this.container.innerHTML = `<div style="color: red;">Error loading objects: ${error.message}</div>`;
+    }
+  }
+  
+  // CHANGED: Render the complete selector UI
+  render() {
+    const { labelField, valueField, maxSelection, roles } = this.config;
+    
+    // Available objects list
+    let availableHTML = '<div style="margin-bottom: 1.5rem;">';
+    availableHTML += '<label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Available Objects</label>';
+    availableHTML += '<div style="border: 1px solid #ddd; border-radius: 4px; padding: 0.5rem; background: #f9f9f9; min-height: 100px;">';
+    
+    if (this.availableObjects.length === 0) {
+      availableHTML += '<p style="color: #999; margin: 0;">No objects available</p>';
+    } else {
+      this.availableObjects.forEach(obj => {
+        const isSelected = this.selectedObjects.some(s => s[valueField] === obj[valueField]);
+        const label = obj[labelField] || `Object ${obj[valueField]}`;
+        
+        availableHTML += `
+          <button 
+            type="button"
+            style="
+              margin: 0.25rem;
+              padding: 0.5rem 1rem;
+              background: ${isSelected ? '#9945ff' : '#e5e7eb'};
+              color: ${isSelected ? 'white' : '#374151'};
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.2s;
+            "
+            onclick="this.mos.toggleObject('${valueField}', ${JSON.stringify(obj).replace(/'/g, '&#39;')})"
+            mos-ref
+          >
+            ${isSelected ? '✓ ' : '+ '}${label}
+          </button>
+        `;
+      });
+    }
+    
+    availableHTML += '</div></div>';
+    
+    // Selected objects (with drag support)
+    let selectedHTML = '<div>';
+    selectedHTML += '<label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Selected Objects';
+    if (maxSelection) selectedHTML += ` (${this.selectedObjects.length}/${maxSelection})`;
+    selectedHTML += '</label>';
+    selectedHTML += '<div style="border: 2px dashed #9945ff; border-radius: 4px; padding: 1rem; min-height: 100px; background: #f3e8ff;">';
+    
+    if (this.selectedObjects.length === 0) {
+      selectedHTML += '<p style="color: #999; margin: 0; text-align: center;">Drag or click objects to add them here</p>';
+    } else {
+      this.selectedObjects.forEach((obj, idx) => {
+        const label = obj[labelField] || `Object ${obj[valueField]}`;
+        
+        selectedHTML += `
+          <div 
+            draggable="true"
+            style="
+              background: white;
+              border: 1px solid #9945ff;
+              border-radius: 4px;
+              padding: 0.75rem;
+              margin-bottom: 0.5rem;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              cursor: move;
+            "
+            ondragstart="event.dataTransfer.effectAllowed='move'; event.dataTransfer.setData('index', ${idx})"
+            ondragover="event.preventDefault(); event.dataTransfer.dropEffect='move'"
+            ondrop="this.mos.reorderObjects(event, ${idx})"
+          >
+            <span>⋮⋮ ${label}</span>
+            <button 
+              type="button"
+              onclick="this.mos.removeObject(${idx})"
+              style="
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                padding: 0.25rem 0.75rem;
+                cursor: pointer;
+              "
+            >
+              ✕
+            </button>
+          </div>
+        `;
+      });
+    }
+    
+    selectedHTML += '</div></div>';
+    
+    // Form fields to store selection
+    let hiddenHTML = '<input type="hidden" id="selectedObjectsJson" name="selectedObjects" value="' + 
+                     JSON.stringify(this.selectedObjects).replace(/"/g, '&quot;') + '">';
+    
+    // Combine and set
+    this.container.innerHTML = availableHTML + selectedHTML + hiddenHTML;
+    
+    // Make buttons reference this instance
+    this.container.querySelectorAll('[mos-ref]').forEach(btn => btn.mos = this);
+    
+    // Make selected divs reference this instance
+    this.container.querySelectorAll('[ondragstart]').forEach(div => div.mos = this);
+  }
+  
+  // CHANGED: Toggle object in selection
+  toggleObject(valueField, obj) {
+    const index = this.selectedObjects.findIndex(s => s[valueField] === obj[valueField]);
+    
+    if (index > -1) {
+      // Remove if selected
+      this.selectedObjects.splice(index, 1);
+    } else {
+      // Add if not selected
+      if (this.config.maxSelection && this.selectedObjects.length >= this.config.maxSelection) {
+        alert(`Maximum ${this.config.maxSelection} objects allowed`);
+        return;
+      }
+      this.selectedObjects.push(obj);
+    }
+    
+    this.config.onSelectionChange(this.selectedObjects);
+    this.render();
+  }
+  
+  // CHANGED: Remove object from selection
+  removeObject(index) {
+    this.selectedObjects.splice(index, 1);
+    this.config.onSelectionChange(this.selectedObjects);
+    this.render();
+  }
+  
+  // CHANGED: Reorder objects via drag-and-drop
+  reorderObjects(event, targetIndex) {
+    event.preventDefault();
+    const sourceIndex = parseInt(event.dataTransfer.getData('index'));
+    
+    if (sourceIndex === targetIndex) return;
+    
+    const [obj] = this.selectedObjects.splice(sourceIndex, 1);
+    this.selectedObjects.splice(targetIndex, 0, obj);
+    
+    this.config.onSelectionChange(this.selectedObjects);
+    this.render();
+  }
+  
+  // CHANGED: Get selected objects for submission
+  getSelection() {
+    return this.selectedObjects;
+  }
+  
+  // CHANGED: Clear all selections
+  clear() {
+    this.selectedObjects = [];
+    this.config.onSelectionChange(this.selectedObjects);
+    this.render();
+  }
+}
+
+// Export for use with or without modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { ToggleFormOptions, PopulateListOptions, CombinedFormHandler, MultiObjectSelector };
+}

@@ -20,16 +20,11 @@
 
 {% block extra_script %}
 
-<!-- CodeMirror -->
-<link rel="stylesheet" href="https://cdnjs.clouflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
-
-<!-- Monaco -->
+<!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
 
-<!-- Pyodide -->
- <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<!-- Pyodide: Python runtime for the browser, allows running Python code without server -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
 
 <style>
     body { font-family: sans-serif; }
@@ -54,13 +49,13 @@
 </div>
 
 <!-- Editor Tab -->
+<!-- NOTE - Consider that after done, the code in base_test.html will need to properly interface with the /create endpoint to save the model -->
+<!-- NOTE - Consider that the code in base_test.html will be transfered to base_red.html to expand it's interface. It must fit every template in the app. -->
 <div id="editor" class="tab-content active">
     <h3>Write your Model code</h3>
     <div id="monaco"></div>
-    <textarea id="codemirror"></textarea>
     <br>
-    <button onClick="runMonaco()"> Run Monaco Code </button>
-    <button onClick="runCodeMirror()"> Run CodeMirror Code </button>
+    <button onClick="runCode()"> Run Monaco Code </button>
     <button onClick="saveModel()"> Save Model </button>
     <div id="output"></div>
 </div> 
@@ -75,6 +70,7 @@
 <div id="saved" class="tab-content">
     <h3> Saved Models </h3>
     <ul id="savedList"></ul>
+    <button onClick="refreshModels()"> Refresh List </button>
 </div>
 
 {% endblock %}
@@ -83,76 +79,89 @@
 {% block extra_js %}
 
 <script>
-    // Tab switching
+    // CHANGED: Tab switching functionality - show/hide editor, parameters, and saved models sections
     document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
             document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(('.tab-content').forEach(c => c.classList.remove("active")));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
             tab.classList.add("active");
             document.getElementById(tab.dataset.tab).classList.add("active");
         });
     });
 
 
-    // Pyodide init
+    // CHANGED: Initialize Pyodide (Python runtime) with scikit-learn package for ML algorithms
+    /*
     let pyodide;
     async function initPyodide() {
         pyodide = await loadPyodide();
         await pyodide.loadPackage("scikit-learn");
+        console.log("Pyodide loaded with scikit-learn");
     }
-    initPyodide();
+    */
+
+    //initPyodide();
 
 
-    // Monaco setup
-    require.config({ paths: {'vs': 'https://cdnjs.cloudfare.com/ajax/libs/monaco-editor/0.34.1/min/vs'}});
+    // CHANGED: Monaco editor setup - advanced IDE-like experience for code writing
+    // FIXED: Corrected CDN URL from cloudfare to cloudflare and vs loader path
+
+    require.config({ paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'}});
     require(["vs/editor/editor.main"], function () {
         window.monacoEditor = monaco.editor.create(document.getElementById("monaco"), {
-            value: "impot sklearan.linear model as lm \n model = lm.LogisticRegression() \n print(model)",
+            value: "import sklearn.linear_model as lm\nmodel = lm.LogisticRegression()\nprint(model)",
             language: "python",
             theme: "vs-dark"
         });
     });
 
-    // CodeMirror setup
-    var codeMirrorEditor = CodeMirror.fromTextArea(document.getElementById("codemirror"), {
-        lineNumbers:true,
-        mode: "python"
-    });
-    codeMirrorEditor.setValue("import sklearn.tree as tree \n model = tree.DecisiontreeClassifier() \n print(model)");
-
-    // Run code from Monaco
-    async function runMonaco() {
+    // TODO - Describe and implement code execution and model saving logic.
+    // TODO - Make a descriptive form and interface for properly parsing and extracting
+    // the code written in monaco editor to a form or file. Currently, it just sends raw code to backend.
+    async function runCode(){
         const code = window.monacoEditor.getValue();
-        await runCode(code);
+        const res = await fetch("/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: code })
+        });
+        console.log("Code sent to /create endpoint");
+
+        const data = await res.json();
+        document.getElementById("output").textContent = 
+            "STDOUT:\n" + data.stdout + "\n\nSTDERR:\n" + data.stderr;
+        document.getElementById("paramsOutput").textContent = 
+            data.params ? JSON.stringify(data.params, null, 2) : "No parameters available";
     }
 
-    // Run code from CodeMirror
-    async function runCodeMirror() {
-        const code = codeMirrorEditor.getValue();
-        await runCode(code);
+    // TODO - Properly make create the file send into the upload endpoint for persistent storage
+    // TODO - Validate and define the process of saving the model - currently it just creates an empty file named model.pkl
+    async function saveModel() {
+        const file = new File([""], "model.pkl");
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/upload/models", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById("savedList").innerHTML +=
+            `<li>${data.filename}</li>`;
     }
 
-    // Generic runner
-    async function runCode(code) {
-        try {
-            let result = await pyodide.runPythonAsync(code);
-            document.getElementById("output").textContent = result || "Executed successfully!";
-
-            // Try to extract parameters
-            let params = await pyodide.runPythonAsync(`
-                try:
-                    model.get_params()
-                except Exception as e:
-                    str(e)
-                
-            `);
-            document.getElementById("paramsOutput").textContent = JSON.stringify(params, null, 2);
-        } catch(err) {
-            document.getElementById("output").text.textContent = "Error: " + err;
-        }
+    async function refreshModels() {
+        const res = await fetch("/learningmodel/list");
+        const data = await res.json();
+        document.getElementById("savedList").innerHTML = 
+            data.models.map(m => `<li>${m}</li>`).join("");
     }
 
-    // Save model locally and to backend
+
+    // CHANGED: Save model locally to browser and send to backend for persistent storage
+    // FIXED: Corrected URL.createdObjectURL -> URL.createObjectURL and octet-stream spacing
+    /*
     async function saveModel() {
         try{
             await pyodide.runPythonAsync(`
@@ -160,25 +169,40 @@
                 joblib.dump(model, "/tmp/model.pkl")
             `);
             const data = pyodide.FS.readFile("/tmp/model.pkl");
-            const blob = new Blob([data], {type: "application/octet-stream "});
-            const url = URL.createdObjectURL(blob);
+            const blob = new Blob([data], {type: "application/octet-stream"});
+            const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
             a.download = "model.pkl";
             a.click();
 
-            // Send to backend
-            fetch("/upload_model", {
+            // Send to backend - uploads trained model to /upload endpoint for storage and registration
+            // CHANGED: Updated endpoint from /upload_model to /upload/{operation_id} for consistency with project pattern
+            const formData = new FormData();
+            formData.append("file", blob, "model.pkl");
+            formData.append("objectName", "user_model_" + new Date().getTime());
+            formData.append("description", "Model trained via code editor");
+            formData.append("operationId", "models");
+
+            fetch("/upload/models", {
                 method: "POST",
-                body: blob
+                body: formData
             }).then(res => res.json())
               .then(data => {
-                document.getElementById("savedList").innerHTML += `<li>${data.filename}</li>`
+                if (data.status === "ok") {
+                    document.getElementById("savedList").innerHTML += `<li>✓ ${data.id} - Saved to database</li>`
+                } else {
+                    document.getElementById("savedList").innerHTML += `<li>⚠ Error saving: ${data.detail}</li>`
+                }
+              })
+              .catch(err => {
+                document.getElementById("savedList").innerHTML += `<li>✗ Upload failed: ${err}</li>`
               });
         } catch (err) {
             document.getElementById("output").textContent = "Error saving model: " + err;
         }
     }
+    */
 
 </script>
 
