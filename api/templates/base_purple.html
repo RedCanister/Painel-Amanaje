@@ -577,9 +577,10 @@
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        
         document.getElementById(tabName).classList.add('active');
-        event.target.classList.add('active');
+        // Mark the corresponding button active (avoid relying on global event)
+        const btn = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`);
+        if (btn) btn.classList.add('active');
         
         // Load data for specific tabs
         if (tabName === 'list') loadList();
@@ -645,10 +646,20 @@
         container.innerHTML = '';
         
         try {
-            // CHANGED: Fetch from both datasetmodel and learningmodel endpoints
-            const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
-            const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
-            
+            // CHANGED: Fetch from both datasetmodel and learningmodel endpoints and normalize responses
+            const normalizeList = (resp) => {
+                if (!resp) return [];
+                if (Array.isArray(resp)) return resp;
+                if (resp.data && Array.isArray(resp.data)) return resp.data;
+                if (resp.items && Array.isArray(resp.items)) return resp.items;
+                return [];
+            };
+
+            let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+            let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+            datasets = normalizeList(datasets);
+            models = normalizeList(models);
+
             const allEntries = [
                 ...datasets.map(d => ({ ...d, type: 'Dataset' })),
                 ...models.map(m => ({ ...m, type: 'Learning Model' }))
@@ -691,9 +702,20 @@
         container.innerHTML = '';
         
         try {
-            const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
-            const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
-            
+            // Reuse the normalizeList helper used in loadList
+            const normalizeList = (resp) => {
+                if (!resp) return [];
+                if (Array.isArray(resp)) return resp;
+                if (resp.data && Array.isArray(resp.data)) return resp.data;
+                if (resp.items && Array.isArray(resp.items)) return resp.items;
+                return [];
+            };
+
+            let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+            let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+            datasets = normalizeList(datasets);
+            models = normalizeList(models);
+
             const allEntries = [
                 ...datasets.map(d => ({ ...d, type: 'Dataset' })),
                 ...models.map(m => ({ ...m, type: 'Learning Model' }))
@@ -749,17 +771,29 @@
         const type = document.getElementById('searchType').value;
         select.innerHTML = '<option value="">Loading...</option>';
         
+        // TODO - Fix the code here. datasets.map and models.map are not working.
+        // "Failed to load table: models.map is not a function or its return value is not iterable"
         try {
+            const normalizeList = (resp) => {
+                if (!resp) return [];
+                if (Array.isArray(resp)) return resp;
+                if (resp.data && Array.isArray(resp.data)) return resp.data;
+                if (resp.items && Array.isArray(resp.items)) return resp.items;
+                return [];
+            };
+
             let entries = [];
             if (!type || type === 'DatasetModel') {
-                const datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+                let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
+                datasets = normalizeList(datasets);
                 entries = [...entries, ...datasets.map(d => ({ ...d, type: 'Dataset' }))];
             }
             if (!type || type === 'LearningModel') {
-                const models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+                let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
+                models = normalizeList(models);
                 entries = [...entries, ...models.map(m => ({ ...m, type: 'Learning Model' }))];
             }
-            
+
             select.innerHTML = '<option value="">Select an entry...</option>';
             entries.forEach(entry => {
                 const option = document.createElement('option');

@@ -39,17 +39,11 @@
                     </select>
                 </div>
                 
-                <!-- TODO - Apply the MultiObjectSelector here as interactive way to select the columns in
-                 inputFeatures and outputFeatures -->
+                <!-- CHANGED: Mount MultiObjectSelector to choose input/output feature columns -->
                 <div class="parameter-row">
-                    <label for="inputFeatures" class="parameter-label">Input Features:</label>
-                    <!-- CHANGED: Input features can be selected from dataset columns (future: dynamic column selection) -->
-                    <input type="number" id="inputFeaturesId" name="inputTarget" min="1" value="1" class="parameter-input" required>
-                </div>
-                <div class="parameter-row">
-                    <label for="outputFeatures" class="parameter-label">Output Features:</label>
-                    <!-- CHANGED: Input features can be selected from dataset columns (future: dynamic column selection) -->
-                    <input type="number" id="outputFeaturesId" name="inputTarget" min="1" value="1" class="parameter-input" required>
+                    <label for="inputFeatures" class="parameter-label">Feature Selection:</label>
+                    <div id="featureSelectorGreen" class="parameter-input" style="min-height:120px;"></div>
+                    <input type="hidden" id="inputFeatures" name="inputFeatures" value="[]">
                 </div>
 
             </div>
@@ -565,6 +559,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (inputTypeSelect.value === 'Manual') {
         studyObjectSelect.parentElement.style.display = 'none';
     }
+
+        // Initialize MultiObjectSelector for feature column selection
+        try {
+            MultiObjectSelector({
+                containerId: 'featureSelectorGreen',
+                objectType: 'datasetmodel',
+                endpoint: '/datasetmodel/list',
+                labelField: 'name',
+                valueField: 'id',
+                roles: ['input','output'],
+                maxSelection: 50,
+                onSelectionChange: (selected) => {
+                    // Persist selected ids to hidden input for form submission
+                    const ids = (selected || []).map(s => s.id ?? s.value ?? (s[Object.keys(s)[0]]));
+                    const el = document.getElementById('inputFeatures');
+                    if (el) el.value = JSON.stringify(ids);
+                }
+            });
+        } catch (err) {
+            console.warn('MultiObjectSelector not available:', err);
+        }
 });
 
 </script>

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 from typing import List, Optional
 from datetime import datetime
 from .model_schemas import AsyncCRUDMixin
@@ -21,7 +21,6 @@ class ObjectModel(AsyncCRUDMixin):
 # Definitions - Send to database | Receive from database | Update in database | Delete from database 
 class DatasetModel(ObjectModel):   
 
-    name: str
     dataset_type: str
     shape: List[int]
     has_features: Optional[bool] = None                      # Whether dataset has features

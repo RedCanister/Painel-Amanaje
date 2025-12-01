@@ -5,3 +5,169 @@ nav a { color: white; text-decoration: none; margin-right: 1rem }
 .card { background: white; border-radius: 6px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1rem }
 .form-row { margin-bottom: 0.75rem }
 .button { background: #0b5cff; color: white; padding: 0.5rem 1rem; border: 0; border-radius: 4px }
+
+  #monacoEditorContainer {
+    width: 100%;
+    height: calc(100vh - 260px);
+    min-height: 300px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    margin: 20px 0;
+  }
+  
+  .editor-controls {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  
+  .editor-controls button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .editor-controls button:hover {
+    background-color: #0056b3;
+  }
+  
+  .editor-controls button.danger {
+    background-color: #dc3545;
+  }
+  
+  .editor-controls button.danger:hover {
+    background-color: #c82333;
+  }
+  
+  .editor-controls button.success {
+    background-color: #28a745;
+  }
+  
+  .editor-controls button.success:hover {
+    background-color: #218838;
+  }
+  
+  #variablePanel {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+  }
+  
+  .variable-item {
+    background-color: white;
+    padding: 10px;
+    margin: 8px 0;
+    border-left: 4px solid #007bff;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .variable-item .var-name {
+    font-weight: bold;
+    color: #333;
+    font-family: monospace;
+  }
+  
+  .variable-item .var-type {
+    background-color: #e7f3ff;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    margin: 0 10px;
+  }
+  
+  .variable-item .var-value {
+    flex-grow: 1;
+    margin-left: 10px;
+    font-size: 12px;
+    color: #666;
+    word-break: break-all;
+    font-family: monospace;
+  }
+  
+  .file-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+  
+  .file-list li {
+    background-color: white;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ddd;
+  }
+  
+  .file-list li button {
+    padding: 4px 8px;
+    font-size: 12px;
+    margin-left: 10px;
+  }
+  
+  .status-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    display: none;
+  }
+  
+  .status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    display: block;
+  }
+  
+  .status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    display: block;
+  }
+
+  /* CHANGED: Execution output console styling */
+  #executionOutput {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Courier New', monospace;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 10px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    display: none;
+  }
+
+  #executionOutput.visible {
+    display: block;
+  }
+
+  .output-line {
+    margin: 4px 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .output-line.error {
+    color: #f48771;
+  }
+
+  .output-line.success {
+    color: #89d185;
+  }
+
+  .output-line.info {
+    color: #569cd6;
+  }

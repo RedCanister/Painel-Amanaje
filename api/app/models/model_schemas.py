@@ -13,7 +13,7 @@ class AsyncCRUDMixin(BaseModel):
         return await create_entry(db, orm_model, cls(**data))
     
     @classmethod
-    async def read(cls, db:AsyncSession, entry_id: int):
+    async def read(cls, db:AsyncSession, entry_id: int | str):
         orm_model = ModelRegistry.get_orm(cls)
         return await get_entry(db, orm_model, entry_id)
     
@@ -23,12 +23,12 @@ class AsyncCRUDMixin(BaseModel):
         return await get_all_entries(db, orm_model,)
     
     @classmethod
-    async def update(cls, db:AsyncSession, entry_id: int, data: dict):
+    async def update(cls, db:AsyncSession, entry_id: int | str, data: dict):
         orm_model = ModelRegistry.get_orm(cls)
         return await update_entry(db, orm_model, entry_id, cls(**data))
     
     @classmethod
-    async def delete(cls, db:AsyncSession, entry_id: int):
+    async def delete(cls, db:AsyncSession, entry_id: int | str):
         orm_model = ModelRegistry.get_orm(cls)
         return await delete_entry(db, orm_model, entry_id)
     

@@ -1,9 +1,11 @@
-import os
+import os, sys, json
+from io import StringIO
+import traceback
 import tracemalloc
 import aiofiles
 
 import asyncio
-import traceback, subprocess, tempfile, os, joblib
+import traceback, subprocess, tempfile, os, joblib, sys, uuid
 from datetime import datetime
 from typing import List
 
@@ -15,8 +17,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.model_objects import DatasetModel, LearningModel
-from app.models.model_orm import DatasetORM, LearningORM
+from app.models.model_objects import DatasetModel, LearningModel, ObjectModel
+from app.models.model_orm import DatasetORM, LearningORM, ObjectORM
 from app.models.model_registry import ModelRegistry
 
 from app.database.db_utils import create_entry, get_all_entries
@@ -51,6 +53,13 @@ async def startup_event():
     # Register pydantic <-> ORM pairs
     ModelRegistry.register_model(DatasetModel, DatasetORM)
     ModelRegistry.register_model(LearningModel, LearningORM)
+    ModelRegistry.register_orm_pair(name="code",
+                                    fields= {
+                                        "variables": dict
+                                    },
+                                    base_orm=ObjectORM,
+                                    base_pydantic=ObjectModel,
+                                    table_name="code")
 
     # Generating FastAPI routes for objects in model registry
     model_routers = ModelRegistry.generate_all_routers()
@@ -239,43 +248,139 @@ async def post_upload(operation_id: str,
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
 
-# TODO - Align the code in base_test.html to fit this endpoint.
-# TODO - Find the simplest reproducible way to properly parse and format all the data 
-# involved in this endpoint
+# CHANGED: base_test.html aligned with /create endpoint; frontend posts code JSON to /create
+# CHANGED: post_create supports optional 'save' flag to persist code as LearningORM entry
 # NOTE - The /create endpoint serves as another measure for the user to input a file
 # in the amanaje app. Instead of uploading a file, the user can write his own code, but
 # I must have a proper way to parse and save the model created in the code.
-@app.post("/create", response_class=JSONResponse)
-async def post_create(operation_id: str,
-                      request: Request,
+@app.post("/execute", response_class=JSONResponse)
+async def post_execute(request: Request,
                       db: AsyncSession = Depends(get_db)):
+    """
+    CHANGED: Simplified endpoint signature - removed unused operation_id path parameter
     
-    data = await request.json()
-    code = data.get("code", "")
+    This was causing 422 errors because FastAPI expected:
+    POST /execute/{operation_id}
+    
+    But frontend was sending:
+    POST /execute
+    
+    Now accepts JSON body with:
+    {
+        "code": "python code here",
+        "save": false,  # optional
+        "objectName": "model_name"  # optional if save=true
+    }
+    
+    Returns: {
+        "status": "success" or "error",
+        "variables": {...},
+        "stdout": "...",
+        "stderr": "...",
+        "error": null or error_message
+    }
+    """
+    
+    try:  
+        # CHANGED: Parse JSON body safely
+        try:
+            data = await request.json()
+            code = data.get("code", "").strip()
+        except Exception:
+            # Fallback to raw text body if not JSON
+            raw = await request.body()
+            code = raw.decode("utf-8") if raw else None
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as f:
-        f.write(code.encode('utf-8'))
-        f.flush()
-        filename = f.name
+        if not code:
+            return JSONResponse({
+                "status": "error",
+                "variables": {},
+                "stdout": "",
+                "stderr": "",
+                "error": "No code provided"
+            }, status_code=400)
+        
+        # CHANGED: Create namespace with common libraries
+        namespace = {
+            '__builtins__': __builtins__,
+            'np': __import__('numpy'),
+            'pd': __import__('pandas'),
+            'ox': __import__('onnx') 
+        }
 
-    result = subprocess.run(["python", filename], capture_output=True, text=True)
-    os.remove(filename)
+        # CHANGED: Capture stdout/stderr during execution
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
 
-    params = None
-    try:
-        if os.path.exists("/tmp/model.pkl"):
-            model = joblib.load("/tmp/model.pkl")
-            if hasattr(model, "__init__"):
-                params = model.__init__.__code__.co_varnames
+        extracted_variables = {}
+        error_message = None
+
+        try:
+            # CHANGED: Execute user code in isolated namespace
+            exec(code, namespace)
+
+            # CHANGED: Extract non-private variables from namespace
+            for name, variable in namespace.items():
+                if not name.startswith('_') and not isinstance(variable, type(sys)):
+                    try:
+                        var_type = type(variable).__name__
+                        var_repr = repr(variable)
+
+                        # CHANGED: Truncate long representations
+                        if len(var_repr) > 150:
+                            var_repr = var_repr[:147] + '...'
+
+                        extracted_variables[name] = {
+                            'type': var_type,
+                            'value': var_repr
+                        }
+
+                    except Exception as e:
+                        extracted_variables[name] = {
+                            'type': type(variable).__name__,
+                            'value': f'<Error serializing: {str(e)}>'
+                        }
+
+        except Exception as e:
+            # CHANGED: Capture full traceback for debugging
+            error_message = traceback.format_exc()
+
+        finally:
+            # CHANGED: Always restore stdout/stderr
+            stdout_output = sys.stdout.getvalue()
+            stderr_output = sys.stderr.getvalue()
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+        
+        # CHANGED: Return structured response
+        return JSONResponse({
+            "status": "success" if not error_message else "error",
+            "variables": extracted_variables,
+            "stdout": stdout_output,
+            "stderr": stderr_output,
+            "error": error_message
+        })
+
+    except json.JSONDecodeError:
+        return JSONResponse({
+            "status": "error",
+            "variables": {},
+            "stdout": "",
+            "stderr": "",
+            "error": "Invalid JSON payload"
+        }, status_code=400)
+
     except Exception as e:
-        params = str(e)
-    
-    return JSONResponse({
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "returncode": result.returncode,
-        "params": params
-    })
+        # CHANGED: Catch-all for unexpected errors
+        return JSONResponse({
+            "status": "error",
+            "variables": {},
+            "stdout": "",
+            "stderr": "",
+            "error": str(e)
+        }, status_code=500)
 
 @app.get("/features", response_class=HTMLResponse)
 async def features_page(request: Request, db: AsyncSession = Depends(get_db)):
@@ -461,7 +566,7 @@ async def analysis(dataset_id: int = None, db: AsyncSession = Depends(get_db)):
 
 @app.get('/optimization', response_class=HTMLResponse)
 async def code_prompt_test(request: Request,):
-    return templates.TemplateResponse("base_test.html", {"request": request, })
+    return templates.TemplateResponse("base_test copy.html", {"request": request, })
 
 @app.get("/registry", response_class=HTMLResponse)
 async def model_registry_view(request: Request):

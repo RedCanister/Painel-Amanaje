@@ -37,11 +37,11 @@
             <div id="datasetFields">
                 <div class="form-group">
                     <label for="objectName">Dataset Name:</label>
-                    <input type="text" id="objectName" name="objectName" required>
+                    <input type="text" id="datasetObjectName" name="objectName" required>
                 </div>
                 <div class="form-group">
                         <label for="description">Description:</label>
-                        <textarea id="description" name="description"></textarea>
+                        <textarea id="datasetDescription" name="description"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="datasetType">Dataset Type:</label>
@@ -66,11 +66,11 @@
             <div id="modelFields" style="display: none;">
                 <div class="form-group">
                     <label for="objectName">Model Name:</label>
-                    <input type="text" id="objectName" name="objectName" required>
+                    <input type="text" id="modelObjectName" name="objectName" required>
                 </div>
                 <div class="form-group">
                         <label for="description">Description:</label>
-                        <textarea id="description" name="description"></textarea>
+                        <textarea id="modelDescription" name="description"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="modelType">Model Type:</label>
@@ -132,9 +132,8 @@
     <section class="form-section" id="analysisSection">
         <h3>Data Analysis</h3>
         <div id="datasetDragSelect">
-            <!-- To apply the MultiObjectSelector here as a means to select the objects
-             that are going to be selected, compared and displayed in the analysis results -->
-            MultiObjectSelector
+            <!-- MultiObjectSelector mounts here to enable multi-selection for analysis -->
+            <div id="featureSelector"></div>
         </div>
 
 
@@ -221,8 +220,14 @@ uploadForm.addEventListener('submit', async (e) => {
     // Common fields for all uploads
     formData.append('file', file);
     formData.append('operationId', operationId);
-    formData.append('objectName', document.getElementById('objectName').value);
-    formData.append('description', document.getElementById('description').value);
+    // Use namespaced IDs depending on operation type to avoid duplicate id conflicts
+    if (operationId === 'datasets') {
+        formData.append('objectName', document.getElementById('datasetObjectName').value);
+        formData.append('description', document.getElementById('datasetDescription').value);
+    } else {
+        formData.append('objectName', document.getElementById('modelObjectName').value);
+        formData.append('description', document.getElementById('modelDescription').value);
+    }
 
     // CHANGED: Operation-specific fields (datasets vs models)
     // For scalability, this pattern can be extended with new operation types
@@ -317,12 +322,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     MultiObjectSelector ({
-        containerId: 'datasetSelect',
+        containerId: 'featureSelector',
         objectType: 'datasetmodel',
         endpoint: '/datasetmodel/list',
         labelField: 'name',
         valueField: 'id',
         roles: ['input', 'output'],
+        maxSelection: 10,
         onSelectionChange: (selected) => console.log('Selected:', selected)
     });
 

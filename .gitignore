@@ -186,3 +186,6 @@ errors.txt
 temp/main_alt1.py
 temp/main_alt2.py
 temp/main_app.py.before
+api/static/pyodide/scikit_learn-1.7.2-cp314-cp314-win_amd64.whl
+api/static/pyodide/pandas-2.3.3-cp314-cp314-win_amd64.whl
+api/static/pyodide/onnx-1.19.1-cp313-cp313t-win_amd64.whl
