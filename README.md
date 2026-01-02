@@ -35,7 +35,7 @@ The architecture combines:
 
 ## 🧩 System Architecture
 
-```mermaid
+```
 graph TD
     A[Data Source: Yahoo Finance] --> B[Prefect ETL Pipeline]
     B --> C[Great Expectations: Data Validation]
