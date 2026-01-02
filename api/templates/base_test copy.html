@@ -23,9 +23,6 @@
 <!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
 
-<!-- Pyodide: Python runtime for the browser, allows running Python code without server -->
-<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-
 <link rel="stylesheet" href="api\static\style.css">
 
 <style>
@@ -62,13 +59,14 @@
         <button id="btnExportJSON" > 📥Export as JSON</button>
     </div>
 
-    <div id="editor" class="tab-content active">
+    <div id="editor">
         <h3>Write your Model code</h3>
         <div id="monacoEditorContainer"></div>
         <br>
         <div id="output"></div>
 
         <!-- Status message for operation feedback -->
+         // TODO - This function is causing trouble within the app and needs to be revised
         <div id="statusMessage" class="statusMessage"></div>
 
         <div id="executionOutput">
@@ -96,7 +94,44 @@
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 
 <script>
-    // CHANGED: Tab switching and Monaco Editor setup
+    // TODO - Revise the functioning of the code editor. The function loadVariableFileFromList
+    // is not properly loading the code value of the retrieved object. Help me debug it
+    window.editor = null;
+
+    window.editorReady = new Promise(resolve => {
+        require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} });
+
+        require(["vs/editor/editor.main"], function () {
+            window.editor = monaco.editor.create(document.getElementById("monacoEditorContainer"), {
+                value: `
+# Define your model here. Use any of the available libraries
+# The more you break down your variables, the better the code will be able to use them
+
+import pandas as pd
+
+df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
+    `,
+                language: "python",
+                theme: "vs-dark",
+                automaticLayout: true,
+                tabSize: 4,
+                minimap: { enabled: false},
+                lineNumbers: "on",
+                scrollBeyondLastLine: true,
+                wordWrap: "on"
+            });
+
+            try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
+            console.log("Monaco Editor initialized");
+            resolve(window.editor);
+        });
+    });
+
+    
+
+</script>
+
+<script>
 
     document.querySelectorAll(".tab").forEach(tab => {
         tab.addEventListener("click", () => {
@@ -112,35 +147,9 @@
         });
     });
 
-    let editor = null;
     let extractedVariables = {};
 
-    // CHANGED: Monaco editor initialization
-    require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} });
-
-    require(["vs/editor/editor.main"], function () {
-        window.editor = monaco.editor.create(document.getElementById("monacoEditorContainer"), {
-            value: `# Define your model here. Use any of the available libraries
-import pandas as pd
-import onnx as ox
-
-df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
-`,
-            language: "python",
-            theme: "vs-dark",
-            automaticLayout: true,
-            tabSize: 4,
-            minimap: { enabled: false},
-            lineNumbers: "on",
-            scrollBeyondLastLine: true,
-            wordWrap: "on"
-        });
-
-        try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
-        console.log("Monaco Editor initialized");
-    });
-
-    // CHANGED: Execute code - single fetch call with correct endpoint
+    
     async function executeCode() {
         if (!window.editor) {
             showStatus('⏳ Please wait, Monaco Editor is initializing...', 'error');
@@ -158,14 +167,12 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             showStatus('▶️ Executing code on backend...', 'info');
             clearExecutionOutput();
             
-            // CHANGED: Single fetch call to /execute (no path parameter needed)
             const response = await fetch("/execute", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code: code })
             });
             
-            // CHANGED: Proper error handling
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -173,12 +180,10 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
 
             const result = await response.json();
            
-            // CHANGED: Display output
             if (result.stdout || result.stderr) {
                 displayExecutionOutput(result.stdout, result.stderr);
             }
 
-            // CHANGED: Display variables
             if (result.variables && Object.keys(result.variables).length > 0) {
                 displayExtractedVariables(result.variables);
                 showStatus('✅ Code executed successfully. Variables extracted.', 'success');
@@ -188,6 +193,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
                 showStatus('✅ Code executed (no variables defined)', 'success');
             }
 
+            loadFileList();
         } catch (error) {
             console.error('Execution error:', error);
             showStatus('❌ Execution failed: ' + error.message, 'error');
@@ -245,7 +251,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
 
     function displayExtractedVariables(variables) {
         const panel = document.getElementById("variablePanel");
-        // CHANGED: Fixed ID from variableList to match HTML
         const list = document.getElementById("variableList");
         
         if (!list || !panel) return;
@@ -290,23 +295,50 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             return;
         }
 
+        // Ensure editor is ready and get its current content
+        if (!window.editor) await window.editorReady;
+        const script = (window.editor ? window.editor.getValue() : "");
+
         try {
             const saveData = {
                 name: filename, 
-                timestamp: new Date().toISOString(),
+                description: "uploaded code", // placeholder
+                object_type: "code",
+                size: 0.0, // placeholder
+                path: "string", // placeholder
+                date: new Date().toISOString(),
+                version: 0,
+                history: [{"uploaded": "now"}], // placeholder
                 variables: extractedVariables,
-                code: window.editor.getValue()
+                code: { script }
             };
 
-            console.log("Saving variables payload preview:", { filename, keys: Object.keys(saveData)});
+            const reserved = new Set(['name', "description", "history"]);
+            Object.entries(extractedVariables).forEach(([k, info]) => {
+                const val = info && Object.prototype.hasOwnProperty.call(info, 'value') ? info.value : info;
 
-            // CHANGED: Use correct endpoint
+                const targetKey = reserved.has(k) ? `var_${k}` : k;
+                try {
+                    if (val !== null && typeof val === 'object') {
+                        saveData[targetKey] = JSON.parse(JSON.stringify(val));
+                    } else {
+                        saveData[targetKey] = val;
+                    }
+                } catch (e) {
+                    saveData[targetKey] = String(val);
+                }
+            });
+
+            console.log("Saving variables payload preview:", { filename, keys: Object.keys(saveData)});
+            
             const response = await fetch('/codemodel/create', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(saveData)
             });
 
+            console.log("Response preview:", { filename, keys: Object.keys(response)});
+            
             if (!response.ok) {
                 throw new Error (`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -315,14 +347,18 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             showStatus(`✅ Variables saved as ${filename}`, 'success');
             loadFileList();
         } catch (error) {
-            console.error('Save failed:', error);
-            showStatus('❌ Save failed: ' + error.message.filename, 'error');
+            console.error('Save error:', error);
+            showStatus('❌ Save error: ' + (error.stack || String(error)), 'error');
+            // Some environments may have extra properties
+            for (const key of Object.getOwnPropertyNames(error)) {
+                console.log(`${key}:`, error[key]);
+            }
+
         }
     }
 
     async function loadFileList() {
         try {
-            // CHANGED: Use correct endpoint
             const response = await fetch('/codemodel/list');
 
             if(!response.ok) {
@@ -347,12 +383,12 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
                 const li = document.createElement("li");
                 li.innerHTML = `
                 <span>
-                    📄 ${escapeHtml(file.filename)}
-                    <small style="color: #999; margin-left: 10px;">${new Date(file.timestamp).toLocaleString()}</small>
+                    📄 ${escapeHtml(file.name)}
+                    <small style="color: #999; margin-left: 10px;">${new Date(file.date).toLocaleString()}</small>
                 </span>
                 <div>
-                    <button class="load-btn" data-filename="${escapeHtml(file.filename)}">Load</button>
-                    <button class="delete-btn" data-filename="${escapeHtml(file.filename)}">Delete</button>
+                    <button class="load-btn" data-filename="${escapeHtml(file.name)}">Load</button>
+                    <button class="delete-btn" data-filename="${escapeHtml(file.name)}">Delete</button>
                 </div>
                 `;
                 fileList.appendChild(li);
@@ -360,7 +396,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
 
             filePanel.style.display = 'block';
 
-            // CHANGED: Proper event listener attachment
             document.querySelectorAll(".load-btn").forEach(btn => {
                 btn.addEventListener("click", async (e) => {
                     const fn = e.target.getAttribute('data-filename');
@@ -380,24 +415,70 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
+    // TODO - Whenever I click the buttton of this function, I get an error
+    // where the editor is not initialized.
     async function loadVariableFileFromList(filename) {
         try {
-            // CHANGED: Use correct endpoint
-            const response = await fetch(`/codemodel/get?item_id=${encodeURIComponent(filename)}`);
+            
+            const response = await fetch(`/codemodel/get/${encodeURIComponent(filename)}`);
+
+            console.log("Got response.")
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
+            console.log("Checked error.")
+
             const data = await response.json();
-            if (data.code && window.editor) {
-                window.editor.setValue(data.code);
+
+            console.log("Got data.")
+
+
+            await window.editorReady;
+
+            if (!window.editor) {
+                throw new Error('Monaco editor failed to initialize. Reload the page.');
             }
+
+            console.log(data.script)
+
+            // Accept either `script` (legacy) or `code` (newer) payload shapes
+            const codeCandidate = (data && (data.script ?? data.code)) || null;
+            let codeText = null;
+            if (codeCandidate) {
+                if (typeof codeCandidate === 'string') {
+                    codeText = codeCandidate;
+                } else if (typeof codeCandidate === 'object' && codeCandidate !== null) {
+                    // payload may be { script: '...' } or { code: { script: '...' } }
+                    codeText = (codeCandidate.script ?? codeCandidate.text) || JSON.stringify(codeCandidate, null, 2);
+                }
+            }
+
+            if (codeText) {
+                try { window.editor.setValue(codeText); } catch (e) { console.warn('Failed to set editor value', e); }
+            } else {
+                console.warn('No code field in loaded file');
+            }
+
+            // TODO - This is where the error.stack finds the error.
+            /*
+            if (new_editor) {
+                new_editor.setValue(data.code);
+            }
+            else {
+                console.log("Can't retrieve code. Show: ", new_editor)
+            }
+            */
+            
+            console.log("Showed data.")
 
             displayExtractedVariables(data.variables || {});
             showStatus(`✅ Loaded ${filename}`, 'success');
         } catch (error) {
-            showStatus('❌ Load failed: ' + error.message, 'error');
+            const errorMsg = error.message || String(error);
+            showStatus(`❌ Load failed: ${errorMsg}`, 'error');
+            console.error('Load error details:', error);
         }
     }
 
@@ -405,8 +486,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         if (!confirm(`Delete ${filename}?`)) return;
 
         try {
-            // CHANGED: Use correct endpoint and fixed typo (respons -> response)
-            const response = await fetch(`/codemodel/delete?item_id=${encodeURIComponent(filename)}`, {
+            const response = await fetch(`/codemodel/delete/${encodeURIComponent(filename)}`, {
                 method: 'DELETE'
             });
 
@@ -427,14 +507,11 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             return;
         }
 
-        // CHANGED: Fixed typo (extracteVariables -> extractedVariables)
         const exportData = {
             exportedAt: new Date().toISOString(),
             variables: extractedVariables,
-            code: window.editor.getValue()
+            code: (window.editor ? window.editor.getValue() : "")
         };
-
-        // CHANGED: Fixed typo (createdObjectURL -> createObjectURL)
         const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -465,7 +542,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         if (confirm('Clear editor content?')) {
             window.editor.setValue('');
             extractedVariables = {};
-            // CHANGED: Fixed typo (getElementByID -> getElementById)
             const panel = document.getElementById('variablePanel');
             if (panel) panel.style.display = 'none';
             clearExecutionOutput();
@@ -473,9 +549,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    // CHANGED: Proper DOMContentLoaded event listener with correct button IDs
     document.addEventListener('DOMContentLoaded', () => {
-        // CHANGED: Fixed button ID from btnExtractedVariables to btnExtractVariables
         document.getElementById('btnExecuteCode')?.addEventListener('click', executeCode);
         document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
             const assignments = parseVariableAssignmentsFromText();
@@ -492,7 +566,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             loadFileList();
         });
         document.getElementById('btnClearEditor')?.addEventListener('click', clearEditor);
-        // CHANGED: Fixed typo (addEventListner -> addEventListener)
         document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
 
         loadFileList();

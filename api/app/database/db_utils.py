@@ -2,15 +2,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import Type, List, Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 from app.models.model_orm import ObjectORM
 
 from app.database.db_session import Base
 from app.utils.utils import debug_type
 
-# Result.scalars - return _asdict(), _fields(), _mapping(), 
+# Result.scalars - return _asdict(), _fields(), _mapping()
 
-# Criando uma entrada de um modelo orm com classe pydantic associada e seus dados correspondentes
+# Database utilities: create/get/update/delete helpers for ORM models
 async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel | dict):
     """Create an ORM entry from a Pydantic model or plain dict.
 
@@ -18,49 +19,50 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
     logic can construct payloads that map to ORM column names.
     """
 
+    # Normalize input to a plain dict. Support Pydantic v2 (.model_dump) and v1 (.dict).
     payload = None
-    
-    try:
-        if isinstance(data, BaseModel) or hasattr(data, "model_dump") or hasattr(data, "dict"):
+
+    if isinstance(data, BaseModel) or hasattr(data, "model_dump") or hasattr(data, "dict"):
+        try:
             if hasattr(data, "model_dump"):
-                payload = data.model_dump(exclude_unset=True)
+                payload = data.model_dump()
             elif hasattr(data, "dict"):
-                payload = data.dict()
+                # pydantic v1 dict supports exclude_unset
+                payload = data.dict(exclude_unset=True)
             else:
                 payload = dict(data)
-        elif isinstance(data, dict):
-            payload = data
-        else:
-            raise TypeError("data must be a pydantic BaseModel or a dict")
-    except Exception as e:
-        print("Exception: ", e)
+            print("Has dump or dict.")
+        except Exception:
+            # fallback to a best-effort conversion
+            
+            payload = dict(data)
+            
+            print("Not in format.")
+        
+    elif isinstance(data, dict):
+        payload = data
+        print("utils.py:create_entry 45:23 Data is a dict")
+    else:
+        raise TypeError("data must be a pydantic BaseModel or a dict")
 
     if not isinstance(payload, dict):
         raise TypeError("normalized payload must be a dict")
-    
-    try:
-        allowed_cols = {c.name for c in orm_model.__table__.columns}
-    except Exception:
-        allowed_cols = set(payload.keys())
 
-    filtered = {k: v for k, v in payload.items() if k in allowed_cols}
-    dropped = [k or k in payload.keys() if k not in filtered else None]
-
-    if dropped:
-        print("create_entry dropping unkwown keys for %s: %s", getattr(orm_model, "__name__", str(orm_model)), dropped)
-
-    if 'name' in allowed_cols and 'name' not in filtered:
-        for alias in ('name'):
-            if alias in payload:
-                filtered['name'] = payload[alias]
-                break
-    
-    print("create_entry filtered payload keys: %s", list(filtered.leys()))
+    # Coerce string ISO datetime values to datetime objects for DateTime columns
+    # This handles payloads with ISO-formatted date strings from the frontend
+    if 'date' in payload.keys() and isinstance(payload['date'], str):
+        print("Date is not datetime.datetime...")
+        try:
+            payload['date'] = datetime.now()
+            print("Date is normalized")
+        except (ValueError, TypeError):
+            # If parsing fails, leave as-is and let SQLAlchemy handle it
+            pass
 
     try:
         obj = orm_model(**payload)
     except TypeError as e:
-        print("Failed to instantiaate %s with filtered payload: %s", orm_model, e)
+        print(f"Failed to instantiate {orm_model} with filtered payload: {e}")
         raise
 
     print("Obj", obj)
@@ -69,51 +71,63 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
 
     debug_type(obj)
     try:
+        print("Creation successful")
         await db.commit()
         await db.refresh(obj)
     except Exception as e:
-        print("DB commit/refresh failed for %s with payload %s", orm_model, filtered)
+        print(f"DB commit/refresh failed for {orm_model} with payload {payload}: {e}")
         await db.rollback()
         raise
 
     return obj
 
-# Resgatando uma entrada de um modelo orm com classe pydantic
-# async def get_entry(db: AsyncSession, orm_model:Type, entry_id: int):
-#     "docstring"
-    
-#     result = await db.execute(select(orm_model).where(orm_model.id == entry_id))
-#     first_entry = result.scalars().first()
-    
-#     # debug_type(result)
-#     debug_type(first_entry)
-
-#     return first_entry
-
-# Resgatando uma entrada de um modelo por id ou nome com classe pydantic
+# Resgatando uma entrada de um modelo orm por id ou nome
 async def get_entry(db: AsyncSession, orm_model: Type, entry_id: int | str) -> Optional[object]:
-    
-    if isinstance(entry_id, int):
-        result =  await db.execute(select(orm_model).where(orm_model.id == entry_id))
-        entry = result.scalars().first()
+    # Try integer id lookup first
+    entry = None
 
+    print(f"Getting entry from {orm_model.__name__}...")
+    if isinstance(entry_id, int):
+        print("{orm_model.__name__} item_id == (int)")
+        result = await db.execute(select(orm_model).where(orm_model.id == entry_id))
+        entry = result.scalars().first()
+        debug_type(entry)
+        return entry
+
+    # If a string was provided, try to look up by a 'name' column if present,
+    # otherwise attempt to coerce to int and lookup by id.
     if isinstance(entry_id, str):
         attr = getattr(orm_model, "name", None)
+        print(f"{orm_model.__name__} item_id == (str)")
+        if attr is not None:
+            result = await db.execute(select(orm_model).where(attr == str(entry_id)))
+            entry = result.scalars().first()
+            debug_type(entry)
+            print("Returned entry.")
+            return entry
+
+        # Fallback: try numeric string -> id
+        try:
+            iid = int(entry_id)
+            result = await db.execute(select(orm_model).where(orm_model.id == iid))
+            entry = result.scalars().first()
+            debug_type(entry)
+            print("Returned entry.")
+            return entry
         
-        result = await db.execute(select(orm_model).where(attr == entry_id))
-        entry = result.scalars().first()
+        except Exception:
+            return None
 
-    debug_type(entry)
-
-    return entry
+    return None
 
 
 # Resgatando todas as entradas de um modelo orm específico
 async def get_all_entries(db: AsyncSession, orm_model: Type) -> List:
     "docstring"
-    
-    result = await db.execute(select(orm_model))
 
+    print("List got called", orm_model)
+    result = await db.execute(select(orm_model))
+    print("Result is printed,", result)
     all_entries = result.scalars().all()
 
     debug_type(all_entries)
@@ -133,13 +147,24 @@ async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int | s
         return None
     
     if hasattr(data, "dict"):
-        updates = data.model_dump(exclude_unset=True)
+        # pydantic v2 preferred, fall back to v1
+        try:
+            updates = data.model_dump(exclude_unset=True)
+        except Exception:
+            updates = data.dict(exclude_unset=True)
     elif isinstance(data, dict):
         updates = data
     else:
         raise TypeError("data must be a pydantic BaseModel or a dict")
 
     debug_type(updates)
+
+    # Coerce string ISO datetime values to datetime objects for DateTime columns
+    if 'date' in updates and isinstance(updates['date'], str):
+        try:
+            updates['date'] = datetime.fromisoformat(updates['date'])
+        except (ValueError, TypeError):
+            pass
 
     for field, value in updates.items():
         setattr(obj, field, value)

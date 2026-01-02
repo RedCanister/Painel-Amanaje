@@ -74,8 +74,13 @@ class ModelRegistry:
         for fname, ftype in fields.items():
             if isinstance(ftype, str):
                 ftype = str
+
             sqlatype = SQLA_TYPE_MAP.get(ftype if not isinstance(ftype, tuple) else ftype[0], JSONB)
-            orm_attrs[fname] = Column(sqlatype)
+            
+            if sqlatype == JSONB:
+                orm_attrs[fname] = Column(JSONB)
+            else:
+                orm_attrs[fname] = Column(sqlatype)
         
         orm_attrs["__mapper_args__"] = {"polymorphic_identity": name.lower()}
 
@@ -91,7 +96,7 @@ class ModelRegistry:
             else:
                 pydantic_fields[fname] = (dict, None)
         
-        pydantic_model = create_model(name + "model",
+        pydantic_model = create_model(name + "Model",
                                       **pydantic_fields, 
                                       __base__=ObjectModel,
                                       __config__={"from_attributes": True}
@@ -118,10 +123,13 @@ class ModelRegistry:
         name = prefix_ or pydantic_model.__name__.lower()
         router = APIRouter(prefix=f"/{name}", tags=[name.capitalize()])
 
+        # TODO - This function is causing trouble within the app and needs to be revised
         async def _parse_body(request, model):
             """
-            Parse JSON body and try to alidate using the provided pydantic model.
-            Returnsd a plain dict suitable for create_entry/update_entry.
+            Parse JSON body and attempt to validate using the provided pydantic
+            model when available. Always return a plain dict suitable for DB
+            helpers; be tolerant of validation failures and return the raw
+            payload in that case.
             """
 
             payload = {}
@@ -130,43 +138,53 @@ class ModelRegistry:
                 payload = await request.json()
             except Exception:
                 payload = {}
-            
+
             try:
+                # pydantic v2 API
                 if hasattr(model, "model_validate") and isinstance(payload, dict):
                     validated = model.model_validate(payload)
-                
                     try:
-                        payload = validated.model_dump() if hasattr(validated, "model_dump") else dict(validated)
-                    except Exception:
-                        try:
+                        if hasattr(validated, "model_dump"):
+                            payload = validated.model_dump()
+                        elif hasattr(validated, "dict"):
+                            payload = validated.dict()
+                        else:
                             payload = dict(validated)
-                        except Exception:
-                            pass
+                    except Exception:
+                        pass
+
+                    #debug_type(payload)
+
+                # pydantic v1 fallback
+                elif hasattr(model, "parse_obj") and isinstance(payload, dict):
+                    try:
+                        validated = model.parse_obj(payload)
+                        payload = validated.dict()
+                    except Exception:
+                        pass
             except Exception:
+                # Keep payload as-is on any unexpected error
                 pass
 
             return payload
         
 
         # Criar
+        # TODO - This function is causing trouble within the app and needs to be revised
         @router.post("/create", response_model=dict)
         async def create_item(request: Request, 
                               #data: pydantic_model, 
                               db: AsyncSession = Depends(get_db)):
             """Rota para criação e inserção de objeto pydantic ao banco de dados postgres"""
-            
-            try:
-                payload = await _parse_body(request, pydantic_model)
 
-                debug_type(payload)
+            try:
+                payload = await request.json()
 
                 obj = await create_entry(db, orm_model, payload)
 
                 print("Created!")
 
-                debug_type(obj)
-
-                return {"id": getattr(obj, "id", None), "message": "f{name} created"}
+                return {"id": getattr(obj, "id", None), "message": f"{name} created"}
             except Exception as e:
                 return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
@@ -176,7 +194,15 @@ class ModelRegistry:
         async def read_item(item_id: int | str, db: AsyncSession = Depends(get_db)):
             """Rota para Leitura e resgate de objeto pydantic no banco de dados postgres"""
 
-            obj = await get_entry(db, orm_model, item_id)
+            print("Getting entry")
+            debug_type(item_id)
+
+            if isinstance(item_id, str):
+                obj = await get_entry(db, orm_model, str(item_id))
+            elif isinstance(item_id, int):
+                obj = await get_entry(db, orm_model, int(item_id))
+
+            debug_type(orm_model)
 
             if not obj:
                 raise HTTPException(status_code=404, detail=f"{name} not found")
@@ -187,9 +213,11 @@ class ModelRegistry:
         @router.get("/list", response_model=List[pydantic_model])
         async def read_all_items(db: AsyncSession = Depends(get_db)):
             """Rota para leitura e resgate de todos os objetos pydantic de uma classe específica ao banco de dados postgres"""
-
+            print("Objects are requested")
             try:
+                
                 objs = await get_all_entries(db, orm_model)
+                print("Objects are listed", objs)
                 obj_list = [o.__dict__ for o in objs]
             except Exception as e:
                 return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)

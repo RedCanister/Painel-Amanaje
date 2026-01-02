@@ -53,9 +53,12 @@ async def startup_event():
     # Register pydantic <-> ORM pairs
     ModelRegistry.register_model(DatasetModel, DatasetORM)
     ModelRegistry.register_model(LearningModel, LearningORM)
+
+    # TODO - This function is causing trouble within the app and needs to be revised
     ModelRegistry.register_orm_pair(name="code",
                                     fields= {
-                                        "variables": dict
+                                        "variables": dict,
+                                        "code": dict
                                     },
                                     base_orm=ObjectORM,
                                     base_pydantic=ObjectModel,
@@ -91,7 +94,6 @@ async def home(request: Request):
       - MLOps (Blue): /production, /airflow, /mlflow
     """
     return templates.TemplateResponse("base_template.html", {"request": request})
-
 
 
 @app.get("/upload", response_class=HTMLResponse)
@@ -285,7 +287,7 @@ async def post_execute(request: Request,
         # CHANGED: Parse JSON body safely
         try:
             data = await request.json()
-            code = data.get("code", "").strip()
+            code = (data.get("code") or "").strip()
         except Exception:
             # Fallback to raw text body if not JSON
             raw = await request.body()
@@ -305,6 +307,8 @@ async def post_execute(request: Request,
             '__builtins__': __builtins__,
             'np': __import__('numpy'),
             'pd': __import__('pandas'),
+            'sk': __import__('sklearn'),
+            'torch': __import__('torch'),
             'ox': __import__('onnx') 
         }
 
@@ -325,16 +329,44 @@ async def post_execute(request: Request,
             for name, variable in namespace.items():
                 if not name.startswith('_') and not isinstance(variable, type(sys)):
                     try:
+
                         var_type = type(variable).__name__
                         var_repr = repr(variable)
 
-                        # CHANGED: Truncate long representations
+                        # CHANGED: Parse value field more intelligently
+                        parsed_value = var_repr
+                        metadata = {}
+
+                        # Detect and extract structure from repr string
                         if len(var_repr) > 150:
-                            var_repr = var_repr[:147] + '...'
+                            # Truncate but capture length indicator
+                            metadata['original_length'] = len(var_repr)
+                            parsed_value = var_repr[:147] + '...'
+                        
+                        # Detect common patterns in repr
+                        if var_repr.startswith('{') and var_repr.endswith('}'):
+                            metadata['structure'] = 'dict-like'
+                            metadata['bracket_depth'] = var_repr.count('{')
+                        elif var_repr.startswith('[') and var_repr.endswith(']'):
+                            metadata['structure'] = 'list-like'
+                            metadata['element_count'] = var_repr.count(',') + 1 if ',' in var_repr else 1
+                        elif var_repr.startswith('(') and var_repr.endswith(')'):
+                            metadata['structure'] = 'tuple-like'
+                            metadata['element_count'] = var_repr.count(',') + 1 if ',' in var_repr else 1
+                        
+                        # Extract dimension hints from common patterns
+                        if 'array(' in var_repr or 'shape=' in var_repr:
+                            metadata['has_shape'] = True
+                        if 'dtype' in var_repr:
+                            dtype_match = var_repr[var_repr.find('dtype'):var_repr.find('dtype')+30]
+                            metadata['dtype_hint'] = dtype_match
+                        
+                        
 
                         extracted_variables[name] = {
                             'type': var_type,
-                            'value': var_repr
+                            'value': parsed_value,
+                            'metadata': metadata if metadata else None
                         }
 
                     except Exception as e:
@@ -511,6 +543,7 @@ async def list_features(db: AsyncSession = Depends(get_db)):
     } for o in objs])
 
 
+# TODO - Adapt this route to expose the details of any LearningModel the user requests
 @app.get('/analysis', response_class=JSONResponse)
 async def analysis(dataset_id: int = None, db: AsyncSession = Depends(get_db)):
     """

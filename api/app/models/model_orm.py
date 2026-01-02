@@ -15,7 +15,7 @@ class ObjectORM(Base):
     object_type = Column(String)        # Tipo / Origem do objeto
     size = Column(Float)                # Tamanho em MB
     path = Column(String)               # Caminho para o conjunto de dados
-    date = Column(DateTime, default=datetime.now().isoformat())               # Data de criação
+    date = Column(DateTime, default=datetime.now)                            # Data de criação
     version = Column(Integer, autoincrement=True)            # Versão da tabela
     history = Column(JSONB, nullable=True)             # Histórico da tabela
 

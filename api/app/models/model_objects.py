@@ -12,7 +12,7 @@ class ObjectModel(AsyncCRUDMixin):
     object_type: str
     size: float                             # Size in MB
     path: str                               # File path to the model
-    date: datetime = Field(default_factory=datetime.now().isoformat())                               # Date of model creation or training
+    date: datetime = Field(default_factory=datetime.now)                     # Date of model creation or training
     version: Optional[int] = None           # Version of the model (date or numeric)
     history: Optional[List[dict]] = None    # History of model training runs
 
@@ -36,8 +36,8 @@ class LearningModel(ObjectModel):
     parameters: dict                        # Model parameters
     metrics: dict                           # Model performance metrics
     reference_data: Optional[str] = None    # Reference to referenced dataset name
-    input_features: List[str]                   # List of input feature names
-    output_features: List[str]                  # List of output feature names
+    input_features: Optional[List[str]] = None                   # List of input feature names
+    output_features: Optional[List[str]] = None                  # List of output feature names
     is_trained: Optional[bool] = False      # Whether the model is trained
     is_tested: Optional[bool] = False       # Whether the model is tested
     is_deployed: Optional[bool] = False     # Whether the model is deployed

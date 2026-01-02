@@ -120,7 +120,9 @@
         <div class="feature-controls">
             <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
 
-            <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
+            <!-- Feature extraction is a future enhancement that will break down datasets into individual columns -->
+                <!-- Extracting features will open the selected dataset for manipulation and save it in postgreSQL database
+                    for full manipulation -->
             <button onclick="extractFeatures()" class="btn">Extract Features</button>
         </div>
         <div class="feature-list" id="featureList">
@@ -128,27 +130,77 @@
         </div>
     </section>
 
-    <!-- Analysis Section -->
-    <section class="form-section" id="analysisSection">
-        <h3>Data Analysis</h3>
-        <div id="datasetDragSelect">
-            <!-- MultiObjectSelector mounts here to enable multi-selection for analysis -->
-            <div id="featureSelector"></div>
+    <!-- TODO - This section is causing some trouble, needs to be analyzed -->
+    <section class="form-section" id="modelsSection">
+        <h3>Upload History</h3>
+        <div class="model-controls">
+            <button onclick="refreshModels()" class="btn">Refresh Model</button>
+
+            <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
+             <!-- TODO - Feature extraction allows the user to choose a dataset that the user can insert into postgresql in full, 
+              with full control-->
+            <button onclick="extractFeatures()" class="btn">Extract Features</button>
         </div>
-
-
-        <div class="analysis-controls">
-            <select id="datasetSelect">
-                <option value="">Select Dataset</option>
-            </select>
-
-            <!-- CHANGED: The analyzeData() method returns statistics and future versions will include plotly/dash visualizations -->
-            <button onclick="analyzeData()" class="btn">Analyze</button>
-        </div>
-        <div id="analysisResults" class="data-grid">
-            <!-- Analysis results will be shown here -->
+        <div class="model-list" id="modelList">
+            <!-- Features will be populated here -->
         </div>
     </section>
+
+    <!-- Analysis Section -->
+    <section class="form-section" id="analysisSection">
+        
+        <!-- Dataset Analysis -->
+        <div id="datasetAnalysis">
+            <h3>Data Analysis</h3>
+
+            <!--
+            <div id="datasetDragSelect">
+                 MultiObjectSelector mounts here to enable multi-selection for analysis 
+                <div id="featureSelector"></div>
+            </div>
+            -->
+
+            <div class="analysis-controls">
+                <select id="datasetSelect">
+                    <option value="">Select Dataset</option>
+                </select>
+
+                <!-- CHANGED: The analyzeData() method returns statistics and future versions will include plotly/dash visualizations -->
+                <button onclick="analyzeData()" class="btn">Analyze</button>
+            </div>
+            <div id="datasetAnalysisResults" class="data-grid">
+                <!-- Analysis results will be shown here -->
+            </div>
+        </div>
+
+
+        <!-- Model Analysis -->
+         <!-- TODO - Align and correct the fields below to make a working model analysis section -->
+         <div id="modelAnalysis">
+            <h3>Model Analysis</h3>
+
+            <!--
+            <div id="modelDragSelect">
+                 MultiObjectSelector mounts here to enable multi-selection for analysis 
+                <div id="modelSelector"></div>
+            </div>
+            -->
+
+            <div class="analysis-controls">
+                <select id="modelSelect">
+                    <option value="">model Dataset</option>
+                </select>
+
+                <button onclick="analyzeModel()" class="btn">Analyze</button>
+            </div>
+            <div id="modelAnalysisResults" class="data-grid">
+                <!-- Analysis results will be shown here -->
+            </div>
+        </div>
+
+    </section>
+
+
 </div>
 {% endblock %}
 
@@ -267,7 +319,12 @@ uploadForm.addEventListener('submit', async (e) => {
             uploadForm.reset();
             fileInput.value = '';
             // Refresh feature list to show new upload
-            refreshFeatures();
+            if (operationId === 'datasets') {
+                refreshFeatures();
+            } else {
+                refreshModels();
+            }
+
         } else {
             document.getElementById('uploadResult').innerHTML = 
                 `<div class="alert alert-error">
@@ -295,10 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ToggleFormOptions({
         triggerElement: '#operationId',
         mapping: {
-            'datasets': ['datasetFields'],    // Show dataset fields when 'datasets' selected
-            'models': ['modelFields']         // Show model fields when 'models' selected
+            'datasets': ['datasetFields', 'featuresSection', 'datasetAnalysis'],    // Show dataset fields when 'datasets' selected
+            'models': ['modelFields', 'modelsSection', 'modelAnalysis']         // Show model fields when 'models' selected
         },
-        allFields: ['datasetFields', 'modelFields']  // All possible form sections
+        allFields: ['datasetFields', 'modelFields', 
+                    'featuresSection', 'modelsSection',
+                    'datasetAnalysis', 'modelAnalysis'
+                ]  // All possible form sections
     });
 
     // ====================================================================
@@ -321,6 +381,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // TODO - Analyze this function call to address the error in this .html
+    PopulateListOptions({
+        selectElement: '#modelSelect',
+        endpoint: '/learningmodel/list',              // Backend route that returns dataset list
+        labelField: 'name',                 // Use 'name' property as display label
+        valueField: 'id',                   // Use 'id' property as option value
+        placeholderText: 'Select a Model',
+        onSuccess: (data) => {
+            console.log(`✅ Loaded ${data.length} models`);
+        },
+        onError: (error) => {
+            console.error('Failed to load model:', error);
+        }
+    });
+
     MultiObjectSelector ({
         containerId: 'featureSelector',
         objectType: 'datasetmodel',
@@ -334,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial feature list load (upload history)
     refreshFeatures();
+    refreshModels   
 });
 
 // ============================================================================
@@ -357,16 +433,17 @@ async function refreshFeatures() {
             return;
         }
         
-        // TODO - I need to be able to select datasets with a boolean toggle that I can 
-        // use to select the datasets to be showed in data analysis.
+        // Add a selection checkbox for each dataset to support multi-select analysis
         featureList.innerHTML = features.map(feature => `
             <div class="feature-item">
-                <h4>📦 ${feature.name}</h4>
-                <p>${feature.description || 'No description provided'}</p>
-                <div style="display: flex; gap: 2rem; font-size: 0.9em; color: #666;">
-                    <small>📊 Type: <b>${feature.dataset_type || 'N/A'}</b></small>
-                    <small>💾 Size: <b>${(feature.size || 0).toFixed(2)}MB</b></small>
-                    <small>🔑 ID: <b>${feature.id}</b></small>
+                <div style="flex:1;">
+                    <h4 style="margin:0.25rem 0;">📦 ${feature.name}</h4>
+                    <p style="margin:0.75; font-size:0.9em; color:#666;">${feature.description || 'No description provided'}</p>
+                    <div style="display:flex; gap:1rem; font-size:0.9em; color:#666; margin-top:6px;">
+                        <small>📊 Type: <b>${feature.dataset_type || 'N/A'}</b></small>
+                        <small>💾 Size: <b>${(feature.size || 0).toFixed(2)}MB</b></small>
+                        <small>🔑 ID: <b>${feature.id}</b></small>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -374,6 +451,48 @@ async function refreshFeatures() {
         console.error('❌ Error fetching features:', error);
         document.getElementById('featureList').innerHTML = 
             `<div class="alert alert-error">Failed to load features list</div>`;
+    }
+}
+
+// Return array of selected dataset ids from checkboxes
+function getSelectedDatasets() {
+    const boxes = Array.from(document.querySelectorAll('.dataset-select'));
+    return boxes.filter(b => b.checked).map(b => b.getAttribute('data-id'));
+}
+
+// TODO - Adapt and correct the refreshModels function so it can properly exhibit the upload details of each model in the history
+async function refreshModels() {
+    try {
+        const response = await fetch('/learningmodel/list');
+        const data = await response.json();
+        const models = Array.isArray(data) ? data : (data.data || data.items || []);
+        const modelsList = document.getElementById('modelList');
+        
+        // CHANGED: Enhanced display with better formatting and info
+        if (models.length === 0 || !Array.isArray(models)) {
+            modelsList.innerHTML = '<div class="model-item">No models uploaded yet</div>';
+            return;
+        }
+        
+        // Display models list
+        modelsList.innerHTML = models.map(model => `
+            <div class="model-item">
+                <div style="flex:1;">
+                    <h4 style="margin:0.25rem 0;">🤖 ${model.name || 'Unnamed'}</h4>
+                    <p style="margin:0.75; font-size:0.9em; color:#666;">${model.description || 'No description provided'}</p>
+                    <div style="display:flex; gap:1rem; font-size:0.9em; color:#666; margin-top:0.5rem;">
+                        <small>📊 Type: <b>${model.model_type || 'N/A'}</b></small>
+                        <small>💾 Size: <b>${(model.size || 0).toFixed(2)}MB</b></small>
+                        <small>🔑 ID: <b>${model.id}</b></small>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        // TODO - The error being return from this catch is: Failed to load models list. TypeError: models.map is not a function.
+        console.error('❌ Error fetching models:', error);
+        const target = document.getElementById('modelList');
+        if (target) target.innerHTML = `<div class="alert alert-error">Failed to load models list. ${error}. </div>`;
     }
 }
 
@@ -422,7 +541,7 @@ async function analyzeData() {
 
     try {
         // Show loading state
-        document.getElementById('analysisResults').innerHTML = 
+        document.getElementById('datasetAnalysisResults').innerHTML = 
             '<div class="alert alert-info">⏳ Analyzing dataset...</div>';
 
         const response = await fetch(`/analysis?dataset_id=${datasetId}`);
@@ -433,11 +552,11 @@ async function analyzeData() {
         // TODO - This table needs to scale easily according to how many datasets I have selected
         // with a reusable function
         // CHANGED: Enhanced display with formatted table instead of raw JSON
-        document.getElementById('analysisResults').innerHTML = `
-            <div class="analysis-result">
+        document.getElementById('datasetAnalysisResults').innerHTML = `
+            <div class="analysis-result" style="grid-column: 1/-1;">
                 <h4>📊 Analysis Results for Dataset #${datasetId}</h4>
                 <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 1px solid #ddd;">
+                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
                         <th style="text-align: left; padding: 0.5rem;">Metric</th>
                         <th style="text-align: right; padding: 0.5rem;">Value</th>
                     </tr>
@@ -454,6 +573,46 @@ async function analyzeData() {
     } catch (error) {
         console.error('❌ Analysis error:', error);
         document.getElementById('analysisResults').innerHTML = 
+            `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
+    }
+}
+
+async function analyzeModel() {
+    const modelId = document.getElementById('modelSelect').value;
+    if (!modelId) {
+        alert('Please select a model first');
+        return;
+    }
+
+    try {
+        document.getElementById('modelAnalysisResults').innerHTML = 
+            '<div class="alert alert-info">⏳ Analyzing model...</div>';
+
+        const response = await fetch(`/analysis?model_id=${modelId}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const results = await response.json();
+        
+        document.getElementById('modelAnalysisResults').innerHTML = `
+            <div class="analysis-result" style="grid-column: 1/-1;">
+                <h4>🤖 Analysis Results for Model #${modelId}</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
+                        <th style="text-align: left; padding: 0.75rem;">Metric</th>
+                        <th style="text-align: right; padding: 0.75rem;">Value</th>
+                    </tr>
+                    ${Object.entries(results.summary || results.metrics || {}).map(([key, value]) => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 0.75rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
+                            <td style="text-align: right; padding: 0.75rem;"><b>${JSON.stringify(value)}</b></td>
+                        </tr>
+                    `).join('')}
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ Model analysis error:', error);
+        document.getElementById('modelAnalysisResults').innerHTML = 
             `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
     }
 }
