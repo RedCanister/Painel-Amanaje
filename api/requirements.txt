@@ -14,5 +14,7 @@ onnx==1.19.1
 scikit-learn==1.7.2
 pytorch-forecasting==1.5.0
 torch==2.9.1
+numpy==2.4.0
+pydantic==2.15.5
 
 # NOTE: torch is very large; include only if the service needs it

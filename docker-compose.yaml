@@ -124,46 +124,46 @@ services:
       - redis
 
   # AIRFLOW SCHEDULER CONTAINER
-  airflow-scheduler:
-    <<: *airflow-common
-    command: scheduler
-    depends_on:
-      - airflow-init
+  # airflow-scheduler:
+  #  <<: *airflow-common
+  #  command: scheduler
+  #  depends_on:
+  #    - airflow-init
 
-  airflow-worker:
-    <<: *airflow-common
-    command: celery worker
-    depends_on:
-      - airflow-init
+  # airflow-worker:
+  #  <<: *airflow-common
+  #  command: celery worker
+  #  depends_on:
+  #    - airflow-init
 
   # AIRFLOW TRIGGERER CONTAINER
-  airflow-triggerer:
-    <<: *airflow-common
-    command: triggerer
-    depends_on:
-      - airflow-init
+  # airflow-triggerer:
+  #  <<: *airflow-common
+  #  command: triggerer
+  #  depends_on:
+  #    - airflow-init
 
   # AIRFLOW FLOWER CONTAINER
-  airflow-flower:
-    <<: *airflow-common
-    command: celery flower --port=5555
-    ports:
-      - "5555:5555"
-    depends_on:
-      - airflow-init
+  #airflow-flower:
+  #  <<: *airflow-common
+  #  command: celery flower --port=5555
+  #  ports:
+  #    - "5555:5555"
+  #  depends_on:
+  #    - airflow-init
 
-  airflow-dag-processor:
-    <<: *airflow-common
-    command: dag-processor
-    healthcheck:
-      test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    depends_on:
-      airflow-init:
-        condition: service_completed_successfully
+  # airflow-dag-processor:
+  #  <<: *airflow-common
+  #  command: dag-processor
+  #  healthcheck:
+  #    test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
+  #    interval: 30s
+  #    timeout: 10s
+  #    retries: 5
+  #    start_period: 30s
+  #  depends_on:
+  #    airflow-init:
+  #      condition: service_completed_successfully
 
   # MISCELLANEOUS SERVICES
 
@@ -200,18 +200,18 @@ services:
       - backend
 
   # PLOTLY DASHBOARD SERVICE CONTAINER
-  dashboard:
-    build:
-      context: ./dashboard
-    env_file:
-      - .env
-    volumes:
-      - ./dashboard:/app:cached
-    ports:
-      - "8050:8050"
-    depends_on:
-      - api
-    restart: unless-stopped
+  # dashboard:
+  #  build:
+  #    context: ./dashboard
+  #  env_file:
+  #    - .env
+  #  volumes:
+  #    - ./dashboard:/app:cached
+  #  ports:
+  #    - "8050:8050"
+  #  depends_on:
+  #    - api
+  #  restart: unless-stopped
 
 
 #  feast:

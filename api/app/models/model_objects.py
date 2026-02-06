@@ -1,6 +1,7 @@
 from pydantic import Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
+import optuna as op
 from .model_schemas import AsyncCRUDMixin
 
 # Modelo pydantic básico para construção das colunas principais
@@ -23,10 +24,11 @@ class DatasetModel(ObjectModel):
 
     dataset_type: str
     shape: List[int]
-    has_features: Optional[bool] = None                      # Whether dataset has features
+    has_features: Optional[bool] = None     # Whether dataset has features
     features_list: Optional[List[str]] = None  # List of feature names
     connection_string: Optional[str] = None # For database connections  
     # Implement shape into the set
+
 
 # Machine Learning Models - Entities: Learning Models, ONNX Models, Template Models. Using ./mlflow-server for model management. Or ./mlruns for run storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database | Train | Study | Deploy |
@@ -42,3 +44,75 @@ class LearningModel(ObjectModel):
     is_tested: Optional[bool] = False       # Whether the model is tested
     is_deployed: Optional[bool] = False     # Whether the model is deployed
     
+
+class StudyModel(ObjectModel):
+
+    model: LearningModel
+    dataset: DatasetModel
+    sampler: str
+    objective: str
+    best_trial: Dict[str]
+    best_params: Dict[str]
+    study_params: Dict[str] # n_trials, direction, metrics, n_jobs
+
+    # Objective fuctions per library
+    
+    # Tensors - Dataloaders
+    def objective_torch(X, y, PyTorchModel, nn_criterion, nn_optimizer, 
+            param_list: Dict[str, int], trial: op.trial.Trial
+        ):
+        # Hyperparameter search space
+        # - Parameter definition
+        # - Range and parameter suggestion function
+
+        # The incoming param_list has 3 integers behind each parameter, to be provided in the front-end
+        # e.g., {'param_name': {'type': 'int', 'low': 1, 'high': 10, 'step': 1}}
+        for param, values in param_list.items():
+            if values['type'] == 'int':
+                param_value = trial.suggest_int(param, values['low'], values['high'], step=values.get('step', 1))
+            elif values['type'] == 'float':
+                param_value = trial.suggest_float(param, values['low'], values['high'], step=values.get('step', 0.1))
+            elif values['type'] == 'categorical':
+                param_value = trial.suggest_categorical(param, values['choices'])
+            # Store or use param_value as needed
+        
+        # Model definition
+        # - Criterion and optimizer
+        # - Training function
+        # model = PyTorchModel(param_value_1, param_value_2, param_value_3, param_value_4, )
+        # criterion = nn.MSELoss()
+        # optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+        # Loss Validation
+        # - Gradient
+        # - Model prediction
+
+        # Front-end request model.train() or model.eval()
+        # model.eval()
+
+        # Front-end request grad() or .no_grad()
+        # with torch.no_grad():
+        # predictions, _ = model(val_x)
+        # loss = criterion(predictions, val_y)
+
+        # Optuna Prunning
+        # if trial.should_prune():
+        #   logging.warning(trial.number)
+        #   raise optuna.exceptions.TrialPruned()
+
+        # Exception catching
+
+
+        return None
+
+    # fit(X, y)
+    def objective_sklearn():
+        return None
+
+
+    def objective_tensorflow():
+        return None
+
+
+    def objective_xgboost():
+        return None

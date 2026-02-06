@@ -4,5 +4,14 @@
         "api"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "servers": {
+    "container-tools": {
+      "command": "docker",
+      "args": ["run", "--rm", "-i", "your-mcp-image"],
+      "env": {
+        "MCP_SERVER_URL": "http://localhost:3333"
+      }
+    }
+  }
 }

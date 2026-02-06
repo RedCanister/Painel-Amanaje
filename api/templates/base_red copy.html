@@ -14,11 +14,34 @@
 </style>
 {% endblock %}
 
+{% block extra_script %}
+
+<!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+
+<link rel="stylesheet" href="api\static\style.css">
+
+<style>
+    body { font-family: sans-serif; }
+    #output { white-space: pre-wrap; background: #f5f5f5; padding:10px; margin-top: 10px;}
+
+    #monacoEditorContainer { 
+        width: 100%; 
+        height: 520px;
+        min-height: 200px; 
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+</style>
+
+{% endblock %}
+
 {% block content %}
 <div class="data-operations">
     <!-- Upload Section -->
     <section class="form-section" id="uploadSection">
-        <h3>Data Upload</h3>
+        <h3>Data Creation</h3>
         
         <!-- CHANGED: Form now supports both dataset and model uploads with dynamic field toggling -->
         <!-- The toggle between dataset and model forms is based on the OperationID dropdown value -->
@@ -33,90 +56,55 @@
                 </select>
             </div>
             
+            <div class="editor-controls">
+                <button id="btnExecuteCode" class="success"> Execute </button>
+                <button id="btnExecuteCode" class="success"> Save </button>
+                <button id="btnExecuteCode" class="success"> Load </button>
+                <button id="btnExecuteCode" class="success"> Generate </button>
+                <button id="btnExecuteCode" class="success"> Reset </button>
+            </div>
+
             <!-- Dataset Form fields -->
             <div id="datasetFields">
-                <div class="form-group">
-                    <label for="objectName">Dataset Name:</label>
-                    <input type="text" id="datasetObjectName" name="objectName" required>
-                </div>
-                <div class="form-group">
-                        <label for="description">Description:</label>
-                        <textarea id="datasetDescription" name="description"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="datasetType">Dataset Type:</label>
-                    <select id="datasetType" name="datasetType">
-                        <option value="numerical_dataset">Numerical</option>
-                        <option value="categorical_dataset">Categorical</option>
-                        <option value="timeseries_dataset">Time-Series</option>
-                        <option value="image_dataset">Image</option>
-                        <option value="videoaudio_dataset">Video-Audio</option>
-                        <option value="text_dataset">Text</option>
-                        <option value="mixed_dataset">Mixed</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="connectionString">Connection String:</label>
-                    <textarea id="connectionString" name="connectionString"></textarea>
-                </div>
+                <h3>Write your data extraction script here.</h3>
+                <div id="dataEditorContainer"></div>
+                <br>
+                <div id="dataOutput"></div>
             </div>
 
             
             <!-- Model Form Fields -->
             <div id="modelFields" style="display: none;">
-                <div class="form-group">
-                    <label for="objectName">Model Name:</label>
-                    <input type="text" id="modelObjectName" name="objectName" required>
-                </div>
-                <div class="form-group">
-                        <label for="description">Description:</label>
-                        <textarea id="modelDescription" name="description"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="modelType">Model Type:</label>
-                    <select id="modelType" name="modelType">
-                        <option value="supervised_model">Supervised</option>
-                        <option value="unsupervised_model">Unsupervised</option>
-                        <option value="reinforcement_model">Reinforcement</option>
-                        <option value="deep_learning_model">Deep Learning</option>
-                        <option value="generative_model">Generative</option>
-                        <option value="transformative_model">Transformer</option>
-                    </select>
-                </div>
-                <!-- CHANGED: Python editor integration now available via /optimization endpoint
-                Users can develop models in-browser using base_test.html (Monaco/CodeMirror editors with Pyodide runtime)
-                Then save directly to backend via saveModel() function, which uploads to /upload/models endpoint
-                This enables seamless workflow: code → test → save → register in model registry -->
-                <div class="form-group">
-                    <!-- NOTE - The easiest way to extract the parameters is from __init__. -->
-                    <label for="parameters">Parameters:</label>
-                    <textarea id="parameters" name="parameters"></textarea>
-                </div>
-                <div class="form-group">
-                    <!-- The metrics can be defined now or later -->
-                    <label for="metrics">Metrics:</label>
-                    <textarea id="metrics" name="metrics"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="referenceData">Reference Data:</label>
-                    <textarea id="referenceData" name="referenceData"></textarea>
-                </div>
+                <h3>Write your model extraction script here.</h3>
+                <div id="modelEditorContainer"></div>
+                <br>
+                <div id="modelOutput"></div>
             </div>
 
-            <!-- Drag and drop file upload zone -->
-            <div class="upload-area" id="dropZone">
-                <p>Drag files here or click to select</p>
-                <input type="file" id="fileInput" name="file" hidden>
+            <div id="statusMessage" class="statusMessage"></div>
+
+            <div id="executionOutput">
+                <div style="color: #569cd6; margin-bottom: 8px;"> Script Output </div>
+                <div id="outputContent"></div>
             </div>
-            <button type="submit" class="btn btn-primary">Upload</button>
-            <!-- CHANGED: Upload feedback is now shown in uploadResult div below -->
+
+            <div id="variablePanel" style="display:none;">
+                <h3> Script Variables </h3>
+                <div id="variableList"></div>
+            </div>
+
+            <div id="filePanel" style="display:none;">
+                <h3> Saved Variables </h3>
+                <ul id="fileList" class="file-list"></ul>
+            </div>
+            
         </form>
         <div id="uploadResult"></div>
     </section>
 
     <!-- Features Section -->
     <section class="form-section" id="featuresSection">
-        <h3>Upload History</h3>
+        <h3>Creation History</h3>
         <div class="feature-controls">
             <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
 
@@ -132,14 +120,14 @@
 
     <!-- TODO - This section is causing some trouble, needs to be analyzed -->
     <section class="form-section" id="modelsSection">
-        <h3>Upload History</h3>
+        <h3>Creation History</h3>
         <div class="model-controls">
-            <button onclick="refreshModels()" class="btn">Refresh Model</button>
+            <button onclick="refreshModels()" class="btn">Refresh Models </button>
 
             <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
              <!-- TODO - Feature extraction allows the user to choose a dataset that the user can insert into postgresql in full, 
               with full control-->
-            <button onclick="extractFeatures()" class="btn">Extract Features</button>
+            <button onclick="extractFeatures()" class="btn">Optimize Models</button>
         </div>
         <div class="model-list" id="modelList">
             <!-- Features will be populated here -->
@@ -188,7 +176,7 @@
 
             <div class="analysis-controls">
                 <select id="modelSelect">
-                    <option value="">model Dataset</option>
+                    <option value="">Select Model</option>
                 </select>
 
                 <button onclick="analyzeModel()" class="btn">Analyze</button>
@@ -204,9 +192,44 @@
 </div>
 {% endblock %}
 
+
+
 {% block extra_js %}
 <!-- Load generic form utilities for dynamic form handling -->
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
+<script src="{{ url_for('static', path='/js/editor-utilities.js') }}"></script>
+
+<script>
+    async function initialize_editor(template, divElement) {
+        window.editor = null;
+
+        window.editorReady = new Promise(resolve => {
+            require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} }); 
+            
+            require(["vs/editor/editor.main"], function () {
+                window.editor = monaco.editor.create(document.getElementById(divElement), {
+                    value: `
+                    ${template}
+                    `,
+                    language: "python",
+                    theme: "vs-dark",
+                    automaticLayout: true,
+                    tabSize: 4,
+                    minimap: {enabled: false},
+                    lineNumbers: "on",
+                    scrollBeyondLastLine: true,
+                    wordWrap: "on"
+                });
+
+                try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
+                console.log("✅ Upload Editor initialized in", divElement);
+                resolve(window.editor);
+            });
+        });
+    }
+
+    let extractedVariables = {};
+</script>
 
 <script>
 /**
@@ -348,6 +371,10 @@ uploadForm.addEventListener('submit', async (e) => {
 // CHANGED: Replaced manual toggle logic with generic ToggleFormOptions function
 // This is now DRY (Don't Repeat Yourself) and can be used in other templates too
 document.addEventListener('DOMContentLoaded', () => {
+
+    initialize_editor("#Insert your data code here" ,"dataEditorContainer");
+    initialize_editor("#Insert your model code here" ,"modelEditorContainer");
+
     // Initialize form field visibility toggle using generic utility
     ToggleFormOptions({
         triggerElement: '#operationId',
@@ -406,6 +433,29 @@ document.addEventListener('DOMContentLoaded', () => {
         maxSelection: 10,
         onSelectionChange: (selected) => console.log('Selected:', selected)
     });
+
+    // Editor Configuration
+    document.getElementById('btnExecuteCode')?.addEventListener('click', executeCode);
+    document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
+        const assignments = parseVariableAssignmentsFromText();
+        if (assignments.length > 0) {
+            showStatus(`📊 Found ${assignments.length} variable assignments in code`, 'success');
+            console.log('Variable assignments:', assignments);
+        } else {
+            showStatus('⚠️ No variable assignments found in code', 'info');
+        }
+    });
+
+    document.getElementById('btnSaveVariables')?.addEventListener('click', saveVariablesToFile);
+    document.getElementById('btnLoadVariables')?.addEventListener('click', () => {
+        loadFileList();
+    });
+    document.getElementById('btnClearEditor')?.addEventListener('click', clearEditor);
+    document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
+
+    loadFileList();
+
+    console.log("✅ Model Builder initialized");
 
     // Initial feature list load (upload history)
     refreshFeatures();

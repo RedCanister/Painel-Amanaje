@@ -1,11 +1,9 @@
-import os, sys, json
 from io import StringIO
-import traceback
 import tracemalloc
 import aiofiles
 
 import asyncio
-import traceback, subprocess, tempfile, os, joblib, sys, uuid
+import traceback, subprocess, tempfile, os, joblib, sys, uuid, json
 from datetime import datetime
 from typing import List
 
@@ -94,6 +92,12 @@ async def home(request: Request):
       - MLOps (Blue): /production, /airflow, /mlflow
     """
     return templates.TemplateResponse("base_template.html", {"request": request})
+
+
+@app.get("/training", response_class=HTMLResponse)
+async def page_test(request: Request):
+    
+    return templates.TemplateResponse("base_red copy.html", {"request": request})
 
 
 @app.get("/upload", response_class=HTMLResponse)
@@ -361,8 +365,6 @@ async def post_execute(request: Request,
                             dtype_match = var_repr[var_repr.find('dtype'):var_repr.find('dtype')+30]
                             metadata['dtype_hint'] = dtype_match
                         
-                        
-
                         extracted_variables[name] = {
                             'type': var_type,
                             'value': parsed_value,

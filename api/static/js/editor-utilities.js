@@ -1,156 +1,6 @@
-{% extends "base_template.html" %}
-
-{% block title %}MLOps - Painel Amanajé{% endblock %}
-
-{% block extra_css %}
-<style>
-    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
-    .mlops-section h3 { color: #0077b6; margin-top: 0; }
-    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
-    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
-    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
-    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
-    .status-active { background-color: #2ecc71; }
-    .status-warning { background-color: #f1c40f; }
-    .status-error { background-color: #e74c3c; }
-</style>
-{% endblock %}
 
 
-{% block extra_script %}
-
-<!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-
-<link rel="stylesheet" href="api\static\style.css">
-
-<style>
-    body { font-family: sans-serif; }
-    #output { white-space: pre-wrap; background: #f5f5f5; padding:10px; margin-top: 10px;}
-
-    #monacoEditorContainer { 
-        width: 100%; 
-        height: 520px;
-        min-height: 200px; 
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-    }
-
-</style>
-
-{% endblock %}
-
-
-{% block content %}
-
-<!-- Editor Tab -->
-<!-- NOTE - Consider that after done, the code in base_test.html will need to properly interface with the /create endpoint to save the model -->
-<!-- NOTE - Consider that the code in base_test.html will be transfered to base_red.html to expand it's interface. It must fit every template in the app. -->
-
-<div class="model-builder">
-
-    <div class="editor-controls">
-        <button id="btnExecuteCode" class="success" onClick="executeCode()">▶ Execute Code</button>
-        <button id="btnExtractVariables" >📊 Extract Variables</button>
-        <button id="btnSaveVariables" >💾 Save Variables</button>
-        <button id="btnLoadVariables" >📂 Load Variables</button>
-        <button id="btnClearEditor" class="danger">🗑️ Clear Editor</button>
-        <button id="btnExportJSON" > 📥Export as JSON</button>
-    </div>
-
-    <div id="editor">
-        <h3>Write your Model code</h3>
-        <div id="monacoEditorContainer"></div>
-        <br>
-        <div id="output"></div>
-
-        <!-- Status message for operation feedback -->
-         // TODO - This function is causing trouble within the app and needs to be revised
-        <div id="statusMessage" class="statusMessage"></div>
-
-        <div id="executionOutput">
-            <div style="color: #569cd6; margin-bottom: 8px;">📋 Execution Output </div>
-            <div id="outputContent"></div>
-        </div>
-
-        <div id="variablePanel" style="display:none;">
-            <h3>🔍 Extracted Variables</h3>
-            <div id="variableList"></div>
-        </div>
-
-        <div id="filePanel" style="display:none;">
-            <h3>📁 Saved Variables </h3>
-            <ul id="fileList" class="file-list"></ul>
-        </div>
-    </div> 
-
-</div>
-
-{% endblock %}
-
-
-{% block extra_js %}
-<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
-
-<script>
-    // TODO - Revise the functioning of the code editor. The function loadVariableFileFromList
-    // is not properly loading the code value of the retrieved object. Help me debug it
-    window.editor = null;
-
-    window.editorReady = new Promise(resolve => {
-        require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} });
-
-        require(["vs/editor/editor.main"], function () {
-            window.editor = monaco.editor.create(document.getElementById("monacoEditorContainer"), {
-                value: `
-# Define your model here. Use any of the available libraries
-# The more you break down your variables, the better the code will be able to use them
-
-import pandas as pd
-
-df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
-    `,
-                language: "python",
-                theme: "vs-dark",
-                automaticLayout: true,
-                tabSize: 4,
-                minimap: { enabled: false},
-                lineNumbers: "on",
-                scrollBeyondLastLine: true,
-                wordWrap: "on"
-            });
-
-            try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
-            console.log("Monaco Editor initialized");
-            resolve(window.editor);
-        });
-    });
-
-</script>
-
-
-
-<script>
-
-    document.querySelectorAll(".tab").forEach(tab => {
-        tab.addEventListener("click", () => {
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-            tab.classList.add("active");
-            document.getElementById(tab.dataset.tab).classList.add("active");
-            setTimeout(() => {
-                if (window.editor && typeof window.editor.layout === 'function') {
-                    window.editor.layout();
-                }
-            }, 100);
-        });
-    });
-
-    let extractedVariables = {};
-
-    
-    async function executeCode() {
+async function executeCode() {
         if (!window.editor) {
             showStatus('⏳ Please wait, Monaco Editor is initializing...', 'error');
             return;
@@ -200,7 +50,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    function displayExecutionOutput(stdout, stderr) {
+function displayExecutionOutput(stdout, stderr) {
         const outputContainer = document.getElementById("executionOutput");
         const outputContent = document.getElementById("outputContent");
 
@@ -223,14 +73,14 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         outputContainer.classList.add("visible");
     }
 
-    function clearExecutionOutput() {
+function clearExecutionOutput() {
         const outputContainer = document.getElementById("executionOutput");
         const outputContent = document.getElementById("outputContent");
         outputContent.innerHTML = '';
         outputContainer.classList.remove("visible");
     }
 
-    function parseVariableAssignmentsFromText() {
+function parseVariableAssignmentsFromText() {
         if (!window.editor) return [];
         const code = window.editor.getValue();
         const assignments = [];
@@ -249,7 +99,10 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         return assignments;
     }
 
-    function displayExtractedVariables(variables) {
+// TODO - This function needs to be split in two: The display an the formatting
+// of the variables in 3 fields: Name, type and value. And have the variables
+// placed inside a data structure
+function displayExtractedVariables(variables) {
         const panel = document.getElementById("variablePanel");
         const list = document.getElementById("variableList");
         
@@ -279,13 +132,13 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         showStatus(`✅ Extracted ${Object.keys(variables).length} variables`, 'success');
     }
 
-    function escapeHtml(text) {
+function escapeHtml(text) {
         const div = document.createElement("div");
         div.textContent = text;
         return div.innerHTML;
     }
 
-    async function saveVariablesToFile() {
+async function saveVariablesToFile() {
         const filename = prompt("Enter filename to save variables:", "variables_" + new Date().toISOString().split('T')[0]);
 
         if (!filename) return;
@@ -357,7 +210,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    async function loadFileList() {
+async function loadFileList() {
         try {
             const response = await fetch('/codemodel/list');
 
@@ -415,9 +268,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    // TODO - Whenever I click the buttton of this function, I get an error
-    // where the editor is not initialized.
-    async function loadVariableFileFromList(filename) {
+async function loadVariableFileFromList(filename) {
         try {
             
             const response = await fetch(`/codemodel/get/${encodeURIComponent(filename)}`);
@@ -482,7 +333,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    async function deleteVariableFile(filename) {
+async function deleteVariableFile(filename) {
         if (!confirm(`Delete ${filename}?`)) return;
 
         try {
@@ -501,7 +352,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    function exportVariablesAsJSON() {
+function exportVariablesAsJSON() {
         if (!extractedVariables || Object.keys(extractedVariables).length === 0) {
             showStatus('⚠️ No variables to export', 'error');
             return;
@@ -512,6 +363,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             variables: extractedVariables,
             code: (window.editor ? window.editor.getValue() : "")
         };
+        
         const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -525,7 +377,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         showStatus('✅ Variables exported', 'success');
     }
 
-    function showStatus(message, type = 'success') {
+function showStatus(message, type = 'success') {
         const statusEl = document.getElementById('statusMessage');
         if (!statusEl) return;
         statusEl.textContent = message;
@@ -537,7 +389,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         //}, 5000);
     }
 
-    function clearEditor() {
+function clearEditor() {
         if (!window.editor) return;
         if (confirm('Clear editor content?')) {
             window.editor.setValue('');
@@ -549,29 +401,4 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('btnExecuteCode')?.addEventListener('click', executeCode);
-        document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
-            const assignments = parseVariableAssignmentsFromText();
-            if (assignments.length > 0) {
-                showStatus(`📊 Found ${assignments.length} variable assignments in code`, 'success');
-                console.log('Variable assignments:', assignments);
-            } else {
-                showStatus('⚠️ No variable assignments found in code', 'info');
-            }
-        });
-
-        document.getElementById('btnSaveVariables')?.addEventListener('click', saveVariablesToFile);
-        document.getElementById('btnLoadVariables')?.addEventListener('click', () => {
-            loadFileList();
-        });
-        document.getElementById('btnClearEditor')?.addEventListener('click', clearEditor);
-        document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
-
-        loadFileList();
-
-        console.log("✅ Model Builder initialized");
-    });
-</script>
-
-{% endblock %}
+    
