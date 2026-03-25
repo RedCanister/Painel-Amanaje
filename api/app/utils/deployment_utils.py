@@ -27,9 +27,9 @@ import mlflow
 from mlflow.exceptions import RestException
 from mlflow.tracking import MLflowClient
 
-from utils.logging import get_logger
-from utils.io import save_json, save_pickle, load_pickle, ensure_dir
-from utils.mlflow_utils import log_artifact, log_json
+from app.utils.logging import get_logger
+from app.utils.io import save_json, save_pickle, load_pickle, ensure_dir
+from app.utils.mlflow_utils import log_artifact, log_json
 
 logger = get_logger("deployment_utils")
 mlflow_client = MLflowClient()

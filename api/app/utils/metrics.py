@@ -10,6 +10,8 @@ Features:
 - Safe handling for Airflow / FastAPI/ Prometheus contexts
 """
 
+# TODO - Consider hardware and system usage as metrics as well
+
 import numpy as np
 from sklearn.metrics import (
     mean_squared_error,
@@ -22,8 +24,8 @@ from sklearn.metrics import (
 )
 from typing import Dict, Any, Optional
 
-from utils.logging import get_logger
-from utils.mlflow_utils import log_metrics
+from app.utils.logging import get_logger
+from app.utils.mlflow_utils import log_metrics
 
 logger = get_logger("metrics")
 
@@ -102,4 +104,5 @@ def pretty_print_metrics(metrics: Dict[str, Any]) -> None:
     logger.info("🧮 Evaluation Summary:")
     for k, v in metrics.items():
         logger.info(f" {k:<10}: {v:.6f}")
+
 

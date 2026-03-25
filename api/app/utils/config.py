@@ -15,9 +15,9 @@ import json
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 
-from utils.io import load_yaml, load_json
-from utils.logging import get_logger
-from utils.serialization import deep_asdict
+from app.utils.io import load_yaml, load_json
+from app.utils.logging import get_logger
+from app.utils.serialization import deep_asdict
 
 logger = get_logger("config")
 
@@ -65,7 +65,7 @@ def merge_env_overrides(config: Dict[str, Any], prefix: str = "") -> Dict[str, A
             override = os.getenv(env_key)
             if override is not None:
                 try:
-                    overried_val = json.loads(override)
+                    override_val = json.loads(override)
                 except json.JSONDecodeError:
                     try:
                         override_val = float(override)
@@ -114,7 +114,8 @@ def save_config_snapshot(config: Dict[str, Any], output_path: str = "configs/run
     """
     Saves the active runtime configuration snapshot (for MLflow or reprsoducibility).
     """
-    from utils.io import save_json
+    from app.utils.io import save_json
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     save_json(deep_asdict(config), output_path)
     logger.info(f"💾 Runtime config snapshot save: {output_path}")
+

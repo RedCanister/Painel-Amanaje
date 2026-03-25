@@ -1,0 +1,845 @@
+{% extends "base_template.html" %}
+
+{% block title %}MLOps - Painel Amanaje{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
+    .mlops-section h3 { color: #0077b6; margin-top: 0; }
+    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
+    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
+    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
+    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+    .status-active { background-color: #2ecc71; }
+    .status-warning { background-color: #f1c40f; }
+    .status-error { background-color: #e74c3c; }
+</style>
+{% endblock %}
+
+
+{% block extra_script %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+
+<style>
+    body { font-family: sans-serif; }
+    #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; margin-top: 10px; }
+
+    #monacoEditorContainer {
+        width: 100%;
+        height: 520px;
+        min-height: 200px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="model-builder">
+    <div class="editor-controls">
+        <button id="btnExecuteCode" class="success">Execute Code</button>
+        <button id="btnExtractVariables">Extract Variables</button>
+        <button id="btnSaveVariables">Save Variables</button>
+        <button id="btnLoadVariables">Load Variables</button>
+        <button id="btnClearEditor" class="danger">Clear Editor</button>
+        <button id="btnExportJSON">Export as JSON</button>
+    </div>
+
+    <div id="editor">
+        <h3>Write your model code</h3>
+        <div id="monacoEditorContainer"></div>
+        <br>
+        <div id="output"></div>
+
+        <div id="statusMessage" class="statusMessage"></div>
+
+        <div id="executionOutput">
+            <div style="color: #569cd6; margin-bottom: 8px;">Execution Output</div>
+            <div id="outputContent"></div>
+        </div>
+
+        <div id="variablePanel" style="display:none;">
+            <h3>Extracted Variables</h3>
+            <div id="variableList"></div>
+        </div>
+
+        <div id="metadataPanel" style="display:none;">
+            <h3>Parsed Metadata</h3>
+            <p id="metadataHint" style="color: #777; margin-top: 0;">Run the script or parse the editor to build a save-ready document.</p>
+            <div id="metadataContent"></div>
+        </div>
+
+        <div id="filePanel" style="display:none;">
+            <h3>Saved Variables</h3>
+            <ul id="fileList" class="file-list"></ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
+
+<script>
+    window.editor = null;
+    window.editorExecution = null;
+    window.executedVariables = {};
+    window.editorDocument = null;
+    window.editorMetadata = {};
+    let extractedVariables = {};
+
+    window.editorReady = new Promise(resolve => {
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+
+        require(["vs/editor/editor.main"], function () {
+            window.editor = monaco.editor.create(document.getElementById("monacoEditorContainer"), {
+                value: `
+# Define your model here. Use any of the available libraries.
+# The more explicit your variables are, the easier it is to save them.
+
+import pandas as pd
+
+df = pd.DataFrame({"feature1": [1, 2], "feature2": [3, 4]})
+name = "example_code_model"
+description = "Example payload generated from the editor"
+object_type = "code_model"
+path = "editor/example_code_model.py"
+version = 1
+`,
+                language: "python",
+                theme: "vs-dark",
+                automaticLayout: true,
+                tabSize: 4,
+                minimap: { enabled: false },
+                lineNumbers: "on",
+                scrollBeyondLastLine: true,
+                wordWrap: "on"
+            });
+
+            try { window.editor.layout(); } catch (error) { console.warn("editor.layout() failed", error); }
+            resolve(window.editor);
+        });
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(item => item.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(item => item.classList.remove("active"));
+            tab.classList.add("active");
+            document.getElementById(tab.dataset.tab).classList.add("active");
+            setTimeout(() => {
+                if (window.editor && typeof window.editor.layout === "function") {
+                    window.editor.layout();
+                }
+            }, 100);
+        });
+    });
+
+    function stringifyVariableValue(value) {
+        if (typeof value === "string") return value;
+
+        try {
+            return JSON.stringify(value);
+        } catch (error) {
+            return String(value);
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text ?? "";
+        return div.innerHTML;
+    }
+
+    function parsePythonLiteral(rawValue) {
+        const value = (rawValue || "").trim();
+        if (!value) return "";
+
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            return value.slice(1, -1);
+        }
+
+        if (value === "True") return true;
+        if (value === "False") return false;
+        if (value === "None") return null;
+
+        if (/^-?\d+(\.\d+)?$/.test(value)) {
+            return Number(value);
+        }
+
+        if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
+            try {
+                const normalized = value
+                    .replace(/\bTrue\b/g, "true")
+                    .replace(/\bFalse\b/g, "false")
+                    .replace(/\bNone\b/g, "null")
+                    .replace(/'/g, '"');
+                return JSON.parse(normalized);
+            } catch (error) {
+                return value;
+            }
+        }
+
+        return value;
+    }
+
+    function inferVariableKind(value, expression = "") {
+        if (value === null) return "null";
+        if (Array.isArray(value)) return "sequence";
+        if (typeof value === "boolean") return "boolean";
+        if (typeof value === "number") return "number";
+        if (typeof value === "string") {
+            const trimmed = expression.trim();
+            if (trimmed.startsWith("{") && trimmed.endsWith("}")) return "mapping";
+            return "string";
+        }
+        if (typeof value === "object") return "mapping";
+        return "object";
+    }
+
+    function serializeVariableForDisplay(value, kind) {
+        if (typeof value === "string") return value;
+        if (kind === "mapping" || kind === "sequence") {
+            try {
+                return JSON.stringify(value);
+            } catch (error) {
+                return String(value);
+            }
+        }
+        return String(value);
+    }
+
+    function isEscaped(text, index) {
+        let backslashes = 0;
+        for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor -= 1) {
+            backslashes += 1;
+        }
+        return backslashes % 2 === 1;
+    }
+
+    function countBracketDelta(line) {
+        let delta = 0;
+        let quote = null;
+
+        for (let index = 0; index < line.length; index += 1) {
+            const current = line[index];
+            const nextThree = line.slice(index, index + 3);
+
+            if (!quote && current === "#") break;
+
+            if (!quote && (nextThree === '"""' || nextThree === "'''")) {
+                quote = nextThree;
+                index += 2;
+                continue;
+            }
+
+            if (quote && nextThree === quote) {
+                quote = null;
+                index += 2;
+                continue;
+            }
+
+            if (quote === '"' || quote === "'") {
+                if (current === quote && !isEscaped(line, index)) quote = null;
+                continue;
+            }
+
+            if (!quote && (current === '"' || current === "'")) {
+                quote = current;
+                continue;
+            }
+
+            if (quote) continue;
+
+            if ("([{".includes(current)) delta += 1;
+            if (")]}".includes(current)) delta -= 1;
+        }
+
+        return delta;
+    }
+
+    function parseVariableAssignmentsFromText() {
+        if (!window.editor) return [];
+
+        const code = window.editor.getValue();
+        const lines = code.split("\n");
+        const assignments = [];
+        let currentAssignment = null;
+        let bracketDepth = 0;
+
+        lines.forEach((line, index) => {
+            const trimmed = line.trim();
+
+            if (!currentAssignment) {
+                if (!trimmed || trimmed.startsWith("#")) return;
+                if (/^\s+/.test(line)) return;
+
+                const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+?)\s*$/);
+                if (!match) return;
+
+                currentAssignment = {
+                    name: match[1],
+                    expressionLines: [match[2]],
+                    line: index + 1
+                };
+                bracketDepth = countBracketDelta(match[2]);
+
+                if (bracketDepth <= 0 && !match[2].trim().endsWith("\\")) {
+                    assignments.push({
+                        name: currentAssignment.name,
+                        expression: currentAssignment.expressionLines.join("\n").trim(),
+                        line: currentAssignment.line
+                    });
+                    currentAssignment = null;
+                    bracketDepth = 0;
+                }
+                return;
+            }
+
+            currentAssignment.expressionLines.push(line);
+            bracketDepth += countBracketDelta(line);
+
+            if (bracketDepth <= 0 && !trimmed.endsWith("\\")) {
+                assignments.push({
+                    name: currentAssignment.name,
+                    expression: currentAssignment.expressionLines.join("\n").trim(),
+                    line: currentAssignment.line
+                });
+                currentAssignment = null;
+                bracketDepth = 0;
+            }
+        });
+
+        if (currentAssignment) {
+            assignments.push({
+                name: currentAssignment.name,
+                expression: currentAssignment.expressionLines.join("\n").trim(),
+                line: currentAssignment.line
+            });
+        }
+
+        return assignments;
+    }
+
+    function buildVariablePayloadFromAssignment(assignment) {
+        const parsedValue = parsePythonLiteral(assignment.expression);
+        const kind = inferVariableKind(parsedValue, assignment.expression);
+        const preview = serializeVariableForDisplay(parsedValue, kind);
+        const payload = {
+            name: assignment.name,
+            type: kind === "number"
+                ? (Number.isInteger(parsedValue) ? "int" : "float")
+                : Array.isArray(parsedValue)
+                    ? "list"
+                    : parsedValue === null
+                        ? "NoneType"
+                        : typeof parsedValue,
+            kind,
+            value: preview,
+            preview,
+            metadata: {
+                source: "editor",
+                line: assignment.line,
+                expression: assignment.expression
+            }
+        };
+
+        if (
+            parsedValue === null ||
+            ["string", "number", "boolean"].includes(typeof parsedValue) ||
+            Array.isArray(parsedValue) ||
+            (parsedValue && typeof parsedValue === "object")
+        ) {
+            payload.raw_value = parsedValue;
+        }
+
+        return payload;
+    }
+
+    function extractMetadataFromEditor() {
+        const metadataFields = new Set([
+            "name",
+            "description",
+            "object_type",
+            "path",
+            "date",
+            "version",
+            "history",
+            "dataset_type",
+            "connection_string",
+            "model_type",
+            "parameters",
+            "metrics",
+            "reference_data",
+            "input_features",
+            "output_features",
+            "is_trained",
+            "is_tested",
+            "is_deployed",
+            "csv_text",
+            "onnx_bytes"
+        ]);
+
+        return parseVariableAssignmentsFromText().reduce((metadata, assignment) => {
+            if (!metadataFields.has(assignment.name)) {
+                return metadata;
+            }
+
+            metadata[assignment.name] = parsePythonLiteral(assignment.expression);
+            return metadata;
+        }, {});
+    }
+
+    function buildDocumentFromEditor() {
+        const metadata = {
+            ...(window.editorDocument?.metadata || {}),
+            ...(window.editorMetadata || {}),
+            ...extractMetadataFromEditor(),
+            ...(window.editorExecution?.metadata || {})
+        };
+        const script = window.editor ? window.editor.getValue() : "";
+        const timestamp = new Date().toISOString();
+        let version = metadata.version ?? 1;
+
+        if (!Number.isInteger(version)) {
+            const parsedVersion = Number(version);
+            version = Number.isFinite(parsedVersion) ? parsedVersion : 1;
+        }
+
+        const history = Array.isArray(metadata.history)
+            ? metadata.history
+            : [{ operation: "editor_save", when: timestamp }];
+
+        return {
+            name: metadata.name || `code_model_${Date.now()}`,
+            description: metadata.description || "Code created in the editor",
+            object_type: metadata.object_type || "code_model",
+            size: 0.0,
+            path: metadata.path || "editor",
+            date: metadata.date || timestamp,
+            version,
+            history,
+            variables: extractedVariables || {},
+            metadata,
+            code: {
+                script,
+                language: "python",
+                line_count: script ? script.split("\n").length : 0
+            }
+        };
+    }
+
+    function setEditorStateFromExecution(result) {
+        window.editorExecution = result || null;
+        window.executedVariables = result?.variables || {};
+        extractedVariables = result?.variables || extractedVariables || {};
+        window.editorDocument = result?.document || buildDocumentFromEditor();
+        window.editorMetadata = result?.metadata || window.editorDocument.metadata || {};
+    }
+
+    function displayExecutionOutput(stdout, stderr) {
+        const outputContainer = document.getElementById("executionOutput");
+        const outputContent = document.getElementById("outputContent");
+        if (!outputContainer || !outputContent) return;
+
+        outputContent.innerHTML = "";
+
+        if (stdout && stdout.trim()) {
+            const stdoutLine = document.createElement("div");
+            stdoutLine.className = "output-line success";
+            stdoutLine.textContent = `Output:\n${stdout}`;
+            outputContent.appendChild(stdoutLine);
+        }
+
+        if (stderr && stderr.trim()) {
+            const stderrLine = document.createElement("div");
+            stderrLine.className = "output-line error";
+            stderrLine.textContent = `Errors:\n${stderr}`;
+            outputContent.appendChild(stderrLine);
+        }
+
+        outputContainer.classList.add("visible");
+    }
+
+    function clearExecutionOutput() {
+        const outputContainer = document.getElementById("executionOutput");
+        const outputContent = document.getElementById("outputContent");
+        if (!outputContainer || !outputContent) return;
+
+        outputContent.innerHTML = "";
+        outputContainer.classList.remove("visible");
+    }
+
+    function displayExtractedVariables(variables) {
+        const panel = document.getElementById("variablePanel");
+        const list = document.getElementById("variableList");
+        if (!list || !panel) return;
+
+        list.innerHTML = "";
+        extractedVariables = variables || {};
+
+        if (!variables || Object.keys(variables).length === 0) {
+            list.innerHTML = '<p style="color: #777;">No variables extracted.</p>';
+            panel.style.display = "block";
+            return;
+        }
+
+        Object.entries(variables).forEach(([name, info]) => {
+            const preview = info.preview ?? info.value ?? info.raw_value ?? "";
+            const item = document.createElement("div");
+            item.className = "variable-item";
+            item.innerHTML = `
+                <span class="var-name">${escapeHtml(name)}</span>
+                <span class="var-type">${escapeHtml(info.kind || info.type || "")}</span>
+                <span class="var-value">${escapeHtml(stringifyVariableValue(preview))}</span>
+            `;
+            list.appendChild(item);
+        });
+
+        panel.style.display = "block";
+    }
+
+    function displayMetadataPanel(metadata) {
+        const panel = document.getElementById("metadataPanel");
+        const content = document.getElementById("metadataContent");
+        const hint = document.getElementById("metadataHint");
+        if (!panel || !content) return;
+
+        if (!metadata || Object.keys(metadata).length === 0) {
+            if (hint) hint.style.display = "block";
+            content.innerHTML = '<p style="color: #999;">No metadata variables defined in the editor.</p>';
+            panel.style.display = "block";
+            return;
+        }
+
+        if (hint) hint.style.display = "none";
+
+        const rows = Object.entries(metadata).map(([key, value]) => `
+            <tr>
+                <td class="metadata-key">${escapeHtml(key)}</td>
+                <td class="metadata-value">${escapeHtml(stringifyVariableValue(value))}</td>
+            </tr>
+        `).join("");
+
+        content.innerHTML = `
+            <table class="metadata-table">
+                <tr><th>Field</th><th>Value</th></tr>
+                ${rows}
+            </table>
+        `;
+
+        panel.style.display = "block";
+    }
+
+    async function executeCode() {
+        await window.editorReady;
+
+        if (!window.editor) {
+            showStatus("Please wait, Monaco Editor is initializing.", "error");
+            return;
+        }
+
+        const code = window.editor.getValue();
+        if (!code.trim()) {
+            showStatus("No code to execute.", "error");
+            return;
+        }
+
+        try {
+            showStatus("Executing code on backend...", "info");
+            clearExecutionOutput();
+
+            const response = await fetch("/execute", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            setEditorStateFromExecution(result);
+
+            if (result.stdout || result.stderr) {
+                displayExecutionOutput(result.stdout, result.stderr);
+            }
+
+            displayExtractedVariables(result.variables || {});
+            displayMetadataPanel(window.editorMetadata);
+
+            if (result.error) {
+                showStatus(`Execution error: ${result.error}`, "error");
+            } else {
+                const count = result.summary?.variable_count ?? Object.keys(result.variables || {}).length;
+                showStatus(`Code executed. ${count} variables available.`, "success");
+            }
+
+            loadFileList();
+        } catch (error) {
+            console.error("Execution error:", error);
+            showStatus(`Execution failed: ${error.message}`, "error");
+        }
+    }
+
+    function parseAndDisplayEditorState() {
+        const assignments = parseVariableAssignmentsFromText();
+        const metadata = extractMetadataFromEditor();
+        const parsedVariables = assignments.reduce((collection, assignment) => {
+            collection[assignment.name] = buildVariablePayloadFromAssignment(assignment);
+            return collection;
+        }, {});
+
+        extractedVariables = parsedVariables;
+        window.executedVariables = parsedVariables;
+        window.editorDocument = buildDocumentFromEditor();
+        window.editorMetadata = window.editorDocument.metadata || metadata;
+
+        displayExtractedVariables(parsedVariables);
+        displayMetadataPanel(window.editorMetadata);
+
+        if (assignments.length > 0) {
+            showStatus(`Parsed ${assignments.length} assignments from the editor.`, "success");
+        } else {
+            showStatus("No variable assignments found in the editor.", "info");
+        }
+    }
+
+    async function saveVariablesToFile() {
+        if (!window.editor) await window.editorReady;
+
+        const saveData = buildDocumentFromEditor();
+        if (!saveData.variables || Object.keys(saveData.variables).length === 0) {
+            showStatus("No variables to save. Execute or extract variables first.", "error");
+            return;
+        }
+
+        const filename = prompt("Enter filename to save variables:", saveData.name);
+        if (!filename) return;
+
+        saveData.name = filename;
+
+        try {
+            const response = await fetch("/codemodel/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(saveData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            window.editorDocument = saveData;
+            displayMetadataPanel(saveData.metadata || {});
+            showStatus(`Variables saved as ${filename}.`, "success");
+            loadFileList();
+        } catch (error) {
+            console.error("Save error:", error);
+            showStatus(`Save error: ${error.message || String(error)}`, "error");
+        }
+    }
+
+    async function loadFileList() {
+        try {
+            const response = await fetch("/codemodel/list");
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const files = await response.json();
+            const fileList = document.getElementById("fileList");
+            const filePanel = document.getElementById("filePanel");
+            if (!fileList || !filePanel) return;
+
+            fileList.innerHTML = "";
+
+            if (!files || files.length === 0) {
+                fileList.innerHTML = "<li>No saved files.</li>";
+                filePanel.style.display = "block";
+                return;
+            }
+
+            files.forEach(file => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>
+                        ${escapeHtml(file.name)}
+                        <small style="color: #999; margin-left: 10px;">${new Date(file.date).toLocaleString()}</small>
+                    </span>
+                    <div>
+                        <button class="load-btn" data-filename="${escapeHtml(file.name)}">Load</button>
+                        <button class="delete-btn" data-filename="${escapeHtml(file.name)}">Delete</button>
+                    </div>
+                `;
+                fileList.appendChild(li);
+            });
+
+            filePanel.style.display = "block";
+
+            document.querySelectorAll(".load-btn").forEach(btn => {
+                btn.addEventListener("click", async event => {
+                    const filename = event.target.getAttribute("data-filename");
+                    await loadVariableFileFromList(filename);
+                });
+            });
+
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", async event => {
+                    const filename = event.target.getAttribute("data-filename");
+                    await deleteVariableFile(filename);
+                });
+            });
+        } catch (error) {
+            console.error("File list failed:", error);
+        }
+    }
+
+    async function loadVariableFileFromList(filename) {
+        try {
+            await window.editorReady;
+
+            const response = await fetch(`/codemodel/get/${encodeURIComponent(filename)}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            if (!window.editor) {
+                throw new Error("Monaco editor failed to initialize. Reload the page.");
+            }
+
+            const codeCandidate = data?.script ?? data?.code ?? null;
+            let codeText = "";
+
+            if (typeof codeCandidate === "string") {
+                codeText = codeCandidate;
+            } else if (codeCandidate && typeof codeCandidate === "object") {
+                codeText = codeCandidate.script ?? codeCandidate.text ?? "";
+            }
+
+            if (codeText) {
+                window.editor.setValue(codeText);
+            }
+
+            extractedVariables = data.variables || {};
+            window.editorExecution = null;
+            window.executedVariables = extractedVariables;
+            window.editorMetadata = data.metadata || {};
+            window.editorDocument = {
+                ...data,
+                metadata: data.metadata || {},
+                code: typeof data.code === "object" && data.code !== null
+                    ? data.code
+                    : { script: codeText, language: "python", line_count: codeText ? codeText.split("\n").length : 0 }
+            };
+
+            displayExtractedVariables(extractedVariables);
+            displayMetadataPanel(window.editorDocument.metadata || {});
+            showStatus(`Loaded ${filename}.`, "success");
+        } catch (error) {
+            console.error("Load error details:", error);
+            showStatus(`Load failed: ${error.message || String(error)}`, "error");
+        }
+    }
+
+    async function deleteVariableFile(filename) {
+        if (!confirm(`Delete ${filename}?`)) return;
+
+        try {
+            const response = await fetch(`/codemodel/delete/${encodeURIComponent(filename)}`, {
+                method: "DELETE"
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete file.");
+            }
+
+            showStatus(`Deleted ${filename}.`, "success");
+            loadFileList();
+        } catch (error) {
+            showStatus(`Delete failed: ${error.message}`, "error");
+        }
+    }
+
+    function exportVariablesAsJSON() {
+        const exportData = buildDocumentFromEditor();
+        if (!exportData.variables || Object.keys(exportData.variables).length === 0) {
+            showStatus("No variables to export. Execute or extract variables first.", "error");
+            return;
+        }
+
+        exportData.exportedAt = new Date().toISOString();
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `${exportData.name || "code_model"}.json`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+
+        window.editorDocument = exportData;
+        displayMetadataPanel(exportData.metadata || {});
+        showStatus("Variables exported.", "success");
+    }
+
+    function showStatus(message, type = "success") {
+        const statusEl = document.getElementById("statusMessage");
+        if (!statusEl) return;
+
+        statusEl.textContent = message;
+        statusEl.className = `status-message ${type}`;
+        statusEl.style.display = "block";
+    }
+
+    function clearEditor() {
+        if (!window.editor) return;
+
+        if (confirm("Clear editor content?")) {
+            window.editor.setValue("");
+            window.editorExecution = null;
+            window.executedVariables = {};
+            window.editorDocument = null;
+            window.editorMetadata = {};
+            extractedVariables = {};
+
+            const variablePanel = document.getElementById("variablePanel");
+            if (variablePanel) variablePanel.style.display = "none";
+
+            const metadataPanel = document.getElementById("metadataPanel");
+            if (metadataPanel) metadataPanel.style.display = "none";
+
+            clearExecutionOutput();
+            showStatus("Editor cleared.", "success");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("btnExecuteCode")?.addEventListener("click", executeCode);
+        document.getElementById("btnExtractVariables")?.addEventListener("click", parseAndDisplayEditorState);
+        document.getElementById("btnSaveVariables")?.addEventListener("click", saveVariablesToFile);
+        document.getElementById("btnLoadVariables")?.addEventListener("click", loadFileList);
+        document.getElementById("btnClearEditor")?.addEventListener("click", clearEditor);
+        document.getElementById("btnExportJSON")?.addEventListener("click", exportVariablesAsJSON);
+
+        displayMetadataPanel(extractMetadataFromEditor());
+        loadFileList();
+    });
+</script>
+
+{% endblock %}

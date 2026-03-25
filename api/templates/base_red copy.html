@@ -1,671 +1,157 @@
 {% extends "base_template.html" %}
 
-{% block title %}Data Operations - Painel Amanajé{% endblock %}
+{% block title %}Data Operations - Painel Amanaje{% endblock %}
 
 {% block extra_css %}
 <style>
     .form-section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; }
     .form-section h3 { color: #e63946; margin-top: 0; }
-    .upload-area { border: 2px dashed #ccc; padding: 2rem; text-align: center; margin: 1rem 0; }
-    .upload-area.dragover { border-color: #e63946; background: #fff5f5; }
-    .feature-list { list-style: none; padding: 0; }
-    .feature-item { padding: 0.5rem; border-bottom: 1px solid #eee; }
+    .feature-list, .model-list { list-style: none; padding: 0; }
+    .feature-item, .model-item { padding: 0.75rem; border-bottom: 1px solid #eee; }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .editor-controls, .feature-controls, .model-controls, .analysis-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+    #editorContainer { width: 100%; height: 520px; min-height: 200px; border: 1px solid #ccc; box-sizing: border-box; }
+    #executionOutput { margin-top: 1rem; padding: 0.75rem; background: #f5f5f5; border: 1px solid #ddd; display: none; }
+    #executionOutput.visible { display: block; }
+    #outputContent { white-space: pre-wrap; }
+    #metadataPanel {
+        background: #f0f4f8;
+        border: 1px solid #e0e6ed;
+        border-radius: 4px;
+        padding: 1rem;
+        margin: 1rem 0;
+        display: none;
+    }
+    #metadataPanel h4 {
+        margin-top: 0;
+        color: #2c3e50;
+        border-bottom: 2px solid #e63946;
+        padding-bottom: 0.5rem;
+    }
+    .metadata-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .metadata-table th { background: #e63946; color: #fff; padding: 0.5rem; text-align: left; }
+    .metadata-table td { padding: 0.5rem; border-bottom: 1px solid #e0e6ed; }
+    .metadata-key { font-weight: 600; color: #2c3e50; width: 30%; }
+    .metadata-value { color: #34495e; font-family: 'Courier New', monospace; word-break: break-word; }
+    .status-message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 4px; }
+    .status-message.success { background: #ecfdf3; color: #166534; }
+    .status-message.error { background: #fef2f2; color: #991b1b; }
+    .status-message.info { background: #eff6ff; color: #1d4ed8; }
+    .upload-status { margin-top: 1rem; }
+    .small-text { color: #6b7280; font-size: 0.9rem; }
 </style>
 {% endblock %}
 
 {% block extra_script %}
-
-<!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-
-<link rel="stylesheet" href="api\static\style.css">
-
-<style>
-    body { font-family: sans-serif; }
-    #output { white-space: pre-wrap; background: #f5f5f5; padding:10px; margin-top: 10px;}
-
-    #monacoEditorContainer { 
-        width: 100%; 
-        height: 520px;
-        min-height: 200px; 
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-    }
-
-</style>
-
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
+<script src="{{ url_for('static', path='/js/editor-utilities.js') }}"></script>
+<script src="{{ url_for('static', path='/js/create-page.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="data-operations">
-    <!-- Upload Section -->
     <section class="form-section" id="uploadSection">
         <h3>Data Creation</h3>
-        
-        <!-- CHANGED: Form now supports both dataset and model uploads with dynamic field toggling -->
-        <!-- The toggle between dataset and model forms is based on the OperationID dropdown value -->
-        <form id="uploadForm" enctype="multipart/form-data">
 
+        <form id="uploadForm" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="operationId">Operation Type:</label>
                 <select id="operationId" name="operationId">
-                    <!-- CHANGED: Uses generic ToggleFormOptions function in JS to manage visibility -->
                     <option value="datasets">Datasets</option>
                     <option value="models">Models</option>
                 </select>
             </div>
-            
+
             <div class="editor-controls">
-                <button id="btnExecuteCode" class="success"> Execute </button>
-                <button id="btnExecuteCode" class="success"> Save </button>
-                <button id="btnExecuteCode" class="success"> Load </button>
-                <button id="btnExecuteCode" class="success"> Generate </button>
-                <button id="btnExecuteCode" class="success"> Reset </button>
+                <button type="button" id="btnExecuteScript" class="success">Execute</button>
+                <button type="button" id="btnExtractVariables">Extract Variables</button>
+                <button type="button" id="btnSaveScript" class="success">Save</button>
+                <button type="button" id="btnLoadScript" class="success">Load</button>
+                <button type="button" id="btnLoadTemplate" class="success">Load Template</button>
+                <button type="button" id="btnGenerateScript" class="success">Generate</button>
+                <button type="button" id="btnExportJSON" class="success">Export JSON</button>
+                <button type="button" id="btnResetScript" class="success">Reset</button>
             </div>
 
-            <!-- Dataset Form fields -->
-            <div id="datasetFields">
-                <h3>Write your data extraction script here.</h3>
-                <div id="dataEditorContainer"></div>
-                <br>
-                <div id="dataOutput"></div>
-            </div>
+            <div id="editor">
+                <h3>Write your creation script here.</h3>
+                <div id="editorContainer"></div>
 
-            
-            <!-- Model Form Fields -->
-            <div id="modelFields" style="display: none;">
-                <h3>Write your model extraction script here.</h3>
-                <div id="modelEditorContainer"></div>
-                <br>
-                <div id="modelOutput"></div>
-            </div>
+                <div id="statusMessage" class="status-message"></div>
 
-            <div id="statusMessage" class="statusMessage"></div>
+                <div id="metadataPanel">
+                    <h4>Object Metadata</h4>
+                    <p class="small-text" id="metadataHint">Click "Extract Variables" or "Execute" to populate this panel.</p>
+                    <div id="metadataContent"></div>
+                </div>
 
-            <div id="executionOutput">
-                <div style="color: #569cd6; margin-bottom: 8px;"> Script Output </div>
-                <div id="outputContent"></div>
-            </div>
+                <div id="executionOutput">
+                    <div style="color: #569cd6; margin-bottom: 8px;">Script Output</div>
+                    <div id="outputContent"></div>
+                </div>
 
-            <div id="variablePanel" style="display:none;">
-                <h3> Script Variables </h3>
-                <div id="variableList"></div>
-            </div>
+                <div id="variablePanel" style="display:none;">
+                    <h3>Script Variables</h3>
+                    <div id="variableList"></div>
+                </div>
 
-            <div id="filePanel" style="display:none;">
-                <h3> Saved Variables </h3>
-                <ul id="fileList" class="file-list"></ul>
+                <div id="filePanel" style="display:none;">
+                    <h3>Saved Variables</h3>
+                    <ul id="fileList" class="file-list"></ul>
+                </div>
             </div>
-            
         </form>
-        <div id="uploadResult"></div>
+
+        <div class="editor-controls" id="uploadActions">
+            <button type="button" id="btnCreateObject" class="success">Create</button>
+        </div>
+        <div id="uploadStatus" class="upload-status"></div>
     </section>
 
-    <!-- Features Section -->
     <section class="form-section" id="featuresSection">
-        <h3>Creation History</h3>
+        <h3>Dataset History</h3>
         <div class="feature-controls">
-            <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
-
-            <!-- Feature extraction is a future enhancement that will break down datasets into individual columns -->
-                <!-- Extracting features will open the selected dataset for manipulation and save it in postgreSQL database
-                    for full manipulation -->
-            <button onclick="extractFeatures()" class="btn">Extract Features</button>
+            <button type="button" id="btnRefreshFeatures" class="btn">Refresh Datasets</button>
+            <button type="button" id="btnExtractFeatures" class="btn">Extract Features</button>
         </div>
-        <div class="feature-list" id="featureList">
-            <!-- Features will be populated here -->
-        </div>
+        <div class="feature-list" id="featureList"></div>
     </section>
 
-    <!-- TODO - This section is causing some trouble, needs to be analyzed -->
     <section class="form-section" id="modelsSection">
-        <h3>Creation History</h3>
+        <h3>Model History</h3>
         <div class="model-controls">
-            <button onclick="refreshModels()" class="btn">Refresh Models </button>
-
-            <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
-             <!-- TODO - Feature extraction allows the user to choose a dataset that the user can insert into postgresql in full, 
-              with full control-->
-            <button onclick="extractFeatures()" class="btn">Optimize Models</button>
+            <button type="button" id="btnRefreshModels" class="btn">Refresh Models</button>
+            <button type="button" id="btnOptimizeModels" class="btn">Optimize Models</button>
         </div>
-        <div class="model-list" id="modelList">
-            <!-- Features will be populated here -->
-        </div>
+        <div class="model-list" id="modelList"></div>
     </section>
 
-    <!-- Analysis Section -->
     <section class="form-section" id="analysisSection">
-        
-        <!-- Dataset Analysis -->
         <div id="datasetAnalysis">
             <h3>Data Analysis</h3>
-
-            <!--
-            <div id="datasetDragSelect">
-                 MultiObjectSelector mounts here to enable multi-selection for analysis 
-                <div id="featureSelector"></div>
-            </div>
-            -->
-
             <div class="analysis-controls">
                 <select id="datasetSelect">
                     <option value="">Select Dataset</option>
                 </select>
-
-                <!-- CHANGED: The analyzeData() method returns statistics and future versions will include plotly/dash visualizations -->
-                <button onclick="analyzeData()" class="btn">Analyze</button>
+                <button type="button" id="btnAnalyzeDataset" class="btn">Analyze</button>
             </div>
-            <div id="datasetAnalysisResults" class="data-grid">
-                <!-- Analysis results will be shown here -->
-            </div>
+            <div id="datasetAnalysisResults" class="data-grid"></div>
         </div>
 
-
-        <!-- Model Analysis -->
-         <!-- TODO - Align and correct the fields below to make a working model analysis section -->
-         <div id="modelAnalysis">
+        <div id="modelAnalysis">
             <h3>Model Analysis</h3>
-
-            <!--
-            <div id="modelDragSelect">
-                 MultiObjectSelector mounts here to enable multi-selection for analysis 
-                <div id="modelSelector"></div>
-            </div>
-            -->
-
             <div class="analysis-controls">
                 <select id="modelSelect">
                     <option value="">Select Model</option>
                 </select>
-
-                <button onclick="analyzeModel()" class="btn">Analyze</button>
+                <button type="button" id="btnAnalyzeModel" class="btn">Analyze</button>
             </div>
-            <div id="modelAnalysisResults" class="data-grid">
-                <!-- Analysis results will be shown here -->
-            </div>
+            <div id="modelAnalysisResults" class="data-grid"></div>
         </div>
-
     </section>
-
-
 </div>
 {% endblock %}
 
-
-
-{% block extra_js %}
-<!-- Load generic form utilities for dynamic form handling -->
-<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
-<script src="{{ url_for('static', path='/js/editor-utilities.js') }}"></script>
-
-<script>
-    async function initialize_editor(template, divElement) {
-        window.editor = null;
-
-        window.editorReady = new Promise(resolve => {
-            require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} }); 
-            
-            require(["vs/editor/editor.main"], function () {
-                window.editor = monaco.editor.create(document.getElementById(divElement), {
-                    value: `
-                    ${template}
-                    `,
-                    language: "python",
-                    theme: "vs-dark",
-                    automaticLayout: true,
-                    tabSize: 4,
-                    minimap: {enabled: false},
-                    lineNumbers: "on",
-                    scrollBeyondLastLine: true,
-                    wordWrap: "on"
-                });
-
-                try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
-                console.log("✅ Upload Editor initialized in", divElement);
-                resolve(window.editor);
-            });
-        });
-    }
-
-    let extractedVariables = {};
-</script>
-
-<script>
-/**
- * base_red.html - Data Operations Dashboard
- * 
- * Handles:
- * - File upload (datasets and models) with drag-and-drop
- * - Dynamic form field toggling based on operation type
- * - Dataset/feature list population from backend
- * - Data analysis interface
- * 
- * Key changes:
- * - CHANGED: Replaced manual ToggleFormOptions logic with reusable ToggleFormOptions() call
- * - ADDED: PopulateListOptions() usage for dataset selection
- * - ADDED: Form feedback mechanism for upload results
- * - FIXED: Logic was inverted (datasets showed when 'datasets' selected, opposite of UI intent)
- */
-
-// ============================================================================
-// FILE UPLOAD HANDLING
-// ============================================================================
-
-const uploadForm = document.getElementById('uploadForm');
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-
-// Drag-and-drop support: click zone or drag files to trigger file selection
-dropZone.addEventListener('click', () => fileInput.click());
-
-dropZone.addEventListener('dragover', (e) => {
-    // CHANGED: PreventDefault allows drop; styling gives visual feedback
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-});
-
-dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('dragover');
-});
-
-dropZone.addEventListener('drop', (e) => {
-    // CHANGED: Transfer dropped files to the hidden file input
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    fileInput.files = e.dataTransfer.files;
-});
-
-// MAIN FORM SUBMISSION HANDLER
-uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // CHANGED: Added file validation before processing
-    const file = fileInput.files[0];
-    if (!file) {
-        document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert alert-error">❌ No file selected. Please select a file to upload.</div>`;
-        return;
-    }
-
-    // CHANGED: Build FormData with common + operation-specific fields
-    const formData = new FormData();
-    const operationId = document.getElementById('operationId').value;
-
-    // Common fields for all uploads
-    formData.append('file', file);
-    formData.append('operationId', operationId);
-    // Use namespaced IDs depending on operation type to avoid duplicate id conflicts
-    if (operationId === 'datasets') {
-        formData.append('objectName', document.getElementById('datasetObjectName').value);
-        formData.append('description', document.getElementById('datasetDescription').value);
-    } else {
-        formData.append('objectName', document.getElementById('modelObjectName').value);
-        formData.append('description', document.getElementById('modelDescription').value);
-    }
-
-    // CHANGED: Operation-specific fields (datasets vs models)
-    // For scalability, this pattern can be extended with new operation types
-    if (operationId === "datasets") {
-        // Dataset-specific metadata
-        formData.append('datasetType', document.getElementById('datasetType').value);
-        formData.append('connectionString', document.getElementById('connectionString').value);
-    } else if (operationId === "models") {
-        // Model-specific metadata
-        formData.append('modelType', document.getElementById('modelType').value);
-        formData.append('parameters', document.getElementById('parameters').value);
-        formData.append('metrics', document.getElementById('metrics').value);
-        formData.append('referenceData'  , document.getElementById('referenceData').value);
-    }
-
-    try {
-        // CHANGED: Show loading state while uploading
-        document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert alert-info">⏳ Uploading...</div>`;
-
-        // Send to backend
-        const response = await fetch(`/upload/${operationId}`, {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-
-        // CHANGED: Enhanced feedback with icon, status, and details
-        if (response.ok) {
-            document.getElementById('uploadResult').innerHTML = 
-                `<div class="alert alert-success">
-                    <strong>✅ Upload Successful</strong><br/>
-                    ID: <code>${result.id || 'n/a'}</code><br/>
-                    Path: <code>${result.path || 'n/a'}</code>
-                </div>`;
-            // Clear form after successful upload
-            uploadForm.reset();
-            fileInput.value = '';
-            // Refresh feature list to show new upload
-            if (operationId === 'datasets') {
-                refreshFeatures();
-            } else {
-                refreshModels();
-            }
-
-        } else {
-            document.getElementById('uploadResult').innerHTML = 
-                `<div class="alert alert-error">
-                    <strong>❌ Upload Failed</strong><br/>
-                    Error: ${result.detail || result.status || 'Unknown error'}
-                </div>`;
-        }
-    } catch (error) {
-        document.getElementById('uploadResult').innerHTML = 
-            `<div class="alert alert-error">
-                <strong>❌ Upload Error</strong><br/>
-                ${error.message}
-            </div>`;
-    }
-});
-
-// ============================================================================
-// FORM FIELD TOGGLE - NOW USING REUSABLE UTILITY
-// ============================================================================
-
-// CHANGED: Replaced manual toggle logic with generic ToggleFormOptions function
-// This is now DRY (Don't Repeat Yourself) and can be used in other templates too
-document.addEventListener('DOMContentLoaded', () => {
-
-    initialize_editor("#Insert your data code here" ,"dataEditorContainer");
-    initialize_editor("#Insert your model code here" ,"modelEditorContainer");
-
-    // Initialize form field visibility toggle using generic utility
-    ToggleFormOptions({
-        triggerElement: '#operationId',
-        mapping: {
-            'datasets': ['datasetFields', 'featuresSection', 'datasetAnalysis'],    // Show dataset fields when 'datasets' selected
-            'models': ['modelFields', 'modelsSection', 'modelAnalysis']         // Show model fields when 'models' selected
-        },
-        allFields: ['datasetFields', 'modelFields', 
-                    'featuresSection', 'modelsSection',
-                    'datasetAnalysis', 'modelAnalysis'
-                ]  // All possible form sections
-    });
-
-    // ====================================================================
-    // DATASET/FEATURES LIST POPULATION - USING REUSABLE UTILITY
-    // ====================================================================
-
-    // CHANGED: Replaced fetch + manual HTML building with generic PopulateListOptions
-    // ADDED: Populates the dataset selection on page load
-    PopulateListOptions({
-        selectElement: '#datasetSelect',
-        endpoint: '/datasetmodel/list',              // Backend route that returns dataset list
-        labelField: 'name',                 // Use 'name' property as display label
-        valueField: 'id',                   // Use 'id' property as option value
-        placeholderText: 'Select a Dataset',
-        onSuccess: (data) => {
-            console.log(`✅ Loaded ${data.length} datasets`);
-        },
-        onError: (error) => {
-            console.error('Failed to load datasets:', error);
-        }
-    });
-
-    // TODO - Analyze this function call to address the error in this .html
-    PopulateListOptions({
-        selectElement: '#modelSelect',
-        endpoint: '/learningmodel/list',              // Backend route that returns dataset list
-        labelField: 'name',                 // Use 'name' property as display label
-        valueField: 'id',                   // Use 'id' property as option value
-        placeholderText: 'Select a Model',
-        onSuccess: (data) => {
-            console.log(`✅ Loaded ${data.length} models`);
-        },
-        onError: (error) => {
-            console.error('Failed to load model:', error);
-        }
-    });
-
-    MultiObjectSelector ({
-        containerId: 'featureSelector',
-        objectType: 'datasetmodel',
-        endpoint: '/datasetmodel/list',
-        labelField: 'name',
-        valueField: 'id',
-        roles: ['input', 'output'],
-        maxSelection: 10,
-        onSelectionChange: (selected) => console.log('Selected:', selected)
-    });
-
-    // Editor Configuration
-    document.getElementById('btnExecuteCode')?.addEventListener('click', executeCode);
-    document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
-        const assignments = parseVariableAssignmentsFromText();
-        if (assignments.length > 0) {
-            showStatus(`📊 Found ${assignments.length} variable assignments in code`, 'success');
-            console.log('Variable assignments:', assignments);
-        } else {
-            showStatus('⚠️ No variable assignments found in code', 'info');
-        }
-    });
-
-    document.getElementById('btnSaveVariables')?.addEventListener('click', saveVariablesToFile);
-    document.getElementById('btnLoadVariables')?.addEventListener('click', () => {
-        loadFileList();
-    });
-    document.getElementById('btnClearEditor')?.addEventListener('click', clearEditor);
-    document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
-
-    loadFileList();
-
-    console.log("✅ Model Builder initialized");
-
-    // Initial feature list load (upload history)
-    refreshFeatures();
-    refreshModels();   
-});
-
-// ============================================================================
-// FEATURE/DATASET MANAGEMENT
-// ============================================================================
-
-/**
- * Refresh the upload history / features list
- * CHANGED: Simplified using PopulateListOptions for list display
- * CHANGED: Uses /features endpoint which is now standardized
- */
-async function refreshFeatures() {
-    try {
-        const response = await fetch('/datasetmodel/list');
-        const features = await response.json();
-        const featureList = document.getElementById('featureList');
-        
-        // CHANGED: Enhanced display with better formatting and info
-        if (features.length === 0) {
-            featureList.innerHTML = '<div class="feature-item">No datasets uploaded yet</div>';
-            return;
-        }
-        
-        // Add a selection checkbox for each dataset to support multi-select analysis
-        featureList.innerHTML = features.map(feature => `
-            <div class="feature-item">
-                <div style="flex:1;">
-                    <h4 style="margin:0.25rem 0;">📦 ${feature.name}</h4>
-                    <p style="margin:0.75; font-size:0.9em; color:#666;">${feature.description || 'No description provided'}</p>
-                    <div style="display:flex; gap:1rem; font-size:0.9em; color:#666; margin-top:6px;">
-                        <small>📊 Type: <b>${feature.dataset_type || 'N/A'}</b></small>
-                        <small>💾 Size: <b>${(feature.size || 0).toFixed(2)}MB</b></small>
-                        <small>🔑 ID: <b>${feature.id}</b></small>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error('❌ Error fetching features:', error);
-        document.getElementById('featureList').innerHTML = 
-            `<div class="alert alert-error">Failed to load features list</div>`;
-    }
-}
-
-// Return array of selected dataset ids from checkboxes
-function getSelectedDatasets() {
-    const boxes = Array.from(document.querySelectorAll('.dataset-select'));
-    return boxes.filter(b => b.checked).map(b => b.getAttribute('data-id'));
-}
-
-// TODO - Adapt and correct the refreshModels function so it can properly exhibit the upload details of each model in the history
-async function refreshModels() {
-    try {
-        const response = await fetch('/learningmodel/list');
-        const data = await response.json();
-        const models = Array.isArray(data) ? data : (data.data || data.items || []);
-        const modelsList = document.getElementById('modelList');
-        
-        // CHANGED: Enhanced display with better formatting and info
-        if (models.length === 0 || !Array.isArray(models)) {
-            modelsList.innerHTML = '<div class="model-item">No models uploaded yet</div>';
-            return;
-        }
-        
-        // Display models list
-        modelsList.innerHTML = models.map(model => `
-            <div class="model-item">
-                <div style="flex:1;">
-                    <h4 style="margin:0.25rem 0;">🤖 ${model.name || 'Unnamed'}</h4>
-                    <p style="margin:0.75; font-size:0.9em; color:#666;">${model.description || 'No description provided'}</p>
-                    <div style="display:flex; gap:1rem; font-size:0.9em; color:#666; margin-top:0.5rem;">
-                        <small>📊 Type: <b>${model.model_type || 'N/A'}</b></small>
-                        <small>💾 Size: <b>${(model.size || 0).toFixed(2)}MB</b></small>
-                        <small>🔑 ID: <b>${model.id}</b></small>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        // TODO - The error being return from this catch is: Failed to load models list. TypeError: models.map is not a function.
-        console.error('❌ Error fetching models:', error);
-        const target = document.getElementById('modelList');
-        if (target) target.innerHTML = `<div class="alert alert-error">Failed to load models list. ${error}. </div>`;
-    }
-}
-
-/**
- * Extract features from a dataset (TODO: Backend implementation needed)
- * CHANGED: Added proper docstring and error handling
- * 
- * Purpose: Breakdown dataset into individual features/columns for reuse
- * Future: Should call backend endpoint to extract and store features
- */
-async function extractFeatures() {
-    // TODO: Implement feature extraction logic
-    // This should:
-    // 1. Fetch the selected dataset
-    // 2. Parse structure (CSV columns, nested objects, etc.)
-    // 3. Create feature entries in database
-    // 4. Display extraction progress
-    
-    console.warn('⚠️ Feature extraction not yet implemented');
-    alert('Feature extraction is coming soon!');
-}
-
-// ============================================================================
-// DATA ANALYSIS
-// ============================================================================
-
-/**
- * Analyze selected dataset
- * CHANGED: Added error checking and enhanced result display
- * CHANGED: Now calls /analysis endpoint with proper query parameters
- * 
- * Future enhancements:
- * - Return Plotly/Dash visualizations instead of raw JSON
- * - Add column-specific analysis options
- * - Support multiple dataset comparison
- */
-
-// TODO - Data Analysis, to be adapted to object analysis of both datasets and models
-// needs to update in realtime alongside the upload of a new file
-async function analyzeData() {
-    const datasetId = document.getElementById('datasetSelect').value;
-    if (!datasetId) {
-        alert('Please select a dataset first');
-        return;
-    }
-
-    try {
-        // Show loading state
-        document.getElementById('datasetAnalysisResults').innerHTML = 
-            '<div class="alert alert-info">⏳ Analyzing dataset...</div>';
-
-        const response = await fetch(`/analysis?dataset_id=${datasetId}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const results = await response.json();
-        
-        // TODO - This table needs to scale easily according to how many datasets I have selected
-        // with a reusable function
-        // CHANGED: Enhanced display with formatted table instead of raw JSON
-        document.getElementById('datasetAnalysisResults').innerHTML = `
-            <div class="analysis-result" style="grid-column: 1/-1;">
-                <h4>📊 Analysis Results for Dataset #${datasetId}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
-                        <th style="text-align: left; padding: 0.5rem;">Metric</th>
-                        <th style="text-align: right; padding: 0.5rem;">Value</th>
-                    </tr>
-                    ${Object.entries(results.summary || {}).map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 0.5rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
-                            <td style="text-align: right; padding: 0.5rem;"><b>${value}</b></td>
-                        </tr>
-                    `).join('')}
-                </table>
-                <!-- <pre>${JSON.stringify(results, null, 2)}</pre> -->
-            </div>
-        `;
-    } catch (error) {
-        console.error('❌ Analysis error:', error);
-        document.getElementById('analysisResults').innerHTML = 
-            `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
-    }
-}
-
-async function analyzeModel() {
-    const modelId = document.getElementById('modelSelect').value;
-    if (!modelId) {
-        alert('Please select a model first');
-        return;
-    }
-
-    try {
-        document.getElementById('modelAnalysisResults').innerHTML = 
-            '<div class="alert alert-info">⏳ Analyzing model...</div>';
-
-        const response = await fetch(`/analysis?model_id=${modelId}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const results = await response.json();
-        
-        document.getElementById('modelAnalysisResults').innerHTML = `
-            <div class="analysis-result" style="grid-column: 1/-1;">
-                <h4>🤖 Analysis Results for Model #${modelId}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
-                        <th style="text-align: left; padding: 0.75rem;">Metric</th>
-                        <th style="text-align: right; padding: 0.75rem;">Value</th>
-                    </tr>
-                    ${Object.entries(results.summary || results.metrics || {}).map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 0.75rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
-                            <td style="text-align: right; padding: 0.75rem;"><b>${JSON.stringify(value)}</b></td>
-                        </tr>
-                    `).join('')}
-                </table>
-            </div>
-        `;
-    } catch (error) {
-        console.error('❌ Model analysis error:', error);
-        document.getElementById('modelAnalysisResults').innerHTML = 
-            `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
-    }
-}
-
-</script>
-{% endblock %}
+{% block extra_js %}{% endblock %}

@@ -1,909 +1,1002 @@
-from io import StringIO
+import ast
+import base64
+import json
+import logging
+import os
+import sys
+import textwrap
+import traceback
 import tracemalloc
-import aiofiles
+import uuid
+import optuna
 
-import asyncio
-import traceback, subprocess, tempfile, os, joblib, sys, uuid, json
-from datetime import datetime
-from typing import List
+from datetime import date, datetime
+from io import StringIO
+from pathlib import Path
+from typing import Any, Optional
 
 import pandas as pd
-
-from fastapi import FastAPI, Request, File, UploadFile, Depends
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.model_objects import DatasetModel, LearningModel, ObjectModel
-from app.models.model_orm import DatasetORM, LearningORM, ObjectORM
-from app.models.model_registry import ModelRegistry
-
+from app.database.db_session import get_db, init_models
 from app.database.db_utils import create_entry, get_all_entries
-from app.database.db_session import get_db, init_models, engine
-from app.utils.utils import get_file_size, debug_type, save_file_to_disk
+from app.models.model_objects import CodeModel, DatasetModel, LearningModel, StudyModel
+from app.models.model_orm import CodeORM, DatasetORM, LearningORM
+from app.models.model_registry import ModelRegistry
+from app.utils.utils import (
+    build_payload_data,
+    build_payload_model,
+    get_upload_dir,
+    save_file_to_disk,
+)
 
-# Start tracemalloc for debugging memory if needed
 tracemalloc.start()
 
-app = FastAPI(title="Painel Amanajé API", version="0.1")
+LOGGER = logging.getLogger(__name__)
 
-# Templates and static
-cur_dir = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = Path(__file__).resolve().parent
+STATIC_DIR = PROJECT_ROOT / "static"
+TEMPLATES_DIR = PROJECT_ROOT / "templates"
 
-# repo_root points to the repository root (one level up from api/)
-repo_root = os.path.abspath(os.path.join(cur_dir, ".."))
-static_dir = os.path.join(cur_dir, "static")
-templates_dir = os.path.join(cur_dir, "templates")
+DATASET_OPERATION = "datasets"
+MODEL_OPERATION = "models"
+ALLOWED_UPLOAD_OPERATIONS = {DATASET_OPERATION, MODEL_OPERATION}
 
-# Ensure static directory exists locally (templates are already present in repo)
-os.makedirs(static_dir, exist_ok=True)
 
-# Mount static files and configure Jinja2 templates. Using absolute paths keeps
-# behaviour consistent when running inside Docker or on-host.
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
-templates = Jinja2Templates(directory=templates_dir)
+class ExecuteRequest(BaseModel):
+    code: str = ""
+    save: bool = False
+    objectName: Optional[str] = None
+
+
+class GenerateRequest(BaseModel):
+    prompt: str = ""
+    operationId: str = ""
+
+
+class TrainingRequest(BaseModel):
+    datasetId: int
+    parameters: dict[str, Any] = Field(default_factory=dict)
+    inputType: str = "Manual"
+    studyId: Optional[str] = None
+
+
+app = FastAPI(title="Painel Amanaje API", version="0.2.0")
+
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+def _register_models() -> None:
+    registry_pairs = (
+        (DatasetModel, DatasetORM),
+        (LearningModel, LearningORM),
+        (CodeModel, CodeORM),
+    )
+
+    for pydantic_model, orm_model in registry_pairs:
+        if ModelRegistry._registry.get(pydantic_model) is not orm_model:
+            ModelRegistry.register_model(pydantic_model, orm_model)
+
+
+def _include_registry_routers() -> None:
+    existing_prefixes = {route.path for route in app.router.routes}
+
+    for router in ModelRegistry.generate_all_routers():
+        first_route = next(iter(router.routes), None)
+        if first_route and first_route.path not in existing_prefixes:
+            app.include_router(router)
+            existing_prefixes.update(route.path for route in router.routes)
+
+
+def _render_page(request: Request, template_name: str, **context: Any) -> HTMLResponse:
+    return templates.TemplateResponse(template_name, {"request": request, **context})
+
+
+def _json_error(detail: str, status_code: int = 400) -> JSONResponse:
+    return JSONResponse({"status": "error", "detail": detail}, status_code=status_code)
+
+
+def _serialize_dataset_summary(dataset: Any) -> dict[str, Any]:
+    return {
+        "id": getattr(dataset, "id", None),
+        "name": getattr(dataset, "name", None),
+        "description": getattr(dataset, "description", None),
+        "dataset_type": getattr(dataset, "dataset_type", None),
+        "shape": getattr(dataset, "shape", None),
+        "size": getattr(dataset, "size", None),
+    }
+
+
+def _serialize_model_summary(model: Any) -> dict[str, Any]:
+    return {
+        "id": getattr(model, "id", None),
+        "name": getattr(model, "name", None),
+        "description": getattr(model, "description", None),
+        "model_type": getattr(model, "model_type", None),
+        "is_trained": getattr(model, "is_trained", False),
+        "metrics": getattr(model, "metrics", {}) or {},
+        "size": getattr(model, "size", None),
+    }
+
+
+def _json_safe_exec_value(value: Any) -> tuple[Any, dict[str, Any]]:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value, {}
+
+    if isinstance(value, bytes):
+        return base64.b64encode(value).decode("ascii"), {"encoding": "base64"}
+
+    if isinstance(value, tuple):
+        return list(value), {"source_type": "tuple"}
+
+    if isinstance(value, list):
+        return value, {}
+
+    if isinstance(value, dict):
+        return value, {}
+
+    if hasattr(value, "tolist"):
+        try:
+            return value.tolist(), {"source_type": type(value).__name__}
+        except Exception:
+            return None, {}
+
+    return None, {}
+
+
+def _truncate_preview(value: str, max_length: int = 160) -> tuple[str, dict[str, Any]]:
+    metadata: dict[str, Any] = {}
+    if len(value) > max_length:
+        metadata["original_length"] = len(value)
+        return f"{value[: max_length - 3]}...", metadata
+    return value, metadata
+
+
+def _classify_variable_kind(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, bytes):
+        return "bytes"
+    if isinstance(value, pd.DataFrame):
+        return "dataframe"
+    if isinstance(value, pd.Series):
+        return "series"
+    if isinstance(value, dict):
+        return "mapping"
+    if isinstance(value, (list, tuple, set)):
+        return "sequence"
+    if isinstance(value, (datetime, date, Path)):
+        return "scalar"
+
+    module_name = type(value).__module__
+    type_name = type(value).__name__.lower()
+
+    if module_name.startswith("numpy"):
+        if "ndarray" in type_name:
+            return "ndarray"
+        return "number"
+
+    return "object"
+
+
+def _serialize_exec_value(
+    value: Any,
+    *,
+    depth: int = 0,
+    max_depth: int = 3,
+    max_items: int = 25,
+) -> tuple[Any, dict[str, Any]]:
+    metadata: dict[str, Any] = {}
+
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value, metadata
+
+    if isinstance(value, (datetime, date)):
+        metadata["serialization"] = "isoformat"
+        return value.isoformat(), metadata
+
+    if isinstance(value, Path):
+        metadata["serialization"] = "path"
+        return str(value), metadata
+
+    if isinstance(value, bytes):
+        metadata["encoding"] = "base64"
+        metadata["byte_length"] = len(value)
+        return base64.b64encode(value).decode("ascii"), metadata
+
+    if depth >= max_depth:
+        metadata["serialization"] = "repr"
+        preview, preview_meta = _truncate_preview(repr(value))
+        metadata.update(preview_meta)
+        return preview, metadata
+
+    if isinstance(value, pd.DataFrame):
+        rows, columns = value.shape
+        metadata.update(
+            {
+                "rows": int(rows),
+                "columns": list(map(str, value.columns.tolist())),
+                "shape": [int(rows), int(columns)],
+                "dtypes": {str(col): str(dtype) for col, dtype in value.dtypes.items()},
+            }
+        )
+        limited_df = value.head(max_items)
+        if len(limited_df) < len(value):
+            metadata["truncated"] = True
+            metadata["returned_rows"] = int(len(limited_df))
+        return limited_df.to_dict(orient="records"), metadata
+
+    if isinstance(value, pd.Series):
+        metadata.update(
+            {
+                "length": int(len(value)),
+                "dtype": str(value.dtype),
+                "name": None if value.name is None else str(value.name),
+            }
+        )
+        limited_series = value.head(max_items)
+        if len(limited_series) < len(value):
+            metadata["truncated"] = True
+            metadata["returned_items"] = int(len(limited_series))
+        return limited_series.tolist(), metadata
+
+    if isinstance(value, dict):
+        items = list(value.items())
+        if len(items) > max_items:
+            metadata["truncated"] = True
+            metadata["returned_items"] = max_items
+            metadata["total_items"] = len(items)
+            items = items[:max_items]
+        return {
+            str(key): _serialize_exec_value(item, depth=depth + 1, max_depth=max_depth, max_items=max_items)[0]
+            for key, item in items
+        }, metadata
+
+    if isinstance(value, (list, tuple, set)):
+        sequence = list(value)
+        if isinstance(value, tuple):
+            metadata["source_type"] = "tuple"
+        elif isinstance(value, set):
+            metadata["source_type"] = "set"
+        if len(sequence) > max_items:
+            metadata["truncated"] = True
+            metadata["returned_items"] = max_items
+            metadata["total_items"] = len(sequence)
+            sequence = sequence[:max_items]
+        return [
+            _serialize_exec_value(item, depth=depth + 1, max_depth=max_depth, max_items=max_items)[0]
+            for item in sequence
+        ], metadata
+
+    if hasattr(value, "item") and callable(getattr(value, "item")):
+        try:
+            scalar = value.item()
+            metadata["source_type"] = type(value).__name__
+            return _serialize_exec_value(scalar, depth=depth + 1, max_depth=max_depth, max_items=max_items)
+        except Exception:
+            pass
+
+    if hasattr(value, "tolist") and callable(getattr(value, "tolist")):
+        try:
+            array_like = value.tolist()
+            metadata["source_type"] = type(value).__name__
+            shape = getattr(value, "shape", None)
+            if shape is not None:
+                metadata["shape"] = [int(item) for item in shape]
+            dtype = getattr(value, "dtype", None)
+            if dtype is not None:
+                metadata["dtype"] = str(dtype)
+            return _serialize_exec_value(array_like, depth=depth + 1, max_depth=max_depth, max_items=max_items)
+        except Exception:
+            pass
+
+    preview, preview_meta = _truncate_preview(repr(value))
+    metadata.update(preview_meta)
+    metadata["serialization"] = "repr"
+    return preview, metadata
+
+
+def _preview_exec_value(serialized_value: Any, kind: str) -> str:
+    if isinstance(serialized_value, str):
+        return serialized_value
+
+    if kind == "dataframe" and isinstance(serialized_value, list):
+        return f"DataFrame rows={len(serialized_value)}"
+    if kind == "series" and isinstance(serialized_value, list):
+        return f"Series length={len(serialized_value)}"
+
+    try:
+        preview = json.dumps(serialized_value, ensure_ascii=False)
+    except TypeError:
+        preview = str(serialized_value)
+
+    preview, _ = _truncate_preview(preview)
+    return preview
+
+
+def _extract_variables(namespace: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    extracted_variables: dict[str, dict[str, Any]] = {}
+
+    for name, variable in namespace.items():
+        if name.startswith("_") or hasattr(variable, "__spec__"):
+            continue
+
+        try:
+            var_type = type(variable).__name__
+            python_type = f"{type(variable).__module__}.{var_type}"
+            kind = _classify_variable_kind(variable)
+            raw_value, metadata = _serialize_exec_value(variable)
+            preview = _preview_exec_value(raw_value, kind)
+
+            legacy_raw_value, legacy_metadata = _json_safe_exec_value(variable)
+            metadata.update({key: value for key, value in legacy_metadata.items() if key not in metadata})
+
+            payload = {
+                "name": name,
+                "type": var_type,
+                "python_type": python_type,
+                "kind": kind,
+                "value": preview,
+                "preview": preview,
+                "metadata": metadata or None,
+            }
+            if raw_value is not None:
+                payload["raw_value"] = raw_value
+            elif legacy_raw_value is not None:
+                payload["raw_value"] = legacy_raw_value
+
+            extracted_variables[name] = payload
+        except Exception as exc:
+            extracted_variables[name] = {
+                "name": name,
+                "type": type(variable).__name__,
+                "kind": "error",
+                "value": f"<Error serializing: {exc}>",
+            }
+
+    return extracted_variables
+
+
+EDITOR_METADATA_FIELDS = {
+    "name",
+    "description",
+    "object_type",
+    "path",
+    "date",
+    "version",
+    "history",
+    "dataset_type",
+    "connection_string",
+    "model_type",
+    "parameters",
+    "metrics",
+    "reference_data",
+    "input_features",
+    "output_features",
+    "is_trained",
+    "is_tested",
+    "is_deployed",
+    "csv_text",
+    "onnx_bytes",
+}
+
+
+def _extract_editor_metadata(variables: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
+
+    for field_name in EDITOR_METADATA_FIELDS:
+        payload = variables.get(field_name)
+        if not payload:
+            continue
+
+        if "raw_value" in payload:
+            metadata[field_name] = payload["raw_value"]
+        elif "value" in payload:
+            metadata[field_name] = payload["value"]
+
+    return metadata
+
+
+def _extract_defined_names(code: str) -> list[str]:
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return []
+
+    names: list[str] = []
+
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.append(target.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.append(node.target.id)
+
+    return names
+
+
+def _normalize_code_document(
+    code: str,
+    variables: dict[str, dict[str, Any]],
+    metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    now_iso = datetime.now().isoformat()
+    metadata = metadata or {}
+
+    version = metadata.get("version", 1)
+    if not isinstance(version, int):
+        try:
+            version = int(version)
+        except (TypeError, ValueError):
+            version = 1
+
+    history = metadata.get("history")
+    if not isinstance(history, list):
+        history = [{"operation": "execute", "when": now_iso}]
+
+    return {
+        "name": metadata.get("name") or f"code_model_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        "description": metadata.get("description") or "Code created in the editor",
+        "object_type": metadata.get("object_type") or "code_model",
+        "size": 0.0,
+        "path": metadata.get("path") or "editor",
+        "date": metadata.get("date") or now_iso,
+        "version": version,
+        "history": history,
+        "variables": variables,
+        "metadata": metadata,
+        "code": {
+            "script": code,
+            "language": "python",
+            "line_count": len(code.splitlines()),
+        },
+    }
+
+
+def _dataset_analysis_summary(df: pd.DataFrame, df_path: str) -> dict[str, Any]:
+    stats: dict[str, dict[str, Any]] = {}
+
+    for column_name in df.columns:
+        column = df[column_name]
+        if pd.api.types.is_numeric_dtype(column):
+            stats[column_name] = {
+                "type": "numeric",
+                "mean": None if column.empty else float(column.mean()),
+                "std": None if column.empty else float(column.std()),
+                "min": None if column.empty else float(column.min()),
+                "max": None if column.empty else float(column.max()),
+                "null_count": int(column.isnull().sum()),
+            }
+            continue
+
+        mode = column.mode(dropna=True)
+        stats[column_name] = {
+            "type": "categorical",
+            "unique_values": int(column.nunique(dropna=True)),
+            "null_count": int(column.isnull().sum()),
+            "mode": None if mode.empty else str(mode.iloc[0]),
+        }
+
+    return {
+        "rows": int(df.shape[0]),
+        "columns": int(df.shape[1]),
+        "column_names": list(df.columns),
+        "dtypes": {column: str(dtype) for column, dtype in df.dtypes.items()},
+        "missing_values": int(df.isnull().sum().sum()),
+        "stats": stats,
+        "path": df_path,
+    }
+
+
+_register_models()
+_include_registry_routers()
 
 
 @app.on_event("startup")
-async def startup_event():
-
-    # Register pydantic <-> ORM pairs
-    ModelRegistry.register_model(DatasetModel, DatasetORM)
-    ModelRegistry.register_model(LearningModel, LearningORM)
-
-    # TODO - This function is causing trouble within the app and needs to be revised
-    ModelRegistry.register_orm_pair(name="code",
-                                    fields= {
-                                        "variables": dict,
-                                        "code": dict
-                                    },
-                                    base_orm=ObjectORM,
-                                    base_pydantic=ObjectModel,
-                                    table_name="code")
-
-    # Generating FastAPI routes for objects in model registry
-    model_routers = ModelRegistry.generate_all_routers()
-    for router in model_routers:
-        app.include_router(router)
-
-    # Create DB tables if not present
+async def startup_event() -> None:
     try:
         await init_models()
-        print("Initialized....")
-    except Exception as e:
-        # In some dev environments init_models may require DB available; print and continue
-        print("init_models error (db may not be reachable during dev):", e)
-        print(f"Error string (strerror): {traceback.format_tb(e.__traceback__)}")
-        
+    except Exception:
+        LOGGER.exception("Database initialization failed during startup")
+
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    """
-    Home page / Dashboard
-    
-    CHANGED: Now properly returns base_template.html with request context
-    This serves as the main entry point with navigation to all sections
-    
-    Returns:
-    - HTML response with navigation links to:
-      - Data Operations (Red): /upload, /features, /analysis
-      - Model Operations (Green): /training, /optimization, /onnx
-      - MLOps (Blue): /production, /airflow, /mlflow
-    """
-    return templates.TemplateResponse("base_template.html", {"request": request})
-
-
-@app.get("/training", response_class=HTMLResponse)
-async def page_test(request: Request):
-    
-    return templates.TemplateResponse("base_red copy.html", {"request": request})
+async def page_home(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_template.html")
 
 
 @app.get("/upload", response_class=HTMLResponse)
-async def page_upload(request: Request):
-    """
-    Render the upload page
-    
-    CHANGED: Enhanced documentation
-    
-    Serves the base_red.html template which provides:
-    - File upload interface with drag-and-drop support
-    - Form toggle between datasets and models
-    - Upload history display
-    - Feature management interface
-    
-    The form will POST to /upload/{operation_id} with:
-    - file (UploadFile)
-    - objectName
-    - description
-    - operation_id ('datasets' or 'models')
-    - type-specific fields (datasetType, connectionString, etc.)
-    """
-    return templates.TemplateResponse("base_red.html", {"request": request})
+async def page_upload(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_red.html")
 
 
-# NOTE - What if the user sends more than one file at a time?
+@app.get("/create", response_class=HTMLResponse)
+async def page_create(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_red copy.html")
+
+
+@app.get("/training", response_class=HTMLResponse)
+async def page_training(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_green.html")
+
+
+@app.get("/editor", response_class=HTMLResponse)
+async def page_editor(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_editor.html")
+
+
+@app.get("/optimization", response_class=HTMLResponse)
+async def page_optimization(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_test.html")
+
+
+@app.get("/production", response_class=HTMLResponse)
+async def page_production(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_blue.html")
+
+
+@app.get("/registry", response_class=HTMLResponse)
+async def page_registry(request: Request) -> HTMLResponse:
+    return _render_page(request, "base_purple.html")
+
+
 @app.post("/upload/{operation_id}", response_class=JSONResponse)
-async def post_upload(operation_id: str,
-                      request: Request,
-                      db: AsyncSession = Depends(get_db)):
-    """
-    Receive uploaded file, store it under data/<datasets|models>, and create a DB entry.
-
-    CHANGED: Refactored to reduce cognitive complexity by extracting helper functions
-    
-    This endpoint accepts multipart/form-data. The form fields expected are:
-    - file: the uploaded file (UploadFile)
-    - operationId: 'datasets' or 'models'
-    - objectName: display name for the object
-    - description: optional description
-    - type-specific fields depending on operation_id
-
-    Operation mapping:
-      - 'datasets' => DatasetORM (stored under data/datasets)
-      - 'models' => LearningORM (stored under models/)
-
-    Returns:
-    - status: 'ok' or 'error'
-    - id: database record ID
-    - path: file storage path on disk
-    """
-    
-    # CHANGED: Extract and validate form data
+async def post_upload(
+    operation_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
     form = await request.form()
-    upload_file = form.get('file')
+    upload_file = form.get("file")
+    normalized_operation = str(form.get("operationId") or operation_id).lower()
 
-    #debug_type(upload_file)
-    
+    if normalized_operation not in ALLOWED_UPLOAD_OPERATIONS:
+        return _json_error(
+            f"operation_id must be one of: {', '.join(sorted(ALLOWED_UPLOAD_OPERATIONS))}",
+            status_code=400,
+        )
+
     if upload_file is None:
-        return JSONResponse({"status": "error", "detail": "no file provided"}, status_code=400)
+        return _json_error("no file provided", status_code=400)
 
-    # Extract common fields
-    object_name = form.get('objectName') or getattr(upload_file, 'filename', 'unnamed')
-    description = form.get('description') or ''
-    operation_id = str(form.get('operationId') or operation_id)
+    object_name = form.get("objectName") or getattr(upload_file, "filename", "unnamed")
+    description = form.get("description") or ""
 
-    # CHANGED: Helper function to determine storage path
-    def get_upload_dir(op_id: str) -> str:
-        if op_id == "models":
-            return os.path.join(repo_root, 'models')
-        else:  # Default to datasets
-            return os.path.join(repo_root, 'data', 'datasets')
-
-    # CHANGED: Helper function to build operation-specific payload
-    # To consider extensions: .pkl, .onnx, .ph, etc...
-    def build_payload_model(common: dict, form_data, ) -> dict:
-        """Build type-specific payload based on operation_id"""
-
-        return {
-            **common,
-            "model_type": form_data.get('modelType') or 'learning_model',
-            "parameters": {},
-            "metrics": {},
-            "reference_data": form_data.get('referenceData'),
-            "input_features": form_data.get('inputFeatures'),
-            "output_features": form_data.get('outputFeatures'),
-            "is_trained": False,
-            "is_tested": False,
-            "is_deployed": False,
-        }
-        
-    async def build_payload_data(common: dict, form_data, uploaded_file) -> tuple:
-        
-        from io import StringIO
-        debug_type(uploaded_file)
-        await uploaded_file.seek(0)
-        content = await uploaded_file.read()
-
-        s = StringIO(content.decode('UTF-8'))
-
-        print("s", s)
-
-        df = pd.read_csv(s, header=0)
-
-        debug_type(df)
-
-        payload = {
-            **common,
-            "dataset_type": form_data.get('datasetType') or 'dataset',
-            "shape": list(df.shape) or None,
-            "has_features": False,
-            "features_list": df.columns.to_list() or None,
-            "connection_string": form_data.get('connectionString'),
-        }
-
-        return payload, df
-
-    
     try:
-        # Save file to disk
-        upload_dir = get_upload_dir(operation_id)
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        filename = getattr(upload_file, 'filename', 'uploaded.bin')
-        dest_path = os.path.join(upload_dir, filename)
-        
-        size_mb = await save_file_to_disk(upload_file, dest_path)
+        upload_dir = Path(get_upload_dir(normalized_operation))
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = getattr(upload_file, "filename", "uploaded.bin")
+        destination_path = upload_dir / filename
+        size_mb = await save_file_to_disk(upload_file, str(destination_path))
         now = datetime.now()
 
-        # Build payloads and save to database
+        raw_history = form.get("history")
+        try:
+            history = (
+                json.loads(raw_history)
+                if raw_history
+                else [{"operation": "upload", "when": now.isoformat()}]
+            )
+        except (TypeError, json.JSONDecodeError):
+            history = [{"operation": "upload", "when": now.isoformat()}]
+
+        raw_version = form.get("version")
+        try:
+            version = int(raw_version) if raw_version not in (None, "") else 1
+        except (TypeError, ValueError):
+            version = 1
+
         common_payload = {
             "name": object_name,
             "description": description or f"Uploaded file {filename}",
-            "object_type": "dataset" if operation_id != "models" else "learning_model",
+            "object_type": "learning_model" if normalized_operation == MODEL_OPERATION else "dataset",
             "size": size_mb,
-            "path": dest_path,
+            "path": form.get("path") or str(destination_path),
             "date": now,
-            "version": 1,
-            "history": [{"operation": "upload", "when": now.isoformat()}],
+            "version": version,
+            "history": history,
         }
 
-        if operation_id == "models":
+        if normalized_operation == MODEL_OPERATION:
             payload = build_payload_model(common_payload, form)
-        if operation_id == "datasets":
-            payload, df = await build_payload_data(common_payload, form, upload_file)
-            debug_type(df)
-        
-        orm_model = LearningORM if operation_id == "models" else DatasetORM
-        obj = await create_entry(db, orm_model, payload)
+            orm_model = LearningORM
+        else:
+            payload, _ = await build_payload_data(common_payload, form, upload_file)
+            orm_model = DatasetORM
 
-        return JSONResponse({"status": "ok", "id": getattr(obj, "id", None), "path": dest_path})
+        created_object = await create_entry(db, orm_model, payload)
+        return JSONResponse(
+            {
+                "status": "ok",
+                "id": getattr(created_object, "id", None),
+                "path": str(destination_path),
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Upload failed for operation '%s'", normalized_operation)
+        return _json_error(str(exc), status_code=500)
 
-    except Exception as e:
-        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
-
-# CHANGED: base_test.html aligned with /create endpoint; frontend posts code JSON to /create
-# CHANGED: post_create supports optional 'save' flag to persist code as LearningORM entry
-# NOTE - The /create endpoint serves as another measure for the user to input a file
-# in the amanaje app. Instead of uploading a file, the user can write his own code, but
-# I must have a proper way to parse and save the model created in the code.
 @app.post("/execute", response_class=JSONResponse)
-async def post_execute(request: Request,
-                      db: AsyncSession = Depends(get_db)):
-    """
-    CHANGED: Simplified endpoint signature - removed unused operation_id path parameter
-    
-    This was causing 422 errors because FastAPI expected:
-    POST /execute/{operation_id}
-    
-    But frontend was sending:
-    POST /execute
-    
-    Now accepts JSON body with:
-    {
-        "code": "python code here",
-        "save": false,  # optional
-        "objectName": "model_name"  # optional if save=true
-    }
-    
-    Returns: {
-        "status": "success" or "error",
-        "variables": {...},
-        "stdout": "...",
-        "stderr": "...",
-        "error": null or error_message
-    }
-    """
-    
-    try:  
-        # CHANGED: Parse JSON body safely
-        try:
-            data = await request.json()
-            code = (data.get("code") or "").strip()
-        except Exception:
-            # Fallback to raw text body if not JSON
-            raw = await request.body()
-            code = raw.decode("utf-8") if raw else None
+async def post_execute(request: Request) -> JSONResponse:
+    try:
+        body = ExecuteRequest.model_validate(await request.json())
+        code = body.code.strip()
+    except Exception:
+        raw = await request.body()
+        code = raw.decode("utf-8").strip() if raw else ""
 
-        if not code:
-            return JSONResponse({
+    if not code:
+        return JSONResponse(
+            {
                 "status": "error",
                 "variables": {},
                 "stdout": "",
                 "stderr": "",
-                "error": "No code provided"
-            }, status_code=400)
-        
-        # CHANGED: Create namespace with common libraries
-        namespace = {
-            '__builtins__': __builtins__,
-            'np': __import__('numpy'),
-            'pd': __import__('pandas'),
-            'sk': __import__('sklearn'),
-            'torch': __import__('torch'),
-            'ox': __import__('onnx') 
-        }
+                "error": "No code provided",
+            },
+            status_code=400,
+        )
 
-        # CHANGED: Capture stdout/stderr during execution
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
-
-        extracted_variables = {}
-        error_message = None
-
+    def _safe_import(module_name: str) -> Any:
         try:
-            # CHANGED: Execute user code in isolated namespace
-            exec(code, namespace)
+            return __import__(module_name)
+        except Exception:
+            return None
 
-            # CHANGED: Extract non-private variables from namespace
-            for name, variable in namespace.items():
-                if not name.startswith('_') and not isinstance(variable, type(sys)):
-                    try:
-
-                        var_type = type(variable).__name__
-                        var_repr = repr(variable)
-
-                        # CHANGED: Parse value field more intelligently
-                        parsed_value = var_repr
-                        metadata = {}
-
-                        # Detect and extract structure from repr string
-                        if len(var_repr) > 150:
-                            # Truncate but capture length indicator
-                            metadata['original_length'] = len(var_repr)
-                            parsed_value = var_repr[:147] + '...'
-                        
-                        # Detect common patterns in repr
-                        if var_repr.startswith('{') and var_repr.endswith('}'):
-                            metadata['structure'] = 'dict-like'
-                            metadata['bracket_depth'] = var_repr.count('{')
-                        elif var_repr.startswith('[') and var_repr.endswith(']'):
-                            metadata['structure'] = 'list-like'
-                            metadata['element_count'] = var_repr.count(',') + 1 if ',' in var_repr else 1
-                        elif var_repr.startswith('(') and var_repr.endswith(')'):
-                            metadata['structure'] = 'tuple-like'
-                            metadata['element_count'] = var_repr.count(',') + 1 if ',' in var_repr else 1
-                        
-                        # Extract dimension hints from common patterns
-                        if 'array(' in var_repr or 'shape=' in var_repr:
-                            metadata['has_shape'] = True
-                        if 'dtype' in var_repr:
-                            dtype_match = var_repr[var_repr.find('dtype'):var_repr.find('dtype')+30]
-                            metadata['dtype_hint'] = dtype_match
-                        
-                        extracted_variables[name] = {
-                            'type': var_type,
-                            'value': parsed_value,
-                            'metadata': metadata if metadata else None
-                        }
-
-                    except Exception as e:
-                        extracted_variables[name] = {
-                            'type': type(variable).__name__,
-                            'value': f'<Error serializing: {str(e)}>'
-                        }
-
-        except Exception as e:
-            # CHANGED: Capture full traceback for debugging
-            error_message = traceback.format_exc()
-
-        finally:
-            # CHANGED: Always restore stdout/stderr
-            stdout_output = sys.stdout.getvalue()
-            stderr_output = sys.stderr.getvalue()
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
-        
-        # CHANGED: Return structured response
-        return JSONResponse({
-            "status": "success" if not error_message else "error",
-            "variables": extracted_variables,
-            "stdout": stdout_output,
-            "stderr": stderr_output,
-            "error": error_message
-        })
-
-    except json.JSONDecodeError:
-        return JSONResponse({
-            "status": "error",
-            "variables": {},
-            "stdout": "",
-            "stderr": "",
-            "error": "Invalid JSON payload"
-        }, status_code=400)
-
-    except Exception as e:
-        # CHANGED: Catch-all for unexpected errors
-        return JSONResponse({
-            "status": "error",
-            "variables": {},
-            "stdout": "",
-            "stderr": "",
-            "error": str(e)
-        }, status_code=500)
-
-@app.get("/features", response_class=HTMLResponse)
-async def features_page(request: Request, db: AsyncSession = Depends(get_db)):
-    """
-    Render features management page
-    
-    CHANGED: Now properly returns base_green.html template
-    
-    Provides interface for:
-    - Model selection and training configuration
-    - Hyperparameter specification (manual or study-based)
-    - Model optimization via Optuna
-    - ONNX export and validation
-    """
-    objs = await get_all_entries(db, DatasetORM)
-    list_data = [obj.__dict__ for obj in objs]
-    return templates.TemplateResponse("base_green.html", {"request": request, "datasets": list_data})
-
-
-@app.post("/training/{operation_id}", response_class=JSONResponse)
-async def post_training(operation_id: int,
-                        request: Request,
-                        db: AsyncSession = Depends(get_db)):
-    """
-    Start a training job
-    
-    CHANGED: Enhanced documentation and error handling
-    
-    This endpoint accepts a JSON payload (posted by base_green.html form).
-    The payload includes:
-    - name: training job identifier
-    - modelType: type of model being trained
-    - datasetId: reference to training dataset
-    - parameters: hyperparameters for this run
-    - inputFeatures: input column names
-    - outputFeatures: target column names
-    - inputType: 'Manual' or 'Study' (Optuna)
-    - studyId: (if inputType='Study') reference to Optuna study
-    
-    Workflow:
-    1. Accept training configuration from frontend
-    2. Store as LearningORM record with history entry
-    3. Return job ID for tracking
-    4. (Future) enqueue to Celery/Kubernetes for execution
-    
-    Returns:
-    - status: 'ok' or 'error'
-    - id: database training record ID
-    """
-
-    payload_json = {}
-    try:
-        payload_json = await request.json()
-    except Exception:
-        # If no JSON provided, use empty dict
-        payload_json = {}
-
-    now = datetime.now()
-
-    # CHANGED: Extract and merge incoming parameters
-    # Parameters become model.parameters dict; other fields go to appropriate ORM columns
-    payload = {
-        "name": payload_json.get('name') or f"training-{operation_id}",
-        "description": payload_json.get('description') or f"Training job {operation_id}",
-        "object_type": "learning_model",
-        "model_type": payload_json.get('modelType') or 'training_job',
-        "size": 0.0,  # Will be updated after training completes
-        "path": "",   # Will be updated after model is saved
-        "date": now,
-        "version": 1,
-        "history": [{"operation": "training_requested", "when": now.isoformat(), "input_type": payload_json.get('inputType')}],
-        # CHANGED: Hyperparameters from form become parameters dict
-        "parameters": payload_json.get('parameters') or {
-            k: v for k, v in payload_json.items() 
-            if k not in ['name', 'description', 'modelType', 'datasetId']
-        },
-        "metrics": {},  # Will be populated during training
-        "reference_data": payload_json.get('datasetId'),  # Reference to training dataset
-        "input_features": payload_json.get('inputFeatures'),
-        "output_features": payload_json.get('outputFeatures'),
-        "is_trained": False,
-        "is_tested": False,
-        "is_deployed": False,
+    namespace = {
+        "__builtins__": __builtins__,
+        "np": _safe_import("numpy"),
+        "pd": _safe_import("pandas"),
+        "sk": _safe_import("sklearn"),
+        "torch": _safe_import("torch"),
+        "ox": _safe_import("onnx"),
     }
 
+    old_stdout = sys.stdout
+    old_stderr = sys.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+
+    error_message = None
+    extracted_variables: dict[str, dict[str, Any]] = {}
+
     try:
-        obj = await create_entry(db, LearningORM, payload)
-    except Exception as e:
-        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
+        exec(code, namespace)
+        extracted_variables = _extract_variables(namespace)
+    except Exception:
+        error_message = traceback.format_exc()
+    finally:
+        stdout_output = sys.stdout.getvalue()
+        stderr_output = sys.stderr.getvalue()
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
 
-    # CHANGED: In real deployment, would enqueue background job here:
-    # - Could use Celery: celery_app.send_task('tasks.train_model', args=[obj.id])
-    # - Could use Kubernetes: job = create_kubernetes_job(model_id=obj.id, ...)
-    # - Could use Airflow: airflow_client.trigger_dag('train_model_dag', conf={'model_id': obj.id})
-    
-    return JSONResponse({"status": "ok", "id": getattr(obj, "id", None)})
+    editor_metadata = _extract_editor_metadata(extracted_variables)
+    normalized_document = _normalize_code_document(
+        code=code,
+        variables=extracted_variables,
+        metadata=editor_metadata,
+    )
+    defined_names = _extract_defined_names(code)
 
-# NOTE - @app.get('/features)-list_features returns a JSON of the chosen object as a list
-# NOTE - Validate and test. If there's an incompatible object
-# with a different __tablename__, /features will not open
-@app.get('/features', response_class=JSONResponse)
-async def list_features(db: AsyncSession = Depends(get_db)):
-    """
-    Return JSON list of available datasets/features
-    
-    CHANGED: Enhanced documentation and error handling
-    
-    This endpoint is called by:
-    - base_red.html: populate #datasetSelect dropdown
-    - base_green.html: populate #datasetId dropdown for training
-    - Analysis interface: to choose which dataset to analyze
-    
-    Returns:
-    - Array of dataset objects with: id, name, description, dataset_type, size
-    
-    Scaling considerations:
-    - Returns only publicly available datasets (future: add permission checks)
-    - Could implement pagination for large datasets (limit/offset params)
-    - Could add filtering by dataset_type
-    """
-    objs = await get_all_entries(db, DatasetORM)
-    return JSONResponse([{
-        'id': getattr(o, 'id', None),
-        'name': getattr(o, 'name', None),
-        'description': getattr(o, 'description', None),
-        'dataset_type': getattr(o, 'dataset_type', None),
-        'size': getattr(o, 'size', None),
-    } for o in objs])
-
-
-# TODO - Adapt this route to expose the details of any LearningModel the user requests
-@app.get('/analysis', response_class=JSONResponse)
-async def analysis(dataset_id: int = None, db: AsyncSession = Depends(get_db)):
-    """
-    Return analysis data for selected dataset
-    
-    CHANGED: Enhanced with detailed documentation
-    
-    Query parameters:
-    - dataset_id: (optional) ID of dataset to analyze
-    
-    Future enhancements:
-    - Compute actual statistics: min, max, mean, std for numeric columns
-    - Detect missing values and data types
-    - Return correlation matrix for feature relationships
-    - Generate visualizations via Plotly/Dash service
-    - Support multi-column analysis and custom aggregations
-    
-    Current implementation:
-    - Returns placeholder stats for demo purposes
-    - Ready for backend integration with pandas/numpy
-    
-    Returns:
-    - dataset_id: requested dataset ID
-    - summary: dict with row count, column count, missing values stats
-    """
-    # CHANGED: Minimal placeholder response
-    # FUTURE: Implement real analysis by uncommenting and integrating pandas:
-    # 1. Fetch dataset from database by ID
-    # 2. Read file (CSV, Parquet, etc.) into pandas DataFrame
-    # 3. Compute statistics: min, max, mean, std, quantiles
-    # 4. Detect data types and missing value patterns
-    # 5. Return correlation matrix for feature relationships
-    # 6. (Optional) Generate interactive Plotly/Dash visualizations
-    # 7. Cache results for repeated queries
-    
-    dataset = await DatasetModel.read(db, dataset_id)
-    debug_type(dataset)
-
-    df_path = dataset.path
-    df = pd.read_csv(df_path)
-    debug_type(df)
-
-
-    return JSONResponse({
-        'dataset_id': dataset_id,
-        'summary': {
-            'rows': df.shape[0],
-            'columns': df.shape[1],
-            'missing_values': 5,
-            'path': df_path
+    return JSONResponse(
+        {
+            "status": "success" if error_message is None else "error",
+            "variables": extracted_variables,
+            "metadata": editor_metadata,
+            "document": normalized_document,
+            "summary": {
+                "variable_count": len(extracted_variables),
+                "defined_name_count": len(defined_names),
+                "defined_names": defined_names,
+                "has_error": error_message is not None,
+            },
+            "stdout": stdout_output,
+            "stderr": stderr_output,
+            "error": error_message,
         }
-    })
-
-@app.get('/optimization', response_class=HTMLResponse)
-async def code_prompt_test(request: Request,):
-    return templates.TemplateResponse("base_test copy.html", {"request": request, })
-
-@app.get("/registry", response_class=HTMLResponse)
-async def model_registry_view(request: Request):
-    """
-    Model Registry CRUD Interface
-    
-    CHANGED: Implemented the TODO from model_registry.py to provide base_purple.html
-    
-    Serves base_purple.html which provides a comprehensive interface for:
-    - CREATE: Register new datasets or learning models with custom fields
-    - READ: View all entries in grid or table format
-    - UPDATE: Edit existing model entries via modal forms
-    - DELETE: Remove entries with confirmation
-    - SEARCH: Find and view detailed information about specific entries
-    
-    This template utilizes the auto-generated CRUD routes from ModelRegistry.generate_router()
-    which creates endpoints like:
-    - /dataset/create, /dataset/list, /dataset/get/{id}, /dataset/update/{id}, /dataset/delete/{id}
-    - /learning/create, /learning/list, /learning/get/{id}, /learning/update/{id}, /learning/delete/{id}
-    
-    The interface is fully generic and works with any models registered via:
-    ModelRegistry.register_model(PydanticModel, ORMModel)
-    
-    Users can easily manage the entire data model ecosystem without writing queries.
-    """
-    return templates.TemplateResponse("base_purple.html", {"request": request})
-
-@app.get('/airflow/dags', response_class=JSONResponse)
-async def airflow_list_dags():
-    """
-    Return list of available Airflow DAGs
-    
-    CHANGED: Added documentation for integration pattern
-    
-    This endpoint is called by base_blue.html to populate DAG selector.
-    
-    Production implementation should:
-    - Call Airflow REST API: requests.get('http://airflow:8080/api/v1/dags')
-    - Handle authentication (Kerberos, Basic Auth, OAuth2)
-    - Filter by user permissions
-    - Cache results with TTL (e.g., 5 minute cache)
-    - Return only ENABLED dags (paused_at=null)
-    
-    Response format:
-    - Array of DAG objects with: id, name, owner, last_run, is_active
-    
-    Current: Returns stub data for UI testing
-    """
-    # CHANGED: Stub response - replace with Airflow API call in production
-    return JSONResponse([
-        {"id": "example_dag", "name": "Example DAG"},
-        # In production, populate from:
-        # response = requests.get(
-        #     'http://airflow-scheduler:8080/api/v1/dags',
-        #     auth=HTTPBasicAuth(user, pwd)
-        # )
-        # return response.json()['dags']
-    ])
+    )
 
 
-@app.post('/airflow/dags/{dag_id}/trigger', response_class=JSONResponse)
-async def airflow_trigger_dag(dag_id: str):
-    """
-    Trigger execution of an Airflow DAG
-    
-    CHANGED: Added documentation for production integration
-    
-    Path parameters:
-    - dag_id: ID of DAG to trigger
-    
-    Production implementation should:
-    - Make POST request to Airflow REST API
-    - Pass configuration parameters if needed (from request body)
-    - Poll DAG run status for completion
-    - Return run_id for tracking progress
-    - Handle rate limiting and error cases
-    
-    Use cases:
-    - Trigger data processing pipeline (ETL)
-    - Trigger model retraining when new data arrives
-    - Trigger feature engineering workflows
-    
-    Current: Returns stub response
-    """
-    # CHANGED: Stub response - replace with Airflow API call in production
-    # In production:
-    # conf = await request.json() if request.method == 'POST' else {}
-    # response = requests.post(
-    #     f'http://airflow-scheduler:8080/api/v1/dags/{dag_id}/dagRuns',
-    #     json={'conf': conf},
-    #     auth=HTTPBasicAuth(user, pwd)
-    # )
-    # return response.json()
-    
-    return JSONResponse({"status": "triggered", "dag_id": dag_id})
+@app.post("/generate", response_class=JSONResponse)
+async def post_generate(request: Request) -> JSONResponse:
+    try:
+        body = GenerateRequest.model_validate(await request.json())
+    except json.JSONDecodeError:
+        return _json_error("Invalid JSON payload", status_code=400)
+
+    prompt = body.prompt.strip()
+    operation_id = body.operationId.lower()
+
+    if not prompt:
+        return _json_error("prompt is required", status_code=400)
+
+    prompt_comment = "\n".join(f"# {line}" for line in prompt.splitlines() if line.strip())
+    is_model_request = operation_id == MODEL_OPERATION or any(
+        token in prompt.lower() for token in ("model", "onnx", "train", "sklearn", "torch")
+    )
+
+    if is_model_request:
+        script = textwrap.dedent(
+            f"""
+            # Generated model template
+            {prompt_comment}
+
+            name = "generated_model"
+            description = "Generated from the editor prompt"
+            object_type = "learning_model"
+            path = "generated/generated_model.onnx"
+            version = 1
+            model_type = "supervised"
+            parameters = {{"prompt": {prompt!r}}}
+            metrics = {{"task": "define_me"}}
+            reference_data = "sample_dataset.csv"
+            input_features = ["input"]
+            output_features = ["output"]
+            is_trained = False
+            is_tested = False
+            is_deployed = False
+            onnx_bytes = ""
+            """
+        ).strip()
+    else:
+        script = textwrap.dedent(
+            f"""
+            # Generated dataset template
+            {prompt_comment}
+
+            import pandas as pd
+
+            df = pd.DataFrame({{
+                "value": [1, 2, 3],
+                "label": ["a", "b", "c"]
+            }})
+
+            csv_text = df.to_csv(index=False)
+
+            name = "generated_dataset"
+            description = "Generated from the editor prompt"
+            object_type = "dataset"
+            path = "generated/generated_dataset.csv"
+            version = 1
+            dataset_type = "csv"
+            connection_string = ""
+            """
+        ).strip()
+
+    return JSONResponse({"script": script})
 
 
-@app.get('/mlflow/experiments', response_class=JSONResponse)
-async def mlflow_list_experiments():
-    """
-    Return list of MLflow experiments
-    
-    CHANGED: Added documentation for MLflow integration
-    
-    This endpoint is called by base_blue.html to populate experiment selector.
-    
-    MLflow experiments group related model training runs:
-    - Different hyperparameter combinations
-    - Different datasets
-    - Different algorithms (all variants tracked together)
-    
-    Production implementation should:
-    - Call MLflow REST API: requests.get('http://mlflow:5000/api/2.0/mlflow/experiments/search')
-    - Filter by user/project if using MLflow Projects
-    - Return with basic metadata (id, name, creation_time, artifact_location)
-    - Current: stubbed for UI development
-    
-    Returns:
-    - Array of experiments with: id, name, artifact_location, created_time
-    """
-    # CHANGED: Stub response - replace with MLflow API call in production
-    # from mlflow.tracking import MlflowClient
-    # client = MlflowClient('http://mlflow:5000')
-    # experiments = client.search_experiments()
-    # return [{'id': e.experiment_id, 'name': e.name} for e in experiments]
-    
+@app.post("/training/{model_id}", response_class=JSONResponse)
+async def post_training(
+    model_id: int,
+    payload: TrainingRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    _ = db
+
+    model_id = model_id
+    dataset_id = payload.dataset_id
+    model_type = payload.model_type
+    study_id = payload.studyId
+    parameters = payload.runtimeParameters
+    framework = payload.parameters.framework
+    input_features = payload.parameters.input_features
+    output_features = payload.parameters.output_features
+
+    learning_model = LearningModel.read(_, model_id)
+    dataset_model = DatasetModel.read(_, dataset_id)
+    study_model = StudyModel.read(_, study_id)
+    parameters = study_model.study_params
+
+
+    if study_model.objective == "torch":
+        study_objective = study_model.objective_torch()
+    if study_model.objective == "sklearn":
+        study_objective = study_model.objective_sklearn()
+
+
+    study = optuna.create_study(
+            direction = parameters.direction,
+            pruner = parameters.pruner,
+        )
+    study.optimize(study_objective, n_trials=parameters.n_trials)
+
+
+
+    try:
+        if payload.datasetId <= 0:
+            return _json_error("datasetId must be a positive integer", status_code=400)
+
+        job_id = f"train_{model_id}_{payload.datasetId}_{uuid.uuid4().hex[:8]}"
+        return JSONResponse(
+            {
+                "status": "submitted",
+                "job_id": job_id,
+                "model_id": model_id,
+                "dataset_id": payload.datasetId,
+                "input_type": payload.inputType,
+                "study_id": payload.studyId,
+                "estimated_time": "30 minutes",
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Training submission failed for model_id=%s", model_id)
+        return _json_error(str(exc), status_code=500)
+
+
+@app.get("/features", response_class=JSONResponse)
+async def list_features(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    datasets = await get_all_entries(db, DatasetORM)
+    return JSONResponse([_serialize_dataset_summary(dataset) for dataset in datasets])
+
+
+@app.get("/list/dataset", response_class=JSONResponse)
+async def list_dataset(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    datasets = await get_all_entries(db, DatasetORM)
+    return JSONResponse([_serialize_dataset_summary(dataset) for dataset in datasets])
+
+
+@app.get("/list/model", response_class=JSONResponse)
+async def list_model(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    models = await get_all_entries(db, LearningORM)
+    return JSONResponse([_serialize_model_summary(model) for model in models])
+
+
+@app.get("/analysis/data", response_class=JSONResponse)
+async def analysis_dataset(
+    dataset_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        if dataset_id is None:
+            datasets = await get_all_entries(db, DatasetORM)
+            return JSONResponse(
+                {
+                    "available_datasets": [
+                        {
+                            "id": dataset.id,
+                            "name": dataset.name,
+                            "shape": dataset.shape,
+                        }
+                        for dataset in datasets
+                    ]
+                }
+            )
+
+        dataset = await DatasetModel.read(db, dataset_id)
+        if dataset is None or not getattr(dataset, "path", None):
+            return JSONResponse({"error": "Dataset not found"}, status_code=404)
+
+        df_path = str(dataset.path)
+        df = pd.read_csv(df_path)
+        return JSONResponse(
+            {
+                "dataset_id": dataset_id,
+                "summary": _dataset_analysis_summary(df, df_path),
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Dataset analysis failed for dataset_id=%s", dataset_id)
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+
+@app.get("/analysis/model", response_class=JSONResponse)
+async def analysis_model(
+    model_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        if model_id is None:
+            models = await get_all_entries(db, LearningORM)
+            return JSONResponse(
+                {
+                    "available_models": [
+                        {
+                            "id": model.id,
+                            "name": model.name,
+                            "type": model.model_type,
+                            "is_trained": model.is_trained,
+                        }
+                        for model in models
+                    ]
+                }
+            )
+
+        model = await LearningModel.read(db, model_id)
+        if model is None:
+            return JSONResponse({"error": "Model not found"}, status_code=404)
+
+        return JSONResponse(
+            {
+                "model_id": model_id,
+                "summary": {
+                    "name": model.name,
+                    "type": model.model_type,
+                    "is_trained": model.is_trained,
+                    "is_tested": getattr(model, "is_tested", False),
+                    "is_deployed": getattr(model, "is_deployed", False),
+                    "metrics": getattr(model, "metrics", {}) or {},
+                    "parameters": getattr(model, "parameters", {}) or {},
+                    "description": model.description,
+                    "size": model.size,
+                },
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Model analysis failed for model_id=%s", model_id)
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+
+@app.get("/mlflow/experiments", response_class=JSONResponse)
+async def mlflow_list_experiments() -> JSONResponse:
     return JSONResponse([{"id": "exp_1", "name": "Example Experiment"}])
 
 
-@app.get('/mlflow/experiments/{exp_id}', response_class=JSONResponse)
-async def mlflow_get_experiment(exp_id: str):
-    """
-    Get detailed information about an MLflow experiment
-    
-    CHANGED: Added documentation for experiment details retrieval
-    
-    Path parameters:
-    - exp_id: Experiment ID to retrieve
-    
-    Returns:
-    - Experiment metadata: id, name, artifact_location, tags, created_time
-    - Could extend to include best metrics across all runs in experiment
-    - Could include list of runs and their parameters/metrics
-    
-    Production implementation:
-    - Call MLflow API for experiment details
-    - List all runs in experiment with best metrics
-    - Retrieve artifacts (models, plots, etc.)
-    - Return formatted comparison view
-    
-    Current: Returns stub experiment data
-    """
-    # CHANGED: Stub response - replace with MLflow API call in production
-    # from mlflow.tracking import MlflowClient
-    # client = MlflowClient('http://mlflow:5000')
-    # exp = client.get_experiment(exp_id)
-    # runs = client.search_runs(experiment_ids=[exp_id])
-    # return {
-    #     'id': exp.experiment_id,
-    #     'name': exp.name,
-    #     'artifact_location': exp.artifact_location,
-    #     'tags': exp.tags,
-    #     'runs': [...list of runs with metrics...]
-    # }
-    
-    return JSONResponse({
-        "id": exp_id,
-        "name": "Example Experiment",
-        "artifact_location": "/mlruns/1",
-        "tags": {}
-    })
+@app.get("/mlflow/experiments/{exp_id}", response_class=JSONResponse)
+async def mlflow_get_experiment(exp_id: str) -> JSONResponse:
+    return JSONResponse(
+        {
+            "id": exp_id,
+            "name": "Example Experiment",
+            "artifact_location": "/mlruns/1",
+            "tags": {},
+        }
+    )
 
 
-@app.get("/production", response_class=HTMLResponse)
-async def get_production(request: Request):
-    """
-    Render production monitoring dashboard
-    
-    CHANGED: Enhanced documentation
-    
-    Serves base_blue.html template with:
-    - Production model health metrics
-    - Airflow DAG orchestration interface
-    - MLflow experiment tracking
-    - Production controls (start/stop/restart)
-    """
-    return templates.TemplateResponse("base_blue.html", {"request": request})
+@app.get("/airflow/dags", response_class=JSONResponse)
+async def airflow_list_dags() -> JSONResponse:
+    return JSONResponse([{"id": "example_dag", "name": "Example DAG"}])
 
 
-@app.post('/production/start', response_class=JSONResponse)
-async def production_start():
-    """
-    Start production model serving
-    
-    CHANGED: Added comprehensive documentation
-    
-    This endpoint triggers model server startup.
-    
-    Production implementation should:
-    - Load latest model from model registry
-    - Start TorchServe/TensorFlow Serving/custom server
-    - Perform health checks (test inference request)
-    - Warm up GPU/accelerators if applicable
-    - Update load balancer to route traffic
-    - Log event to audit trail
-    
-    Returns:
-    - status: 'started' or 'error'
-    - message: reason if error occurs
-    - server_info: (optional) endpoint, version, etc.
-    
-    Current: Stub implementation for UI testing
-    """
-    # CHANGED: Stub response
-    # Production implementation might:
-    # 1. Check if server already running (idempotent)
-    # 2. Load model: model = mlflow.pytorch.load_model(model_uri)
-    # 3. Start server: torch.jit.script(model).serve()
-    # 4. Verify health: requests.get('http://localhost:8080/health')
-    # 5. Update metrics: prometheus_client.set_gauge('model_serving_active', 1)
-    
+@app.post("/airflow/dags/{dag_id}/trigger", response_class=JSONResponse)
+async def airflow_trigger_dag(dag_id: str) -> JSONResponse:
+    return JSONResponse({"status": "triggered", "dag_id": dag_id})
+
+
+@app.post("/production/start", response_class=JSONResponse)
+async def production_start() -> JSONResponse:
     return JSONResponse({"status": "started"})
 
 
-@app.post('/production/stop', response_class=JSONResponse)
-async def production_stop():
-    """
-    Stop production model serving
-    
-    CHANGED: Added comprehensive documentation
-    
-    This endpoint triggers graceful model server shutdown.
-    
-    Production implementation should:
-    - Stop accepting new requests (drain pool)
-    - Wait for in-flight requests to complete (with timeout)
-    - Save final metrics to database
-    - Stop model server process
-    - Remove from load balancer
-    - Log event to audit trail
-    - (Optional) Archive logs for this serving session
-    
-    Returns:
-    - status: 'stopped' or 'error'
-    - uptime: (optional) how long the server was running
-    - requests_processed: (optional) total requests served
-    
-    Current: Stub implementation for UI testing
-    """
-    # CHANGED: Stub response
-    # Production implementation might:
-    # 1. Set "shutdown" flag to reject new requests
-    # 2. Wait for in-flight requests: for i in range(60): if no requests, break; sleep(1)
-    # 3. Shutdown server: torch_server.shutdown()
-    # 4. Update metrics: prometheus_client.set_gauge('model_serving_active', 0)
-    # 5. Save stats: db.record_serving_session(requests, uptime, errors)
-    
+@app.post("/production/stop", response_class=JSONResponse)
+async def production_stop() -> JSONResponse:
     return JSONResponse({"status": "stopped"})
 
 
-# Generic exception handlers
-@app.exception_handler(Exception)
-async def generic_exception_handler(request: Request, exc: Exception):
-    """
-    Global exception handler for unhandled errors
-    
-    CHANGED: Added comprehensive documentation
-    
-    Catches all exceptions not handled by specific exception handlers.
-    
-    Behavior:
-    - Log full traceback for debugging
-    - Return JSON error response to client
-    - Sanitize error message to avoid leaking internal details
-    - Set appropriate HTTP status code (500 for server errors)
-    - (Optional) Send alert if critical errors occur
-    
-    Returns:
-    - detail: error message (sanitized in production)
-    - request_id: (optional) for tracking in logs
-    - timestamp: when error occurred
-    
-    In production, should:
-    - Log to centralized log aggregation (ELK, Splunk, etc.)
-    - Send alerts for specific error types
-    - Return generic error message to client (don't expose internals)
-    - Track error patterns to identify bugs
-    """
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
-    
-    # CHANGED: Return generic error message in production
-    # In development, might return str(exc) for debugging
-    error_detail = str(exc) if os.getenv("DEBUG") else "An error occurred"
-    
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
     return JSONResponse(
-        {"detail": error_detail},
-        status_code=500
+        {"status": "error", "detail": exc.detail},
+        status_code=exc.status_code,
     )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+    LOGGER.exception("Unhandled exception", exc_info=exc)
+    error_detail = str(exc) if os.getenv("DEBUG") else "An error occurred"
+    return JSONResponse({"detail": error_detail}, status_code=500)
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main_app:app", host="0.0.0.0", port=8000, reload=True)

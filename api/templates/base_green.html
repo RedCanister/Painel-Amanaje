@@ -1,586 +1,701 @@
 {% extends "base_template.html" %}
 
-{% block title %}Model Operations - Painel Amanajé{% endblock %}
+{% block title %}Training Orchestration - Painel Amanajé{% endblock %}
 
 {% block extra_css %}
 <style>
-    .model-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
-    .model-section h3 { color: #2a9d8f; margin-top: 0; }
-    .model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .model-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; }
-    .metrics-display { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.9em; }
-    .parameter-group { margin: 1rem 0; }
-    .parameter-row { display: flex; align-items: center; margin: 0.5rem 0; }
-    .parameter-label { flex: 1; }
-    .parameter-input { flex: 2; }
+    .training-section { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid #ddd; border-radius: 4px; }
+    .training-section h3 { color: #2a9d8f; margin-top: 0; }
+    .pipeline-grid, .registry-grid, .framework-grid, .results-grid { display: grid; gap: 1rem; }
+    .pipeline-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .registry-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .framework-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+    .results-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .pipeline-card, .status-card, .study-card, .framework-card {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        padding: 1rem;
+    }
+    .pipeline-card h4, .status-card h4, .study-card h4, .framework-card h4 { margin-top: 0; }
+    .metric-value { font-size: 1.5rem; font-weight: 700; color: #2a9d8f; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 0.65rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .form-group textarea { min-height: 110px; resize: vertical; }
+    .inline-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+    .status-stack { display: grid; gap: 0.75rem; }
+    .study-list { display: grid; gap: 0.75rem; }
+    .study-card small, .muted-text { color: #6b7280; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.65rem;
+        background: #e6fffa;
+        color: #115e59;
+        border: 1px solid #99f6e4;
+        border-radius: 999px;
+        font-size: 0.85rem;
+    }
+    .json-block {
+        background: #111827;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        overflow-x: auto;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+    }
+    .empty-state {
+        padding: 1rem;
+        border: 1px dashed #cbd5e1;
+        border-radius: 4px;
+        background: #f8fafc;
+        color: #475569;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="model-operations">
-    <!-- Training Section -->
-    <section class="model-section" id="trainingSection">
-        <h3>Model Training</h3>
-        <form id="trainingForm">
-            <div class="parameter-group">
-                <h4>Training Configuration</h4>
-                <!-- CHANGED: Training configuration selects model and dataset, saves as trained object with MLflow experiment tracking -->
-                <div class="parameter-row">
-                    <label for="modelType" class="parameter-label">Model:</label>
-                    <select id="modelType" name="modelType" class="parameter-input" required>
-                        <!-- CHANGED: Uses PopulateListOptions utility to load available model types -->
-                    </select>
-                </div>
-                
-                <div class="parameter-row">
-                    <label for="datasetId" class="parameter-label">Training Dataset:</label>
-                    <select id="datasetId" name="datasetId" class="parameter-input" required>
-                        <!-- CHANGED: Uses PopulateListOptions utility to populate from /features endpoint -->
-                    </select>
-                </div>
-                
-                <!-- CHANGED: Mount MultiObjectSelector to choose input/output feature columns -->
-                <div class="parameter-row">
-                    <label for="inputFeatures" class="parameter-label">Feature Selection:</label>
-                    <div id="featureSelectorGreen" class="parameter-input" style="min-height:120px;"></div>
-                    <input type="hidden" id="inputFeatures" name="inputFeatures" value="[]">
+<div class="training-operations">
+
+    <!-- TODO - Is it possible for the sections to be on different tabs
+     and not on top of each other? -->
+    <section class="training-section" id="orchestrationSection">
+        <h3>Study-Orchestrated Training</h3>
+        <div class="pipeline-grid">
+            <div class="pipeline-card">
+                <h4>Training Job</h4>
+                <p class="muted-text">Use a `StudyModel` to bind a PostgreSQL dataset to a registered `LearningModel`, then submit the training run with manual parameters or an existing study.</p>
+
+                <form id="trainingForm">
+                    <div class="form-group">
+                        <label for="modelId">Learning Model</label>
+                        <select id="modelId" name="modelId" required>
+                            <option value="">Select a model</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="datasetId">Dataset From PostgreSQL Registry</label>
+                        <select id="datasetId" name="datasetId" required>
+                            <option value="">Select a dataset</option>
+                        </select>
+                    </div>
+
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="framework">Execution Framework</label>
+                            <select id="framework" name="framework">
+                                <option value="pytorch">PyTorch</option>
+                                <option value="sklearn">scikit-learn</option>
+                                <option value="onnx">ONNX</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputType">Parameter Source</label>
+                            <select id="inputType" name="inputType">
+                                <option value="Manual">Manual</option>
+                                <option value="Study">Study</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="studySelectionGroup" style="display:none;">
+                        <label for="studyId">StudyModel</label>
+                        <select id="studyId" name="studyId">
+                            <option value="">Select a study</option>
+                        </select>
+                    </div>
+                    
+                    <!-- TODO - I'd like for Input Features and Output Features to be populated
+                    with the names of the features in the dataset, automatically, with multiple selection -->
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="inputFeatures">Input Features</label>
+                            <input id="inputFeatures" name="inputFeatures" type="text" placeholder="feature_a, feature_b">
+                        </div>
+                        <div class="form-group">
+                            <label for="outputFeatures">Output Features</label>
+                            <input id="outputFeatures" name="outputFeatures" type="text" placeholder="target">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="parametersJson">Runtime Parameters</label>
+                        <textarea id="parametersJson" name="parametersJson" spellcheck="false">{
+  "epochs": 50,
+  "batch_size": 32,
+  "learning_rate": 0.001
+}</textarea>
+                    </div>
+
+                    <div class="actions-row">
+                        <button type="submit" class="btn btn-primary">Start Training</button>
+                        <button type="button" class="btn" id="btnHydrateFromStudy">Load Best Params From Study</button>
+                        <button type="button" class="btn" id="btnRefreshTrainingData">Refresh Registry</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="pipeline-card">
+                <h4>Pipeline Summary</h4>
+                <div class="status-stack">
+                    <div class="status-card">
+                        <small>Selected Model</small>
+                        <div class="metric-value" id="summaryModel">-</div>
+                    </div>
+                    <div class="status-card">
+                        <small>Selected Dataset</small>
+                        <div class="metric-value" id="summaryDataset">-</div>
+                    </div>
+                    <div class="status-card">
+                        <small>Study Coordination</small>
+                        <div class="metric-value" id="summaryStudy">Manual</div>
+                    </div>
                 </div>
 
-            </div>
+                <div class="framework-grid">
+                    <div class="framework-card">
+                        <h4>PyTorch</h4>
+                        <p class="muted-text">Use for trainable deep-learning runs that need epochs, optimizers, and tensor-based batching.</p>
+                    </div>
+                    <div class="framework-card">
+                        <h4>scikit-learn</h4>
+                        <p class="muted-text">Use for classical estimators where the study should tune compact parameter sets against the stored dataset.</p>
+                    </div>
+                    <div class="framework-card">
+                        <h4>ONNX</h4>
+                        <p class="muted-text">Use when the selected model should be exported or validated as a portable artifact after training.</p>
+                    </div>
+                </div>
 
-            <div class="parameter-row">
-                <label for="InputType" class="parameter-label">Input Type:</label>
-                <select id="InputType" name="InputType" class="parameter-input" required>
-                    <!-- CHANGED: Toggle between Manual hyperparameters and Optuna Study optimization -->
-                    <option value="Manual">Manual</option>
-                    <option value="Study">Study</option>
-                </select>
-            </div>
-            
-            <div class="parameter-row">
-                <label for="StudyObject" class="parameter-label">Study:</label>
-                <select id="StudyObject" name="StudyObject" class="parameter-input" required>
-                    <!-- CHANGED: Dynamically populated based on available study objects when Study mode selected -->
-                </select>
-            </div>
-            
-            
-            <div class="parameter-group">
-                <h4>Hyperparameters</h4>
-                <!-- CHANGED: Ability to select study object to populate stored hyperparameters -->
-                <!-- New trials will be added to existing study, or new study created if inserted manually -->
-                <div id="hyperparameters">
-                    <!-- CHANGED: Dynamically populated based on model type and study parameters -->
+                <div class="pill-row" id="pipelinePills">
+                    <span class="pill">postgresql dataset registry</span>
+                    <span class="pill">StudyModel coordination</span>
+                    <span class="pill">ML training execution</span>
                 </div>
             </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary">Start Training</button>
-        </form>
-        <div id="trainingResult"></div>
+        <div id="trainingResult" style="margin-top:1rem;"></div>
     </section>
 
-    <!-- Optimization Section -->
-    <section class="model-section" id="optimizationSection">
-        <!-- CHANGED: Automatically performs Optuna study to generate parameter object based on data -->
-        <!-- User can optimize study with manual hyperparameters, gets added to history log -->
-        <h3>Model Optimization</h3>
-        <div class="optimization-controls">
-            <select id="modelSelect">
-                <option value="">Select Model</option>
-            </select>
-            <button onclick="startOptimization()" class="btn">Optimize</button>
+    <section class="training-section" id="studyRegistrySection">
+        <h3>Study Registry</h3>
+        <div class="pipeline-grid">
+            <div class="pipeline-card">
+                <h4>Create StudyModel</h4>
+                <p class="muted-text">Register a reusable study object so the same dataset/model pair can be replayed across PyTorch, ONNX export preparation, or scikit-learn tuning.</p>
+
+                <form id="studyForm">
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="studyName">Study Name</label>
+                            <input id="studyName" name="studyName" type="text" placeholder="customer-churn-study" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studySampler">Sampler</label>
+                            <select id="studySampler" name="studySampler">
+                                <option value="TPESampler">TPESampler</option>
+                                <option value="RandomSampler">RandomSampler</option>
+                                <option value="CmaEsSampler">CmaEsSampler</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="studyModelId">Linked LearningModel</label>
+                            <select id="studyModelId" name="studyModelId" required>
+                                <option value="">Select a model</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studyDatasetId">Linked DatasetModel</label>
+                            <select id="studyDatasetId" name="studyDatasetId" required>
+                                <option value="">Select a dataset</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="studyObjective">Objective</label>
+                            <input id="studyObjective" name="studyObjective" type="text" value="maximize_accuracy">
+                        </div>
+                        <div class="form-group">
+                            <label for="studyPath">Storage Path</label>
+                            <input id="studyPath" name="studyPath" type="text" value="studies/study.json">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studyDescription">Description</label>
+                        <textarea id="studyDescription" name="studyDescription" spellcheck="false">StudyModel linking dataset ingestion from PostgreSQL to registered training models.</textarea>
+                    </div>
+                    
+                    <!-- TODO - When selecting the model in this section, the user needs to be able to
+                     define the min-max value to be used in the study. 
+                     
+                    Consider extra form fields for user in Pytorch models: 
+                     - nn_criterion
+                     - nn_optimizer
+                     - with_grad() or no_grad()
+                     For each __init__ (initialization) variable for pytorch model:
+                     - Min value
+                     - Max value
+                     - Step value
+                     - Categorical choices
+                     -->
+                    <div class="form-group">
+                        <label for="studyParamsJson">Study Parameters</label>
+                        <textarea id="studyParamsJson" name="studyParamsJson" spellcheck="false">{
+  "n_trials": 25,
+  "direction": "maximize",
+  "metric": "accuracy",
+  "framework": "pytorch"
+}</textarea>
+                    </div>
+
+                    <div class="actions-row">
+                        <button type="submit" class="btn btn-primary">Create StudyModel</button>
+                        <button type="button" class="btn" id="btnSyncStudyForm">Use Selected Training Pair</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="pipeline-card">
+                <h4>StudyModel Inventory</h4>
+                <div class="results-grid">
+                    <div class="status-card">
+                        <small>Total Studies</small>
+                        <div class="metric-value" id="studyCount">0</div>
+                    </div>
+                    <div class="status-card">
+                        <small>Reusable Pairs</small>
+                        <div class="metric-value" id="pairCount">0</div>
+                    </div>
+                    <div class="status-card">
+                        <small>Active Framework</small>
+                        <div class="metric-value" id="activeFramework">pytorch</div>
+                    </div>
+                </div>
+                <div id="studyList" class="study-list" style="margin-top:1rem;"></div>
+            </div>
         </div>
-        <div class="metrics-display" id="optimizationMetrics">
-            <!-- Optimization metrics will be shown here -->
-        </div>
+
+        <div id="studyResult" style="margin-top:1rem;"></div>
     </section>
 
-    <!-- ONNX Export Section -->
-    <section class="model-section" id="onnxSection">
-        <h3>ONNX Model Management</h3>
-        <!-- CHANGED: Runs tests and produces graph of model converted to ONNX format -->
-        <!-- Future: Will support PyTorch model editing via ONNX tools -->
-        <div class="onnx-controls">
-            <button onclick="exportONNX()" class="btn">Export to ONNX</button>
-            <button onclick="validateONNX()" class="btn">Validate ONNX Model</button>
+    <section class="training-section" id="trackingSection">
+        <h3>Training Tracking</h3>
+        <div class="registry-grid">
+            <div class="pipeline-card">
+                <h4>Model Snapshot</h4>
+                <div id="modelSnapshot" class="empty-state">Select a model to load its current registry summary.</div>
+            </div>
+            <div class="pipeline-card">
+                <h4>Dataset Snapshot</h4>
+                <div id="datasetSnapshot" class="empty-state">Select a dataset to review the stored dataset summary from PostgreSQL.</div>
+            </div>
+            <div class="pipeline-card" id="onnxSection">
+                <h4>ONNX Readiness</h4>
+                <p class="muted-text">`main_app.py` currently exposes training, MLflow, and registry routes but no ONNX execution route. This section keeps the orchestration aligned until the backend export endpoint is added.</p>
+                <div class="actions-row">
+                    <button type="button" class="btn" id="btnPrepareOnnx">Prepare ONNX Payload</button>
+                    <button type="button" class="btn" id="btnValidateOnnx">Validate Route Availability</button>
+                </div>
+                <div id="onnxResults" style="margin-top:1rem;"></div>
+            </div>
         </div>
-        <div id="onnxResults"></div>
     </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Load generic form utilities for dynamic form handling -->
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 
 <script>
-/**
- * base_green.html - Model Operations Dashboard
- * 
- * Handles:
- * - Model training configuration and submission
- * - Hyperparameter management (manual or study-based)
- * - Model optimization via Optuna studies
- * - ONNX model export and validation
- * 
- * Key changes:
- * - CHANGED: Replaced manual select population with PopulateListOptions()
- * - ADDED: Dynamic hyperparameter UI based on model type
- * - ADDED: Study-based optimization workflow
- * - ADDED: Comments explaining each section
- * - FIXED: Hyperparameter templates now properly editable
- */
-
-// ============================================================================
-// TRAINING FORM INITIALIZATION AND DATA LOADING
-// ============================================================================
-
 const trainingForm = document.getElementById('trainingForm');
-const modelTypeSelect = document.getElementById('modelType');
+const studyForm = document.getElementById('studyForm');
+const modelIdSelect = document.getElementById('modelId');
 const datasetIdSelect = document.getElementById('datasetId');
-const hyperparametersContainer = document.getElementById('hyperparameters');
-const inputTypeSelect = document.getElementById('InputType');
-const studyObjectSelect = document.getElementById('StudyObject');
+const studyIdSelect = document.getElementById('studyId');
+const inputTypeSelect = document.getElementById('inputType');
+const frameworkSelect = document.getElementById('framework');
+const parametersJson = document.getElementById('parametersJson');
 
-/**
- * Hyperparameter templates for different model types
- * CHANGED: Made editable and extendable for new model types
- * 
- * Structure: each model type has array of parameter definitions
- * - name: parameter identifier
- * - type: HTML input type (number, text, range, etc.)
- * - default: starting value
- * - min/max: constraints for numeric inputs
- * - step: increment for numeric inputs
- * 
- * TODO: In production, these should come from backend database
- * Each LearningModel should have its own parameter schema
- */
-const hyperparameterTemplates = {
-    regression: [
-        { name: 'learning_rate', type: 'number', default: 0.01, min: 0.0001, max: 1, step: 0.0001 },
-        { name: 'epochs', type: 'number', default: 100, min: 1, max: 10000, step: 1 },
-        { name: 'batch_size', type: 'number', default: 32, min: 1, max: 512, step: 1 }
-    ],
-    classification: [
-        { name: 'learning_rate', type: 'number', default: 0.01, min: 0.0001, max: 1, step: 0.0001 },
-        { name: 'epochs', type: 'number', default: 100, min: 1, max: 10000, step: 1 },
-        { name: 'num_classes', type: 'number', default: 2, min: 2, max: 1000, step: 1 }
-    ],
-    clustering: [
-        { name: 'n_clusters', type: 'number', default: 3, min: 2, max: 100, step: 1 },
-        { name: 'max_iter', type: 'number', default: 300, min: 10, max: 10000, step: 10 }
-    ],
-    timeseries: [
-        { name: 'lookback_window', type: 'number', default: 12, min: 1, max: 365, step: 1 },
-        { name: 'forecast_horizon', type: 'number', default: 1, min: 1, max: 365, step: 1 },
-        { name: 'learning_rate', type: 'number', default: 0.01, min: 0.0001, max: 1, step: 0.0001 }
-    ]
-};
+let modelCache = [];
+let datasetCache = [];
+let studyCache = [];
 
-/**
- * Update hyperparameters UI when model type changes
- * CHANGED: Now properly renders all parameters as editable inputs
- * CHANGED: Includes labels and descriptions for better UX
- * ADDED: Support for custom parameter ranges per model type
- */
-function updateHyperparameters() {
-    const selectedType = modelTypeSelect.value;
-    const params = hyperparameterTemplates[selectedType] || [];
-    
-    // CHANGED: Generate proper form inputs with labels and validation
-    hyperparametersContainer.innerHTML = params.map(param => `
-        <div class="parameter-row">
-            <label for="${param.name}" class="parameter-label">
-                ${param.name.replace(/_/g, ' ').toUpperCase()}:
-            </label>
-            <input 
-                type="${param.type}" 
-                id="${param.name}"
-                name="${param.name}"
-                value="${param.default}"
-                ${param.min !== undefined ? `min="${param.min}"` : ''}
-                ${param.max !== undefined ? `max="${param.max}"` : ''}
-                ${param.step !== undefined ? `step="${param.step}"` : ''}
-                class="parameter-input"
-                required>
-            <small style="color: #999; margin-left: 0.5rem;">
-                ${param.min !== undefined && param.max !== undefined 
-                    ? `Range: ${param.min} - ${param.max}` 
-                    : ''}
-            </small>
+function renderAlert(targetId, type, message) {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+}
+
+function safeParseJson(value, fallback = {}) {
+    if (!value || !String(value).trim()) return fallback;
+    return JSON.parse(value);
+}
+
+function setStudyVisibility() {
+    const showStudy = inputTypeSelect.value === 'Study';
+    document.getElementById('studySelectionGroup').style.display = showStudy ? 'block' : 'none';
+    document.getElementById('summaryStudy').textContent = showStudy
+        ? (studyIdSelect.options[studyIdSelect.selectedIndex]?.text || 'Study')
+        : 'Manual';
+}
+
+function getSelectedLabel(selectElement) {
+    if (!selectElement || selectElement.selectedIndex < 0) return '-';
+    return selectElement.options[selectElement.selectedIndex]?.text || '-';
+}
+
+function updatePipelineSummary() {
+    document.getElementById('summaryModel').textContent = modelIdSelect.value ? getSelectedLabel(modelIdSelect) : '-';
+    document.getElementById('summaryDataset').textContent = datasetIdSelect.value ? getSelectedLabel(datasetIdSelect) : '-';
+    document.getElementById('summaryStudy').textContent = inputTypeSelect.value === 'Study'
+        ? (studyIdSelect.value ? getSelectedLabel(studyIdSelect) : 'Study required')
+        : 'Manual';
+    document.getElementById('activeFramework').textContent = frameworkSelect.value;
+}
+
+function buildRegistryCard(title, summary) {
+    const lines = Object.entries(summary || {}).map(([key, value]) => `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:0.5rem; font-weight:600;">${key.replace(/_/g, ' ')}</td>
+            <td style="padding:0.5rem;">${typeof value === 'object' ? JSON.stringify(value) : value}</td>
+        </tr>
+    `).join('');
+
+    return `
+        <div style="background:#f8fafc; border-radius:4px; padding:1rem;">
+            <h4 style="margin-top:0;">${title}</h4>
+            <table style="width:100%; border-collapse:collapse;">${lines}</table>
+        </div>
+    `;
+}
+
+async function populateRegistryOptions() {
+    await Promise.all([
+        PopulateListOptions({
+            selectElement: '#modelId',
+            endpoint: '/learningmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a model',
+            onSuccess: (data) => { modelCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#studyModelId',
+            endpoint: '/learningmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a model',
+            onSuccess: (data) => { modelCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#datasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset',
+            onSuccess: (data) => { datasetCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#studyDatasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset',
+            onSuccess: (data) => { datasetCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#studyId',
+            endpoint: '/studymodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a study',
+            onSuccess: (data) => {
+                studyCache = data;
+                renderStudyInventory();
+            },
+            onError: () => {
+                studyCache = [];
+                renderStudyInventory();
+            }
+        })
+    ]);
+
+    updatePipelineSummary();
+}
+
+function renderStudyInventory() {
+    const studyList = document.getElementById('studyList');
+    document.getElementById('studyCount').textContent = studyCache.length;
+
+    const pairs = new Set(
+        studyCache.map(study => `${study.learning_model_id || 'x'}:${study.dataset_id || 'y'}`)
+    );
+    document.getElementById('pairCount').textContent = studyCache.length ? pairs.size : 0;
+
+    if (!studyCache.length) {
+        studyList.innerHTML = '<div class="empty-state">No StudyModel objects registered yet.</div>';
+        return;
+    }
+
+    studyList.innerHTML = studyCache.map(study => `
+        <div class="study-card">
+            <h4>${study.name || 'Unnamed study'}</h4>
+            <small>ID ${study.id || '-'} | model ${study.learning_model_id || '-'} | dataset ${study.dataset_id || '-'}</small>
+            <div class="pill-row">
+                <span class="pill">${study.sampler || 'sampler:n/a'}</span>
+                <span class="pill">${study.objective || 'objective:n/a'}</span>
+            </div>
+            <div class="json-block" style="margin-top:0.75rem;">${JSON.stringify(study.study_params || {}, null, 2)}</div>
         </div>
     `).join('');
 }
 
-/**
- * Load available models from backend
- * CHANGED: Uses PopulateListOptions for consistency
- * ADDED: Handles errors gracefully
- */
-async function loadModels() {
-    // CHANGED: Replaced custom fetch logic with generic PopulateListOptions
-    // This makes the code more maintainable and reusable
-    await PopulateListOptions({
-        selectElement: '#modelType',
-        endpoint: '/learningmodel/list',  // TODO: Ensure this endpoint exists
-        labelField: 'name',
-        valueField: 'id',
-        placeholderText: 'Select a Model Type',
-        onSuccess: (models) => {
-            console.log(`✅ Loaded ${models.length} model types`);
-            // Trigger hyperparameter update after models load
-            updateHyperparameters();
-        },
-        onError: (error) => {
-            console.error('Failed to load models:', error);
-            modelTypeSelect.innerHTML = '<option value="">Error loading models</option>';
-        }
-    });
-}
-
-/**
- * Load available datasets for training
- * CHANGED: Uses PopulateListOptions for consistency
- */
-async function loadDatasets() {
-    // CHANGED: Uses generic PopulateListOptions utility
-    await PopulateListOptions({
-        selectElement: '#datasetId',
-        endpoint: '/datasetmodel/list',  // Rturns list of available datasets
-        labelField: 'name',
-        valueField: 'id',
-        placeholderText: 'Select Training Dataset',
-        onSuccess: (datasets) => {
-            console.log(`✅ Loaded ${datasets.length} datasets`);
-        },
-        onError: (error) => {
-            console.error('Failed to load datasets:', error);
-        }
-    });
-}
-
-/**
- * Load available study objects (Optuna studies)
- * CHANGED: New function to support study-based optimization workflow
- * ADDED: Populates study dropdown when optimization is selected
- */
-async function loadStudies() {
-    // TODO: Implement backend endpoint to return available Optuna studies
-    // Format: [{ id: "study_1", name: "Study 1", created: "2025-11-14", trials: 42 }, ...]
-    
-    await PopulateListOptions({
-        selectElement: '#StudyObject',
-        endpoint: '/studies/list',  // TODO: Create this endpoint
-        labelField: 'name',
-        valueField: 'id',
-        placeholderText: 'Select or Create Study',
-        onError: (error) => {
-            console.log('Note: Studies endpoint not available yet');
-        }
-    });
-}
-
-// ============================================================================
-// TRAINING FORM EVENT HANDLERS
-// ============================================================================
-
-/**
- * Handle model type selection change
- * CHANGED: Now calls updateHyperparameters to reflect chosen model
- */
-modelTypeSelect.addEventListener('change', () => {
-    updateHyperparameters();
-});
-
-/**
- * Handle input type toggle between Manual and Study
- * CHANGED: New feature for optimization workflow
- * ADDED: Shows/hides study selection based on input type
- */
-inputTypeSelect.addEventListener('change', () => {
-    if (inputTypeSelect.value === 'Study') {
-        // Show study selection when "Study" is chosen
-        studyObjectSelect.parentElement.style.display = 'block';
-        loadStudies();
-    } else {
-        // Hide study selection for manual input
-        studyObjectSelect.parentElement.style.display = 'none';
-    }
-});
-
-/**
- * Main training form submission
- * CHANGED: Properly collects all form data including hyperparameters
- * ADDED: Validation before submission
- * ADDED: Enhanced error feedback
- */
-trainingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    const modelType = modelTypeSelect.value;
-    const datasetId = datasetIdSelect.value;
-    
-    if (!modelType) {
-        alert('Please select a model type');
+async function loadModelSnapshot() {
+    if (!modelIdSelect.value) {
+        document.getElementById('modelSnapshot').innerHTML = 'Select a model to load its current registry summary.';
         return;
     }
-    if (!datasetId) {
-        alert('Please select a training dataset');
-        return;
-    }
-
-    // CHANGED: Collect all form data including dynamically generated hyperparameters
-    const formData = new FormData(trainingForm);
-    
-    // Extract hyperparameters from the dynamically generated inputs
-    const hyperparams = {};
-    document.querySelectorAll('#hyperparameters input').forEach(input => {
-        hyperparams[input.name] = input.type === 'number' ? parseFloat(input.value) : input.value;
-    });
-
-    // Build payload for backend
-    const payload = {
-        name: `training-${new Date().getTime()}`,
-        description: `Training ${modelType} with dataset ${datasetId}`,
-        modelType: modelType,
-        datasetId: datasetId,
-        operationId: formData.get('operationId'),
-        inputFeatures: formData.get('inputFeatures'),
-        parameters: hyperparams,  // CHANGED: Now includes actual hyperparameters
-        inputType: formData.get('InputType'),
-        studyId: formData.get('InputType') === 'Study' ? formData.get('StudyObject') : null
-    };
 
     try {
-        // Show loading state
-        document.getElementById('trainingResult').innerHTML = 
-            `<div class="alert alert-info">⏳ Submitting training job...</div>`;
+        const response = await fetch(`/analysis/model?model_id=${modelIdSelect.value}`);
+        const result = await response.json();
+        if (!response.ok || result.error) throw new Error(result.error || `HTTP ${response.status}`);
+        document.getElementById('modelSnapshot').innerHTML = buildRegistryCard('LearningModel Summary', result.summary || {});
+    } catch (error) {
+        document.getElementById('modelSnapshot').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+    }
+}
 
-        const response = await fetch(`/training/${payload.operationId || 1}`, {
+async function loadDatasetSnapshot() {
+    if (!datasetIdSelect.value) {
+        document.getElementById('datasetSnapshot').innerHTML = 'Select a dataset to review the stored dataset summary from PostgreSQL.';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/analysis/data?dataset_id=${datasetIdSelect.value}`);
+        const result = await response.json();
+        if (!response.ok || result.error) throw new Error(result.error || `HTTP ${response.status}`);
+        document.getElementById('datasetSnapshot').innerHTML = buildRegistryCard('DatasetModel Summary', result.summary || {});
+    } catch (error) {
+        document.getElementById('datasetSnapshot').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+    }
+}
+
+function hydrateParametersFromStudy() {
+    if (!studyIdSelect.value) {
+        renderAlert('trainingResult', 'warning', 'Select a StudyModel before loading best parameters.');
+        return;
+    }
+
+    const selectedStudy = studyCache.find(study => String(study.id) === String(studyIdSelect.value));
+    if (!selectedStudy) {
+        renderAlert('trainingResult', 'warning', 'The selected study is not available in the current cache.');
+        return;
+    }
+
+    const nextPayload = {
+        ...(selectedStudy.study_params || {}),
+        ...(selectedStudy.best_params || {})
+    };
+    parametersJson.value = JSON.stringify(nextPayload, null, 2);
+    renderAlert('trainingResult', 'success', `Loaded parameter payload from study <code>${selectedStudy.name || selectedStudy.id}</code>.`);
+}
+
+function syncStudyFormWithTrainingSelection() {
+    document.getElementById('studyModelId').value = modelIdSelect.value || '';
+    document.getElementById('studyDatasetId').value = datasetIdSelect.value || '';
+    document.getElementById('studyPath').value = `studies/${document.getElementById('studyName').value || 'study'}.json`;
+}
+
+trainingForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!modelIdSelect.value) {
+        renderAlert('trainingResult', 'error', 'Select a LearningModel before submitting training.');
+        return;
+    }
+
+    if (!datasetIdSelect.value) {
+        renderAlert('trainingResult', 'error', 'Select a DatasetModel before submitting training.');
+        return;
+    }
+
+    if (inputTypeSelect.value === 'Study' && !studyIdSelect.value) {
+        renderAlert('trainingResult', 'error', 'Study mode requires a StudyModel selection.');
+        return;
+    }
+
+    let runtimeParameters;
+    try {
+        runtimeParameters = safeParseJson(parametersJson.value, {});
+    } catch (error) {
+        renderAlert('trainingResult', 'error', `Runtime parameters must be valid JSON: ${error.message}`);
+        return;
+    }
+
+    const payload = {
+        datasetId: Number(datasetIdSelect.value),
+        inputType: inputTypeSelect.value,
+        studyId: inputTypeSelect.value === 'Study' ? String(studyIdSelect.value) : null,
+        parameters: {
+            ...runtimeParameters,
+            framework: frameworkSelect.value,
+            input_features: document.getElementById('inputFeatures').value.split(',').map(v => v.trim()).filter(Boolean),
+            output_features: document.getElementById('outputFeatures').value.split(',').map(v => v.trim()).filter(Boolean)
+        }
+    };
+
+    renderAlert('trainingResult', 'info', 'Submitting training job...');
+
+    try {
+        const response = await fetch(`/training/${modelIdSelect.value}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
 
-        if (response.ok) {
-            document.getElementById('trainingResult').innerHTML = 
-                `<div class="alert alert-success">
-                    <strong>✅ Training Started</strong><br/>
-                    Job ID: <code>${result.id}</code><br/>
-                    <small>Monitor progress in MLflow or check back shortly</small>
-                </div>`;
-            // Clear form after submission
-            trainingForm.reset();
-            updateHyperparameters();
-        } else {
-            document.getElementById('trainingResult').innerHTML = 
-                `<div class="alert alert-error">
-                    <strong>❌ Training Failed</strong><br/>
-                    ${result.detail || 'Unknown error'}
-                </div>`;
+        if (!response.ok) {
+            throw new Error(result.detail || 'Training submission failed');
         }
+
+        renderAlert(
+            'trainingResult',
+            'success',
+            `Training submitted. Job ID: <code>${result.job_id}</code><br>Model: <code>${result.model_id}</code> | Dataset: <code>${result.dataset_id}</code> | Study: <code>${result.study_id || 'manual'}</code>`
+        );
     } catch (error) {
-        document.getElementById('trainingResult').innerHTML = 
-            `<div class="alert alert-error">
-                <strong>❌ Error</strong><br/>
-                ${error.message}
-            </div>`;
+        renderAlert('trainingResult', 'error', error.message);
     }
 });
 
-// ============================================================================
-// MODEL OPTIMIZATION (OPTUNA)
-// ============================================================================
+studyForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-/**
- * Start optimization study for selected model
- * CHANGED: Now references proper backend endpoint
- * ADDED: Status tracking and progress feedback
- * 
- * TODO: Implement full Optuna integration:
- * - Support multiple optimization objectives (accuracy, F1, etc.)
- * - Allow setting trial count and timeout
- * - Show trial progress in real-time
- * - Save best parameters to model history
- */
-async function startOptimization() {
-    const modelId = document.getElementById('modelSelect').value;
-    if (!modelId) {
-        alert('Please select a model to optimize');
-        return;
-    }
-
+    let studyParams;
     try {
-        document.getElementById('optimizationMetrics').innerHTML = 
-            '<div class="alert alert-info">⏳ Starting optimization study...</div>';
-
-        // TODO: This endpoint should:
-        // - Create/retrieve Optuna study for this model
-        // - Configure optimization parameters
-        // - Start trial runs
-        // - Return study metadata
-        const response = await fetch(`/optimization/${modelId}`, { method: 'POST' });
-        const results = await response.json();
-
-        // CHANGED: Enhanced results display
-        if (response.ok) {
-            document.getElementById('optimizationMetrics').innerHTML = 
-                Object.entries(results.metrics || {})
-                    .map(([key, value]) => `
-                        <div class="metric-item" style="padding: 1rem; background: #f0f0f0; border-radius: 4px;">
-                            <strong>${key.replace(/_/g, ' ').toUpperCase()}</strong><br/>
-                            <code>${JSON.stringify(value)}</code>
-                        </div>
-                    `).join('');
-        } else {
-            throw new Error(results.detail || 'Optimization failed');
-        }
+        studyParams = safeParseJson(document.getElementById('studyParamsJson').value, {});
     } catch (error) {
-        document.getElementById('optimizationMetrics').innerHTML = 
-            `<div class="alert alert-error">❌ ${error.message}</div>`;
-        console.error('Optimization error:', error);
-    }
-}
-
-// ============================================================================
-// ONNX EXPORT AND VALIDATION
-// ============================================================================
-
-/**
- * Export model to ONNX format
- * CHANGED: Added proper error handling and status feedback
- * 
- * Purpose: Convert trained PyTorch/TF model to ONNX format for:
- * - Cross-platform inference
- * - Edge deployment
- * - Model optimization tools
- * 
- * TODO: Implement full ONNX workflow:
- * - Validate model structure before export
- * - Generate test data for graph optimization
- * - Save ONNX file and metadata
- * - Return download link or storage path
- */
-async function exportONNX() {
-    const modelId = document.getElementById('modelSelect').value;
-    if (!modelId) {
-        alert('Please select a model to export');
+        renderAlert('studyResult', 'error', `Study parameters must be valid JSON: ${error.message}`);
         return;
     }
 
-    try {
-        document.getElementById('onnxResults').innerHTML = 
-            '<div class="alert alert-info">⏳ Exporting to ONNX...</div>';
+    const studyName = document.getElementById('studyName').value.trim();
+    const path = document.getElementById('studyPath').value.trim() || `studies/${studyName || 'study'}.json`;
 
-        const response = await fetch(`/onnx/${modelId}`, { method: 'POST' });
+    const payload = {
+        name: studyName,
+        description: document.getElementById('studyDescription').value.trim(),
+        object_type: 'study_model',
+        size: 0,
+        path: path,
+        version: 1,
+        history: [{ action: 'create', when: new Date().toISOString() }],
+        learning_model_id: Number(document.getElementById('studyModelId').value),
+        dataset_id: Number(document.getElementById('studyDatasetId').value),
+        sampler: document.getElementById('studySampler').value,
+        objective: document.getElementById('studyObjective').value.trim(),
+        best_trial: null,
+        best_params: null,
+        study_params: {
+            ...studyParams,
+            framework: frameworkSelect.value
+        }
+    };
+
+    renderAlert('studyResult', 'info', 'Creating StudyModel...');
+
+    try {
+        const response = await fetch('/studymodel/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
         const result = await response.json();
 
-        if (response.ok) {
-            document.getElementById('onnxResults').innerHTML = 
-                `<div class="alert alert-success">
-                    <strong>✅ Export Successful</strong><br/>
-                    Model saved to: <code>${result.path}</code><br/>
-                    <small>You can now use this ONNX model for inference on any platform</small>
-                </div>`;
-        } else {
-            throw new Error(result.detail || 'Export failed');
+        if (!response.ok || result.status === 'error') {
+            throw new Error(result.detail || 'StudyModel creation failed');
         }
+
+        renderAlert('studyResult', 'success', `StudyModel created successfully. ID: <code>${result.id || 'created'}</code>`);
+        await populateRegistryOptions();
     } catch (error) {
-        document.getElementById('onnxResults').innerHTML = 
-            `<div class="alert alert-error">❌ ${error.message}</div>`;
-        console.error('ONNX export error:', error);
+        renderAlert('studyResult', 'error', error.message);
     }
-}
-
-/**
- * Validate ONNX model (new feature)
- * CHANGED: Added as complement to exportONNX
- * 
- * Checks:
- * - Model file integrity
- * - Input/output shape compatibility
- * - Op support across platforms
- */
-async function validateONNX() {
-    const modelId = document.getElementById('modelSelect').value;
-    if (!modelId) {
-        alert('Please select a model to validate');
-        return;
-    }
-
-    try {
-        document.getElementById('onnxResults').innerHTML = 
-            '<div class="alert alert-info">⏳ Validating ONNX model...</div>';
-
-        // TODO: Implement backend validation endpoint
-        const response = await fetch(`/onnx/${modelId}/validate`, { method: 'POST' });
-        const result = await response.json();
-
-        if (response.ok) {
-            document.getElementById('onnxResults').innerHTML = 
-                `<div class="alert alert-success">
-                    <strong>✅ Validation Passed</strong><br/>
-                    <ul>
-                        <li>Model structure: Valid</li>
-                        <li>Inputs: ${result.inputs?.length || 0} found</li>
-                        <li>Outputs: ${result.outputs?.length || 0} found</li>
-                    </ul>
-                </div>`;
-        } else {
-            throw new Error(result.detail || 'Validation failed');
-        }
-    } catch (error) {
-        document.getElementById('onnxResults').innerHTML = 
-            `<div class="alert alert-error">❌ ${error.message}</div>`;
-        console.error('ONNX validation error:', error);
-    }
-}
-
-// ============================================================================
-// PAGE INITIALIZATION
-// ============================================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    // CHANGED: Initialize all data loading on page load
-    loadModels();
-    loadDatasets();
-    loadStudies();
-
-    // Initialize hyperparameters with first model type
-    if (hyperparameterTemplates[modelTypeSelect.value]) {
-        updateHyperparameters();
-    }
-
-    // Set initial visibility of study selector
-    if (inputTypeSelect.value === 'Manual') {
-        studyObjectSelect.parentElement.style.display = 'none';
-    }
-
-        // Initialize MultiObjectSelector for feature column selection
-        try {
-            MultiObjectSelector({
-                containerId: 'featureSelectorGreen',
-                objectType: 'datasetmodel',
-                endpoint: '/datasetmodel/list',
-                labelField: 'name',
-                valueField: 'id',
-                roles: ['input','output'],
-                maxSelection: 50,
-                onSelectionChange: (selected) => {
-                    // Persist selected ids to hidden input for form submission
-                    const ids = (selected || []).map(s => s.id ?? s.value ?? (s[Object.keys(s)[0]]));
-                    const el = document.getElementById('inputFeatures');
-                    if (el) el.value = JSON.stringify(ids);
-                }
-            });
-        } catch (err) {
-            console.warn('MultiObjectSelector not available:', err);
-        }
 });
 
+document.getElementById('btnHydrateFromStudy').addEventListener('click', hydrateParametersFromStudy);
+document.getElementById('btnRefreshTrainingData').addEventListener('click', async () => {
+    await populateRegistryOptions();
+    renderAlert('trainingResult', 'success', 'Registry lists refreshed.');
+});
+document.getElementById('btnSyncStudyForm').addEventListener('click', syncStudyFormWithTrainingSelection);
+document.getElementById('btnPrepareOnnx').addEventListener('click', () => {
+    let parsed;
+    try {
+        parsed = safeParseJson(parametersJson.value, {});
+    } catch (error) {
+        renderAlert('onnxResults', 'error', `Parameters must be valid JSON before preparing ONNX metadata: ${error.message}`);
+        return;
+    }
+
+    const onnxPayload = {
+        model_id: modelIdSelect.value || null,
+        dataset_id: datasetIdSelect.value || null,
+        study_id: studyIdSelect.value || null,
+        framework: frameworkSelect.value,
+        export_target: 'onnx',
+        parameters: parsed
+    };
+    document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(onnxPayload, null, 2)}</div>`;
+});
+document.getElementById('btnValidateOnnx').addEventListener('click', () => {
+    renderAlert('onnxResults', 'warning', 'No `/onnx/...` route is exposed in `api/main_app.py` yet. Add the backend route before wiring export or validation buttons to live requests.');
+});
+
+modelIdSelect.addEventListener('change', async () => {
+    updatePipelineSummary();
+    await loadModelSnapshot();
+});
+datasetIdSelect.addEventListener('change', async () => {
+    updatePipelineSummary();
+    await loadDatasetSnapshot();
+});
+studyIdSelect.addEventListener('change', updatePipelineSummary);
+inputTypeSelect.addEventListener('change', () => {
+    setStudyVisibility();
+    updatePipelineSummary();
+});
+frameworkSelect.addEventListener('change', updatePipelineSummary);
+document.getElementById('studyName').addEventListener('input', (event) => {
+    const cleanName = event.target.value.trim() || 'study';
+    document.getElementById('studyPath').value = `studies/${cleanName}.json`;
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    setStudyVisibility();
+    await populateRegistryOptions();
+    syncStudyFormWithTrainingSelection();
+});
 </script>
 {% endblock %}

@@ -14,9 +14,9 @@ import time
 import json
 from typing import Dict, Any, Optional
 
-from utils.logging import get_logger
-from utils.mlflow_utils import start_run, log_params, log_metrics, end_run
-from utils.prometheus_utils import create_registry, define_counter, push_metrics
+from app.utils.logging import get_logger
+from app.utils.mlflow_utils import start_run, log_params, log_metrics, end_run
+from app.utils.prometheus_utils import create_registry, define_counter, push_metrics
 
 logger = get_logger("retrain_utils")
 

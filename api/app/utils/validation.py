@@ -13,7 +13,7 @@ Features:
 
 from typing import Any, Dict, List, Optional, Type
 from pydantic import BaseModel, ValidationError, Field
-from utils.logging import get_logger
+from app.utils.logging import get_logger
 
 logger = get_logger("validation")
 

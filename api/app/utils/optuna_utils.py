@@ -16,10 +16,10 @@ import optuna
 import mlflow
 from typing import Any, Callable, Dict, Optional
 
-from utils.logging import get_logger
-from utils.serialization import safe_log_params
-from utils.mlflow_utils import log_metrics, log_params, log_json, start_run, end_run
-from utils.io import save_json
+from app.utils.logging import get_logger
+from app.utils.serialization import safe_log_params
+from app.utils.mlflow_utils import log_metrics, log_params, log_json, start_run, end_run
+from app.utils.io import save_json
 
 logger = get_logger("optuna_utils")
 

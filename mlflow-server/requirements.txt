@@ -1,2 +1,2 @@
-mlflow==3.5.0
+mlflow==3.10.1
 gunicorn==21.2.0

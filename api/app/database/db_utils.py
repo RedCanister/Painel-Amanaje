@@ -11,6 +11,21 @@ from app.utils.utils import debug_type
 
 # Result.scalars - return _asdict(), _fields(), _mapping()
 
+
+def _normalize_datetime_value(value):
+    """Convert supported datetime payloads to datetime objects."""
+    if not isinstance(value, str):
+        return value
+
+    normalized_value = value.strip()
+    if normalized_value.endswith("Z"):
+        normalized_value = normalized_value[:-1] + "+00:00"
+
+    try:
+        return datetime.fromisoformat(normalized_value)
+    except (ValueError, TypeError):
+        return value
+
 # Database utilities: create/get/update/delete helpers for ORM models
 async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel | dict):
     """Create an ORM entry from a Pydantic model or plain dict.
@@ -52,12 +67,8 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
     # This handles payloads with ISO-formatted date strings from the frontend
     if 'date' in payload.keys() and isinstance(payload['date'], str):
         print("Date is not datetime.datetime...")
-        try:
-            payload['date'] = datetime.now()
-            print("Date is normalized")
-        except (ValueError, TypeError):
-            # If parsing fails, leave as-is and let SQLAlchemy handle it
-            pass
+        payload['date'] = _normalize_datetime_value(payload['date'])
+        print("Date is normalized")
 
     try:
         obj = orm_model(**payload)
@@ -161,10 +172,7 @@ async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int | s
 
     # Coerce string ISO datetime values to datetime objects for DateTime columns
     if 'date' in updates and isinstance(updates['date'], str):
-        try:
-            updates['date'] = datetime.fromisoformat(updates['date'])
-        except (ValueError, TypeError):
-            pass
+        updates['date'] = _normalize_datetime_value(updates['date'])
 
     for field, value in updates.items():
         setattr(obj, field, value)

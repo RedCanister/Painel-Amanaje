@@ -1,11 +1,11 @@
 {% extends "base_template.html" %}
 
-{% block title %}Model Registry - CRUD Management - Painel Amanajé{% endblock %}
+{% block title %}Model Registry - CRUD Management - Painel Amanaje{% endblock %}
 
 {% block extra_css %}
 <style>
     .registry-container { max-width: 1400px; margin: 0 auto; padding: 2rem 0; }
-    
+
     .registry-header {
         background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
         color: white;
@@ -13,10 +13,10 @@
         border-radius: 8px;
         margin-bottom: 2rem;
     }
-    
+
     .registry-header h2 { margin: 0 0 0.5rem 0; font-size: 2em; }
     .registry-header p { margin: 0; opacity: 0.9; }
-    
+
     .tabs-container {
         display: flex;
         gap: 1rem;
@@ -24,7 +24,7 @@
         border-bottom: 2px solid #e5e7eb;
         flex-wrap: wrap;
     }
-    
+
     .tab-button {
         padding: 1rem 1.5rem;
         border: none;
@@ -36,25 +36,24 @@
         border-bottom: 3px solid transparent;
         transition: all 0.3s ease;
     }
-    
+
     .tab-button.active {
         color: #9945ff;
         border-bottom-color: #9945ff;
     }
-    
+
     .tab-button:hover {
         color: #7c3aed;
     }
-    
+
     .tab-content { display: none; animation: fadeIn 0.3s ease; }
     .tab-content.active { display: block; }
-    
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    
-    /* Create Form Styles */
+
     .form-section {
         background: white;
         padding: 2rem;
@@ -62,18 +61,18 @@
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
-    
+
     .form-group {
         margin-bottom: 1.5rem;
     }
-    
+
     .form-group label {
         display: block;
         margin-bottom: 0.5rem;
         font-weight: 500;
         color: #374151;
     }
-    
+
     .form-group input,
     .form-group select,
     .form-group textarea {
@@ -84,12 +83,12 @@
         font-size: 1rem;
         font-family: inherit;
     }
-    
+
     .form-group textarea {
         resize: vertical;
         min-height: 100px;
     }
-    
+
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
@@ -97,19 +96,46 @@
         border-color: #9945ff;
         box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.1);
     }
-    
+
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
     }
-    
+
     .button-group {
         display: flex;
         gap: 1rem;
         margin-top: 2rem;
     }
-    
+
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+
+    .checkbox-card {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #faf5ff;
+    }
+
+    .checkbox-card input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+        accent-color: #9945ff;
+    }
+
+    .checkbox-card label {
+        margin: 0;
+        cursor: pointer;
+    }
+
     .btn {
         padding: 0.75rem 1.5rem;
         border: none;
@@ -119,54 +145,53 @@
         font-weight: 500;
         transition: all 0.3s ease;
     }
-    
+
     .btn-primary {
         background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
         color: white;
     }
-    
+
     .btn-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(153, 69, 255, 0.3);
     }
-    
+
     .btn-secondary {
         background: #f3f4f6;
         color: #374151;
         border: 1px solid #d1d5db;
     }
-    
+
     .btn-secondary:hover {
         background: #e5e7eb;
     }
-    
+
     .btn-danger {
         background: #ef4444;
         color: white;
     }
-    
+
     .btn-danger:hover {
         background: #dc2626;
     }
-    
+
     .btn-edit {
         background: #3b82f6;
         color: white;
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
     }
-    
+
     .btn-edit:hover {
         background: #2563eb;
     }
-    
-    /* List Styles */
+
     .items-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 1.5rem;
     }
-    
+
     .item-card {
         background: white;
         border: 1px solid #e5e7eb;
@@ -174,78 +199,75 @@
         padding: 1.5rem;
         transition: all 0.3s ease;
     }
-    
+
     .item-card:hover {
         border-color: #9945ff;
         box-shadow: 0 4px 12px rgba(153, 69, 255, 0.1);
     }
-    
+
     .item-card h3 {
         margin: 0 0 0.5rem 0;
         color: #9945ff;
         font-size: 1.25rem;
     }
-    
+
     .item-meta {
         color: #6b7280;
         font-size: 0.875rem;
         margin-bottom: 1rem;
     }
-    
+
     .item-description {
         color: #374151;
         margin-bottom: 1rem;
         line-height: 1.5;
     }
-    
+
     .item-actions {
         display: flex;
         gap: 0.5rem;
     }
-    
+
     .item-actions .btn {
         flex: 1;
         padding: 0.5rem;
         font-size: 0.875rem;
         text-align: center;
     }
-    
-    /* Table Styles */
+
     .table-wrapper {
         overflow-x: auto;
         background: white;
         border-radius: 8px;
         border: 1px solid #e5e7eb;
     }
-    
+
     table {
         width: 100%;
         border-collapse: collapse;
     }
-    
+
     thead {
         background: #f9fafb;
         border-bottom: 2px solid #e5e7eb;
     }
-    
+
     th {
         padding: 1rem;
         text-align: left;
         font-weight: 600;
         color: #374151;
     }
-    
+
     td {
         padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
         color: #6b7280;
     }
-    
+
     tr:hover {
         background: #f9fafb;
     }
-    
-    /* Detail View Styles */
     .detail-section {
         background: white;
         padding: 2rem;
@@ -253,14 +275,14 @@
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
-    
+
     .detail-section h3 {
         margin: 0 0 1rem 0;
         color: #9945ff;
         border-bottom: 2px solid #f3e8ff;
         padding-bottom: 0.5rem;
     }
-    
+
     .detail-row {
         display: grid;
         grid-template-columns: 200px 1fr;
@@ -269,23 +291,23 @@
         padding-bottom: 1rem;
         border-bottom: 1px solid #e5e7eb;
     }
-    
+
     .detail-row:last-child {
         border-bottom: none;
         margin-bottom: 0;
         padding-bottom: 0;
     }
-    
+
     .detail-label {
         font-weight: 600;
         color: #374151;
     }
-    
+
     .detail-value {
         color: #6b7280;
         word-break: break-all;
     }
-    
+
     .detail-value.json {
         background: #1e1e1e;
         color: #d4d4d4;
@@ -294,64 +316,56 @@
         font-family: monospace;
         font-size: 0.875rem;
         overflow-x: auto;
+        margin: 0;
     }
-    
-    /* Status & Message Styles */
+
     .alert {
         padding: 1rem;
         border-radius: 4px;
         margin-bottom: 1.5rem;
     }
-    
+
     .alert-success {
         background: #d1fae5;
         color: #065f46;
         border: 1px solid #6ee7b7;
     }
-    
+
     .alert-error {
         background: #fee2e2;
         color: #7f1d1d;
         border: 1px solid #fca5a5;
     }
-    
+
     .alert-info {
         background: #dbeafe;
         color: #0c2340;
         border: 1px solid #93c5fd;
     }
-    
+
     .loading {
         text-align: center;
         padding: 2rem;
         color: #9945ff;
     }
-    
+
     .loading::after {
         content: "...";
         animation: dots 1.5s steps(4, end) infinite;
     }
-    
+
     @keyframes dots {
         0%, 20% { content: "."; }
         40% { content: ".."; }
         60%, 100% { content: "..."; }
     }
-    
+
     .empty-state {
         text-align: center;
         padding: 3rem 2rem;
         color: #9ca3af;
     }
-    
-    .empty-state svg {
-        width: 64px;
-        height: 64px;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-    
-    /* Edit Modal Styles */
+
     .modal {
         display: none;
         position: fixed;
@@ -364,11 +378,11 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .modal.active {
         display: flex;
     }
-    
+
     .modal-content {
         background: white;
         border-radius: 8px;
@@ -379,19 +393,19 @@
         padding: 2rem;
         position: relative;
     }
-    
+
     .modal-header {
         margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .modal-header h2 {
         margin: 0;
         color: #9945ff;
     }
-    
+
     .modal-close {
         background: none;
         border: none;
@@ -399,42 +413,46 @@
         cursor: pointer;
         color: #9ca3af;
     }
-    
+
     .modal-close:hover {
         color: #374151;
+    }
+
+    @media (max-width: 768px) {
+        .form-row,
+        .detail-row {
+            grid-template-columns: 1fr;
+        }
+
+        .item-actions,
+        .button-group {
+            flex-direction: column;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-
 <div class="registry-container">
-    <!-- Header -->
     <div class="registry-header">
         <h2>Model Registry - CRUD Management</h2>
-        <p>Create, Read, Update, and Delete models registered in the Painel Amanajé system</p>
+        <p>Create, read, update, and delete registry objects in the Painel Amanaje system.</p>
     </div>
-    
-    <!-- Status Messages -->
-    <div id="alertContainer"></div>
-    
-    <!-- TODO - Completely remake base_purple. This page must scale to any new model that get created. 
-        Review the page and find the error in the view function-->
 
-    <!-- Tabs -->
+    <div id="alertContainer"></div>
+
     <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('create')">➕ Create</button>
-        <button class="tab-button" onclick="switchTab('list')">📋 List All</button>
-        <button class="tab-button" onclick="switchTab('table')">📊 Table View</button>
-        <button class="tab-button" onclick="switchTab('search')">🔍 Search & Detail</button>
+        <button class="tab-button active" type="button" onclick="switchTab('create')">Create</button>
+        <button class="tab-button" type="button" onclick="switchTab('list')">List All</button>
+        <button class="tab-button" type="button" onclick="switchTab('table')">Table View</button>
+        <button class="tab-button" type="button" onclick="switchTab('search')">Search and Detail</button>
     </div>
-    
-    <!-- CREATE TAB -->
+
     <div id="create" class="tab-content active">
         <div class="form-section">
             <h3>Create New Model Entry</h3>
-            <p>Register a new model or datasetmodel object in the system</p>
-            
+            <p>Register a new dataset or learning model using the fields expected by the API.</p>
+
             <form id="createForm">
                 <div class="form-group">
                     <label for="modelType">Model Type *</label>
@@ -444,7 +462,7 @@
                         <option value="LearningModel">Learning Model</option>
                     </select>
                 </div>
-                
+
                 <div id="commonFields">
                     <div class="form-row">
                         <div class="form-group">
@@ -456,55 +474,119 @@
                             <input type="text" id="description" name="description" placeholder="Brief description">
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="objectPath">Path *</label>
+                            <input type="text" id="objectPath" name="objectPath" required placeholder="e.g., data/iris.csv">
+                        </div>
+                        <div class="form-group">
+                            <label for="objectSize">Size (MB) *</label>
+                            <input type="number" id="objectSize" name="objectSize" min="0" step="0.01" required placeholder="e.g., 1.25">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="objectVersion">Version</label>
+                            <input type="number" id="objectVersion" name="objectVersion" min="1" step="1" placeholder="e.g., 1">
+                        </div>
+                        <div class="form-group">
+                            <label for="history">History (JSON Array)</label>
+                            <input type="text" id="history" name="history" placeholder='e.g., [{"event":"created"}]'>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Dataset-specific fields -->
+
                 <div id="datasetFields" style="display: none;">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="datasetType">Dataset Type</label>
                             <select id="datasetType" name="datasetType">
-                                <option value="">Auto-detect</option>
-                                <option value="csv">CSV File</option>
-                                <option value="json">JSON</option>
-                                <option value="database">Database</option>
+                                <option value="dataset">Generic Dataset</option>
+                                <option value="numerical_dataset">Numerical Dataset</option>
+                                <option value="categorical_dataset">Categorical Dataset</option>
+                                <option value="timeseries_dataset">Time Series Dataset</option>
+                                <option value="image_dataset">Image Dataset</option>
+                                <option value="videoaudio_dataset">Video/Audio Dataset</option>
+                                <option value="text_dataset">Text Dataset</option>
+                                <option value="mixed_dataset">Mixed Dataset</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="connectionString">Connection String / Path</label>
-                            <input type="text" id="connectionString" name="connectionString" placeholder="File path or DB connection">
+                            <label for="datasetShape">Shape (JSON Array) *</label>
+                            <input type="text" id="datasetShape" name="datasetShape" placeholder='e.g., [150, 4]'>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="schema">Schema (JSON)</label>
-                        <textarea id="schema" name="schema" placeholder='{"columns": ["col1", "col2"], "types": ["int", "str"]}'></textarea>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="connectionString">Connection String</label>
+                            <input type="text" id="connectionString" name="connectionString" placeholder="File path or DB connection">
+                        </div>
+                        <div class="form-group">
+                            <label for="featuresList">Features List (JSON Array)</label>
+                            <input type="text" id="featuresList" name="featuresList" placeholder='e.g., ["sepal_length", "species"]'>
+                        </div>
+                    </div>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-card">
+                            <input type="checkbox" id="hasFeatures" name="hasFeatures">
+                            <label for="hasFeatures">Has Features</label>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Learning Model-specific fields -->
+
                 <div id="modelFields" style="display: none;">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="framework">Framework</label>
-                            <select id="framework" name="framework">
-                                <option value="">Select framework</option>
-                                <option value="sklearn">scikit-learn</option>
-                                <option value="pytorch">PyTorch</option>
-                                <option value="tensorflow">TensorFlow</option>
-                                <option value="xgboost">XGBoost</option>
+                            <label for="learningModelType">Learning Model Type</label>
+                            <select id="learningModelType" name="learningModelType">
+                                <option value="learning_model">Generic Learning Model</option>
+                                <option value="supervised_model">Supervised Model</option>
+                                <option value="unsupervised_model">Unsupervised Model</option>
+                                <option value="reinforcement_model">Reinforcement Model</option>
+                                <option value="deep_learning_model">Deep Learning Model</option>
+                                <option value="generative_model">Generative Model</option>
+                                <option value="transformative_model">Transformative Model</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="modelType">Model Type (e.g., LogisticRegression)</label>
-                            <input type="text" id="modelTypeName" name="modelTypeName" placeholder="e.g., RandomForest">
+                            <label for="referenceData">Reference Data</label>
+                            <input type="text" id="referenceData" name="referenceData" placeholder="e.g., iris_dataset">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inputFeatures">Input Features (JSON Array)</label>
+                            <input type="text" id="inputFeatures" name="inputFeatures" placeholder='e.g., ["age", "income"]'>
+                        </div>
+                        <div class="form-group">
+                            <label for="outputFeatures">Output Features (JSON Array)</label>
+                            <input type="text" id="outputFeatures" name="outputFeatures" placeholder='e.g., ["approved"]'>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="hyperparameters">Hyperparameters (JSON)</label>
-                        <textarea id="hyperparameters" name="hyperparameters" placeholder='{"n_estimators": 100, "max_depth": 10}'></textarea>
+                        <label for="parameters">Parameters (JSON) *</label>
+                        <textarea id="parameters" name="parameters" placeholder='{"n_estimators": 100, "max_depth": 10}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="metrics">Metrics (JSON)</label>
+                        <textarea id="metrics" name="metrics" placeholder='{"accuracy": 0.93}'></textarea>
+                    </div>
+                    <div class="checkbox-grid">
+                        <div class="checkbox-card">
+                            <input type="checkbox" id="isTrained" name="isTrained">
+                            <label for="isTrained">Trained</label>
+                        </div>
+                        <div class="checkbox-card">
+                            <input type="checkbox" id="isTested" name="isTested">
+                            <label for="isTested">Tested</label>
+                        </div>
+                        <div class="checkbox-card">
+                            <input type="checkbox" id="isDeployed" name="isDeployed">
+                            <label for="isDeployed">Deployed</label>
+                        </div>
                     </div>
                 </div>
-                
+
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">Create Entry</button>
                     <button type="reset" class="btn btn-secondary">Clear Form</button>
@@ -512,22 +594,19 @@
             </form>
         </div>
     </div>
-    
-    <!-- LIST TAB (Grid) -->
+
     <div id="list" class="tab-content">
         <h3>All Registered Models</h3>
         <div id="listLoading" class="loading" style="display: none;"></div>
         <div id="listContainer" class="items-grid"></div>
     </div>
-    
-    <!-- TABLE VIEW TAB -->
+
     <div id="table" class="tab-content">
         <h3>Table View - All Models</h3>
         <div id="tableLoading" class="loading" style="display: none;"></div>
         <div id="tableContainer" class="table-wrapper"></div>
     </div>
-    
-    <!-- SEARCH & DETAIL TAB -->
+
     <div id="search" class="tab-content">
         <div class="form-section">
             <h3>Search Model Entry</h3>
@@ -541,26 +620,24 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="searchId">Select Entry or Enter ID</label>
+                    <label for="searchSelect">Select Entry</label>
                     <div style="display: flex; gap: 0.5rem;">
                         <select id="searchSelect" style="flex: 1;" onchange="loadDetail()"></select>
-                        <button onclick="loadDetailById()" class="btn btn-primary" style="flex: 0 0 auto;">Load</button>
+                        <button type="button" onclick="loadDetailById()" class="btn btn-primary" style="flex: 0 0 auto;">Load</button>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Detail View -->
+
         <div id="detailContainer"></div>
     </div>
 </div>
 
-<!-- Edit Modal -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2>Edit Entry</h2>
-            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            <button class="modal-close" type="button" onclick="closeEditModal()">&times;</button>
         </div>
         <form id="editForm">
             <div id="editFormContent"></div>
@@ -571,34 +648,177 @@
         </form>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // CHANGED: Tab switching functionality
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        // Mark the corresponding button active (avoid relying on global event)
-        const btn = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`);
-        if (btn) btn.classList.add('active');
-        
-        // Load data for specific tabs
-        if (tabName === 'list') loadList();
-        if (tabName === 'table') loadTable();
-        if (tabName === 'search') loadSearchList();
+    const REGISTRY_CONFIG = {
+        DatasetModel: {
+            endpoint: '/datasetmodel',
+            label: 'Dataset',
+            objectType: 'dataset'
+        },
+        LearningModel: {
+            endpoint: '/learningmodel',
+            label: 'Learning Model',
+            objectType: 'learning_model'
+        }
+    };
+
+    let currentEditContext = null;
+    const ARRAY_FIELDS = new Set(['shape', 'features_list', 'input_features', 'output_features', 'history']);
+    const OBJECT_FIELDS = new Set(['parameters', 'metrics']);
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    // CHANGED: Update form fields based on model type selection
-    function updateFieldsForType() {
-        const type = document.getElementById('modelType').value;
-        document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
-        document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+    function formatLabel(key) {
+        return key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
-    // CHANGED: Show alert message
+    function getConfigForType(type) {
+        return REGISTRY_CONFIG[type] || REGISTRY_CONFIG.LearningModel;
+    }
+
+    function normalizeListResponse(response) {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        if (response && Array.isArray(response.items)) return response.items;
+        return [];
+    }
+
+    async function fetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const text = await response.text();
+        let data = null;
+
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (error) {
+                data = { detail: text };
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(data?.detail || data?.message || `Request failed with status ${response.status}`);
+        }
+
+        return data;
+    }
+
+    function parseJsonField(rawValue, fallback, fieldLabel) {
+        const trimmed = String(rawValue || '').trim();
+        if (!trimmed) return fallback;
+
+        try {
+            return JSON.parse(trimmed);
+        } catch (error) {
+            throw new Error(`${fieldLabel} must be valid JSON.`);
+        }
+    }
+
+    function parseArrayField(rawValue, fieldLabel) {
+        const parsed = parseJsonField(rawValue, [], fieldLabel);
+        if (!Array.isArray(parsed)) {
+            throw new Error(`${fieldLabel} must be a JSON array.`);
+        }
+        return parsed;
+    }
+
+    function parseObjectField(rawValue, fieldLabel) {
+        const parsed = parseJsonField(rawValue, {}, fieldLabel);
+        if (parsed === null || Array.isArray(parsed) || typeof parsed !== 'object') {
+            throw new Error(`${fieldLabel} must be a JSON object.`);
+        }
+        return parsed;
+    }
+
+    function coerceByExample(fieldName, rawValue, exampleValue) {
+        if (rawValue === '' && exampleValue !== false && exampleValue !== 0) {
+            return null;
+        }
+
+        if (ARRAY_FIELDS.has(fieldName)) {
+            const parsed = parseArrayField(rawValue, formatLabel(fieldName));
+            if ((fieldName === 'shape') || (Array.isArray(exampleValue) && exampleValue.every((item) => typeof item === 'number'))) {
+                const numericValues = parsed.map((value) => Number(value));
+                if (numericValues.some((value) => Number.isNaN(value))) {
+                    throw new Error(`${formatLabel(fieldName)} must contain only numbers.`);
+                }
+                return numericValues;
+            }
+            return parsed;
+        }
+
+        if (OBJECT_FIELDS.has(fieldName)) {
+            return parseObjectField(rawValue, formatLabel(fieldName));
+        }
+
+        if (Array.isArray(exampleValue)) {
+            return parseArrayField(rawValue, formatLabel(fieldName));
+        }
+
+        if (exampleValue && typeof exampleValue === 'object') {
+            return parseObjectField(rawValue, formatLabel(fieldName));
+        }
+
+        if (typeof exampleValue === 'boolean') {
+            return rawValue === 'true';
+        }
+
+        if (typeof exampleValue === 'number') {
+            if (rawValue === '') return null;
+            const numberValue = Number(rawValue);
+            if (Number.isNaN(numberValue)) {
+                throw new Error(`${formatLabel(fieldName)} must be a number.`);
+            }
+            return numberValue;
+        }
+
+        return rawValue;
+    }
+
+    function renderValue(value) {
+        if (value === null || value === undefined || value === '') {
+            return '<span style="opacity: 0.7;">Not provided</span>';
+        }
+
+        if (typeof value === 'object') {
+            return `<pre class="detail-value json">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+        }
+
+        return escapeHtml(value);
+    }
+
+    function summarizeDescription(entry) {
+        const description = entry.description || '';
+        return description.length > 50 ? `${description.slice(0, 50)}...` : (description || 'No description');
+    }
+
+    async function fetchRegistryEntries(typeFilter = '') {
+        const keys = typeFilter ? [typeFilter] : Object.keys(REGISTRY_CONFIG);
+        const responses = await Promise.all(
+            keys.map(async (key) => {
+                const config = getConfigForType(key);
+                const response = await fetchJson(`${config.endpoint}/list`);
+                return normalizeListResponse(response).map((entry) => ({
+                    ...entry,
+                    registryType: key,
+                    registryLabel: config.label
+                }));
+            })
+        );
+
+        return responses.flat().sort((a, b) => (a.id || 0) - (b.id || 0));
+    }
+
     function showAlert(message, type = 'info') {
         const container = document.getElementById('alertContainer');
         const alert = document.createElement('div');
@@ -608,87 +828,102 @@
         setTimeout(() => alert.remove(), 5000);
     }
 
-    // CHANGED: Create new entry - POST to appropriate registry endpoint
-    document.getElementById('createForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const modelType = document.getElementById('modelType').value;
-        const endpoint = modelType === 'DatasetModel' ? '/datasetmodel/create' : '/learningmodel/create';
-        
-        const formData = new FormData(document.getElementById('createForm'));
-        const data = Object.fromEntries(formData);
-        
-        // Parse JSON fields if present
-        if (data.schema) data.schema = JSON.parse(data.schema || '{}');
-        if (data.hyperparameters) data.hyperparameters = JSON.parse(data.hyperparameters || '{}');
-        
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            if (response.ok) {
-                showAlert(`✓ Entry created successfully (ID: ${result.id})`, 'success');
-                document.getElementById('createForm').reset();
-            } else {
-                showAlert(`✗ Error: ${result.detail || 'Unknown error'}`, 'error');
-            }
-        } catch (error) {
-            showAlert(`✗ Request failed: ${error.message}`, 'error');
-        }
-    });
+    function updateFieldsForType() {
+        const type = document.getElementById('modelType').value;
+        document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
+        document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+    }
 
-    // CHANGED: Load and display all entries in grid format
+    function buildCreatePayload() {
+        const modelType = document.getElementById('modelType').value;
+        const config = getConfigForType(modelType);
+
+        if (!modelType) {
+            throw new Error('Select a model type before creating an entry.');
+        }
+
+        const payload = {
+            name: document.getElementById('objectName').value.trim(),
+            description: document.getElementById('description').value.trim() || null,
+            object_type: config.objectType,
+            path: document.getElementById('objectPath').value.trim(),
+            size: Number(document.getElementById('objectSize').value),
+            version: document.getElementById('objectVersion').value ? Number(document.getElementById('objectVersion').value) : null,
+            history: parseJsonField(document.getElementById('history').value, null, 'History')
+        };
+
+        if (!payload.name || !payload.path || Number.isNaN(payload.size)) {
+            throw new Error('Name, path, and size are required.');
+        }
+
+        if (modelType === 'DatasetModel') {
+            payload.dataset_type = document.getElementById('datasetType').value || 'dataset';
+            payload.shape = parseArrayField(document.getElementById('datasetShape').value, 'Shape').map((value) => Number(value));
+            if (payload.shape.some((value) => Number.isNaN(value))) {
+                throw new Error('Shape must contain only numbers.');
+            }
+            payload.has_features = document.getElementById('hasFeatures').checked;
+            payload.features_list = parseArrayField(document.getElementById('featuresList').value, 'Features List');
+            payload.connection_string = document.getElementById('connectionString').value.trim() || null;
+        }
+
+        if (modelType === 'LearningModel') {
+            payload.model_type = document.getElementById('learningModelType').value || 'learning_model';
+            payload.parameters = parseObjectField(document.getElementById('parameters').value, 'Parameters');
+            payload.metrics = parseObjectField(document.getElementById('metrics').value, 'Metrics');
+            payload.reference_data = document.getElementById('referenceData').value.trim() || null;
+            payload.input_features = parseArrayField(document.getElementById('inputFeatures').value, 'Input Features');
+            payload.output_features = parseArrayField(document.getElementById('outputFeatures').value, 'Output Features');
+            payload.is_trained = document.getElementById('isTrained').checked;
+            payload.is_tested = document.getElementById('isTested').checked;
+            payload.is_deployed = document.getElementById('isDeployed').checked;
+        }
+
+        return { modelType, payload };
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach((tab) => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach((button) => button.classList.remove('active'));
+
+        const nextTab = document.getElementById(tabName);
+        const nextButton = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`);
+
+        if (nextTab) nextTab.classList.add('active');
+        if (nextButton) nextButton.classList.add('active');
+
+        if (tabName === 'list') loadList();
+        if (tabName === 'table') loadTable();
+        if (tabName === 'search') loadSearchList();
+    }
+
     async function loadList() {
         const container = document.getElementById('listContainer');
         const loading = document.getElementById('listLoading');
-        
+
         loading.style.display = 'block';
         container.innerHTML = '';
-        
+
         try {
-            // CHANGED: Fetch from both datasetmodel and learningmodel endpoints and normalize responses
-            const normalizeList = (resp) => {
-                if (!resp) return [];
-                if (Array.isArray(resp)) return resp;
-                if (resp.data && Array.isArray(resp.data)) return resp.data;
-                if (resp.items && Array.isArray(resp.items)) return resp.items;
-                return [];
-            };
+            const entries = await fetchRegistryEntries();
 
-            let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
-            let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
-            datasets = normalizeList(datasets);
-            models = normalizeList(models);
-
-            const allEntries = [
-                ...datasets.map(d => ({ ...d, type: 'Dataset' })),
-                ...models.map(m => ({ ...m, type: 'Learning Model' }))
-            ];
-            
-            if (allEntries.length === 0) {
+            if (!entries.length) {
                 container.innerHTML = '<div class="empty-state"><p>No entries found. Create one using the Create tab.</p></div>';
-                loading.style.display = 'none';
                 return;
             }
-            
-            allEntries.forEach(entry => {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <h3>${entry.objectName || entry.name || 'Unnamed'}</h3>
-                    <div class="item-meta">Type: ${entry.type} | ID: ${entry.id}</div>
-                    <div class="item-description">${entry.description || 'No description'}</div>
+
+            container.innerHTML = entries.map((entry) => `
+                <div class="item-card">
+                    <h3>${escapeHtml(entry.name || 'Unnamed')}</h3>
+                    <div class="item-meta">Type: ${escapeHtml(entry.registryLabel)} | ID: ${escapeHtml(entry.id)}</div>
+                    <div class="item-description">${escapeHtml(entry.description || 'No description')}</div>
                     <div class="item-actions">
-                        <button class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.type}')">View</button>
-                        <button class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.type}')">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteEntry(${entry.id}, '${entry.type}')">Delete</button>
+                        <button type="button" class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.registryType}')">View</button>
+                        <button type="button" class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.registryType}')">Edit</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteEntry(${entry.id}, '${entry.registryType}')">Delete</button>
                     </div>
-                `;
-                container.appendChild(card);
-            });
+                </div>
+            `).join('');
         } catch (error) {
             showAlert(`Failed to load entries: ${error.message}`, 'error');
         } finally {
@@ -696,41 +931,22 @@
         }
     }
 
-    // CHANGED: Load and display all entries in table format
     async function loadTable() {
         const container = document.getElementById('tableContainer');
         const loading = document.getElementById('tableLoading');
-        
+
         loading.style.display = 'block';
         container.innerHTML = '';
-        
+
         try {
-            // Reuse the normalizeList helper used in loadList
-            const normalizeList = (resp) => {
-                if (!resp) return [];
-                if (Array.isArray(resp)) return resp;
-                if (resp.data && Array.isArray(resp.data)) return resp.data;
-                if (resp.items && Array.isArray(resp.items)) return resp.items;
-                return [];
-            };
+            const entries = await fetchRegistryEntries();
 
-            let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
-            let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
-            datasets = normalizeList(datasets);
-            models = normalizeList(models);
-
-            const allEntries = [
-                ...datasets.map(d => ({ ...d, type: 'Dataset' })),
-                ...models.map(m => ({ ...m, type: 'Learning Model' }))
-            ];
-            
-            if (allEntries.length === 0) {
+            if (!entries.length) {
                 container.innerHTML = '<div class="empty-state"><p>No entries found.</p></div>';
-                loading.style.display = 'none';
                 return;
             }
-            
-            let tableHTML = `
+
+            container.innerHTML = `
                 <table>
                     <thead>
                         <tr>
@@ -742,25 +958,21 @@
                         </tr>
                     </thead>
                     <tbody>
+                        ${entries.map((entry) => `
+                            <tr>
+                                <td>#${escapeHtml(entry.id)}</td>
+                                <td>${escapeHtml(entry.name || 'Unnamed')}</td>
+                                <td>${escapeHtml(entry.registryLabel)}</td>
+                                <td>${escapeHtml(summarizeDescription(entry))}</td>
+                                <td>
+                                    <button type="button" class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.registryType}')">View</button>
+                                    <button type="button" class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.registryType}')">Edit</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
-            
-            allEntries.forEach(entry => {
-                tableHTML += `
-                    <tr>
-                        <td>#${entry.id}</td>
-                        <td>${entry.objectName || entry.name || 'Unnamed'}</td>
-                        <td>${entry.type}</td>
-                        <td>${(entry.description || '').substring(0, 50)}...</td>
-                        <td>
-                            <button class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.type}')">View</button>
-                            <button class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.type}')">Edit</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            tableHTML += '</tbody></table>';
-            container.innerHTML = tableHTML;
         } catch (error) {
             showAlert(`Failed to load table: ${error.message}`, 'error');
         } finally {
@@ -768,194 +980,254 @@
         }
     }
 
-    // CHANGED: Load search list dropdown
     async function loadSearchList() {
         const select = document.getElementById('searchSelect');
         const type = document.getElementById('searchType').value;
-        select.innerHTML = '<option value="">Loading...</option>';
-        
-        // TODO - Fix the code here. datasets.map and models.map are not working.
-        // "Failed to load table: models.map is not a function or its return value is not iterable"
-        try {
-            const normalizeList = (resp) => {
-                if (!resp) return [];
-                if (Array.isArray(resp)) return resp;
-                if (resp.data && Array.isArray(resp.data)) return resp.data;
-                if (resp.items && Array.isArray(resp.items)) return resp.items;
-                return [];
-            };
 
-            let entries = [];
-            if (!type || type === 'DatasetModel') {
-                let datasets = await fetch('/datasetmodel/list').then(r => r.json()).catch(() => []);
-                datasets = normalizeList(datasets);
-                entries = [...entries, ...datasets.map(d => ({ ...d, type: 'Dataset' }))];
-            }
-            if (!type || type === 'LearningModel') {
-                let models = await fetch('/learningmodel/list').then(r => r.json()).catch(() => []);
-                models = normalizeList(models);
-                entries = [...entries, ...models.map(m => ({ ...m, type: 'Learning Model' }))];
+        select.innerHTML = '<option value="">Loading...</option>';
+
+        try {
+            const entries = await fetchRegistryEntries(type);
+
+            if (!entries.length) {
+                select.innerHTML = '<option value="">No entries found</option>';
+                document.getElementById('detailContainer').innerHTML = '';
+                return;
             }
 
             select.innerHTML = '<option value="">Select an entry...</option>';
-            entries.forEach(entry => {
+            entries.forEach((entry) => {
                 const option = document.createElement('option');
-                option.value = `${entry.id}|${entry.type}`;
-                option.textContent = `${entry.objectName || entry.name} (ID: ${entry.id})`;
+                option.value = `${entry.id}|${entry.registryType}`;
+                option.textContent = `${entry.name || 'Unnamed'} (${entry.registryLabel} #${entry.id})`;
                 select.appendChild(option);
             });
         } catch (error) {
+            select.innerHTML = '<option value="">Failed to load entries</option>';
             showAlert(`Failed to load entries: ${error.message}`, 'error');
         }
     }
 
-    // CHANGED: Load detail view for selected entry
     async function loadDetail() {
         const select = document.getElementById('searchSelect');
-        const [id, type] = select.value.split('|');
-        if (!id) return;
-        
-        const endpoint = type === 'Dataset' ? `/datasetmodel/get/${id}` : `/learningmodel/get/${id}`;
-        
+        const container = document.getElementById('detailContainer');
+        const [id, registryType] = (select.value || '').split('|');
+
+        if (!id || !registryType) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const config = getConfigForType(registryType);
+
         try {
-            const data = await fetch(endpoint).then(r => r.json());
-            displayDetail(data, type, id);
+            const data = await fetchJson(`${config.endpoint}/get/${id}`);
+            displayDetail(data, registryType);
         } catch (error) {
+            container.innerHTML = '';
             showAlert(`Failed to load detail: ${error.message}`, 'error');
         }
     }
 
-    // CHANGED: Load detail by ID number
     async function loadDetailById() {
-        const select = document.getElementById('searchSelect');
-        loadDetail();
+        await loadDetail();
     }
 
-    // CHANGED: Display detailed view of an entry
-    function displayDetail(data, type, id) {
+    function displayDetail(data, registryType) {
+        const config = getConfigForType(registryType);
         const container = document.getElementById('detailContainer');
-        let html = `<div class="detail-section">
-            <h3>${type === 'Dataset' ? '📊 Dataset' : '🤖 Learning Model'} Details</h3>
+
+        const rows = Object.entries(data).map(([key, value]) => `
             <div class="detail-row">
-                <div class="detail-label">ID</div>
-                <div class="detail-value">${data.id}</div>
-            </div>`;
-        
-        Object.entries(data).forEach(([key, value]) => {
-            if (key === 'id') return;
-            
-            let displayValue = value;
-            if (typeof value === 'object') {
-                displayValue = `<pre style="margin: 0;">${JSON.stringify(value, null, 2)}</pre>`;
-            }
-            
-            html += `
-                <div class="detail-row">
-                    <div class="detail-label">${key}</div>
-                    <div class="detail-value">${displayValue}</div>
+                <div class="detail-label">${escapeHtml(formatLabel(key))}</div>
+                <div class="detail-value">${renderValue(value)}</div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="detail-section">
+                <h3>${escapeHtml(config.label)} Details</h3>
+                ${rows}
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="button" class="btn btn-primary" onclick="editEntry(${data.id}, '${registryType}')">Edit</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteEntry(${data.id}, '${registryType}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildEditField(fieldName, value) {
+        const label = escapeHtml(formatLabel(fieldName));
+
+        if (typeof value === 'boolean') {
+            return `
+                <div class="form-group">
+                    <label for="edit_${fieldName}">${label}</label>
+                    <select id="edit_${fieldName}" name="${fieldName}">
+                        <option value="true" ${value ? 'selected' : ''}>True</option>
+                        <option value="false" ${!value ? 'selected' : ''}>False</option>
+                    </select>
                 </div>
             `;
-        });
-        
-        html += `
-            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                <button class="btn btn-primary" onclick="editEntry(${id}, '${type}')">✏️ Edit</button>
-                <button class="btn btn-danger" onclick="deleteEntry(${id}, '${type}')">🗑️ Delete</button>
+        }
+
+        if (Array.isArray(value) || (value && typeof value === 'object')) {
+            return `
+                <div class="form-group">
+                    <label for="edit_${fieldName}">${label}</label>
+                    <textarea id="edit_${fieldName}" name="${fieldName}">${escapeHtml(JSON.stringify(value, null, 2))}</textarea>
+                </div>
+            `;
+        }
+
+        const inputType = typeof value === 'number' ? 'number' : 'text';
+        const step = typeof value === 'number' ? 'step="any"' : '';
+
+        return `
+            <div class="form-group">
+                <label for="edit_${fieldName}">${label}</label>
+                <input type="${inputType}" id="edit_${fieldName}" name="${fieldName}" value="${escapeHtml(value ?? '')}" ${step}>
             </div>
-        </div>`;
-        
-        container.innerHTML = html;
+        `;
     }
 
-    // CHANGED: Edit entry - opens modal with pre-filled data
-    async function editEntry(id, type) {
-        const endpoint = type === 'Dataset' ? `/datasetmodel/get/${id}` : `/learningmodel/get/${id}`;
-        
+    async function editEntry(id, registryType) {
+        const config = getConfigForType(registryType);
+
         try {
-            const data = await fetch(endpoint).then(r => r.json());
-            
-            let formHTML = '';
-            Object.entries(data).forEach(([key, value]) => {
-                if (key === 'id') return;
-                
-                const inputType = typeof value === 'number' ? 'number' : 'text';
-                const inputValue = typeof value === 'object' ? JSON.stringify(value) : value;
-                
-                formHTML += `
-                    <div class="form-group">
-                        <label for="edit_${key}">${key}</label>
-                        <input type="${inputType}" id="edit_${key}" name="${key}" value="${inputValue}" />
-                    </div>
-                `;
-            });
-            
-            document.getElementById('editFormContent').innerHTML = formHTML;
-            document.getElementById('editForm').onsubmit = async (e) => {
-                e.preventDefault();
-                
-                const updateEndpoint = type === 'Dataset' ? `/datasetmodel/update/${id}` : `/learningmodel/update/${id}`;
-                const formData = new FormData(document.getElementById('editForm'));
-                const updateData = Object.fromEntries(formData);
-                
-                try {
-                    const response = await fetch(updateEndpoint, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                    });
-                    
-                    if (response.ok) {
-                        showAlert('✓ Entry updated successfully', 'success');
-                        closeEditModal();
-                        loadList(); // Refresh list
-                    } else {
-                        showAlert('✗ Update failed', 'error');
-                    }
-                } catch (error) {
-                    showAlert(`✗ Error: ${error.message}`, 'error');
-                }
-            };
-            
+            const data = await fetchJson(`${config.endpoint}/get/${id}`);
+            currentEditContext = { id, registryType, originalData: data };
+            document.getElementById('editFormContent').innerHTML = Object.entries(data)
+                .filter(([key]) => key !== 'id')
+                .map(([key, value]) => buildEditField(key, value))
+                .join('');
             document.getElementById('editModal').classList.add('active');
         } catch (error) {
             showAlert(`Failed to load entry: ${error.message}`, 'error');
         }
     }
 
-    // CHANGED: Delete entry with confirmation
-    async function deleteEntry(id, type) {
-        if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
-        
-        const endpoint = type === 'Dataset' ? `/datasetmodel/delete/${id}` : `/learningmodel/delete/${id}`;
-        
+    async function deleteEntry(id, registryType) {
+        const config = getConfigForType(registryType);
+
+        if (!confirm(`Are you sure you want to delete this ${config.label.toLowerCase()}?`)) {
+            return;
+        }
+
         try {
-            const response = await fetch(endpoint, { method: 'DELETE' });
-            if (response.ok) {
-                showAlert('✓ Entry deleted successfully', 'success');
-                loadList();
-            } else {
-                showAlert('✗ Deletion failed', 'error');
-            }
+            await fetchJson(`${config.endpoint}/delete/${id}`, { method: 'DELETE' });
+            showAlert('Entry deleted successfully.', 'success');
+            document.getElementById('detailContainer').innerHTML = '';
+            closeEditModal();
+            await refreshVisibleData();
         } catch (error) {
-            showAlert(`✗ Error: ${error.message}`, 'error');
+            showAlert(`Deletion failed: ${error.message}`, 'error');
         }
     }
 
-    // CHANGED: Close edit modal
     function closeEditModal() {
         document.getElementById('editModal').classList.remove('active');
+        currentEditContext = null;
+        document.getElementById('editForm').reset();
     }
 
-    // CHANGED: View detail (same as displayDetail but triggered from button)
-    function viewDetail(id, type) {
-        document.getElementById('searchType').value = type === 'Dataset' ? 'DatasetModel' : 'LearningModel';
-        loadSearchList();
-        // Select the entry after list loads
-        setTimeout(() => {
-            const select = document.getElementById('searchSelect');
-            select.value = `${id}|${type}`;
-            loadDetail();
-        }, 500);
+    async function viewDetail(id, registryType) {
+        switchTab('search');
+        document.getElementById('searchType').value = registryType;
+        await loadSearchList();
+        document.getElementById('searchSelect').value = `${id}|${registryType}`;
+        await loadDetail();
     }
+
+    async function refreshVisibleData() {
+        const activeTab = document.querySelector('.tab-content.active')?.id;
+
+        if (activeTab === 'list') await loadList();
+        if (activeTab === 'table') await loadTable();
+        if (activeTab === 'search') await loadSearchList();
+    }
+
+    document.getElementById('createForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+            const { modelType, payload } = buildCreatePayload();
+            const config = getConfigForType(modelType);
+
+            const result = await fetchJson(`${config.endpoint}/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            showAlert(`Entry created successfully (ID: ${result?.id ?? 'unknown'}).`, 'success');
+            document.getElementById('createForm').reset();
+            updateFieldsForType();
+            await refreshVisibleData();
+        } catch (error) {
+            showAlert(error.message, 'error');
+        }
+    });
+
+    document.getElementById('createForm').addEventListener('reset', () => {
+        window.setTimeout(updateFieldsForType, 0);
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (!currentEditContext) {
+            showAlert('No entry is currently selected for editing.', 'error');
+            return;
+        }
+
+        try {
+            const updateData = {};
+
+            Object.entries(currentEditContext.originalData).forEach(([key, originalValue]) => {
+                if (key === 'id') return;
+                const field = document.getElementById(`edit_${key}`);
+                if (!field) return;
+                updateData[key] = coerceByExample(key, field.value, originalValue);
+            });
+
+            const config = getConfigForType(currentEditContext.registryType);
+            const editedId = currentEditContext.id;
+            const editedType = currentEditContext.registryType;
+
+            await fetchJson(`${config.endpoint}/update/${editedId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            showAlert('Entry updated successfully.', 'success');
+            closeEditModal();
+            await refreshVisibleData();
+
+            if (document.getElementById('searchSelect').value === `${editedId}|${editedType}`) {
+                await loadDetail();
+            }
+        } catch (error) {
+            showAlert(`Update failed: ${error.message}`, 'error');
+        }
+    });
+
+    document.getElementById('editModal').addEventListener('click', (event) => {
+        if (event.target.id === 'editModal') {
+            closeEditModal();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && document.getElementById('editModal').classList.contains('active')) {
+            closeEditModal();
+        }
+    });
+
+    updateFieldsForType();
 </script>
 {% endblock %}
+
+
+

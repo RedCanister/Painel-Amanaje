@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
+from sqlalchemy.orm import relationship
 
 # Modelo ORM básico para construção das colunas principais
 class ObjectORM(Base):
@@ -184,31 +185,38 @@ class TransformativeModelORM(LearningORM):
 
 
 
-classes = """
-class FeatureSetORM(DatasetORM):
-    __tablename__ = "feature_sets"
-    id = Column(Integer, primary_key=True, index=True)
-    features = Column(JSONB)
 
-class FeatureUnitORM(DatasetORM):
-    __tablename__ = "feature_units"
-    id = Column(Integer, primary_key=True, index=True)
-    data_type = Column(String)
-    origin_dataset = Column(String)
+class CodeORM(ObjectORM):
+    __tablename__ = "code_models"
 
-class SampleSetORM(DatasetORM):
-    __tablename__ = "sample_sets"
-    id = Column(Integer, primary_key=True, index=True)
-    features = Column(JSONB)
-    origin_dataset = Column(String)
-    proportion = Column(Float)
+    id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
 
-class TemplateSetORM(DatasetORM):
-    __tablename__ = "template_sets"
-    id = Column(Integer, primary_key=True, index=True)
-    features = Column(JSONB)
-    source_origin = Column(String)
+    variables = Column(JSONB, nullable=False)
+    code = Column(JSONB, nullable=False)
 
-# Registe BaseModel to ORM pairs
-# ModelRegistry.register(model_schemas.StandardDataset, StandardDatasetORM)
-"""
+    __mapper_args__ = {
+        "polymorphic_identity": "code_model"
+    }
+
+
+
+class StudyORM(ObjectORM):
+    __tablename__ = "study_models"
+
+    id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
+    
+    learning_model_id = Column(Integer, ForeignKey("learning_models.id"), nullable=False)
+    dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=False)
+
+    sampler = Column(String, nullable=False)
+    objective = Column(String, nullable=False)
+    best_trial = Column(JSONB, nullable=True)
+    best_params = Column(JSONB, nullable=True)
+    study_params = Column(JSONB, nullable=True)
+
+    learning_model = relationship("LearningORM", foreign_keys=[learning_model_id])
+    dataset = relationship("DatasetORM", foreign_keys=[dataset_id])
+
+    __mapper_args__ = {
+        "polymorphic_identity" : "study_model"
+    }

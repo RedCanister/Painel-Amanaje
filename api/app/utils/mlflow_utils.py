@@ -17,8 +17,8 @@ from functools import wraps
 from typing import Any, Dict, Optional, Callable
 from datetime import datetime
 
-from utils.serialization import safe_log_params, to_json
-from utils.logging import get_logger
+from app.utils.serialization import safe_log_params, to_json
+from app.utils.logging import get_logger
 
 
 # Default logger
@@ -157,4 +157,5 @@ def track_experiment(
     return decorator
 
     
+
 

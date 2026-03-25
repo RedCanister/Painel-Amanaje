@@ -2,6 +2,7 @@ import os
 import inspect
 import aiofiles
 import json
+import pandas as pd
 
 from typing import Dict, Type, Any, Optional
 from sqlalchemy import Column, Integer, String, Float, Boolean, JSON
@@ -11,18 +12,22 @@ from pydantic import create_model, BaseModel
 
 from app.database.db_session import Base # Reorganizer
 
+# Resolve repository root (api/app/utils -> api/app -> api -> repo)
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
 # File functions
 def get_file_size(file_path):
-    raw_size = os.path.getsize(file_path)
-    
     try:
-        kb_size = raw_size / 1024
-        mb_size = kb_size / 1024
+        raw_size = os.path.getsize(file_path)
     except FileNotFoundError:
         print(f"Error: The file '{file_path}' was not found.")
+        return 0, 0
     except OSError as e:
-        print(f"Error acessing file '{file_path}': {e}")
+        print(f"Error accessing file '{file_path}': {e}")
+        return 0, 0
 
+    kb_size = raw_size / 1024
+    mb_size = kb_size / 1024
     return kb_size, mb_size
 
 # CHANGED: Helper function to save file to disk
@@ -59,6 +64,79 @@ def recover_model_params(file_path):
         params["error"] = str(e)
     
     return params
+
+
+def get_upload_dir(op_id: str) -> str:
+    if op_id == "models":
+        return os.path.join(repo_root, "models")
+    # Default to datasets
+    return os.path.join(repo_root, "data", "datasets")
+
+def _parse_json_field(value, default):
+    if value is None or value == "":
+        return default
+
+    if isinstance(value, (dict, list, bool, int, float)):
+        return value
+
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
+
+    return value
+
+def _parse_bool_field(value, default=False):
+    if value is None or value == "":
+        return default
+
+    if isinstance(value, bool):
+        return value
+
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "off"}:
+        return False
+
+    return default
+
+def build_payload_model(common: dict, form_data, ) -> dict:
+    """Build type-specific payload based on operation_id"""
+
+    return {
+        **common,
+        "model_type": form_data.get('modelType') or 'learning_model',
+        "parameters": _parse_json_field(form_data.get('parameters'), {}),
+        "metrics": _parse_json_field(form_data.get('metrics'), {}),
+        "reference_data": form_data.get('referenceData'),
+        "input_features": form_data.get('inputFeatures'),
+        "output_features": form_data.get('outputFeatures'),
+        "is_trained": _parse_bool_field(form_data.get('isTrained'), False),
+        "is_tested": _parse_bool_field(form_data.get('isTested'), False),
+        "is_deployed": _parse_bool_field(form_data.get('isDeployed'), False),
+    }
+        
+async def build_payload_data(common: dict, form_data, uploaded_file) -> tuple:
+    
+    from io import StringIO
+    await uploaded_file.seek(0)
+    content = await uploaded_file.read()
+
+    s = StringIO(content.decode('UTF-8'))
+    df = pd.read_csv(s, header=0)
+
+    payload = {
+        **common,
+        "dataset_type": form_data.get('datasetType') or 'dataset',
+        "shape": list(df.shape) or None,
+        "has_features": False,
+        "features_list": df.columns.to_list() or None,
+        "connection_string": form_data.get('connectionString'),
+    }
+
+    return payload, df
 
 
 # Debug function
@@ -176,3 +254,4 @@ def debug_type(obj):
         print("📦 Module:", mod_file)
 
     print("-" * 40 + "\n")
+

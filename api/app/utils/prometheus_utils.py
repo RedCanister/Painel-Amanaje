@@ -13,7 +13,7 @@ import time
 import socket
 from typing import Dict, Optional
 from prometheus_client import CollectorRegistry, Gauge, Counter, Histogram, push_to_gateway, start_http_server
-from utils.logging import get_logger
+from app.utils.logging import get_logger
 
 logger = get_logger("prometheus_utils")
 
@@ -119,3 +119,4 @@ def update_and_push_training_metrics(
 
     push_metrics(metrics["train_loss"]._registry, job_name=job_name, gateway=gateway)
     logger.info(f"📤 Training metrics pushed to Prometheus ({gateway})")
+

@@ -45,15 +45,26 @@ class LearningModel(ObjectModel):
     is_deployed: Optional[bool] = False     # Whether the model is deployed
     
 
+class CodeModel(ObjectModel):
+    
+    code: dict
+    variables: dict
+    
+
 class StudyModel(ObjectModel):
 
-    model: LearningModel
+    learning_model_id: int
+    learning_model: LearningModel
+    dataset_id: int
     dataset: DatasetModel
     sampler: str
     objective: str
-    best_trial: Dict[str]
-    best_params: Dict[str]
-    study_params: Dict[str] # n_trials, direction, metrics, n_jobs
+    best_trial: Optional[Dict[str, float]] = None
+    best_params: Optional[Dict[str, float]] = None
+    study_params: Optional[Dict[str, float]] = None # n_trials, direction, metrics, n_jobs
+
+    class Config:
+        from_attributes = True
 
     # Objective fuctions per library
     
@@ -79,18 +90,21 @@ class StudyModel(ObjectModel):
         # Model definition
         # - Criterion and optimizer
         # - Training function
-        # model = PyTorchModel(param_value_1, param_value_2, param_value_3, param_value_4, )
-        # criterion = nn.MSELoss()
-        # optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        model = PyTorchModel(param_list, )
+        criterion = nn.MSELoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
         # Loss Validation
         # - Gradient
         # - Model prediction
 
+        # Training function
+        # model, metric_a, metric_b = train_torch(model, X, y, kw1, kw1, criterion, optimizer, epochs, steps)
+
         # Front-end request model.train() or model.eval()
         # model.eval()
 
-        # Front-end request grad() or .no_grad()
+        # Front-end request with_grad() or .no_grad()
         # with torch.no_grad():
         # predictions, _ = model(val_x)
         # loss = criterion(predictions, val_y)

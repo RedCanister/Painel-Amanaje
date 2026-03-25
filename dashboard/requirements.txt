@@ -1,8 +1,8 @@
 dash==3.2.0
 plotly==6.3.1
-pandas==2.3.3
-yfinance==0.2.66
+pandas==3.0.1
+yfinance==1.2.0
 # optional: if using MLflow client in dashboard
-mlflow==3.5.0
+mlflow==3.10.1
 gunicorn==23.0.0
-uvicorn==0.38.0
+uvicorn==0.41.0

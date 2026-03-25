@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from typing import Dict, List, Optional
 
-from utils.io import ensure_dir
-from utils.logging import get_logger
-from utils.mlflow_utils import log_artifact
+from app.utils.io import ensure_dir
+from app.utils.logging import get_logger
+from app.utils.mlflow_utils import log_artifact
 
 logger = get_logger("plotting")
 

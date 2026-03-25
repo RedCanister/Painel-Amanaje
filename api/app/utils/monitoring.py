@@ -15,9 +15,9 @@ import pandas as pd
 from typing import Dict, Tuple, Optional
 from scipy.stats import ks_2samp
 
-from utils.logging import get_logger
-from utils.mlflow_utils import log_metrics
-from utils.prometheus_utils import create_registry, define_gauge, push_metrics
+from app.utils.logging import get_logger
+from app.utils.mlflow_utils import log_metrics
+from app.utils.prometheus_utils import create_registry, define_gauge, push_metrics
 
 logger = get_logger("monitoring")
 
@@ -144,4 +144,5 @@ def log_monitoring_results_to_mlflow(
 
     log_metrics(combined)
     logger.info(f"🧾 Monitoring results logged to MLflow: {combined}")
+
 

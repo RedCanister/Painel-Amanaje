@@ -14,9 +14,9 @@ import time
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
 
-from utils.logging import get_logger
-from utils.mlflow_utils import start_run, end_run, log_params, log_metrics
-from utils.prometheus_utils import create_registry, define_histogram, push_metrics
+from app.utils.logging import get_logger
+from app.utils.mlflow_utils import start_run, end_run, log_params, log_metrics
+from app.utils.prometheus_utils import create_registry, define_histogram, push_metrics
 
 logger = get_logger("airflow_utils")
 
