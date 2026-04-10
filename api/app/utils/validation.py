@@ -1,68 +1,75 @@
 """
 utils/validation.py
 
-Schema and data validation utilities for ensuring data integrity
-across configurations, dataset, and API inputs.
-
-Features:
-- Validate configurations (YAML/JSON)
-- Validate model inputs/outputs
-- Define reusable schemas for Airflow, FastAPI, and ML pipelines
-- Integrate with existing utils (loggging, serialization)
+Schema and data validation utilities for configurations, datasets, and API
+payloads.
 """
 
-from typing import Any, Dict, List, Optional, Type
-from pydantic import BaseModel, ValidationError, Field
-from app.utils.logging import get_logger
+from __future__ import annotations
+
+from typing import Any, Iterable, Mapping, Type
+
+from pydantic import BaseModel, ValidationError
+
+from .logging import get_logger
 
 logger = get_logger("validation")
 
-# Core Validation
 
 def validate_input(data: Any, schema: Type[BaseModel]) -> BaseModel:
     """
-    Validates data against a given Pydantic schema.
-
-    Args:
-        data: dict-like input to validate
-        schema: subclass of pydantic.BaseModel defining structure
-
-    Returns:
-        A validated Pydantic model instance (with type conversions)
+    Validate arbitrary data against a Pydantic schema.
     """
 
     try:
-        validated = schema(**data)
-        logger.info(f"✅ Data validated successfully against {schema.__name__}")
+        if hasattr(schema, "model_validate"):
+            validated = schema.model_validate(data)
+        else:
+            validated = schema(**data)
+        logger.info("Validated data against schema '%s'.", schema.__name__)
         return validated
-    except ValidationError as e:
-        logger.error(f"❌ Validation failed for {schema.__name__}")
-        logger.error(e.json(indent=2))
+    except ValidationError:
+        logger.exception("Validation failed for schema '%s'.", schema.__name__)
         raise
 
 
-# High-level helpers
-
-def validate_config(config: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, Any]:
+def validate_config(config: Mapping[str, Any], schema: Type[BaseModel]) -> dict[str, Any]:
     """
-    Validates a loaded configuration dictionary and returns a clean dict.
-
-    Example:
-        cfg = load_yaml("configs/base.yaml")
-        validate_cfg = validate_config(cfg["model"], ModelConfigSchema)
+    Validate a loaded configuration mapping and return a normalized dictionary.
     """
 
-    validated_model = validate_input(config, schema)
-    return validated_model.model_dump()
+    validated_model = validate_input(dict(config), schema)
+    if hasattr(validated_model, "model_dump"):
+        return validated_model.model_dump()
+    return validated_model.dict()  # type: ignore[no-any-return]
 
-def validate_dataframe_columns(df_columns: List[str], required: List[str]) -> bool:
+
+def validate_dataframe_columns(df_columns: Any, required: Iterable[str]) -> bool:
     """
-    Validates that required columns exist in a DataFrame.
+    Validate that all required columns exist in a DataFrame or column iterable.
     """
-    
-    missing = [col for col in required if col not in df_columns]
+
+    available_columns = list(df_columns.columns) if hasattr(df_columns, "columns") else list(df_columns)
+    required_columns = list(required)
+    missing = [column for column in required_columns if column not in available_columns]
+
     if missing:
-        logger.error(f"❌ Missing required columns: {missing}")
+        logger.error("Missing required columns: %s", missing)
         raise ValueError(f"Missing required columns: {missing}")
-    logger.info("✅ All required columns present.")
+
+    logger.info("All required columns are present.")
+    return True
+
+
+def validate_required_keys(data: Mapping[str, Any], required: Iterable[str]) -> bool:
+    """
+    Validate that a mapping contains every required key.
+    """
+
+    missing = [key for key in required if key not in data]
+    if missing:
+        logger.error("Missing required keys: %s", missing)
+        raise KeyError(f"Missing required keys: {missing}")
+
+    logger.info("All required keys are present.")
     return True

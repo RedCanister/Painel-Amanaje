@@ -1,0 +1,7 @@
+artifact_location: file:///app/mlruns/932711086757815481
+creation_time: 1775683376609
+experiment_id: '932711086757815481'
+last_update_time: 1775683376609
+lifecycle_stage: active
+name: lstm_finance_training
+workspace: default

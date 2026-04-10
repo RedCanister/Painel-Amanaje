@@ -17,6 +17,8 @@
         border-radius: 4px;
         padding: 1rem;
     }
+    .btn { padding: 0.75rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #2a9d8f; color: white; }
     .pipeline-card h4, .status-card h4, .study-card h4, .framework-card h4 { margin-top: 0; }
     .metric-value { font-size: 1.5rem; font-weight: 700; color: #2a9d8f; }
     .form-group { margin-bottom: 1rem; }
@@ -62,6 +64,11 @@
         background: #f8fafc;
         color: #475569;
     }
+    .alert { padding: 1rem; border-radius: 4px; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .alert-error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+    .alert-info { background: #dbeafe; color: #0c2340; border: 1px solid #93c5fd; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 </style>
 {% endblock %}
 
@@ -130,6 +137,7 @@
                         </div>
                     </div>
 
+                    <!-- TODO - Runtime Parameters are updated dynamically according to the selected model's available parameters -->
                     <div class="form-group">
                         <label for="parametersJson">Runtime Parameters</label>
                         <textarea id="parametersJson" name="parametersJson" spellcheck="false">{
@@ -147,6 +155,7 @@
                 </form>
             </div>
 
+            <!-- TODO -  Use the Pipeline Summary to track the execution of the training process at runtime -->
             <div class="pipeline-card">
                 <h4>Pipeline Summary</h4>
                 <div class="status-stack">
@@ -244,6 +253,7 @@
                         <textarea id="studyDescription" name="studyDescription" spellcheck="false">StudyModel linking dataset ingestion from PostgreSQL to registered training models.</textarea>
                     </div>
                     
+                    
                     <!-- TODO - When selecting the model in this section, the user needs to be able to
                      define the min-max value to be used in the study. 
                      
@@ -259,6 +269,8 @@
                      -->
                     <div class="form-group">
                         <label for="studyParamsJson">Study Parameters</label>
+
+                        <!-- TODO - The study parameters must be shown in whole, or described to the user. It needs to update dynamically to input -->
                         <textarea id="studyParamsJson" name="studyParamsJson" spellcheck="false">{
   "n_trials": 25,
   "direction": "maximize",
@@ -270,6 +282,7 @@
                     <div class="actions-row">
                         <button type="submit" class="btn btn-primary">Create StudyModel</button>
                         <button type="button" class="btn" id="btnSyncStudyForm">Use Selected Training Pair</button>
+                        <button type="button" class="btn" id="btnRunStudy">Run Selected Study</button>
                     </div>
                 </form>
             </div>
@@ -297,6 +310,8 @@
         <div id="studyResult" style="margin-top:1rem;"></div>
     </section>
 
+
+    <!-- TODO - The shown tracking results must be collapsed when viewing large datasets. Think of a better parsing wway to show this to the user. -->
     <section class="training-section" id="trackingSection">
         <h3>Training Tracking</h3>
         <div class="registry-grid">
@@ -310,10 +325,10 @@
             </div>
             <div class="pipeline-card" id="onnxSection">
                 <h4>ONNX Readiness</h4>
-                <p class="muted-text">`main_app.py` currently exposes training, MLflow, and registry routes but no ONNX execution route. This section keeps the orchestration aligned until the backend export endpoint is added.</p>
+                <p class="muted-text">Prepare an ONNX export payload from the active training context, then validate the currently registered model artifact when one is available.</p>
                 <div class="actions-row">
                     <button type="button" class="btn" id="btnPrepareOnnx">Prepare ONNX Payload</button>
-                    <button type="button" class="btn" id="btnValidateOnnx">Validate Route Availability</button>
+                    <button type="button" class="btn" id="btnValidateOnnx">Validate ONNX Artifact</button>
                 </div>
                 <div id="onnxResults" style="margin-top:1rem;"></div>
             </div>
@@ -386,6 +401,19 @@ function buildRegistryCard(title, summary) {
             <table style="width:100%; border-collapse:collapse;">${lines}</table>
         </div>
     `;
+}
+
+function applyDatasetSuggestions(summary) {
+    const profile = summary?.profile || {};
+    const recommendedInputs = Array.isArray(profile.recommended_inputs) ? profile.recommended_inputs : [];
+    const recommendedTarget = profile.recommended_target || '';
+
+    if (recommendedInputs.length) {
+        document.getElementById('inputFeatures').value = recommendedInputs.join(', ');
+    }
+    if (recommendedTarget) {
+        document.getElementById('outputFeatures').value = recommendedTarget;
+    }
 }
 
 async function populateRegistryOptions() {
@@ -496,6 +524,7 @@ async function loadDatasetSnapshot() {
         const result = await response.json();
         if (!response.ok || result.error) throw new Error(result.error || `HTTP ${response.status}`);
         document.getElementById('datasetSnapshot').innerHTML = buildRegistryCard('DatasetModel Summary', result.summary || {});
+        applyDatasetSuggestions(result.summary || {});
     } catch (error) {
         document.getElementById('datasetSnapshot').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
     }
@@ -525,6 +554,41 @@ function syncStudyFormWithTrainingSelection() {
     document.getElementById('studyModelId').value = modelIdSelect.value || '';
     document.getElementById('studyDatasetId').value = datasetIdSelect.value || '';
     document.getElementById('studyPath').value = `studies/${document.getElementById('studyName').value || 'study'}.json`;
+}
+
+async function runSelectedStudy() {
+    if (!studyIdSelect.value) {
+        renderAlert('studyResult', 'error', 'Select a StudyModel before running optimization.');
+        return;
+    }
+
+    renderAlert('studyResult', 'info', 'Running Optuna study...');
+
+    try {
+        const response = await fetch(`/studies/${studyIdSelect.value}/optimize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+
+        if (!response.ok || result.status === 'error') {
+            throw new Error(result.detail || 'Study optimization failed');
+        }
+
+        if (result.summary?.best_params) {
+            parametersJson.value = JSON.stringify(result.summary.best_params, null, 2);
+        }
+
+        renderAlert(
+            'studyResult',
+            'success',
+            `Study completed. Best value: <code>${result.summary?.best_value ?? 'n/a'}</code>`
+        );
+        await populateRegistryOptions();
+    } catch (error) {
+        renderAlert('studyResult', 'error', error.message);
+    }
 }
 
 trainingForm.addEventListener('submit', async (event) => {
@@ -650,7 +714,8 @@ document.getElementById('btnRefreshTrainingData').addEventListener('click', asyn
     renderAlert('trainingResult', 'success', 'Registry lists refreshed.');
 });
 document.getElementById('btnSyncStudyForm').addEventListener('click', syncStudyFormWithTrainingSelection);
-document.getElementById('btnPrepareOnnx').addEventListener('click', () => {
+document.getElementById('btnRunStudy').addEventListener('click', runSelectedStudy);
+document.getElementById('btnPrepareOnnx').addEventListener('click', async () => {
     let parsed;
     try {
         parsed = safeParseJson(parametersJson.value, {});
@@ -659,18 +724,44 @@ document.getElementById('btnPrepareOnnx').addEventListener('click', () => {
         return;
     }
 
-    const onnxPayload = {
-        model_id: modelIdSelect.value || null,
-        dataset_id: datasetIdSelect.value || null,
-        study_id: studyIdSelect.value || null,
-        framework: frameworkSelect.value,
-        export_target: 'onnx',
-        parameters: parsed
-    };
-    document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(onnxPayload, null, 2)}</div>`;
+    try {
+        const response = await fetch('/onnx/prepare', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model_id: modelIdSelect.value || null,
+                dataset_id: datasetIdSelect.value || null,
+                study_id: studyIdSelect.value || null,
+                framework: frameworkSelect.value,
+                export_target: 'onnx',
+                parameters: parsed
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') {
+            throw new Error(result.detail || 'Unable to prepare ONNX payload');
+        }
+        document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(result.payload, null, 2)}</div>`;
+    } catch (error) {
+        renderAlert('onnxResults', 'error', error.message);
+    }
 });
-document.getElementById('btnValidateOnnx').addEventListener('click', () => {
-    renderAlert('onnxResults', 'warning', 'No `/onnx/...` route is exposed in `api/main_app.py` yet. Add the backend route before wiring export or validation buttons to live requests.');
+document.getElementById('btnValidateOnnx').addEventListener('click', async () => {
+    if (!modelIdSelect.value) {
+        renderAlert('onnxResults', 'error', 'Select a model before validating the ONNX artifact.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/onnx/validate/${modelIdSelect.value}`);
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') {
+            throw new Error(result.detail || 'ONNX validation failed');
+        }
+        document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(result, null, 2)}</div>`;
+    } catch (error) {
+        renderAlert('onnxResults', 'error', error.message);
+    }
 });
 
 modelIdSelect.addEventListener('change', async () => {

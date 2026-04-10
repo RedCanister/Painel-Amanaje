@@ -2,53 +2,99 @@
 utils/metrics.py
 
 Centralized metric utilities for evaluating ML models.
-
-Features:
-- Common regression & classification metrics (RMSE, MAE, MAPE, R2, Accuracy, F1)
-- Unified login to MLflow
-- Integration with project-wide logger
-- Safe handling for Airflow / FastAPI/ Prometheus contexts
 """
 
-# TODO - Consider hardware and system usage as metrics as well
+from __future__ import annotations
 
-import numpy as np
-from sklearn.metrics import (
-    mean_squared_error,
-    mean_absolute_error,
-    r2_score,
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-)
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Mapping, Optional
 
-from app.utils.logging import get_logger
-from app.utils.mlflow_utils import log_metrics
+try:
+    import numpy as np
+
+    NUMPY_AVAILABLE = True
+except Exception:  # pragma: no cover - only used when numpy is unavailable.
+    np = None  # type: ignore[assignment]
+    NUMPY_AVAILABLE = False
+
+try:
+    from sklearn.metrics import (
+        accuracy_score,
+        f1_score,
+        mean_absolute_error,
+        mean_squared_error,
+        precision_score,
+        r2_score,
+        recall_score,
+    )
+
+    SKLEARN_METRICS_AVAILABLE = True
+except Exception:  # pragma: no cover - only used when scikit-learn is unavailable.
+    accuracy_score = None  # type: ignore[assignment]
+    f1_score = None  # type: ignore[assignment]
+    mean_absolute_error = None  # type: ignore[assignment]
+    mean_squared_error = None  # type: ignore[assignment]
+    precision_score = None  # type: ignore[assignment]
+    r2_score = None  # type: ignore[assignment]
+    recall_score = None  # type: ignore[assignment]
+    SKLEARN_METRICS_AVAILABLE = False
+
+from .logging import get_logger
+from .mlflow_utils import log_metrics
 
 logger = get_logger("metrics")
 
-# Regression 
+LOWER_IS_BETTER_TOKENS = {
+    "loss",
+    "error",
+    "rmse",
+    "mae",
+    "mse",
+    "mape",
+    "latency",
+    "duration",
+}
 
-def compute_regression_metrics(
-    y_true: np.ndarray, y_pred: np.ndarray
-) -> Dict[str, float]:
+
+def _require_metric_dependencies() -> None:
+    if not NUMPY_AVAILABLE or np is None:
+        raise RuntimeError("numpy is required for metric computation.")
+    if not SKLEARN_METRICS_AVAILABLE:
+        raise RuntimeError("scikit-learn is required for metric computation.")
+
+
+def is_higher_better_metric(metric_name: str) -> bool:
     """
-    Computes core regression metrics.
+    Infer whether a metric should improve when its value increases.
     """
-    y_true, y_pred = np.array(y_true), np.array(y_pred)
+
+    normalized_name = metric_name.lower()
+    return not any(token in normalized_name for token in LOWER_IS_BETTER_TOKENS)
+
+
+def compute_regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    """
+    Compute standard regression metrics.
+    """
+
+    _require_metric_dependencies()
+    true_values = np.asarray(y_true)
+    predicted_values = np.asarray(y_pred)
+
     metrics = {
-        "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
-        "mae": float(mean_absolute_error(y_true, y_pred)),
-        "mape": float(np.mean(np.abs((y_true - y_pred) / np.maximum(np.abs(y_true), 1e-8))) * 100),
-        "r2": float(r2_score(y_true, y_pred)),
+        "rmse": float(np.sqrt(mean_squared_error(true_values, predicted_values))),
+        "mse": float(mean_squared_error(true_values, predicted_values)),
+        "mae": float(mean_absolute_error(true_values, predicted_values)),
+        "mape": float(
+            np.mean(
+                np.abs((true_values - predicted_values) / np.maximum(np.abs(true_values), 1e-8))
+            )
+            * 100
+        ),
+        "r2": float(r2_score(true_values, predicted_values)),
     }
-    logger.info(f"📊 Regression metrics computed: {metrics}")
+    logger.info("Computed regression metrics: %s", metrics)
     return metrics
 
-
-# Classification
 
 def compute_classification_metrics(
     y_true: np.ndarray,
@@ -56,53 +102,69 @@ def compute_classification_metrics(
     average: str = "macro",
 ) -> Dict[str, float]:
     """
-    Computes core classification metrics
+    Compute standard classification metrics.
     """
-    y_true, y_pred = np.array(y_true), np.array(y_pred)
+
+    _require_metric_dependencies()
+    true_values = np.asarray(y_true)
+    predicted_values = np.asarray(y_pred)
+
     metrics = {
-        "accuracy": float(accuracy_score(y_true, y_pred)),
-        "precision": float(precision_score(y_true, y_pred, average=average, zero_divison=0)),
-        "recall": float(recall_score(y_true, y_pred, average=average, zero_division=0)),
-        "f1": float(f1_score(y_true, y_pred, average=average, zero_division = 0)),
+        "accuracy": float(accuracy_score(true_values, predicted_values)),
+        "precision": float(
+            precision_score(true_values, predicted_values, average=average, zero_division=0)
+        ),
+        "recall": float(
+            recall_score(true_values, predicted_values, average=average, zero_division=0)
+        ),
+        "f1": float(f1_score(true_values, predicted_values, average=average, zero_division=0)),
     }
-    logger.info(f"📊 Classification metrics computed: {metrics}")
+    logger.info("Computed classification metrics: %s", metrics)
     return metrics
 
-# Combined
 
 def evaluate_and_log_metrics(
     y_true: np.ndarray,
     y_pred: np.ndarray,
     task_type: str = "regression",
     step: Optional[int] = None,
+    prefix: str = "",
+    log_to_mlflow: bool = True,
+    average: str = "macro",
 ) -> Dict[str, float]:
     """
-    Computes and logs metrics to Mlflow based on task type.
+    Compute evaluation metrics and optionally log them to MLflow.
     """
 
-    if task_type == "regression":
+    normalized_task_type = task_type.lower()
+    if normalized_task_type == "regression":
         metrics = compute_regression_metrics(y_true, y_pred)
-    elif task_type == "classification":
-        metrics = compute_classification_metrics(y_true, y_pred)
+    elif normalized_task_type == "classification":
+        metrics = compute_classification_metrics(y_true, y_pred, average=average)
     else:
-        raise ValueError("task_type must be 'regression' or 'classification'. ")
+        raise ValueError("task_type must be 'regression' or 'classification'.")
 
-    try:
-        log_metrics(metrics, step=step)
-    except Exception as e:
-        logger.warning(f"⚠️ Could not log metrics to MLflow: {e}")
+    if prefix:
+        metrics = {f"{prefix}{key}": value for key, value in metrics.items()}
+
+    if log_to_mlflow:
+        try:
+            log_metrics(metrics, step=step)
+        except Exception:
+            logger.exception("Could not log metrics to MLflow.")
 
     return metrics
 
 
-# Utility
-
-def pretty_print_metrics(metrics: Dict[str, Any]) -> None:
+def pretty_print_metrics(metrics: Mapping[str, Any]) -> None:
     """
-    Prints metrics in a clean, aligned format.
+    Log a clean, aligned view of metric values.
     """
-    logger.info("🧮 Evaluation Summary:")
-    for k, v in metrics.items():
-        logger.info(f" {k:<10}: {v:.6f}")
 
-
+    logger.info("Evaluation summary:")
+    for key in sorted(metrics):
+        value = metrics[key]
+        if isinstance(value, (int, float)):
+            logger.info("  %-20s %.6f", key, float(value))
+        else:
+            logger.info("  %-20s %s", key, value)

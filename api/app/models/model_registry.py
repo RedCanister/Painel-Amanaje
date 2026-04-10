@@ -8,6 +8,7 @@ from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, St
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy.inspection import inspect as sqlalchemy_inspect
 
 from app.database.db_session import Base, get_db
 from app.database.db_utils import create_entry, delete_entry, get_all_entries, get_entry, update_entry
@@ -68,6 +69,13 @@ class ModelRegistry:
     def _orm_to_dict(obj: Any) -> Dict[str, Any]:
         if obj is None:
             return {}
+
+        mapper = getattr(obj, "__mapper__", None)
+        if mapper is not None:
+            return {
+                attr.key: getattr(obj, attr.key)
+                for attr in sqlalchemy_inspect(obj).mapper.column_attrs
+            }
 
         table = getattr(obj, "__table__", None)
         if table is None:

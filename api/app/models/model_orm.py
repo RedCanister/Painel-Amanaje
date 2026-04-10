@@ -32,6 +32,9 @@ class DatasetORM(ObjectORM):
     
     id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
 
+    # Legacy schema compatibility: the persisted datasets table still carries a
+    # duplicated name column in addition to objects.name.
+    legacy_name = Column("name", String, nullable=False)
     dataset_type = Column(String(50))
     shape = Column(ARRAY(Integer))
     has_features = Column(Boolean, nullable=True)
@@ -118,8 +121,8 @@ class LearningORM(ObjectORM):
     parameters= Column(JSONB, nullable=False)
     metrics= Column(JSONB, nullable=True)
     reference_data = Column(String, nullable=True)
-    input_features = Column(String, nullable=True)
-    output_features = Column(String, nullable=True)
+    input_features = Column(JSONB, nullable=True)
+    output_features = Column(JSONB, nullable=True)
     is_trained = Column(Boolean, nullable=True)
     is_tested = Column(Boolean, nullable=True)
     is_deployed = Column(Boolean, nullable=True)

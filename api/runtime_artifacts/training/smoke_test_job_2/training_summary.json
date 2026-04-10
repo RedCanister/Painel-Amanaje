@@ -1,0 +1,24 @@
+{
+    "framework": "sklearn",
+    "metrics": {
+        "fit_duration_sec": 0.010107300004165154,
+        "eval_rmse": 0.02317801567392226,
+        "eval_mse": 0.000537220410580586,
+        "eval_mae": 0.014740151477607951,
+        "eval_mape": 51910.687661931675,
+        "eval_r2": 0.31612451496234084
+    },
+    "history": {},
+    "parameters": {
+        "copy_X": true,
+        "fit_intercept": true,
+        "n_jobs": null,
+        "positive": false,
+        "tol": 1e-06
+    },
+    "run_id": "62c1097dcb7f4f76958bd38b9675d719",
+    "artifact_paths": [],
+    "metadata": {
+        "fit_duration_sec": 0.010107300004165154
+    }
+}

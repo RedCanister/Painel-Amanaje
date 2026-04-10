@@ -1,0 +1,43 @@
+{
+    "rows": 3,
+    "columns": 2,
+    "column_names": [
+        "value",
+        "category"
+    ],
+    "dtypes": {
+        "value": "int64",
+        "category": "object"
+    },
+    "missing_values": 0,
+    "stats": {
+        "value": {
+            "type": "numeric",
+            "mean": 20.0,
+            "std": 10.0,
+            "min": 10.0,
+            "max": 30.0,
+            "null_count": 0
+        },
+        "category": {
+            "type": "categorical",
+            "unique_values": 3,
+            "null_count": 0,
+            "mode": "a"
+        }
+    },
+    "path": "/data/datasets/sample_dataset.csv",
+    "profile": {
+        "numeric_columns": [
+            "value"
+        ],
+        "categorical_columns": [
+            "category"
+        ],
+        "datetime_columns": [],
+        "recommended_target": "category",
+        "recommended_inputs": [
+            "value"
+        ]
+    }
+}

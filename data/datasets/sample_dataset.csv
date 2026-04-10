@@ -1,1 +1,4 @@
-df.to_csv(index=False)
+value,category
+10,a
+20,b
+30,c

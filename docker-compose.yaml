@@ -83,6 +83,8 @@ services:
       test: ["CMD-SHELL", "redis-cli ping"]
       interval: 5s
       retries: 5
+    networks:
+      - backend
 
 
   # AIRFLOW SERVICES
@@ -181,6 +183,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    networks:
+      - backend
 
   # FASTAPI SERVICE CONTAINER
   api:
@@ -191,12 +195,15 @@ services:
     volumes:
       - ./api:/app:cached
       - ./data:/data
+      - ./mlruns:/mlruns
       - ./models:/models
     ports:
       - "8000:8000"
     depends_on:
+      - postgres
       - airflow-webserver
       - airflow-init
+      - mlflow
     restart: unless-stopped
     networks:
       - backend

@@ -1,130 +1,171 @@
 """
 utils/io.py
 
-General-purpose I/O utilities for reading and writing files
-acrpss multiple formats (YAML, JSON, CSV, Pickle, TXT).
-
-These helpers standardize data persistence across modules like:
-- Airflow task I/O (XComs, configs, intermediate files)
-- MLflow model and config logging
-- FastAPI configuration loading
-- Feast and OPtuna experiment snapshots
+General-purpose I/O utilities for reading and writing files across multiple
+formats used by the project.
 """
 
-import os
+from __future__ import annotations
+
 import json
-import yaml
 import pickle
-import pandas as pd
-from typing import Any, Dict, Optional, Union
+from pathlib import Path
+from typing import Any, Callable, Optional, Union
+
+import yaml
+
+try:
+    import pandas as pd
+
+    PANDAS_AVAILABLE = True
+except Exception:  # pragma: no cover - only used when pandas is unavailable.
+    pd = None  # type: ignore[assignment]
+    PANDAS_AVAILABLE = False
+
+PathLike = Union[str, Path]
 
 
-# JSON
-
-def save_json(data: Any, path: str, indent = 4, ensure_ascii: bool = False) -> None:
-    """
-    Saves any Python-serializable object as a JSON file.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
+def _require_pandas() -> None:
+    if not PANDAS_AVAILABLE or pd is None:
+        raise RuntimeError("pandas is required for CSV I/O helpers.")
 
 
-def load_json(path:str) -> Any:
+def ensure_dir(path: PathLike) -> Path:
     """
-    Loads a JSON file and returns its contents.
+    Ensure a directory exists and return it as a ``Path`` object.
     """
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+
+    directory = Path(path)
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
 
 
-# YAML
+def ensure_parent_dir(path: PathLike) -> Path:
+    """
+    Ensure the parent directory of a file path exists and return the file path.
+    """
 
-def save_yaml(data: Dict[str, Any], path: str) -> None:
-    """
-    Saves a Python dictionary to a YAML file.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
-
-def load_yaml(path: str) -> Dict[str, Any]:
-    """
-    Loads a YAML file and returns a dictionary.
-    """
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-    
-
-# Pickle
-
-def save_pickle(obj: Any, path: str) -> None:
-    """
-    Saves a Python object to a Pickle file.
-    Use only for trusted objects (not secure against code injection).
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "wb") as f:
-        pickle.dump(obj, f)
-
-def load_pickle(path: str) -> any:
-    """
-    Loads a Pickle file and returns the Python object.
-    """
-    with open(path, "rb") as f:
-        return pickle.load(f)
+    file_path = Path(path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    return file_path
 
 
-# CSV
+def save_json(
+    data: Any,
+    path: PathLike,
+    indent: int = 4,
+    ensure_ascii: bool = False,
+    default: Optional[Callable[[Any], Any]] = None,
+) -> None:
+    """
+    Save a JSON-serializable object to disk.
+    """
 
-def save_csv(df: pd.DataFrame, path: str, index: bool = False, sep: str = ",") -> None:
-    """
-    Saves Pandas DataFrame to a CSV file.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    df.to_csv(path, index=index, sep=sep, encoding="utf-8")
-
-def load_csv(path: str, sep: str = ",") -> pd.DataFrame:
-    """
-    Loads a CSV file into a Pandas DataFrame.
-    """
-    return pd.read_csv(path, sep=sep, encoding="utf-8")
+    file_path = ensure_parent_dir(path)
+    serializer = default or str
+    with file_path.open("w", encoding="utf-8") as file_handle:
+        json.dump(data, file_handle, indent=indent, ensure_ascii=ensure_ascii, default=serializer)
 
 
-# TXT
+def load_json(path: PathLike) -> Any:
+    """
+    Load and return the contents of a JSON file.
+    """
 
-def save_txt(text: str, path: str) -> None:
-    """
-    Saves a string as a plan text file.
-    """
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(text)
+    with Path(path).open("r", encoding="utf-8") as file_handle:
+        return json.load(file_handle)
 
-def load_txt(path: str) -> str:
-    """
-    Loads text from a plain text file.
-    """
-    with open(path, "r", encoding="utf-8") as f:
-        return f.read()
-    
 
-# Utiility helpers
+def save_yaml(data: Any, path: PathLike) -> None:
+    """
+    Save a Python object to a YAML file.
+    """
 
-def file_exists(path: str) -> bool:
-    """
-    Checks if a file exists.
-    """
-    return os.path.isfile(path)
+    file_path = ensure_parent_dir(path)
+    with file_path.open("w", encoding="utf-8") as file_handle:
+        yaml.safe_dump(data, file_handle, sort_keys=False, allow_unicode=True)
 
-def ensure_dir(path: str) -> None:
-    """
-    Ensure directory exists.
-    """
-    os.makedirs(path, exist_ok=True)
 
-def get_file_size(path: str) -> Optional[int]:
+def load_yaml(path: PathLike) -> Any:
     """
-    Return file size is bytes if exists.
+    Load and return the contents of a YAML file.
     """
-    return os.path.getsize(path) if os.path.exists(path) else None
+
+    with Path(path).open("r", encoding="utf-8") as file_handle:
+        return yaml.safe_load(file_handle)
+
+
+def save_pickle(obj: Any, path: PathLike) -> None:
+    """
+    Save a Python object to a pickle file.
+
+    Use this only with trusted data sources.
+    """
+
+    file_path = ensure_parent_dir(path)
+    with file_path.open("wb") as file_handle:
+        pickle.dump(obj, file_handle)
+
+
+def load_pickle(path: PathLike) -> Any:
+    """
+    Load and return a Python object from a pickle file.
+    """
+
+    with Path(path).open("rb") as file_handle:
+        return pickle.load(file_handle)
+
+
+def save_csv(df: pd.DataFrame, path: PathLike, index: bool = False, sep: str = ",") -> None:
+    """
+    Save a ``pandas.DataFrame`` to CSV.
+    """
+
+    _require_pandas()
+    file_path = ensure_parent_dir(path)
+    df.to_csv(file_path, index=index, sep=sep, encoding="utf-8")
+
+
+def load_csv(path: PathLike, sep: str = ",", **read_csv_kwargs: Any) -> pd.DataFrame:
+    """
+    Load a CSV file into a ``pandas.DataFrame``.
+    """
+
+    _require_pandas()
+    return pd.read_csv(Path(path), sep=sep, encoding="utf-8", **read_csv_kwargs)
+
+
+def save_txt(text: str, path: PathLike) -> None:
+    """
+    Save plain text to disk.
+    """
+
+    file_path = ensure_parent_dir(path)
+    with file_path.open("w", encoding="utf-8") as file_handle:
+        file_handle.write(text)
+
+
+def load_txt(path: PathLike) -> str:
+    """
+    Load and return a text file.
+    """
+
+    with Path(path).open("r", encoding="utf-8") as file_handle:
+        return file_handle.read()
+
+
+def file_exists(path: PathLike) -> bool:
+    """
+    Return ``True`` when the given file path exists.
+    """
+
+    return Path(path).is_file()
+
+
+def get_file_size(path: PathLike) -> Optional[int]:
+    """
+    Return file size in bytes, or ``None`` when the file does not exist.
+    """
+
+    file_path = Path(path)
+    return file_path.stat().st_size if file_path.exists() else None

@@ -1,0 +1,14 @@
+artifact_uri: file:///app/mlruns/932711086757815481/cf7a6e8b56ee4aa481e2c8b9f3647b23/artifacts
+end_time: 1775683506512
+entry_point_name: ''
+experiment_id: '932711086757815481'
+lifecycle_stage: active
+run_id: cf7a6e8b56ee4aa481e2c8b9f3647b23
+run_name: lstm_finance_a1faa6f1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1775683377052
+status: 3
+tags: []
+user_id: appuser

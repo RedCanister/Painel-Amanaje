@@ -1,0 +1,17 @@
+{
+    "study_name": "nvidia-lstm-study",
+    "direction": "MAXIMIZE",
+    "best_value": 0.10387673956262425,
+    "best_params": {
+        "hidden_dim": 112,
+        "hidden_layers": 2,
+        "dropout": 0.0,
+        "learning_rate": 0.0005083858013825619,
+        "batch_size": 64
+    },
+    "n_trials": 25,
+    "completed_trials": 25,
+    "pruned_trials": 0,
+    "failed_trials": 0,
+    "has_best_trial": true
+}

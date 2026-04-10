@@ -1,0 +1,367 @@
+{
+    "rows": 502,
+    "columns": 29,
+    "column_names": [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume",
+        "Close_Return",
+        "Volatility",
+        "MA20",
+        "MA50",
+        "Momentum",
+        "RelVolume",
+        "RSI_Close",
+        "Williams_%R",
+        "CCI",
+        "Bollinger_%B",
+        "KeltnerC_%",
+        "MACD_lib",
+        "MACD_signal",
+        "MACD_Hist",
+        "Force_Index",
+        "Volume_Price_Trend",
+        "DLR",
+        "RSI_Over",
+        "RSI_Under",
+        "Williams_Over",
+        "Williams_Under",
+        "MACD_Over",
+        "MACD_Under"
+    ],
+    "dtypes": {
+        "Date": "object",
+        "Open": "float64",
+        "High": "float64",
+        "Low": "float64",
+        "Close": "float64",
+        "Volume": "int64",
+        "Close_Return": "float64",
+        "Volatility": "float64",
+        "MA20": "float64",
+        "MA50": "float64",
+        "Momentum": "float64",
+        "RelVolume": "float64",
+        "RSI_Close": "float64",
+        "Williams_%R": "float64",
+        "CCI": "float64",
+        "Bollinger_%B": "float64",
+        "KeltnerC_%": "float64",
+        "MACD_lib": "float64",
+        "MACD_signal": "float64",
+        "MACD_Hist": "float64",
+        "Force_Index": "float64",
+        "Volume_Price_Trend": "float64",
+        "DLR": "float64",
+        "RSI_Over": "bool",
+        "RSI_Under": "bool",
+        "Williams_Over": "bool",
+        "Williams_Under": "bool",
+        "MACD_Over": "bool",
+        "MACD_Under": "bool"
+    },
+    "missing_values": 256,
+    "stats": {
+        "Date": {
+            "type": "categorical",
+            "unique_values": 502,
+            "null_count": 0,
+            "mode": "2023-09-20 00:00:00-04:00"
+        },
+        "Open": {
+            "type": "numeric",
+            "mean": 110.97677662155563,
+            "std": 39.24110043342428,
+            "min": 40.42617778091217,
+            "max": 182.94968779347357,
+            "null_count": 0
+        },
+        "High": {
+            "type": "numeric",
+            "mean": 112.85150446378557,
+            "std": 39.628111206340876,
+            "min": 40.85492597583814,
+            "max": 184.46959107996432,
+            "null_count": 0
+        },
+        "Low": {
+            "type": "numeric",
+            "mean": 108.86234712384416,
+            "std": 38.655804285083065,
+            "min": 39.206895078542935,
+            "max": 180.5798072904055,
+            "null_count": 0
+        },
+        "Close": {
+            "type": "numeric",
+            "mean": 110.98484375942276,
+            "std": 39.168627299361084,
+            "min": 40.30224609375,
+            "max": 183.1496734619141,
+            "null_count": 0
+        },
+        "Volume": {
+            "type": "numeric",
+            "mean": 332919382.07171315,
+            "std": 154709524.70229018,
+            "min": 105157000.0,
+            "max": 1142269000.0,
+            "null_count": 0
+        },
+        "Close_Return": {
+            "type": "numeric",
+            "mean": 0.0033698468221187174,
+            "std": 0.03196624064730037,
+            "min": -0.1696815994678485,
+            "max": 0.1872273416115148,
+            "null_count": 1
+        },
+        "Volatility": {
+            "type": "numeric",
+            "mean": 0.030297388614188906,
+            "std": 0.011919010042403063,
+            "min": 0.0139494888889077,
+            "max": 0.0590536186321064,
+            "null_count": 20
+        },
+        "MA20": {
+            "type": "numeric",
+            "mean": 111.07152945713968,
+            "std": 37.23985652979433,
+            "min": 43.37543621063232,
+            "max": 179.68886489868163,
+            "null_count": 19
+        },
+        "MA50": {
+            "type": "numeric",
+            "mean": 111.09467760806054,
+            "std": 33.478664609035725,
+            "min": 44.96190048217773,
+            "max": 175.5374899291992,
+            "null_count": 49
+        },
+        "Momentum": {
+            "type": "numeric",
+            "mean": 0.033510240569248236,
+            "std": 0.0951446372772466,
+            "min": -0.2108343139712223,
+            "max": 0.3146809381511435,
+            "null_count": 10
+        },
+        "RelVolume": {
+            "type": "numeric",
+            "mean": 1.0,
+            "std": 0.46470567060275475,
+            "min": 0.3158632559799371,
+            "max": 3.431067884638652,
+            "null_count": 0
+        },
+        "RSI_Close": {
+            "type": "numeric",
+            "mean": 57.81893324900247,
+            "std": 12.793316820630482,
+            "min": 0.0,
+            "max": 100.0,
+            "null_count": 0
+        },
+        "Williams_%R": {
+            "type": "numeric",
+            "mean": -36.87491191347488,
+            "std": 29.655659784622927,
+            "min": -99.40247814805169,
+            "max": -0.0,
+            "null_count": 13
+        },
+        "CCI": {
+            "type": "numeric",
+            "mean": 34.85550550394822,
+            "std": 104.595192896185,
+            "min": -245.29234772076055,
+            "max": 285.51446176760675,
+            "null_count": 19
+        },
+        "Bollinger_%B": {
+            "type": "numeric",
+            "mean": 0.6079201625834417,
+            "std": 0.31883733160311717,
+            "min": -0.254147580250553,
+            "max": 1.2419868411594903,
+            "null_count": 19
+        },
+        "KeltnerC_%": {
+            "type": "numeric",
+            "mean": 1.0058876308612397,
+            "std": 1.0462721909575596,
+            "min": -1.5174289801709335,
+            "max": 4.045551742795079,
+            "null_count": 0
+        },
+        "MACD_lib": {
+            "type": "numeric",
+            "mean": 1.9254491593770091,
+            "std": 3.517762939239172,
+            "min": -6.257274968611228,
+            "max": 9.77254262707028,
+            "null_count": 25
+        },
+        "MACD_signal": {
+            "type": "numeric",
+            "mean": 1.9617721335576435,
+            "std": 3.3268495175267065,
+            "min": -4.741643994805117,
+            "max": 8.85417719545354,
+            "null_count": 33
+        },
+        "MACD_Hist": {
+            "type": "numeric",
+            "mean": 0.0040692612084773415,
+            "std": 1.0723446632976057,
+            "min": -2.5639893032745467,
+            "max": 2.95492936109566,
+            "null_count": 33
+        },
+        "Force_Index": {
+            "type": "numeric",
+            "mean": 38623150.48116521,
+            "std": 427501414.8067373,
+            "min": -2791328587.2166934,
+            "max": 1689701713.3317327,
+            "null_count": 13
+        },
+        "Volume_Price_Trend": {
+            "type": "numeric",
+            "mean": 345349257.1075374,
+            "std": 167041745.79985726,
+            "min": -50374242.16565549,
+            "max": 550837047.3934189,
+            "null_count": 1
+        },
+        "DLR": {
+            "type": "numeric",
+            "mean": 0.002857342989465407,
+            "std": 0.03189310737347049,
+            "min": -0.1859460366539756,
+            "max": 0.1716206234989342,
+            "null_count": 1
+        },
+        "RSI_Over": {
+            "type": "numeric",
+            "mean": 0.1892430278884462,
+            "std": 0.39209227485019493,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        },
+        "RSI_Under": {
+            "type": "numeric",
+            "mean": 0.00398406374501992,
+            "std": 0.06305641539110804,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        },
+        "Williams_Over": {
+            "type": "numeric",
+            "mean": 0.3884462151394422,
+            "std": 0.48788309692291176,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        },
+        "Williams_Under": {
+            "type": "numeric",
+            "mean": 0.10956175298804781,
+            "std": 0.31265428474239587,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        },
+        "MACD_Over": {
+            "type": "numeric",
+            "mean": 0.50199203187251,
+            "std": 0.5004947810761727,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        },
+        "MACD_Under": {
+            "type": "numeric",
+            "mean": 0.43227091633466136,
+            "std": 0.4958856895259266,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        }
+    },
+    "path": "/data/datasets/nvda.csv",
+    "profile": {
+        "numeric_columns": [
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "Volume_Price_Trend",
+            "DLR"
+        ],
+        "categorical_columns": [
+            "Date",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under"
+        ],
+        "datetime_columns": [],
+        "recommended_target": "MACD_Under",
+        "recommended_inputs": [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "Volume_Price_Trend",
+            "DLR",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over"
+        ]
+    }
+}

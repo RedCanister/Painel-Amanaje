@@ -1,0 +1,7 @@
+{
+    "hidden_dim": 96,
+    "hidden_layers": 1,
+    "dropout": 0.4,
+    "learning_rate": 0.0009951712529494118,
+    "batch_size": 16
+}

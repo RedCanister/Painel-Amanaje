@@ -1,119 +1,188 @@
-""" 
+"""
 utils/logging.py
 
-Centralized and consistent logging configuration for the project
+Centralized and consistent logging configuration for the project.
 
 Features:
-- Colored console logging (for local development and debugging)
-- Optional file logging (rotating handler).
-- MLflow integration hook for run-level logging
-- Airflow and FastAPI compatibility
-- Structured format with timestamps, levels, and module names
+- Colored console logging for local development.
+- Optional rotating file logging.
+- Consistent formatting across utility modules.
+- Helper to persist selected log messages as MLflow text artifacts.
 """
+
+from __future__ import annotations
 
 import logging
 import sys
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Optional
-import mlflow
 
-
-# ANSI Color Map for Console Output
+DEFAULT_LOG_FORMAT = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+DEFAULT_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _COLORS = {
-    "DEBUG": "\033[36m",    # Cyan
-    "INFO": "\033[32m",    # Green
-    "WARNING": "\033[33m",    # Yellow
-    "ERROR": "\033[31m",    # Red
-    "CRITICAL": "\033[41m",    # Red Background
-    "RESET": "\033[0m",    # Reset
+    "DEBUG": "\033[36m",
+    "INFO": "\033[32m",
+    "WARNING": "\033[33m",
+    "ERROR": "\033[31m",
+    "CRITICAL": "\033[41m",
+    "RESET": "\033[0m",
 }
 
 
-# Custom Formatter
+def _coerce_level(level: int | str) -> int:
+    """Normalize string and integer log levels into ``logging`` constants."""
+
+    if isinstance(level, int):
+        return level
+
+    resolved_level = logging.getLevelName(str(level).upper())
+    return resolved_level if isinstance(resolved_level, int) else logging.INFO
+
 
 class ColorFormatter(logging.Formatter):
-    """
-    Formatter that colorizes log levels for better readability in console.
-    """
+    """Formatter that colorizes the level name when the stream supports it."""
+
+    def __init__(self, use_colors: Optional[bool] = None) -> None:
+        super().__init__(DEFAULT_LOG_FORMAT, datefmt=DEFAULT_DATE_FORMAT)
+        self.use_colors = sys.stdout.isatty() if use_colors is None else use_colors
 
     def format(self, record: logging.LogRecord) -> str:
-        color = _COLORS.get(record.levelname, "")
+        if not self.use_colors:
+            return super().format(record)
+
+        original_levelname = record.levelname
+        color = _COLORS.get(original_levelname, "")
         reset = _COLORS["RESET"]
-        log_fmt = f"%(asctime)s | %(name)s | {color}%(levelname)s{reset} | %(message)s"
-        formatter = logging.Formatter(log_fmt, datefmt="%Y-%m-%d %H:%M:S")
-        return formatter.format(record)
+        if color:
+            record.levelname = f"{color}{original_levelname}{reset}"
+
+        try:
+            return super().format(record)
+        finally:
+            record.levelname = original_levelname
 
 
-# Logger
+def _has_stream_handler(logger: logging.Logger) -> bool:
+    return any(
+        isinstance(handler, logging.StreamHandler) and not isinstance(handler, RotatingFileHandler)
+        for handler in logger.handlers
+    )
+
+
+def _has_file_handler(logger: logging.Logger, log_file: Path) -> bool:
+    for handler in logger.handlers:
+        if isinstance(handler, RotatingFileHandler):
+            try:
+                if Path(handler.baseFilename).resolve() == log_file.resolve():
+                    return True
+            except OSError:
+                if Path(handler.baseFilename) == log_file:
+                    return True
+    return False
+
 
 def get_logger(
     name: str,
-    level: int = logging.INFO,
+    level: int | str = logging.INFO,
     log_file: Optional[str] = None,
     file_max_bytes: int = 5_000_000,
     file_backup_count: int = 3,
+    use_colors: Optional[bool] = None,
+    reset_handlers: bool = False,
 ) -> logging.Logger:
     """
-    Creates and returns a configured logger.
-    - name: module or component name
-    - level: logging level(DEBUG, INFO, etc.)
-    - log_file: optional file path path to store logs
+    Create or reuse a configured logger.
+
+    Parameters
+    ----------
+    name:
+        Logger name, usually the module or subsystem name.
+    level:
+        Logging level as either an integer constant or string.
+    log_file:
+        Optional path for a rotating file handler.
     """
 
-    logger = logging.getlogger(name)
-    logger.setLevel(level)
+    normalized_level = _coerce_level(level)
+    logger = logging.getLogger(name)
+    logger.setLevel(normalized_level)
     logger.propagate = False
 
-    if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+    if reset_handlers:
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+            handler.close()
+
+    if not _has_stream_handler(logger):
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(level)
-        console_handler.setFormatter(ColorFormatter())
+        console_handler.setLevel(normalized_level)
+        console_handler.setFormatter(ColorFormatter(use_colors=use_colors))
         logger.addHandler(console_handler)
 
-    if log_file and not any(isinstance(h, RotatingFileHandler) for h in logger.handlers):
-        file_handler = RotatingFileHandler(
-            log_file, maxBytes=file_max_bytes, backupCount=file_backup_count, enconding="utf-8"
-        )
-        file_handler.setLevel(level)
-        file_handler.setFormatter(logging.Formatter(
-            "%(asctime)s | %(name)s | %(levelname)s | %(message)s", "%Y-%m-%d %H:%M%:%S"
-        ))
-        logger.addHandler(file_handler)
+    if log_file:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if not _has_file_handler(logger, log_path):
+            file_handler = RotatingFileHandler(
+                log_path,
+                maxBytes=file_max_bytes,
+                backupCount=file_backup_count,
+                encoding="utf-8",
+            )
+            file_handler.setLevel(normalized_level)
+            file_handler.setFormatter(
+                logging.Formatter(DEFAULT_LOG_FORMAT, datefmt=DEFAULT_DATE_FORMAT)
+            )
+            logger.addHandler(file_handler)
+
+    for handler in logger.handlers:
+        handler.setLevel(normalized_level)
 
     return logger
 
 
-# MLflow 
-
 def log_to_mlflow(logger: logging.Logger, message: str, level: str = "info") -> None:
-        """
-        Logs a message both locally and to the active MLflow run, if one exists.
-        """
-        log_method = getattr(logger, level.lower(), logger.info)
-        log_method(message)
-
-        try:
-            active_run = mlflow.active_run()
-            if active_run:
-                mlflow.log_text(message, artifact_file="logs/run_logs.txt")
-        except Exception:
-            pass
-
-def init_global_logging(log_dir: Optional[str] = "logs") -> logging.Logger:
-    """ 
-    Initializes a root-level logger or the entire project.
-    Creates a rotating log file in `logs/app.log` by default.
+    """
+    Log a message locally and, when possible, persist it as an MLflow artifact.
     """
 
-    import os
-    os.makedirs(log_dir, exist_ok=True)
+    log_method = getattr(logger, level.lower(), logger.info)
+    log_method(message)
+
+    try:
+        import mlflow
+    except Exception:
+        return
+
+    try:
+        if mlflow.active_run():
+            timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
+            artifact_file = f"logs/{logger.name}_{timestamp}.log"
+            mlflow.log_text(f"{message.rstrip()}\n", artifact_file=artifact_file)
+    except Exception:
+        logger.debug("Unable to mirror log message to MLflow.", exc_info=True)
+
+
+def init_global_logging(
+    log_dir: Optional[str] = "logs",
+    logger_name: str = "app",
+    level: int | str = logging.INFO,
+) -> logging.Logger:
+    """
+    Initialize a root application logger backed by a rotating log file.
+    """
+
+    directory = Path(log_dir or "logs")
+    directory.mkdir(parents=True, exist_ok=True)
 
     root_logger = get_logger(
-        name="app",
-        level=logging.INFO,
-        log_file=os.path.join(log_dir, "app.log"),
+        name=logger_name,
+        level=level,
+        log_file=str(directory / "app.log"),
     )
-
-    root_logger.info("✅ Logging initialized.")
+    root_logger.info("Logging initialized.")
     return root_logger

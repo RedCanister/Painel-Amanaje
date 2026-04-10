@@ -1,0 +1,16 @@
+{
+    "study_name": "sample-study",
+    "direction": "MAXIMIZE",
+    "best_value": 0.0,
+    "best_params": {
+        "hidden_dim": 96,
+        "hidden_layers": 1,
+        "dropout": 0.4,
+        "learning_rate": 0.0009951712529494118,
+        "batch_size": 16
+    },
+    "n_trials": 25,
+    "completed_trials": 25,
+    "pruned_trials": 0,
+    "failed_trials": 0
+}

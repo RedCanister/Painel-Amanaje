@@ -1,8 +1,45 @@
-from pydantic import Field
-from typing import List, Optional, Dict
+import ast
+import json
+from pydantic import Field, field_validator
+from typing import Any, List, Optional, Dict
 from datetime import datetime
 import optuna as op
 from .model_schemas import AsyncCRUDMixin
+
+
+def _parse_container_literal(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+
+    trimmed = value.strip()
+    if not trimmed:
+        return value
+
+    try:
+        return json.loads(trimmed)
+    except json.JSONDecodeError:
+        pass
+
+    try:
+        return ast.literal_eval(trimmed)
+    except (ValueError, SyntaxError):
+        return value
+
+
+def _coerce_list_field(value: Any) -> Any:
+    parsed = _parse_container_literal(value)
+
+    if parsed == "":
+        return None
+    if isinstance(parsed, (tuple, set)):
+        return list(parsed)
+
+    return parsed
+
+
+def _coerce_dict_field(value: Any) -> Any:
+    parsed = _parse_container_literal(value)
+    return None if parsed == "" else parsed
 
 # Modelo pydantic básico para construção das colunas principais
 class ObjectModel(AsyncCRUDMixin):
@@ -17,6 +54,11 @@ class ObjectModel(AsyncCRUDMixin):
     version: Optional[int] = None           # Version of the model (date or numeric)
     history: Optional[List[dict]] = None    # History of model training runs
 
+    @field_validator("history", mode="before")
+    @classmethod
+    def _validate_history(cls, value: Any) -> Any:
+        return _coerce_list_field(value)
+
 
 # Data models - Entities: Datasets, Features, Samples, Templates. Using postgres and redis for storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database 
@@ -28,6 +70,11 @@ class DatasetModel(ObjectModel):
     features_list: Optional[List[str]] = None  # List of feature names
     connection_string: Optional[str] = None # For database connections  
     # Implement shape into the set
+
+    @field_validator("shape", "features_list", mode="before")
+    @classmethod
+    def _validate_dataset_lists(cls, value: Any) -> Any:
+        return _coerce_list_field(value)
 
 
 # Machine Learning Models - Entities: Learning Models, ONNX Models, Template Models. Using ./mlflow-server for model management. Or ./mlruns for run storage
@@ -43,25 +90,45 @@ class LearningModel(ObjectModel):
     is_trained: Optional[bool] = False      # Whether the model is trained
     is_tested: Optional[bool] = False       # Whether the model is tested
     is_deployed: Optional[bool] = False     # Whether the model is deployed
+
+    @field_validator("parameters", "metrics", mode="before")
+    @classmethod
+    def _validate_learning_dicts(cls, value: Any) -> Any:
+        return _coerce_dict_field(value)
+
+    @field_validator("input_features", "output_features", mode="before")
+    @classmethod
+    def _validate_learning_lists(cls, value: Any) -> Any:
+        return _coerce_list_field(value)
     
 
 class CodeModel(ObjectModel):
     
     code: dict
     variables: dict
+
+    @field_validator("code", "variables", mode="before")
+    @classmethod
+    def _validate_code_dicts(cls, value: Any) -> Any:
+        return _coerce_dict_field(value)
     
 
 class StudyModel(ObjectModel):
 
     learning_model_id: int
-    learning_model: LearningModel
+    learning_model: Optional[LearningModel] = None
     dataset_id: int
-    dataset: DatasetModel
+    dataset: Optional[DatasetModel] = None
     sampler: str
     objective: str
-    best_trial: Optional[Dict[str, float]] = None
-    best_params: Optional[Dict[str, float]] = None
-    study_params: Optional[Dict[str, float]] = None # n_trials, direction, metrics, n_jobs
+    best_trial: Optional[Dict[str, Any]] = None
+    best_params: Optional[Dict[str, Any]] = None
+    study_params: Optional[Dict[str, Any]] = None # n_trials, direction, metrics, n_jobs
+
+    @field_validator("best_trial", "best_params", "study_params", mode="before")
+    @classmethod
+    def _validate_study_dicts(cls, value: Any) -> Any:
+        return _coerce_dict_field(value)
 
     class Config:
         from_attributes = True

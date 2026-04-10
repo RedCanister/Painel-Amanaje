@@ -1,0 +1,7 @@
+artifact_location: file:///app/mlruns/682527084424190119
+creation_time: 1775625159327
+experiment_id: '682527084424190119'
+last_update_time: 1775625159327
+lifecycle_stage: active
+name: sample_model_training
+workspace: default

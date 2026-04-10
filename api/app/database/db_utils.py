@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import text
 from typing import Type, List, Optional
 from pydantic import BaseModel
 from datetime import datetime
@@ -10,6 +11,81 @@ from app.database.db_session import Base
 from app.utils.utils import debug_type
 
 # Result.scalars - return _asdict(), _fields(), _mapping()
+
+POLYMORPHIC_IDENTITY_ALIASES = {
+    "object_type": {
+        "code": "code_model",
+        "codes": "code_model",
+        "model": "learning_model",
+        "models": "learning_model",
+        "study": "study_model",
+    },
+    "dataset_type": {
+        "csv": "dataset",
+        "tsv": "dataset",
+        "json": "dataset",
+        "parquet": "dataset",
+        "excel": "dataset",
+        "xlsx": "dataset",
+        "xls": "dataset",
+        "table": "dataset",
+        "tabular": "dataset",
+        "dataframe": "dataset",
+        "numerical": "numerical_dataset",
+        "categorical": "categorical_dataset",
+        "timeseries": "timeseries_dataset",
+        "time_series": "timeseries_dataset",
+        "time-series": "timeseries_dataset",
+        "image": "image_dataset",
+        "video_audio": "videoaudio_dataset",
+        "video-audio": "videoaudio_dataset",
+        "text": "text_dataset",
+        "mixed": "mixed_dataset",
+    },
+    "model_type": {
+        "supervised": "supervised_model",
+        "unsupervised": "unsupervised_model",
+        "reinforcement": "reinforcement_model",
+        "deep": "deep_learning_model",
+        "deep_learning": "deep_learning_model",
+        "deep-learning": "deep_learning_model",
+        "transformer": "transformative_model",
+        "transformative": "transformative_model",
+        "generative": "generative_model",
+        "onnx": "learning_model",
+        "sklearn": "learning_model",
+        "torch": "learning_model",
+        "pytorch": "learning_model",
+        "tensorflow": "learning_model",
+    },
+}
+
+POLYMORPHIC_IDENTITY_TABLES = {
+    "object_type": "objects",
+    "dataset_type": "datasets",
+    "model_type": "learning_models",
+}
+
+JSONB_CONTAINER_COLUMNS = {
+    "objects": {
+        "history": "[",
+    },
+    "learning_models": {
+        "parameters": "{",
+        "metrics": "{",
+        "input_features": "[",
+        "output_features": "[",
+    },
+    "code_models": {
+        "variables": "{",
+        "code": "{",
+    },
+    "study_models": {
+        "best_trial": "{",
+        "best_params": "{",
+        "study_params": "{",
+    },
+}
 
 
 def _normalize_datetime_value(value):
@@ -25,6 +101,110 @@ def _normalize_datetime_value(value):
         return datetime.fromisoformat(normalized_value)
     except (ValueError, TypeError):
         return value
+
+
+def _normalize_polymorphic_identity(discriminator_key: str, value):
+    if not isinstance(value, str):
+        return value
+
+    normalized = value.strip().lower()
+    aliases = POLYMORPHIC_IDENTITY_ALIASES.get(discriminator_key, {})
+    return aliases.get(normalized, normalized)
+
+
+def _resolve_polymorphic_model(orm_model: Type[ObjectORM], payload: dict) -> tuple[Type[ObjectORM], dict]:
+    mapper = getattr(orm_model, "__mapper__", None)
+    if mapper is None:
+        return orm_model, payload
+
+    polymorphic_on = getattr(mapper, "polymorphic_on", None)
+    discriminator_key = getattr(polymorphic_on, "key", None)
+    if not discriminator_key or discriminator_key not in payload:
+        return orm_model, payload
+
+    normalized_identity = _normalize_polymorphic_identity(discriminator_key, payload[discriminator_key])
+    if normalized_identity is not None:
+        payload[discriminator_key] = normalized_identity
+
+    target_mapper = mapper.polymorphic_map.get(payload[discriminator_key])
+    if target_mapper is not None:
+        return target_mapper.class_, payload
+
+    base_identity = getattr(mapper, "polymorphic_identity", None)
+    if base_identity is not None:
+        payload[discriminator_key] = base_identity
+
+    return orm_model, payload
+
+
+def _sync_legacy_name_payload(orm_model: Type[ObjectORM], payload: dict) -> dict:
+    if "name" in payload and hasattr(orm_model, "legacy_name") and "legacy_name" not in payload:
+        payload["legacy_name"] = payload["name"]
+    return payload
+
+
+async def normalize_legacy_polymorphic_identities(db: AsyncSession) -> dict[str, int]:
+    """Repair persisted discriminator aliases so ORM polymorphic loading can succeed."""
+
+    normalized_counts: dict[str, int] = {}
+
+    for discriminator_key, aliases in POLYMORPHIC_IDENTITY_ALIASES.items():
+        table_name = POLYMORPHIC_IDENTITY_TABLES.get(discriminator_key)
+        if not table_name:
+            continue
+
+        updated_rows = 0
+        for legacy_value, canonical_value in aliases.items():
+            result = await db.execute(
+                text(
+                    f"UPDATE {table_name} "
+                    f"SET {discriminator_key} = :canonical_value "
+                    f"WHERE lower(trim({discriminator_key})) = :legacy_value"
+                ),
+                {
+                    "canonical_value": canonical_value,
+                    "legacy_value": legacy_value,
+                },
+            )
+            updated_rows += result.rowcount or 0
+
+        if updated_rows:
+            normalized_counts[discriminator_key] = updated_rows
+
+    if normalized_counts:
+        await db.commit()
+
+    return normalized_counts
+
+
+async def normalize_legacy_jsonb_containers(db: AsyncSession) -> dict[str, int]:
+    """Repair JSONB columns that were persisted as JSON strings instead of containers."""
+
+    normalized_counts: dict[str, int] = {}
+
+    for table_name, columns in JSONB_CONTAINER_COLUMNS.items():
+        updated_rows = 0
+
+        for column_name, leading_char in columns.items():
+            result = await db.execute(
+                text(
+                    f"UPDATE {table_name} "
+                    f"SET {column_name} = ({column_name} #>> '{{}}')::jsonb "
+                    f"WHERE {column_name} IS NOT NULL "
+                    f"AND jsonb_typeof({column_name}) = 'string' "
+                    f"AND left(ltrim({column_name} #>> '{{}}'), 1) = :leading_char"
+                ),
+                {"leading_char": leading_char},
+            )
+            updated_rows += result.rowcount or 0
+
+        if updated_rows:
+            normalized_counts[table_name] = updated_rows
+
+    if normalized_counts:
+        await db.commit()
+
+    return normalized_counts
 
 # Database utilities: create/get/update/delete helpers for ORM models
 async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel | dict):
@@ -70,6 +250,9 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
         payload['date'] = _normalize_datetime_value(payload['date'])
         print("Date is normalized")
 
+    orm_model, payload = _resolve_polymorphic_model(orm_model, payload)
+    payload = _sync_legacy_name_payload(orm_model, payload)
+
     try:
         obj = orm_model(**payload)
     except TypeError as e:
@@ -99,35 +282,38 @@ async def get_entry(db: AsyncSession, orm_model: Type, entry_id: int | str) -> O
 
     print(f"Getting entry from {orm_model.__name__}...")
     if isinstance(entry_id, int):
-        print("{orm_model.__name__} item_id == (int)")
+        print(f"{orm_model.__name__} item_id == (int)")
         result = await db.execute(select(orm_model).where(orm_model.id == entry_id))
         entry = result.scalars().first()
         debug_type(entry)
         return entry
 
-    # If a string was provided, try to look up by a 'name' column if present,
-    # otherwise attempt to coerce to int and lookup by id.
+    # If a numeric string was provided, treat it as an id first. This keeps
+    # FastAPI path params like "/get/1" from being misread as a model name.
     if isinstance(entry_id, str):
+        normalized_entry_id = entry_id.strip()
         attr = getattr(orm_model, "name", None)
         print(f"{orm_model.__name__} item_id == (str)")
-        if attr is not None:
-            result = await db.execute(select(orm_model).where(attr == str(entry_id)))
-            entry = result.scalars().first()
-            debug_type(entry)
-            print("Returned entry.")
-            return entry
 
-        # Fallback: try numeric string -> id
         try:
-            iid = int(entry_id)
+            iid = int(normalized_entry_id)
             result = await db.execute(select(orm_model).where(orm_model.id == iid))
             entry = result.scalars().first()
             debug_type(entry)
-            print("Returned entry.")
+            if entry is not None:
+                print("Returned entry by id.")
+                return entry
+        except (TypeError, ValueError):
+            pass
+
+        if attr is not None:
+            result = await db.execute(select(orm_model).where(attr == normalized_entry_id))
+            entry = result.scalars().first()
+            debug_type(entry)
+            print("Returned entry by name.")
             return entry
-        
-        except Exception:
-            return None
+
+        return None
 
     return None
 
@@ -176,6 +362,8 @@ async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int | s
 
     for field, value in updates.items():
         setattr(obj, field, value)
+        if field == "name" and hasattr(obj, "legacy_name"):
+            setattr(obj, "legacy_name", value)
 
     await db.commit()
     await db.refresh(obj)

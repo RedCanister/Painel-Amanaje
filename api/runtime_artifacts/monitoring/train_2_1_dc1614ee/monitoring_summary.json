@@ -1,0 +1,17 @@
+{
+    "job_id": "train_2_1_dc1614ee",
+    "drift_results": {
+        "value": false
+    },
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+    },
+    "degradation_results": {},
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 0
+    },
+    "retrain_recommended": false,
+    "evaluated_at": "2026-04-08T05:13:45.751830"
+}

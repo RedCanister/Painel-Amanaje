@@ -1,0 +1,11 @@
+{
+    "model_id": 2,
+    "dataset_id": 1,
+    "model_name": "sample_model",
+    "artifact_path": "/models/sample_model.pt",
+    "started_at": "2026-04-08T05:22:05.164883",
+    "status": "active",
+    "artifact_metadata": {
+        "error": "Unsupported file type: .pt"
+    }
+}

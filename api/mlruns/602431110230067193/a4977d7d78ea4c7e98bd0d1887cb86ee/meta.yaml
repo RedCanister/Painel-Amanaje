@@ -1,0 +1,14 @@
+artifact_uri: file:///app/mlruns/602431110230067193/a4977d7d78ea4c7e98bd0d1887cb86ee/artifacts
+end_time: 1775626356995
+entry_point_name: ''
+experiment_id: '602431110230067193'
+lifecycle_stage: active
+run_id: a4977d7d78ea4c7e98bd0d1887cb86ee
+run_name: sample-study_study
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1775626025935
+status: 4
+tags: []
+user_id: appuser

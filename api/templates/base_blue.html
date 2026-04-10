@@ -1,477 +1,309 @@
 {% extends "base_template.html" %}
 
-{% block title %}MLOps - Painel Amanajé{% endblock %}
+{% block title %}Production Operations - Painel Amanaje{% endblock %}
 
 {% block extra_css %}
 <style>
     .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
     .mlops-section h3 { color: #0077b6; margin-top: 0; }
-    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
+    .monitoring-grid, .control-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .metric-card, .panel-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; border: 1px solid #e5e7eb; }
     .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
-    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
-    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
-    .status-active { background-color: #2ecc71; }
-    .status-warning { background-color: #f1c40f; }
-    .status-error { background-color: #e74c3c; }
+    .log-display, .json-display { max-height: 320px; overflow-y: auto; background: #111827; color: #f9fafb; padding: 1rem; font-family: Consolas, "Courier New", monospace; border-radius: 4px; white-space: pre-wrap; }
+    .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-radius: 999px; font-weight: 600; }
+    .status-pill.active { background: #dcfce7; color: #166534; }
+    .status-pill.inactive { background: #fee2e2; color: #991b1b; }
+    .alert { padding: 1rem; border-radius: 4px; }
+    .alert-error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+    .btn { padding: 0.75rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #0077b6; color: white; }
+    .btn-danger { background: #e63946; color: white; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
+    .form-group select { width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
+    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+    .empty-state { padding: 1rem; border: 1px dashed #cbd5e1; border-radius: 4px; background: #f8fafc; color: #475569; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="mlops-operations">
-    <!-- Production Monitoring -->
     <section class="mlops-section" id="productionSection">
-        <h3>Production Monitoring</h3>
-        
-        <!-- ADDED: Status display div for production state -->
-        <div id="productionStatus" style="margin-bottom: 1rem;">
-            <div class="alert alert-warning">🔴 Production is INACTIVE</div>
-        </div>
-        
-        <div class="monitoring-grid">
-            <div class="metric-card">
-                <h4>Model Health</h4>
-                <div class="status-indicator status-active"></div>
-                <span>Active</span>
-                <div class="metric-value" id="modelHealth">100%</div>
+        <h3>Production Control</h3>
+        <div id="productionStatus" style="margin-bottom: 1rem;"></div>
+
+        <div class="control-grid">
+            <div class="panel-card">
+                <div class="form-group">
+                    <label for="productionModelId">Learning Model</label>
+                    <select id="productionModelId">
+                        <option value="">Select a model</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="productionDatasetId">Dataset</label>
+                    <select id="productionDatasetId">
+                        <option value="">Select a dataset</option>
+                    </select>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" id="btnStartProduction">Start</button>
+                    <button type="button" class="btn btn-danger" id="btnStopProduction">Stop</button>
+                    <button type="button" class="btn" id="btnRestartProduction">Restart</button>
+                </div>
             </div>
-            <div class="metric-card">
-                <h4>Requests/min</h4>
-                <div class="metric-value" id="requestRate">0</div>
-            </div>
-            <div class="metric-card">
-                <h4>Avg Response Time</h4>
-                <div class="metric-value" id="responseTime">0ms</div>
-            </div>
-            <div class="metric-card">
-                <h4>Error Rate</h4>
-                <div class="metric-value" id="errorRate">0%</div>
+
+            <div class="panel-card">
+                <h4>Deployment Snapshot</h4>
+                <div id="deploymentSummary" class="json-display">No deployment summary loaded yet.</div>
             </div>
         </div>
 
-        <div class="production-controls">
-            <h4>Model Controls</h4>
-            <button onclick="startProduction()" class="btn btn-primary">Start</button>
-            <button onclick="stopProduction()" class="btn btn-danger">Stop</button>
-            <button onclick="restartProduction()" class="btn">Restart</button>
+        <div class="monitoring-grid" style="margin-top:1rem;">
+            <div class="metric-card">
+                <h4>Runtime State</h4>
+                <div class="metric-value" id="runtimeState">INACTIVE</div>
+            </div>
+            <div class="metric-card">
+                <h4>Tracked Metrics</h4>
+                <div class="metric-value" id="trackedMetrics">0</div>
+            </div>
+            <div class="metric-card">
+                <h4>Drifted Features</h4>
+                <div class="metric-value" id="driftedFeatures">0</div>
+            </div>
+            <div class="metric-card">
+                <h4>Retrain Flag</h4>
+                <div class="metric-value" id="retrainFlag">No</div>
+            </div>
         </div>
     </section>
 
-    <!-- Airflow Integration -->
-    <section class="mlops-section" id="airflowSection">
-        <h3>Airflow DAGs</h3>
-        <div class="dag-controls">
-            <select id="dagSelect">
-                <option value="">Select DAG</option>
-            </select>
-            <button onclick="triggerDag()" class="btn">Trigger DAG</button>
-            <button onclick="refreshDags()" class="btn">Refresh</button>
+    <section class="mlops-section" id="monitoringSection">
+        <h3>Monitoring and Retraining</h3>
+        <div class="actions-row">
+            <button type="button" class="btn" id="btnRefreshMonitoring">Refresh Monitoring</button>
+            <button type="button" class="btn" id="btnTriggerRetrain">Trigger Retraining</button>
         </div>
-        <div class="log-display" id="dagLogs">
-            <!-- DAG logs will be shown here -->
-        </div>
+        <div id="monitoringResults" class="json-display" style="margin-top:1rem;">No monitoring run executed yet.</div>
     </section>
 
-    <!-- MLflow Integration -->
     <section class="mlops-section" id="mlflowSection">
         <h3>MLflow Experiments</h3>
-        <div class="experiment-controls">
-            <select id="experimentSelect">
+        <div class="actions-row">
+            <select id="experimentSelect" style="min-width:260px;">
                 <option value="">Select Experiment</option>
             </select>
-            <button onclick="viewExperiment()" class="btn">View Details</button>
+            <button type="button" class="btn" id="btnViewExperiment">View Details</button>
         </div>
-        <div id="experimentResults">
-            <!-- MLflow experiment details will be shown here -->
-        </div>
+        <div id="experimentResults" class="json-display" style="margin-top:1rem;">No experiment selected.</div>
+    </section>
+
+    <section class="mlops-section" id="logsSection">
+        <h3>Activity Log</h3>
+        <div id="productionLogs" class="log-display">No production activity yet.</div>
     </section>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 <script>
-/**
- * base_blue.html - MLOps / Production Management Dashboard
- * 
- * Handles:
- * - Production model health monitoring and metrics
- * - Airflow DAG orchestration and triggering
- * - MLflow experiment tracking and visualization
- * 
- * Key changes:
- * - ADDED: Detailed comments explaining each section
- * - FIXED: All TODOs from previous version completed
- * - CHANGED: Enhanced logging and error handling
- * - ADDED: Real-time metrics updates while production is active
- */
+const productionModelId = document.getElementById('productionModelId');
+const productionDatasetId = document.getElementById('productionDatasetId');
+const experimentSelect = document.getElementById('experimentSelect');
 
-// ============================================================================
-// PRODUCTION MONITORING
-// ============================================================================
-
-/**
- * Monitoring state
- * CHANGED: Tracks whether monitoring is active to prevent duplicate intervals
- */
-let monitoringInterval = null;
-
-/**
- * Update metrics display with simulated/real data
- * CHANGED: Now properly formats metric values and timestamps
- * 
- * TODO: Replace with real API calls to:
- * - Prometheus for metrics
- * - Grafana API for dashboards
- * - Custom telemetry endpoint
- */
-function updateMetrics() {
-    const now = new Date().toLocaleTimeString();
-    
-    // CHANGED: Simulated data - replace with real values from metrics API
-
-    // How many times the model hits is requested
-    document.getElementById('requestRate').textContent = 
-        Math.floor(Math.random() * 100) + '/min';
-
-    // Response time between request and return
-    document.getElementById('responseTime').textContent = 
-        Math.floor(Math.random() * 200) + 'ms';
-
-    // Rate of error of the model counted in live requests
-    document.getElementById('errorRate').textContent = 
-        (Math.random() * 2).toFixed(2) + '%';
-    
-    // Time since last update to the model's parameters
-    document.getElementById('lastUpdate').textContent = 
-        `Last updated: ${now}`;
+function renderStatusPill(running) {
+    return running
+        ? '<span class="status-pill active">ACTIVE</span>'
+        : '<span class="status-pill inactive">INACTIVE</span>';
 }
 
-/**
- * Start production monitoring
- * CHANGED: Validates response and manages monitoring interval
- * ADDED: Prevents multiple intervals from running simultaneously
- * 
- * Purpose:
- * - Activate the production model
- * - Begin collecting metrics
- * - Update dashboard every 5 seconds
- */
-
-// Starting production should start a persistent container within Docker to host
-// the model in active production.
-async function startProduction() {
-    try {
-        const response = await fetch('/production/start', { method: 'POST' });
-        const result = await response.json();
-        
-        if (response.ok) {
-            console.log('✅ Production started:', result.status);
-            
-            // CHANGED: Clear any existing monitoring intervals
-            if (monitoringInterval) {
-                clearInterval(monitoringInterval);
-            }
-            
-            // Update metrics immediately
-            updateMetrics();
-            
-            // CHANGED: Set up metrics refresh every 5 seconds
-            monitoringInterval = setInterval(updateMetrics, 5000);
-            
-            // Provide user feedback
-            document.getElementById('productionStatus').innerHTML = 
-                '<div class="alert alert-success">🟢 Production is ACTIVE</div>';
-        } else {
-            throw new Error(result.detail || 'Failed to start production');
-        }
-    } catch (error) {
-        console.error('❌ Failed to start production:', error);
-        document.getElementById('productionStatus').innerHTML = 
-            `<div class="alert alert-error">Failed to start: ${error.message}</div>`;
-    }
-}
-
-/**
- * Stop production monitoring
- * CHANGED: Properly cleans up monitoring interval
- * ADDED: Clear feedback when stopping
- */
-
-// Stopping production should clear and turn off the container and then 
-// Save all the statistics behind the model in production
-function stopProduction() {
-    // CHANGED: Clear monitoring interval if running
-    if (monitoringInterval) {
-        clearInterval(monitoringInterval);
-        monitoringInterval = null;
-    }
-    
-    // Notify backend
-    fetch('/production/stop', { method: 'POST' })
-        .then(r => r.json())
-        .then(result => {
-            console.log('✅ Production stopped:', result.status);
-            document.getElementById('productionStatus').innerHTML = 
-                '<div class="alert alert-warning">🔴 Production is INACTIVE</div>';
-        })
-        .catch(error => {
-            console.error('❌ Failed to stop production:', error);
-            document.getElementById('productionStatus').innerHTML = 
-                `<div class="alert alert-error">Stop failed: ${error.message}</div>`;
-        });
-}
-
-/**
- * Restart production (convenience function)
- * CHANGED: Properly implements stop -> wait -> start pattern
- * 
- * In production, this should:
- * - Drain existing requests
- * - Stop current model server
- * - Start new model server
- * - Perform health check before declaring ready
- * 
- * Currently: simple sequential stop/start
- */
-function restartProduction() {
-    console.log('🔄 Restarting production...');
-    stopProduction();
-    
-    // Wait 1 second for clean shutdown, then start
-    setTimeout(() => {
-        console.log('↻ Starting production after stop...');
-        startProduction();
-    }, 1000);
-}
-
-// ============================================================================
-// AIRFLOW DAG ORCHESTRATION
-// ============================================================================
-
-/**
- * Load and display available Airflow DAGs
- * CHANGED: Uses PopulateListOptions utility for consistency
- * ADDED: Error handling for when Airflow is unavailable
- * 
- * TODO: In production, ensure:
- * - Airflow REST API is enabled
- * - Authentication is configured
- * - Network connectivity is reliable
- */
-async function loadDags() {
-    try {
-        // Fetch DAG list from backend (which proxies to Airflow API)
-        const response = await fetch('/airflow/dags');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const dags = await response.json();
-        const dagSelect = document.getElementById('dagSelect');
-        
-        // CHANGED: Build options with better formatting
-        dagSelect.innerHTML = `
-            <option value="">Select DAG</option>
-            ${dags.map(dag => `
-                <option value="${dag.id}">${dag.name || dag.id}</option>
-            `).join('')}
-        `;
-        
-        console.log(`✅ Loaded ${dags.length} DAGs`);
-    } catch (error) {
-        console.error('❌ Failed to load DAGs:', error);
-        document.getElementById('dagSelect').innerHTML = 
-            '<option value="">Error loading DAGs</option>';
-    }
-}
-
-/**
- * Refresh DAG list (convenience wrapper)
- * CHANGED: Added as a standalone function separate from initial load
- * Allows user to manually refresh if new DAGs were added
- */
-function refreshDags() {
-    console.log('🔄 Refreshing DAG list...');
-    loadDags().catch(err => {
-        console.error('refreshDags failed', err);
-        document.getElementById('dagLogs').innerHTML = 
-            `<div class="alert alert-error">Failed to refresh DAGs: ${err.message}</div>`;
-    });
-}
-
-/**
- * Trigger DAG execution
- * CHANGED: Improved logging and error handling
- * CHANGED: Logs appear in chronological order in log display
- * 
- * Future: Could enhance with:
- * - DAG run configuration parameters
- * - Real-time task status polling
- * - Direct link to Airflow UI
- */
-async function triggerDag() {
-    const dagId = document.getElementById('dagSelect').value;
-    if (!dagId) {
-        alert('Please select a DAG first');
+function renderJson(targetId, payload, emptyMessage = 'No data available.') {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (!payload || (typeof payload === 'object' && Object.keys(payload).length === 0)) {
+        target.textContent = emptyMessage;
         return;
     }
+    target.textContent = JSON.stringify(payload, null, 2);
+}
 
+async function populateProductionOptions() {
+    await Promise.all([
+        PopulateListOptions({
+            selectElement: '#productionModelId',
+            endpoint: '/learningmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a model'
+        }),
+        PopulateListOptions({
+            selectElement: '#productionDatasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset'
+        })
+    ]);
+}
+
+function syncSelectorsWithStatus(status) {
+    if (status?.model_id) productionModelId.value = String(status.model_id);
+    if (status?.dataset_id) productionDatasetId.value = String(status.dataset_id);
+}
+
+function renderProductionStatus(status) {
+    const container = document.getElementById('productionStatus');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            ${renderStatusPill(Boolean(status?.running))}
+            <span>Model: <strong>${status?.active_model?.name || status?.model_id || 'n/a'}</strong></span>
+            <span>Dataset: <strong>${status?.dataset_id || 'n/a'}</strong></span>
+        </div>
+    `;
+
+    document.getElementById('runtimeState').textContent = status?.running ? 'ACTIVE' : 'INACTIVE';
+    document.getElementById('trackedMetrics').textContent = Object.keys(status?.metrics || {}).length;
+    document.getElementById('driftedFeatures').textContent = status?.monitoring?.summary?.drifted_features ?? 0;
+    document.getElementById('retrainFlag').textContent = status?.monitoring?.retrain_recommended ? 'Yes' : 'No';
+
+    renderJson('deploymentSummary', status?.deployment, 'No deployment summary loaded yet.');
+    renderJson('monitoringResults', status?.monitoring, 'No monitoring run executed yet.');
+
+    const logs = Array.isArray(status?.logs) ? status.logs : [];
+    document.getElementById('productionLogs').textContent = logs.length ? logs.join('\n') : 'No production activity yet.';
+}
+
+async function syncProductionStatus() {
     try {
-        const timestamp = new Date().toISOString();
-        
-        // CHANGED: Send trigger request to backend
-        const response = await fetch(`/airflow/dags/${dagId}/trigger`, {
-            method: 'POST'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        const logDisplay = document.getElementById('dagLogs');
-        
-        // CHANGED: Append log with timestamp for better tracking
-        const logEntry = `[${timestamp}] ✅ Triggered DAG '${dagId}': ${result.status}`;
-        logDisplay.innerHTML += logEntry + '\n';
-        
-        // CHANGED: Auto-scroll to bottom so latest logs are visible
-        logDisplay.scrollTop = logDisplay.scrollHeight;
-        
-        console.log(`✅ DAG triggered: ${dagId}`);
+        const response = await fetch('/production/status');
+        const status = await response.json();
+        if (!response.ok) throw new Error(status.detail || `HTTP ${response.status}`);
+        syncSelectorsWithStatus(status);
+        renderProductionStatus(status);
     } catch (error) {
-        const timestamp = new Date().toISOString();
-        const logDisplay = document.getElementById('dagLogs');
-        const logEntry = `[${timestamp}] ❌ Error triggering DAG: ${error.message}`;
-        logDisplay.innerHTML += logEntry + '\n';
-        logDisplay.scrollTop = logDisplay.scrollHeight;
-        
-        console.error('❌ Failed to trigger DAG:', error);
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
     }
 }
 
-// ============================================================================
-// MLFLOW EXPERIMENT TRACKING
-// ============================================================================
+async function startProduction() {
+    try {
+        const response = await fetch('/production/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelId: productionModelId.value ? Number(productionModelId.value) : null,
+                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Unable to start production');
+        renderProductionStatus(result);
+    } catch (error) {
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+    }
+}
 
-/**
- * Load available MLflow experiments
- * CHANGED: Enhanced error handling and user feedback
- * 
- * MLflow tracks:
- * - Model training runs
- * - Hyperparameter variations (studies)
- * - Metrics and artifacts
- * - Model versions
- */
+async function stopProduction() {
+    try {
+        const response = await fetch('/production/stop', { method: 'POST' });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Unable to stop production');
+        renderProductionStatus(result);
+    } catch (error) {
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+    }
+}
+
+async function restartProduction() {
+    await stopProduction();
+    await startProduction();
+}
+
+async function refreshMonitoring() {
+    try {
+        const response = await fetch('/production/monitor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelId: productionModelId.value ? Number(productionModelId.value) : null,
+                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Monitoring refresh failed');
+        renderJson('monitoringResults', result.monitoring, 'No monitoring run executed yet.');
+        renderProductionStatus(result.production || {});
+    } catch (error) {
+        renderJson('monitoringResults', { error: error.message });
+    }
+}
+
+async function triggerRetraining() {
+    try {
+        const response = await fetch('/production/retrain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelId: productionModelId.value ? Number(productionModelId.value) : null,
+                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Retraining failed');
+        renderJson('monitoringResults', result.retraining, 'No retraining result available.');
+        await syncProductionStatus();
+    } catch (error) {
+        renderJson('monitoringResults', { error: error.message });
+    }
+}
+
 async function loadExperiments() {
     try {
         const response = await fetch('/mlflow/experiments');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
         const experiments = await response.json();
-        const experimentSelect = document.getElementById('experimentSelect');
-        
-        // CHANGED: Build options with better formatting
+        if (!response.ok) throw new Error(experiments.detail || `HTTP ${response.status}`);
+
         experimentSelect.innerHTML = `
             <option value="">Select Experiment</option>
-            ${experiments.map(exp => `
-                <option value="${exp.id}">${exp.name || exp.id}</option>
-            `).join('')}
+            ${experiments.map(exp => `<option value="${exp.id}">${exp.name || exp.id}</option>`).join('')}
         `;
-        
-        console.log(`✅ Loaded ${experiments.length} experiments`);
     } catch (error) {
-        console.error('❌ Failed to load experiments:', error);
-        document.getElementById('experimentSelect').innerHTML = 
-            '<option value="">Error loading experiments</option>';
+        experimentSelect.innerHTML = '<option value="">Error loading experiments</option>';
+        renderJson('experimentResults', { error: error.message });
     }
 }
 
-/**
- * View experiment details
- * CHANGED: Improved display formatting and error handling
- * CHANGED: Shows artifact location for result tracking
- * 
- * Displays:
- * - Experiment metadata
- * - Associated runs
- * - Best metrics achieved
- * - Artifact storage location
- */
 async function viewExperiment() {
-    const experimentId = document.getElementById('experimentSelect').value;
-    if (!experimentId) {
-        alert('Please select an experiment first');
+    if (!experimentSelect.value) {
+        renderJson('experimentResults', { info: 'Select an experiment first.' });
         return;
     }
 
     try {
-        const response = await fetch(`/mlflow/experiments/${experimentId}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
+        const response = await fetch(`/mlflow/experiments/${experimentSelect.value}`);
         const experiment = await response.json();
-        
-        // CHANGED: Enhanced display with better formatting and structure
-        document.getElementById('experimentResults').innerHTML = `
-            <div class="experiment-details" style="background: #f8f9fa; padding: 1rem; border-radius: 4px;">
-                <h4>📊 ${experiment.name || 'Experiment Details'}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 0.5rem;"><strong>ID:</strong></td>
-                        <td style="padding: 0.5rem;"><code>${experiment.id}</code></td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 0.5rem;"><strong>Artifact Location:</strong></td>
-                        <td style="padding: 0.5rem;"><code>${experiment.artifact_location}</code></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 0.5rem;"><strong>Tags:</strong></td>
-                        <td style="padding: 0.5rem;">
-                            <pre style="margin: 0; background: #f0f0f0; padding: 0.5rem; border-radius: 2px;">
-${JSON.stringify(experiment.tags, null, 2)}</pre>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        `;
-        
-        console.log(`✅ Loaded experiment: ${experimentId}`);
+        if (!response.ok) throw new Error(experiment.detail || `HTTP ${response.status}`);
+        renderJson('experimentResults', experiment, 'No experiment selected.');
     } catch (error) {
-        console.error('❌ Failed to load experiment details:', error);
-        document.getElementById('experimentResults').innerHTML = 
-            `<div class="alert alert-error">Failed to load experiment: ${error.message}</div>`;
+        renderJson('experimentResults', { error: error.message });
     }
 }
 
-// ============================================================================
-// PAGE INITIALIZATION
-// ============================================================================
+document.getElementById('btnStartProduction').addEventListener('click', startProduction);
+document.getElementById('btnStopProduction').addEventListener('click', stopProduction);
+document.getElementById('btnRestartProduction').addEventListener('click', restartProduction);
+document.getElementById('btnRefreshMonitoring').addEventListener('click', refreshMonitoring);
+document.getElementById('btnTriggerRetrain').addEventListener('click', triggerRetraining);
+document.getElementById('btnViewExperiment').addEventListener('click', viewExperiment);
 
-document.addEventListener('DOMContentLoaded', () => {
-    // CHANGED: Initialize all monitoring components on page load
-    console.log('🚀 Initializing MLOps dashboard...');
-    
-    // Load Airflow DAGs
-    loadDags();
-    
-    // Load MLflow experiments
-    loadExperiments();
-    
-    // Check if production is already running and resume monitoring
-    // TODO: Add endpoint to check current production status on page load
-    // fetch('/production/status').then(r => r.json()).then(status => {
-    //     if (status.running) startProduction();
-    // });
-    
-    console.log('✅ Dashboard initialized');
+document.addEventListener('DOMContentLoaded', async () => {
+    await populateProductionOptions();
+    await syncProductionStatus();
+    await loadExperiments();
 });
 </script>
 {% endblock %}

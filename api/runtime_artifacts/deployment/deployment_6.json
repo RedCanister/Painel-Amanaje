@@ -1,0 +1,11 @@
+{
+    "model_id": 6,
+    "dataset_id": 55,
+    "model_name": "model.pkl",
+    "artifact_path": "/models/model.pkl",
+    "started_at": "2026-04-07T19:30:47.745010",
+    "status": "active",
+    "artifact_metadata": {
+        "error": "Unsupported file type: .pkl"
+    }
+}

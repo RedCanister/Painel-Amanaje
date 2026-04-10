@@ -168,7 +168,7 @@ async function saveVariablesToFile() {
         const saveData = {
             name: filename,
             description: 'uploaded code',
-            object_type: 'code',
+            object_type: 'code_model',
             size: 0.0,
             path: 'editor',
             date: new Date().toISOString(),
@@ -370,6 +370,18 @@ function parsePythonLiteral(rawValue) {
     return value;
 }
 
+function isMaterializedEditorField(fieldName) {
+    return fieldName === 'csv_text' || fieldName === 'pytorch_bytes' || fieldName === 'torch_bytes' || fieldName === 'model_bytes';
+}
+
+function isQuotedPythonString(rawValue) {
+    const value = (rawValue || '').trim();
+    return (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+    );
+}
+
 function extractMetadataFromEditor(allowedFields = null) {
     if (!window.editor) return {};
 
@@ -390,7 +402,9 @@ function extractMetadataFromEditor(allowedFields = null) {
         'version',
         'history',
         'csv_text',
-        'onnx_bytes',
+        'pytorch_bytes',
+        'torch_bytes',
+        'model_bytes',
         'parameters',
         'metrics',
         'reference_data',
@@ -409,9 +423,13 @@ function extractMetadataFromEditor(allowedFields = null) {
     while ((match = assignmentRegex.exec(code)) !== null) {
         const varName = match[1];
         const varValue = match[2].trim();
+        const parsedValue = parsePythonLiteral(varValue);
 
         if (!fieldsToExtract.includes(varName)) continue;
-        metadata[varName] = parsePythonLiteral(varValue);
+        if (isMaterializedEditorField(varName) && parsedValue === varValue && !isQuotedPythonString(varValue)) {
+            continue;
+        }
+        metadata[varName] = parsedValue;
     }
 
     return metadata;
@@ -486,28 +504,41 @@ description = "Dataset created from the editor"
 object_type = "dataset"
 path = "generated/sample_dataset.csv"
 version = 1
-dataset_type = "csv"
+dataset_type = "dataset"
 connection_string = ""
 `;
 
     const modelTemplate = `# Model creation template
-# Paste a base64-encoded ONNX model into onnx_bytes before creating the object.
+# Materialize a PyTorch model file into base64 and assign it to pytorch_bytes before creating the object.
+
+import torch.nn as nn
+
+class MyModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(MyModel, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        return self.fc2(x)
 
 name = "sample_model"
 description = "Model created from the editor"
 object_type = "learning_model"
-path = "generated/sample_model.onnx"
+path = "generated/sample_model.pt"
 version = 1
-model_type = "supervised"
-parameters = {"framework": "onnx", "input_size": 1, "output_size": 1}
+model_type = "supervised_model"
+parameters = {"framework": "pytorch", "input_size": 1, "output_size": 1}
 metrics = {"task": "regression"}
 reference_data = "sample_dataset.csv"
 input_features = ["input"]
 output_features = ["output"]
-is_trained = True
+is_trained = False
 is_tested = False
 is_deployed = False
-onnx_bytes = ""
+pytorch_bytes = ""
 `;
 
     if (!window.editor) {

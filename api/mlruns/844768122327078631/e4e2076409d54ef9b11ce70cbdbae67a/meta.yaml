@@ -1,0 +1,14 @@
+artifact_uri: file:///app/mlruns/844768122327078631/e4e2076409d54ef9b11ce70cbdbae67a/artifacts
+end_time: 1774989739813
+entry_point_name: ''
+experiment_id: '844768122327078631'
+lifecycle_stage: active
+run_id: e4e2076409d54ef9b11ce70cbdbae67a
+run_name: model.pkl_d8c6031c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1774989698569
+status: 3
+tags: []
+user_id: appuser

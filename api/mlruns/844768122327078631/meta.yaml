@@ -1,0 +1,7 @@
+artifact_location: file:///app/mlruns/844768122327078631
+creation_time: 1774989697921
+experiment_id: '844768122327078631'
+last_update_time: 1774989697921
+lifecycle_stage: active
+name: model.pkl_training
+workspace: default

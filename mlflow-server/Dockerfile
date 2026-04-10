@@ -15,4 +15,4 @@ VOLUME ["/mlruns"]
 
 EXPOSE 5000
 
-CMD ["mlflow", "server", "--backend-store-uri", "sqlite:///mlflow.db", "--default-artifact-root", "/mlruns", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["mlflow", "server", "--backend-store-uri", "sqlite:///mlflow.db", "--serve-artifacts", "--artifacts-destination", "/mlruns", "--host", "0.0.0.0", "--port", "5000", "--allowed-hosts", "mlflow,mlflow:5000,localhost,localhost:5000,127.0.0.1,127.0.0.1:5000"]

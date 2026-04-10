@@ -1,0 +1,24 @@
+{
+    "job_id": "train_6_55_e6c5de88",
+    "drift_results": {
+        "value": false
+    },
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+    },
+    "degradation_results": {
+        "train_loss": false,
+        "val_loss": false,
+        "eval_accuracy": true,
+        "eval_precision": true,
+        "eval_recall": true,
+        "eval_f1": true
+    },
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 4
+    },
+    "retrain_recommended": true,
+    "evaluated_at": "2026-04-07T19:30:14.635923"
+}

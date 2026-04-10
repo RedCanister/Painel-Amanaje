@@ -1,78 +1,169 @@
-import os
+from __future__ import annotations
+
 import inspect
-import aiofiles
 import json
-import pandas as pd
+from io import StringIO
+from pathlib import Path
+from pprint import pformat
+from typing import Any, Mapping, Optional
 
-from typing import Dict, Type, Any, Optional
-from sqlalchemy import Column, Integer, String, Float, Boolean, JSON
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import DeclarativeMeta
-from pydantic import create_model, BaseModel
+from pydantic import BaseModel
 
-from app.database.db_session import Base # Reorganizer
+try:
+    import aiofiles
 
-# Resolve repository root (api/app/utils -> api/app -> api -> repo)
-repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+    AIOFILES_AVAILABLE = True
+except Exception:  # pragma: no cover - only used when aiofiles is unavailable.
+    aiofiles = None  # type: ignore[assignment]
+    AIOFILES_AVAILABLE = False
 
-# File functions
-def get_file_size(file_path):
+try:
+    import pandas as pd
+
+    PANDAS_AVAILABLE = True
+except Exception:  # pragma: no cover - only used when pandas is unavailable.
+    pd = None  # type: ignore[assignment]
+    PANDAS_AVAILABLE = False
+
+from .io import load_json, load_yaml
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+MODEL_UPLOAD_DIR = REPO_ROOT / "models"
+DATASET_UPLOAD_DIR = REPO_ROOT / "data" / "datasets"
+
+
+def _require_aiofiles() -> None:
+    if not AIOFILES_AVAILABLE or aiofiles is None:
+        raise RuntimeError("aiofiles is required for async file upload helpers.")
+
+
+def _require_pandas() -> None:
+    if not PANDAS_AVAILABLE or pd is None:
+        raise RuntimeError("pandas is required for dataset payload helpers.")
+
+
+def get_file_size(file_path: str | Path) -> tuple[float, float]:
+    """
+    Return file size in kilobytes and megabytes.
+    """
+
     try:
-        raw_size = os.path.getsize(file_path)
+        raw_size = Path(file_path).stat().st_size
     except FileNotFoundError:
-        print(f"Error: The file '{file_path}' was not found.")
-        return 0, 0
-    except OSError as e:
-        print(f"Error accessing file '{file_path}': {e}")
-        return 0, 0
+        return 0.0, 0.0
+    except OSError:
+        return 0.0, 0.0
 
     kb_size = raw_size / 1024
     mb_size = kb_size / 1024
     return kb_size, mb_size
 
-# CHANGED: Helper function to save file to disk
-async def save_file_to_disk(file, dest_path: str) -> int:
-    """Save file and return size in MB"""
+
+async def _seek_to_start(file: Any) -> None:
+    """
+    Reset an uploaded file pointer when the object exposes ``seek``.
+    """
+
+    seek_method = getattr(file, "seek", None)
+    if seek_method is None:
+        return
+
+    result = seek_method(0)
+    if inspect.isawaitable(result):
+        await result
+
+
+async def save_file_to_disk(file: Any, dest_path: str) -> float:
+    """
+    Save an uploaded file to disk and return its size in megabytes.
+    """
+
+    _require_aiofiles()
+    destination = Path(dest_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    await _seek_to_start(file)
     contents = await file.read()
-    async with aiofiles.open(dest_path, 'wb') as out_f:
-        await out_f.write(contents)
+    async with aiofiles.open(destination, "wb") as output_file:
+        await output_file.write(contents)
+    await _seek_to_start(file)
+
     return round(len(contents) / (1024 * 1024), 4)
 
-def get_file_extension(file_path):
-    ext = os.path.splitext(file_path)[-1].lower()
 
-    return ext
+def get_file_extension(file_path: str | Path) -> str:
+    """
+    Return a lowercase file extension.
+    """
 
-def recover_model_params(file_path):
-    ext = get_file_extension(file_path)
-    params = {}
+    return Path(file_path).suffix.lower()
+
+
+def _load_model_metadata_from_onnx(file_path: Path) -> dict[str, Any]:
+    """
+    Extract lightweight metadata from an ONNX model when the dependency exists.
+    """
 
     try:
-        # CHANGED: Support for JSON/YAML config files
-        # Future extensions can add support for different model formats:
-        # - Keras/TensorFlow: .h5, .keras models
-        # - PyTorch: .pt, .pth model state dicts with optional config.json
-        # - ONNX: .onnx models with input/output inspection
-        if ext == ".json":
-            with open(file_path) as f:
-                params = json.load(f)
-            params["framework"] = "config"
-        else:
-            params["error"] = f"Unsupported file type: {ext}"
-    
-    except Exception as e:
-        params["error"] = str(e)
-    
-    return params
+        import onnx
+    except Exception as exc:
+        return {"error": f"Unable to inspect ONNX model: {exc}"}
+
+    model = onnx.load(str(file_path))
+    graph = model.graph
+    return {
+        "framework": "onnx",
+        "ir_version": model.ir_version,
+        "producer_name": model.producer_name,
+        "node_count": len(graph.node),
+        "inputs": [tensor.name for tensor in graph.input],
+        "outputs": [tensor.name for tensor in graph.output],
+    }
+
+
+def recover_model_params(file_path: str | Path) -> dict[str, Any]:
+    """
+    Recover metadata from model-related files such as JSON, YAML, and ONNX.
+    """
+
+    path = Path(file_path)
+    extension = get_file_extension(path)
+
+    try:
+        if extension == ".json":
+            params = load_json(path)
+            if isinstance(params, dict):
+                params.setdefault("framework", "config")
+                return params
+            return {"framework": "config", "payload": params}
+
+        if extension in {".yaml", ".yml"}:
+            params = load_yaml(path)
+            if isinstance(params, dict):
+                params.setdefault("framework", "config")
+                return params
+            return {"framework": "config", "payload": params}
+
+        if extension == ".onnx":
+            return _load_model_metadata_from_onnx(path)
+
+        return {"error": f"Unsupported file type: {extension}"}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 def get_upload_dir(op_id: str) -> str:
-    if op_id == "models":
-        return os.path.join(repo_root, "models")
-    # Default to datasets
-    return os.path.join(repo_root, "data", "datasets")
+    """
+    Resolve the upload directory for the given operation identifier.
+    """
 
-def _parse_json_field(value, default):
+    normalized = str(op_id).strip().lower()
+    if normalized in {"model", "models", "learning_model"}:
+        return str(MODEL_UPLOAD_DIR)
+    return str(DATASET_UPLOAD_DIR)
+
+
+def _parse_json_field(value: Any, default: Any) -> Any:
     if value is None or value == "":
         return default
 
@@ -87,7 +178,8 @@ def _parse_json_field(value, default):
 
     return value
 
-def _parse_bool_field(value, default=False):
+
+def _parse_bool_field(value: Any, default: bool = False) -> bool:
     if value is None or value == "":
         return default
 
@@ -99,72 +191,113 @@ def _parse_bool_field(value, default=False):
         return True
     if normalized in {"false", "0", "no", "off"}:
         return False
-
     return default
 
-def build_payload_model(common: dict, form_data, ) -> dict:
-    """Build type-specific payload based on operation_id"""
+
+def _parse_list_field(value: Any) -> Optional[list[str]]:
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, list):
+        return [str(item) for item in value]
+
+    if isinstance(value, tuple):
+        return [str(item) for item in value]
+
+    if isinstance(value, str):
+        parsed = _parse_json_field(value, value)
+        if isinstance(parsed, list):
+            return [str(item) for item in parsed]
+        return [item.strip() for item in value.split(",") if item.strip()]
+
+    return [str(value)]
+
+
+def build_payload_model(common: Mapping[str, Any], form_data: Any) -> dict[str, Any]:
+    """
+    Build a normalized model payload from multipart form data.
+    """
 
     return {
-        **common,
-        "model_type": form_data.get('modelType') or 'learning_model',
-        "parameters": _parse_json_field(form_data.get('parameters'), {}),
-        "metrics": _parse_json_field(form_data.get('metrics'), {}),
-        "reference_data": form_data.get('referenceData'),
-        "input_features": form_data.get('inputFeatures'),
-        "output_features": form_data.get('outputFeatures'),
-        "is_trained": _parse_bool_field(form_data.get('isTrained'), False),
-        "is_tested": _parse_bool_field(form_data.get('isTested'), False),
-        "is_deployed": _parse_bool_field(form_data.get('isDeployed'), False),
+        **dict(common),
+        "model_type": form_data.get("modelType") or form_data.get("model_type") or "learning_model",
+        "parameters": _parse_json_field(form_data.get("parameters"), {}),
+        "metrics": _parse_json_field(form_data.get("metrics"), {}),
+        "reference_data": form_data.get("referenceData") or form_data.get("reference_data"),
+        "input_features": _parse_list_field(form_data.get("inputFeatures") or form_data.get("input_features")),
+        "output_features": _parse_list_field(form_data.get("outputFeatures") or form_data.get("output_features")),
+        "is_trained": _parse_bool_field(form_data.get("isTrained") or form_data.get("is_trained"), False),
+        "is_tested": _parse_bool_field(form_data.get("isTested") or form_data.get("is_tested"), False),
+        "is_deployed": _parse_bool_field(form_data.get("isDeployed") or form_data.get("is_deployed"), False),
     }
-        
-async def build_payload_data(common: dict, form_data, uploaded_file) -> tuple:
-    
-    from io import StringIO
-    await uploaded_file.seek(0)
-    content = await uploaded_file.read()
 
-    s = StringIO(content.decode('UTF-8'))
-    df = pd.read_csv(s, header=0)
+
+async def build_payload_data(
+    common: Mapping[str, Any],
+    form_data: Any,
+    uploaded_file: Any,
+) -> tuple[dict[str, Any], pd.DataFrame]:
+    """
+    Build a normalized dataset payload and return the parsed DataFrame.
+    """
+
+    _require_pandas()
+    await _seek_to_start(uploaded_file)
+    content = await uploaded_file.read()
+    await _seek_to_start(uploaded_file)
+
+    decoded_content = content.decode("utf-8-sig")
+    normalized_content = decoded_content.strip()
+    if normalized_content in {"df.to_csv(index=False)", "csv_text = df.to_csv(index=False)"}:
+        raise ValueError(
+            "The uploaded dataset is a Python expression, not CSV data. "
+            "Run the editor code first so `csv_text` contains the materialized CSV content."
+        )
+
+    dataframe = pd.read_csv(StringIO(decoded_content), header=0)
+    suspicious_single_expression = (
+        list(dataframe.columns) == ["df.to_csv(index=False)"] and dataframe.empty
+    )
+    if suspicious_single_expression:
+        raise ValueError(
+            "The uploaded dataset is a Python expression, not CSV data. "
+            "Run the editor code first so `csv_text` contains the materialized CSV content."
+        )
 
     payload = {
-        **common,
-        "dataset_type": form_data.get('datasetType') or 'dataset',
-        "shape": list(df.shape) or None,
-        "has_features": False,
-        "features_list": df.columns.to_list() or None,
-        "connection_string": form_data.get('connectionString'),
+        **dict(common),
+        "dataset_type": form_data.get("datasetType") or form_data.get("dataset_type") or "dataset",
+        "shape": list(dataframe.shape),
+        "has_features": bool(len(dataframe.columns)),
+        "features_list": dataframe.columns.to_list() or None,
+        "connection_string": form_data.get("connectionString") or form_data.get("connection_string"),
     }
 
-    return payload, df
+    return payload, dataframe
 
 
-# Debug function
-def _get_object_name(obj):
-    """CHANGED: Helper to extract object name safely"""
+def _get_object_name(obj: Any) -> str:
     try:
-        return getattr(obj, '__name__', None) or obj.__class__.__name__
+        return getattr(obj, "__name__", None) or obj.__class__.__name__
     except Exception:
         return "Unknown"
 
-def _get_object_repr(obj):
-    """CHANGED: Helper to get object representation safely"""
+
+def _get_object_repr(obj: Any) -> str:
     try:
         return repr(obj)
     except Exception:
         return "Error getting representation"
 
-def _get_object_dict(obj):
-    """CHANGED: Helper to get __dict__ safely"""
-    try:
-        if hasattr(obj, '__dict__'):
-            return obj.__dict__
-    except Exception:
-        pass
-    return None
 
-def _get_pydantic_dump(obj):
-    """CHANGED: Helper to dump Pydantic model safely"""
+def _get_object_dict(obj: Any) -> Any:
+    try:
+        return getattr(obj, "__dict__", None)
+    except Exception:
+        return None
+
+
+def _get_pydantic_dump(obj: Any) -> Any:
     if isinstance(obj, BaseModel):
         try:
             return obj.model_dump()
@@ -172,86 +305,51 @@ def _get_pydantic_dump(obj):
             return None
     return None
 
-def _get_object_attributes(obj):
-    """CHANGED: Helper to get object attributes safely"""
+
+def _get_object_attributes(obj: Any) -> list[str]:
     try:
         return dir(obj)
     except Exception:
         return []
 
-def _get_function_signature(obj):
-    """CHANGED: Helper to get function signature safely"""
+
+def _get_function_signature(obj: Any) -> Optional[str]:
     if inspect.isfunction(obj) or inspect.ismethod(obj):
         try:
-            return inspect.signature(obj)
+            return str(inspect.signature(obj))
         except Exception:
-            pass
+            return None
     return None
 
-def _get_module_file(obj):
-    """CHANGED: Helper to get module file safely"""
+
+def _get_module_file(obj: Any) -> Optional[str]:
     if inspect.ismodule(obj):
         try:
-            return obj.__file__
+            return str(obj.__file__)
         except Exception:
             return "Built-in or no __file__"
     return None
 
-def debug_type(obj):
+
+def debug_type(obj: Any) -> dict[str, Any]:
     """
-    CHANGED: Refactored debug function to reduce cognitive complexity
-    by extracting helper functions for each inspection type
-    
-    Purpose: Print comprehensive debugging information about any Python object
-    Displays:
-    - Type and class name
-    - String representation
-    - Instance attributes (__dict__)
-    - Pydantic model dump (if applicable)
-    - Available attributes/methods
-    - Function signature (if function/method)
-    - Module information (if module)
-    
-    This is useful for development/debugging to understand object structure
+    Print and return structured debugging information about any Python object.
     """
+
+    payload = {
+        "type": str(type(obj)),
+        "name": _get_object_name(obj),
+        "repr": _get_object_repr(obj),
+        "dict": _get_object_dict(obj),
+        "pydantic_model_dump": _get_pydantic_dump(obj),
+        "attribute_count": len(_get_object_attributes(obj)),
+        "signature": _get_function_signature(obj),
+        "module_file": _get_module_file(obj),
+    }
+
     print("\n" + "-" * 40)
-    print("🔍 Debugging object")
-
-    # Object type
-    print("📦 Type:", type(obj))
-
-    # Object name
-    obj_name = _get_object_name(obj)
-    print("🧩 Name:", obj_name, "\n")
-
-    # Object representation
-    obj_repr = _get_object_repr(obj)
-    print("🪞 Representation:", obj_repr, "\n")
-
-    # Object __dict__
-    obj_dict = _get_object_dict(obj)
-    if obj_dict:
-        print("📚 __dict__:", obj_dict, "\n")
-
-    # Pydantic dump
-    pydantic_dump = _get_pydantic_dump(obj)
-    if pydantic_dump:
-        print("🧬 Pydantic model_dump:", pydantic_dump, "\n")
-
-    # Available attributes
-    attrs = _get_object_attributes(obj)
-    if attrs:
-        print("🔧 Attributes available:", len(attrs), "items")
-
-    # Function signature
-    sig = _get_function_signature(obj)
-    if sig:
-        print("📝 Signature:", sig)
-
-    # Module file
-    mod_file = _get_module_file(obj)
-    if mod_file:
-        print("📦 Module:", mod_file)
-
+    print("Debugging object")
+    print(pformat(payload, width=100))
     print("-" * 40 + "\n")
 
+    return payload

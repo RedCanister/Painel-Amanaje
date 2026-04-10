@@ -1,0 +1,44 @@
+{
+    "rows": 2,
+    "columns": 2,
+    "column_names": [
+        "value",
+        "target"
+    ],
+    "dtypes": {
+        "value": "int64",
+        "target": "int64"
+    },
+    "missing_values": 0,
+    "stats": {
+        "value": {
+            "type": "numeric",
+            "mean": 1.5,
+            "std": 0.7071067811865476,
+            "min": 1.0,
+            "max": 2.0,
+            "null_count": 0
+        },
+        "target": {
+            "type": "numeric",
+            "mean": 0.5,
+            "std": 0.7071067811865476,
+            "min": 0.0,
+            "max": 1.0,
+            "null_count": 0
+        }
+    },
+    "path": "/data/datasets/codex_valid_dataset.csv",
+    "profile": {
+        "numeric_columns": [
+            "value",
+            "target"
+        ],
+        "categorical_columns": [],
+        "datetime_columns": [],
+        "recommended_target": "target",
+        "recommended_inputs": [
+            "value"
+        ]
+    }
+}

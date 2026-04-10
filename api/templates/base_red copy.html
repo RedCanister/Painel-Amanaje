@@ -44,9 +44,9 @@
 
 {% block extra_script %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
-<script src="{{ url_for('static', path='/js/editor-utilities.js') }}"></script>
-<script src="{{ url_for('static', path='/js/create-page.js') }}"></script>
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/editor-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/create-page.js') }}?v=20260403-1"></script>
 <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 {% endblock %}
 
@@ -91,7 +91,8 @@
                     <div style="color: #569cd6; margin-bottom: 8px;">Script Output</div>
                     <div id="outputContent"></div>
                 </div>
-
+                
+                <!-- TODO - Turn Script Variables into a better metadata visualizer -->
                 <div id="variablePanel" style="display:none;">
                     <h3>Script Variables</h3>
                     <div id="variableList"></div>

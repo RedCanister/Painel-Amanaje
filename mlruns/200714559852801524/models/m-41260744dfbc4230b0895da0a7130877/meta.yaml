@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/andma/Documents/Painel%20Amanaj%C3%A9/Painel-Amanaje/mlruns/200714559852801524/models/m-41260744dfbc4230b0895da0a7130877/artifacts
+creation_timestamp: 1774826834366
+experiment_id: '200714559852801524'
+last_updated_timestamp: 1774826834627
+model_id: m-41260744dfbc4230b0895da0a7130877
+model_type: null
+name: model
+source_run_id: e69af1c7d3754f5ebd48bb12147168c6
+status: 3
+status_message: null

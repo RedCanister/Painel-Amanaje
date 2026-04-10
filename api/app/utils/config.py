@@ -2,84 +2,135 @@
 utils/config.py
 
 Centralized configuration management for the project.
-
-Features:
-- Load configuration from YAML or JSON
-- Merge environment variable overrides
-- Support for multiple environments (dev, staging, prod)
-- Compatible with airflow, FastAPI, MLflow, an Docker
 """
 
-import os
-import json
-from typing import Any, Dict, Optional
-from dotenv import load_dotenv
+from __future__ import annotations
 
-from app.utils.io import load_yaml, load_json
-from app.utils.logging import get_logger
-from app.utils.serialization import deep_asdict
+import json
+import os
+from copy import deepcopy
+from pathlib import Path
+from typing import Any, Dict
+
+try:
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover - only used when python-dotenv is unavailable.
+    def load_dotenv(*_args: Any, **_kwargs: Any) -> bool:
+        return False
+
+from .io import load_json, load_yaml, save_json
+from .logging import get_logger
+from .serialization import deep_asdict
 
 logger = get_logger("config")
 
-# Automatically load environment variables from .env file
-
 load_dotenv()
 
-# Base Loaders
+
+def _parse_env_value(value: str) -> Any:
+    """
+    Parse environment variable values into structured Python objects when possible.
+    """
+
+    stripped = value.strip()
+    if not stripped:
+        return stripped
+
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+
+    lowered = stripped.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+
+    try:
+        return int(stripped)
+    except ValueError:
+        pass
+
+    try:
+        return float(stripped)
+    except ValueError:
+        return stripped
+
+
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively merge two dictionaries, preferring values from ``override``.
+    """
+
+    merged = deepcopy(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _environment_config_candidates(base_path: Path, env: str) -> list[Path]:
+    """
+    Build candidate filenames for environment-specific configuration overlays.
+    """
+
+    suffixes = [base_path.suffix] if base_path.suffix else []
+    suffixes.extend(suffix for suffix in (".yaml", ".yml", ".json") if suffix not in suffixes)
+    return [base_path.with_name(f"{base_path.stem}.{env}{suffix}") for suffix in suffixes]
+
 
 def load_config(path: str) -> Dict[str, Any]:
     """
-    Loads configuration file (YAML or JSON) into a dictionary.
+    Load a YAML or JSON configuration file into a dictionary.
     """
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Config file not fount: {path}")
 
-    ext = os.path.splitext(path)[1].lower()
+    config_path = Path(path)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {path}")
 
-    if ext in [".yaml", ".yml"]:
-        config = load_yaml(path)
-    elif ext == ".json":
-        config = load_json(path)
+    extension = config_path.suffix.lower()
+    if extension in {".yaml", ".yml"}:
+        config = load_yaml(config_path)
+    elif extension == ".json":
+        config = load_json(config_path)
     else:
-        raise ValueError(f"Unsupported config format: {ext}")
+        raise ValueError(f"Unsupported config format: {extension}")
 
-    logger.info(f"🧩 Loaded config file: {path}")
+    if not isinstance(config, dict):
+        raise TypeError(f"Configuration at '{path}' must deserialize into a dictionary.")
+
+    logger.info("Loaded config file '%s'.", config_path)
     return config
 
-# Env Merge
 
 def merge_env_overrides(config: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
     """
-    Recursively merges environment variable overrides into a configuration dict.
+    Recursively merge environment variable overrides into a configuration dictionary.
 
-    Example:
-    - If you have an env var MODEL__LR=0.001, it overrides config['model']['lr'].
+    Nested keys use ``__`` as a separator. For example, ``MODEL__LR=0.001`` maps
+    to ``config['model']['lr']``.
     """
-    updated_config = {}
+
+    updated_config: Dict[str, Any] = {}
 
     for key, value in config.items():
         env_key = f"{prefix}{key}".upper().replace(".", "_")
         if isinstance(value, dict):
             updated_config[key] = merge_env_overrides(value, prefix=f"{env_key}__")
-        else:
-            override = os.getenv(env_key)
-            if override is not None:
-                try:
-                    override_val = json.loads(override)
-                except json.JSONDecodeError:
-                    try:
-                        override_val = float(override)
-                    except ValueError:
-                        override_val = override
-                
-                logger.info(f"🔁 ENV override applied: {env_key}={override_val}")
-                updated_config[key] = override_val
-            else:
-                updated_config[key] = value
-    
+            continue
+
+        override = os.getenv(env_key)
+        if override is None:
+            updated_config[key] = value
+            continue
+
+        parsed_override = _parse_env_value(override)
+        updated_config[key] = parsed_override
+        logger.info("Applied environment override '%s'.", env_key)
+
     return updated_config
 
-# Environment Profiles
 
 def load_env_config(
     base_config_path: str,
@@ -87,35 +138,31 @@ def load_env_config(
     default_env: str = "development",
 ) -> Dict[str, Any]:
     """
-    Loads configuration for a specific environment.
-    Environment is defined by APP_ENV (dev/staging/prod.)
+    Load base configuration, merge an optional environment-specific overlay,
+    and then apply environment variable overrides.
     """
-    base_config = load_config(base_config_path)
 
-    # Determine current environment
-    env = os.getenv(env_var, default_env).lower()
-    logger.info(f"🌍 Active environment: {env}")
+    base_path = Path(base_config_path)
+    base_config = load_config(str(base_path))
 
-    # Try load environment-specific config file
-    env_config_path = os.path.splitext(base_config_path)[0] + f".{env}.yaml"
-    if os.path.exists(env_config_path):
-        env_config = load_yaml(env_config_path)
-        logger.info(f"⚙️ Loaded environment-specific config: {env_config_path}")
-        base_config.update(env_config)
+    environment = os.getenv(env_var, default_env).lower()
+    logger.info("Active environment: %s", environment)
 
-    # Merge with environment variables
-    final_config = merge_env_overrides(base_config)
-    return final_config
+    final_config = dict(base_config)
+    for candidate in _environment_config_candidates(base_path, environment):
+        if candidate.exists():
+            overlay = load_config(str(candidate))
+            final_config = _deep_merge(final_config, overlay)
+            logger.info("Loaded environment-specific config '%s'.", candidate)
+            break
 
+    return merge_env_overrides(final_config)
 
-# Export Helpers
 
 def save_config_snapshot(config: Dict[str, Any], output_path: str = "configs/runtime_config.json") -> None:
     """
-    Saves the active runtime configuration snapshot (for MLflow or reprsoducibility).
+    Save the active runtime configuration to disk for reproducibility.
     """
-    from app.utils.io import save_json
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    save_json(deep_asdict(config), output_path)
-    logger.info(f"💾 Runtime config snapshot save: {output_path}")
 
+    save_json(deep_asdict(config), output_path)
+    logger.info("Saved runtime config snapshot to '%s'.", output_path)

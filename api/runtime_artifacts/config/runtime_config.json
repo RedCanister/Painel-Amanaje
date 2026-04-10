@@ -1,0 +1,19 @@
+{
+    "app": {
+        "name": "Painel Amanaje API",
+        "version": "0.3.0"
+    },
+    "mlflow": {
+        "tracking_uri": "http://mlflow:5000",
+        "registry_uri": "http://mlflow:5000"
+    },
+    "artifacts": {
+        "runtime_dir": "/app/runtime_artifacts",
+        "training_dir": "/app/runtime_artifacts/training",
+        "monitoring_dir": "/app/runtime_artifacts/monitoring",
+        "deployment_dir": "/app/runtime_artifacts/deployment",
+        "optuna_dir": "/app/runtime_artifacts/optuna",
+        "plots_dir": "/app/runtime_artifacts/plots",
+        "serving_dir": "/app/runtime_artifacts/serving"
+    }
+}

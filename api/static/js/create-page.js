@@ -39,20 +39,24 @@ function appendIfPresent(formData, key, value) {
 
 function buildDatasetFile(metadata) {
     if (typeof metadata.csv_text !== 'string' || metadata.csv_text.trim() === '') {
-        throw new Error("Datasets require a non-empty 'csv_text' value.");
+        throw new Error("Datasets require a materialized 'csv_text' value. Execute the editor code first or assign a literal CSV string.");
     }
 
     return new File([metadata.csv_text], `${metadata.name || 'dataset'}.csv`, { type: 'text/csv' });
 }
 
 function buildModelFile(metadata) {
-    if (typeof metadata.onnx_bytes !== 'string' || metadata.onnx_bytes.trim() === '') {
-        throw new Error("Models require a non-empty base64 'onnx_bytes' value.");
+    const payload = metadata.pytorch_bytes || metadata.torch_bytes || metadata.model_bytes;
+    if (typeof payload !== 'string' || payload.trim() === '') {
+        throw new Error("Models require a materialized base64 PyTorch payload such as 'pytorch_bytes'. Execute the editor code first or assign a literal payload.");
     }
 
-    const binary = atob(metadata.onnx_bytes);
+    const binary = atob(payload);
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-    return new File([bytes], `${metadata.name || 'model'}.onnx`, { type: 'application/octet-stream' });
+    const path = typeof metadata.path === 'string' ? metadata.path.trim() : '';
+    const pathFilename = path ? path.split(/[\\/]/).pop() : '';
+    const fileName = pathFilename || `${metadata.name || 'model'}.pt`;
+    return new File([bytes], fileName, { type: 'application/octet-stream' });
 }
 
 async function submitUpload(event) {
@@ -285,7 +289,42 @@ async function analyzeModel() {
 }
 
 async function extractFeatures() {
-    alert('Feature extraction is not implemented yet.');
+    const datasetId = document.getElementById('datasetSelect').value;
+    const target = document.getElementById('datasetAnalysisResults');
+
+    if (!datasetId) {
+        alert('Please select a dataset first.');
+        return;
+    }
+
+    try {
+        target.innerHTML = '<div class="status-message info" style="display:block;">Extracting feature candidates...</div>';
+        const response = await fetch(`/features/extract?dataset_id=${encodeURIComponent(datasetId)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const result = await response.json();
+        const summary = result.summary || {};
+        target.innerHTML = `
+            <div class="analysis-result" style="grid-column: 1 / -1;">
+                <h4>Feature Suggestions for Dataset #${datasetId}</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
+                        <th style="text-align: left; padding: 0.5rem;">Suggestion</th>
+                        <th style="text-align: right; padding: 0.5rem;">Value</th>
+                    </tr>
+                    ${Object.entries(summary).map(([key, value]) => `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 0.5rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
+                            <td style="text-align: right; padding: 0.5rem;"><b>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</b></td>
+                        </tr>
+                    `).join('')}
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Feature extraction error:', error);
+        target.innerHTML = `<div class="status-message error" style="display:block;">Feature extraction failed: ${error.message}</div>`;
+    }
 }
 
 async function generateScript() {
@@ -408,7 +447,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnRefreshFeatures')?.addEventListener('click', refreshFeatures);
     document.getElementById('btnExtractFeatures')?.addEventListener('click', extractFeatures);
     document.getElementById('btnRefreshModels')?.addEventListener('click', refreshModels);
-    document.getElementById('btnOptimizeModels')?.addEventListener('click', extractFeatures);
+    document.getElementById('btnOptimizeModels')?.addEventListener('click', () => {
+        window.location.href = '/optimization';
+    });
     document.getElementById('btnAnalyzeDataset')?.addEventListener('click', analyzeData);
     document.getElementById('btnAnalyzeModel')?.addEventListener('click', analyzeModel);
     document.getElementById('operationId')?.addEventListener('change', () => {

@@ -1,0 +1,21 @@
+{
+    "job_id": "smoke_test_job_3",
+    "drift_results": {
+        "Open": false,
+        "High": false,
+        "Low": false,
+        "Close": false,
+        "Volume": false
+    },
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 0.465445234649496
+    },
+    "degradation_results": {},
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 0
+    },
+    "retrain_recommended": false,
+    "evaluated_at": "2026-03-29T20:27:14.816483"
+}

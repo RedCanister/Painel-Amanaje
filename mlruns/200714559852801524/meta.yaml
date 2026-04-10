@@ -1,0 +1,7 @@
+artifact_location: file:///C:/Users/andma/Documents/Painel%20Amanaj%C3%A9/Painel-Amanaje/mlruns/200714559852801524
+creation_time: 1774826152365
+experiment_id: '200714559852801524'
+last_update_time: 1774826152365
+lifecycle_stage: active
+name: smoke_model_training
+workspace: default

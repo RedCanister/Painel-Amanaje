@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/andma/Documents/Painel%20Amanaj%C3%A9/Painel-Amanaje/mlruns/200714559852801524/e69af1c7d3754f5ebd48bb12147168c6/artifacts
+end_time: 1774826834820
+entry_point_name: ''
+experiment_id: '200714559852801524'
+lifecycle_stage: active
+run_id: e69af1c7d3754f5ebd48bb12147168c6
+run_name: smoke_model_1b295097
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1774826831749
+status: 3
+tags: []
+user_id: andma

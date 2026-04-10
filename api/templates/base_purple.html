@@ -458,8 +458,10 @@
                     <label for="modelType">Model Type *</label>
                     <select id="modelType" name="modelType" required onchange="updateFieldsForType()">
                         <option value="">Select a type...</option>
-                        <option value="DatasetModel">Dataset</option>
+                        <option value="DatasetModel">Dataset Model</option>
                         <option value="LearningModel">Learning Model</option>
+                        <option value="StudyModel">Study Model</option>
+                        <option value="CodeModel">Code Model</option>
                     </select>
                 </div>
 
@@ -474,13 +476,19 @@
                             <input type="text" id="description" name="description" placeholder="Brief description">
                         </div>
                     </div>
+
+                    <!-- TODO - Both the path and the size need to be generated after the file is created. -->
                     <div class="form-row">
                         <div class="form-group">
                             <label for="objectPath">Path *</label>
+
+                            <!-- TODO - The placeholder must be of a different folder per model type. -->
                             <input type="text" id="objectPath" name="objectPath" required placeholder="e.g., data/iris.csv">
                         </div>
                         <div class="form-group">
                             <label for="objectSize">Size (MB) *</label>
+
+                            <!-- TODO - The size must be calculated after the file is recieved. -->
                             <input type="number" id="objectSize" name="objectSize" min="0" step="0.01" required placeholder="e.g., 1.25">
                         </div>
                     </div>
@@ -587,6 +595,56 @@
                     </div>
                 </div>
 
+                <div id="studyFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+
+                            <!-- TODO -  The identification of the Learning model's should be by name -->
+                            <label for="studyLearningModelId">Learning Model ID</label>
+                            <input type="number" id="studyLearningModelId" name="studyLearningModelId" min="1" placeholder="e.g., 1">
+                        </div>
+                        <div class="form-group">
+
+                            <!-- TODO -  The identification of the Learning model's should be by name -->
+                            <label for="studyDatasetId">Dataset ID</label>
+                            <input type="number" id="studyDatasetId" name="studyDatasetId" min="1" placeholder="e.g., 2">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studySampler">Sampler</label>
+                            <input type="text" id="studySampler" name="studySampler" placeholder="e.g., TPESampler">
+                        </div>
+                        <div class="form-group">
+                            <label for="studyObjective">Objective</label>
+                            <input type="text" id="studyObjective" name="studyObjective" placeholder="e.g., maximize_accuracy">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="studyBestTrial">Best Trial (JSON)</label>
+                        <textarea id="studyBestTrial" name="studyBestTrial" placeholder='{"value": 0.95}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="studyBestParams">Best Params (JSON)</label>
+                        <textarea id="studyBestParams" name="studyBestParams" placeholder='{"learning_rate": 0.001}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="studyParams">Study Params (JSON)</label>
+                        <textarea id="studyParams" name="studyParams" placeholder='{"n_trials": 20, "direction": "maximize", "framework": "sklearn"}'></textarea>
+                    </div>
+                </div>
+
+                <div id="codeFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="codeVariables">Variables (JSON)</label>
+                        <textarea id="codeVariables" name="codeVariables" placeholder='{"name": {"value": "example"}}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="codeDocument">Code Document (JSON)</label>
+                        <textarea id="codeDocument" name="codeDocument" placeholder='{"script": "print(\"hello\")", "language": "python"}'></textarea>
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">Create Entry</button>
                     <button type="reset" class="btn btn-secondary">Clear Form</button>
@@ -617,6 +675,8 @@
                         <option value="">All Types</option>
                         <option value="DatasetModel">Datasets</option>
                         <option value="LearningModel">Learning Models</option>
+                        <option value="StudyModel">Studies</option>
+                        <option value="CodeModel">Code Models</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -655,19 +715,29 @@
     const REGISTRY_CONFIG = {
         DatasetModel: {
             endpoint: '/datasetmodel',
-            label: 'Dataset',
+            label: 'Dataset Model',
             objectType: 'dataset'
         },
         LearningModel: {
             endpoint: '/learningmodel',
             label: 'Learning Model',
             objectType: 'learning_model'
+        },
+        StudyModel: {
+            endpoint: '/studymodel',
+            label: 'Study Model',
+            objectType: 'study_model'
+        },
+        CodeModel: {
+            endpoint: '/codemodel',
+            label: 'Code Model',
+            objectType: 'code_model'
         }
     };
 
     let currentEditContext = null;
     const ARRAY_FIELDS = new Set(['shape', 'features_list', 'input_features', 'output_features', 'history']);
-    const OBJECT_FIELDS = new Set(['parameters', 'metrics']);
+    const OBJECT_FIELDS = new Set(['parameters', 'metrics', 'best_trial', 'best_params', 'study_params', 'variables', 'code']);
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -683,7 +753,17 @@
     }
 
     function getConfigForType(type) {
-        return REGISTRY_CONFIG[type] || REGISTRY_CONFIG.LearningModel;
+        if (!type) return null;
+        if (REGISTRY_CONFIG[type]) return REGISTRY_CONFIG[type];
+
+        const normalizedType = String(type).trim().toLowerCase();
+        const matchedEntry = Object.entries(REGISTRY_CONFIG).find(([key, config]) => {
+            const normalizedKey = key.toLowerCase();
+            const normalizedEndpoint = String(config.endpoint || '').replace(/^\//, '').toLowerCase();
+            return normalizedKey === normalizedType || normalizedEndpoint === normalizedType;
+        });
+
+        return matchedEntry ? matchedEntry[1] : null;
     }
 
     function normalizeListResponse(response) {
@@ -694,7 +774,9 @@
     }
 
     async function fetchJson(url, options = {}) {
+
         const response = await fetch(url, options);
+
         const text = await response.text();
         let data = null;
 
@@ -705,7 +787,7 @@
                 data = { detail: text };
             }
         }
-
+        
         if (!response.ok) {
             throw new Error(data?.detail || data?.message || `Request failed with status ${response.status}`);
         }
@@ -804,15 +886,20 @@
 
     async function fetchRegistryEntries(typeFilter = '') {
         const keys = typeFilter ? [typeFilter] : Object.keys(REGISTRY_CONFIG);
+
         const responses = await Promise.all(
             keys.map(async (key) => {
                 const config = getConfigForType(key);
-                const response = await fetchJson(`${config.endpoint}/list`);
-                return normalizeListResponse(response).map((entry) => ({
-                    ...entry,
-                    registryType: key,
-                    registryLabel: config.label
-                }));
+                try {
+                    const response = await fetchJson(`${config.endpoint}/list`);
+                    return normalizeListResponse(response).map((entry) => ({
+                        ...entry,
+                        registryType: key,
+                        registryLabel: config.label
+                    }));
+                } catch (error) {
+                    throw new Error(`${config.label} entries failed to load: ${error.message}`);
+                }
             })
         );
 
@@ -825,13 +912,15 @@
         alert.className = `alert alert-${type}`;
         alert.textContent = message;
         container.appendChild(alert);
-        setTimeout(() => alert.remove(), 5000);
+        setTimeout(() => alert.remove(), 50000);
     }
 
     function updateFieldsForType() {
         const type = document.getElementById('modelType').value;
         document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
         document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+        document.getElementById('studyFields').style.display = type === 'StudyModel' ? 'block' : 'none';
+        document.getElementById('codeFields').style.display = type === 'CodeModel' ? 'block' : 'none';
     }
 
     function buildCreatePayload() {
@@ -877,6 +966,21 @@
             payload.is_trained = document.getElementById('isTrained').checked;
             payload.is_tested = document.getElementById('isTested').checked;
             payload.is_deployed = document.getElementById('isDeployed').checked;
+        }
+
+        if (modelType === 'StudyModel') {
+            payload.learning_model_id = Number(document.getElementById('studyLearningModelId').value);
+            payload.dataset_id = Number(document.getElementById('studyDatasetId').value);
+            payload.sampler = document.getElementById('studySampler').value.trim() || 'TPESampler';
+            payload.objective = document.getElementById('studyObjective').value.trim() || 'maximize_accuracy';
+            payload.best_trial = parseObjectField(document.getElementById('studyBestTrial').value, 'Best Trial');
+            payload.best_params = parseObjectField(document.getElementById('studyBestParams').value, 'Best Params');
+            payload.study_params = parseObjectField(document.getElementById('studyParams').value, 'Study Params');
+        }
+
+        if (modelType === 'CodeModel') {
+            payload.variables = parseObjectField(document.getElementById('codeVariables').value, 'Variables');
+            payload.code = parseObjectField(document.getElementById('codeDocument').value, 'Code Document');
         }
 
         return { modelType, payload };
@@ -925,7 +1029,7 @@
                 </div>
             `).join('');
         } catch (error) {
-            showAlert(`Failed to load entries: ${error.message}`, 'error');
+            showAlert(`Failed to load entries: ${error.stack}`, 'error');
         } finally {
             loading.style.display = 'none';
         }
@@ -1019,13 +1123,18 @@
         }
 
         const config = getConfigForType(registryType);
+        if (!config) {
+            container.innerHTML = '';
+            showAlert(`Unknown registry type: ${registryType}`, 'error');
+            return;
+        }
 
         try {
             const data = await fetchJson(`${config.endpoint}/get/${id}`);
             displayDetail(data, registryType);
         } catch (error) {
             container.innerHTML = '';
-            showAlert(`Failed to load detail: ${error.message}`, 'error');
+            showAlert(`Failed to load detail: ${error.stack}`, 'error');
         }
     }
 
@@ -1036,6 +1145,7 @@
     function displayDetail(data, registryType) {
         const config = getConfigForType(registryType);
         const container = document.getElementById('detailContainer');
+        const label = config?.label || formatLabel(registryType || 'entry');
 
         const rows = Object.entries(data).map(([key, value]) => `
             <div class="detail-row">
@@ -1046,7 +1156,7 @@
 
         container.innerHTML = `
             <div class="detail-section">
-                <h3>${escapeHtml(config.label)} Details</h3>
+                <h3>${escapeHtml(label)} Details</h3>
                 ${rows}
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                     <button type="button" class="btn btn-primary" onclick="editEntry(${data.id}, '${registryType}')">Edit</button>
@@ -1228,6 +1338,4 @@
     updateFieldsForType();
 </script>
 {% endblock %}
-
-
 
