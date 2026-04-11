@@ -8,9 +8,16 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  #IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  format:
+    runs-on:
+    steps:
+      - name: Set IMAGE_NAME to lowercase
+      run: |
+        echo "IMAGE_NAME=${github.repository,,}" >> ${github.env}
+
   build:
     runs-on: ubuntu-latest
     permissions:
