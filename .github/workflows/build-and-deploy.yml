@@ -8,6 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  NAMESPACE: painel-amanaje
   #IMAGE_NAME: ${{ github.repository }}
 
 jobs:      
@@ -43,8 +44,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
       - name: Build and push MLflow image
         uses: docker/build-push-action@v5
@@ -54,8 +55,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
   deploy:
     needs: build
@@ -75,14 +76,12 @@ jobs:
           mkdir -p $HOME/.kube
           echo  | base64 -di > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+          kubectl config use-context docker-desktop
+
+      - name: Create Namespace if not exists
+        run : kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/ -n painel-amanaje
-          kubectl apply -f k8s/configmap.yml
-          kubectl apply -f k8s/secrets.yml
-          kubectl apply -f k8s/postgres.yml
-          kubectl apply -f k8s/redis.yml
-          kubectl apply -f k8s/mlflow.yml
-          kubectl apply -f k8s/api.yml
+          kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
           kubectl rollout status deployment/api -n painel-amanaje --timeout=5m
