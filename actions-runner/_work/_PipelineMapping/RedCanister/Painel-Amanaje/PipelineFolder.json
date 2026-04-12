@@ -1,0 +1,12 @@
+﻿{
+  "repositoryName": "RedCanister/Painel-Amanaje",
+  "pipelineDirectory": "Painel-Amanaje",
+  "workspaceDirectory": "Painel-Amanaje\\Painel-Amanaje",
+  "repositories": {
+    "RedCanister/Painel-Amanaje": {
+      "repositoryPath": "Painel-Amanaje\\Painel-Amanaje",
+      "lastRunOn": "04/12/2026 04:32:58 -03:00"
+    }
+  },
+  "lastRunOn": "04/12/2026 04:32:58 -03:00"
+}
