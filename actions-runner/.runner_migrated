@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 21,
+  "agentName": "Host-Amanaje",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus21.actions.githubusercontent.com/x5usBeiXCttzgtx6WdgnCSfjnVJju7yqW2DVilCIODkxwOxYNk/",
+  "gitHubUrl": "https://github.com/RedCanister/Painel-Amanaje",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

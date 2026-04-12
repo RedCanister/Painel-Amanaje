@@ -71,13 +71,17 @@ jobs:
         run: echo "${{ secrets.KUBE_CONFIG }}" 
 
       - name: Configure kubectl
-        shell: bash
+        shell: pwsh
         env:
           KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
         run: |
-          mkdir -p $HOME/.kube
-          echo "$KUBE_CONFIG_DATA" | base64 -di > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
+          if (!(Test-Path "$HOME\.kube")) {
+              New-Item -ItemType Directory -Force -Path "$HOME\.kube"
+          }
+
+          $bytes = [System.Convert]::FromBase64String($env:KUBE_CONFIG_DATA)
+          [System.IO.File]::WriteAllBytes("$HOME\.kube\config", $bytes)
+
           kubectl config use-context docker-desktop
 
       - name: Create Namespace 
