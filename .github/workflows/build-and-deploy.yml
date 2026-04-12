@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Set IMAGE_NAME to lowercase
       run: |
-        echo "IMAGE_NAME=${github.repository,,}" >> ${github.env}
+        echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
   build:
     runs-on: ubuntu-latest
