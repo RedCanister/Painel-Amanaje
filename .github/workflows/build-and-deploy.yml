@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check Secret Length
-        run: echo "${{ secrets.KUBE_CONFIG }}" | wc -c
+        run: echo "${{ secrets.KUBE_CONFIG }}" 
 
       - name: Configure kubectl
         shell: bash
