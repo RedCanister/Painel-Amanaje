@@ -75,10 +75,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check Secret Length
+        run: echo "${{ secrets.KUBE_CONFIG }}" | wc -c
+
       - name: Configure kubectl
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d -i > $HOME/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode --ignore-garbage > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
       - name: Deploy to Kubernetes
