@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Declaring IMAGE and REPO
         run: |
-          $repo = "{{ github.repository }}".ToLower()
+          $repo = "${{ github.repository }}".ToLower()
           echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
 
       - uses: actions/checkout@v4
