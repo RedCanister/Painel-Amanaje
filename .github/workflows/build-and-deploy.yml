@@ -20,9 +20,10 @@ jobs:
       packages: write
 
     steps:
-      - name: Set IMAGE_NAME to lowercase
+      - name: Declaring IMAGE and REPO
         run: |
-          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+          $repo = "{{ github.repository }}".ToLower()
+          echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
 
       - uses: actions/checkout@v4
 
@@ -44,8 +45,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-from: type=local,src=${{ github.workspace }}/.buildx-cache
+          cache-to: type=local,dest=${{ github.workspace }}/.buildx-cache-new,mode=max
 
       - name: Build and push MLflow image
         uses: docker/build-push-action@v5
@@ -55,8 +56,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-from: type=local,src=${{ github.workspace }}/.buildx-cache
+          cache-to: type=local,dest=${{ github.workspace }}/.buildx-cache-new,mode=max
 
   deploy:
     needs: build
@@ -70,18 +71,19 @@ jobs:
         run: echo "${{ secrets.KUBE_CONFIG }}" | wc -c
 
       - name: Configure kubectl
+        shell: bash
         env:
           KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
         run: |
           mkdir -p $HOME/.kube
-          echo  | base64 -di > $HOME/.kube/config
+          echo "$KUBE_CONFIG_DATA" | base64 -di > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
           kubectl config use-context docker-desktop
 
-      - name: Create Namespace if not exists
-        run : kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f
+      - name: Create Namespace 
+        run : kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
-          kubectl rollout status deployment/api -n painel-amanaje --timeout=5m
+          kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} --timeout=5m
