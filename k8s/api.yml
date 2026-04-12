@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: ghcr.io/<your-username>/painel-amanaje/api:latest
+        image: ghcr.io/RedCanister/painel-amanaje/api:latest
         ports:
         - containerPort: 8000
         envFrom:

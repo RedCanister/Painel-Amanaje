@@ -23,7 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv/
 
-COPY . /app
+COPY --link . /app
 
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser

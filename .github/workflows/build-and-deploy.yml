@@ -23,6 +23,16 @@ jobs:
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
+      - name: Clean-up Build 
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large_packages: true
+          swap_storage: true
+
       - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
