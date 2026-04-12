@@ -79,9 +79,11 @@ jobs:
         run: echo "${{ secrets.KUBE_CONFIG }}" | wc -c
 
       - name: Configure kubectl
+        env:
+          KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
         run: |
           mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode --ignore-garbage > $HOME/.kube/config
+          echo  | base64 -di > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
       - name: Deploy to Kubernetes
