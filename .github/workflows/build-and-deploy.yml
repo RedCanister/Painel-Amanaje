@@ -89,4 +89,4 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
-          kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} --timeout=5m
+          kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} 
