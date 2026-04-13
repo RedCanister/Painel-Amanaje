@@ -71,7 +71,7 @@ jobs:
         run: echo "${{ secrets.KUBE_CONFIG }}" 
 
       - name: Configure kubectl
-        shell: pwsh
+        shell: powershell
         env:
           KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
         run: |
