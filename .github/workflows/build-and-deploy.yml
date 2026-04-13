@@ -9,7 +9,6 @@ on:
 env:
   REGISTRY: ghcr.io
   NAMESPACE: painel-amanaje
-  #IMAGE_NAME: ${{ github.repository }}
 
 jobs:      
 
@@ -45,8 +44,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
-          cache-from: type=local,src=${{ github.workspace }}/.buildx-cache
-          cache-to: type=local,dest=${{ github.workspace }}/.buildx-cache-new,mode=max
+          cache-from: type=local,src=${{ github.workspace }}/api
+          cache-to: type=local,dest=${{ github.workspace }}/api,mode=max
 
       - name: Build and push MLflow image
         uses: docker/build-push-action@v5
@@ -56,8 +55,8 @@ jobs:
           tags: |
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:${{ github.sha }} 
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:latest
-          cache-from: type=local,src=${{ github.workspace }}/.buildx-cache
-          cache-to: type=local,dest=${{ github.workspace }}/.buildx-cache-new,mode=max
+          cache-from: type=local,src=${{ github.workspace }}/mlflow
+          cache-to: type=local,dest=${{ github.workspace }}/mlflow,mode=max
 
   deploy:
     needs: build

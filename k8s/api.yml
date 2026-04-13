@@ -26,9 +26,12 @@ spec:
       labels:
         app: api
     spec:
+      imagePullSecrets:
+        - name : ghcr-login
       containers:
       - name: api
         image: ghcr.io/RedCanister/painel-amanaje/api:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
         envFrom:
@@ -71,8 +74,7 @@ spec:
         persistentVolumeClaim:
           claimName: mlruns-pvc
     
-    imagePullSecrets:
-    - name: ghcr-login
+    
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
