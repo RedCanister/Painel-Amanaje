@@ -28,7 +28,19 @@ spec:
     spec:
       imagePullSecrets:
         - name : ghcr-login
+
       containers:
+        env:
+          - name: POSTGRES_PORT
+            value: "5432"
+          - name: POSTGRES_DB
+            value: "airflow"
+          - name: POSTGRES_USER
+            value: "airflow"
+          - name: POSTGRES_HOST
+            value: "postgres"
+          - name: POSTGRES_PASSWORD
+            value: "airflow"
       - name: api
         image: ghcr.io/redcanister/painel-amanaje/api:latest
         imagePullPolicy: Always
@@ -52,14 +64,15 @@ spec:
           httpGet:
             path: /docs
             port: 8000
-          initialDelaySeconds: 45
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /docs
             port: 8000
-          initialDelaySeconds: 20
-          periodSeconds: 5
+          initialDelaySeconds: 60
+          periodSeconds: 30
+
       volumes:
       #- name: app
       #  configMap:
