@@ -30,20 +30,21 @@ spec:
         - name : ghcr-login
 
       containers:
-        env:
-          - name: POSTGRES_PORT
-            value: "5432"
-          - name: POSTGRES_DB
-            value: "airflow"
-          - name: POSTGRES_USER
-            value: "airflow"
-          - name: POSTGRES_HOST
-            value: "postgres"
-          - name: POSTGRES_PASSWORD
-            value: "airflow"
+        
       - name: api
         image: ghcr.io/redcanister/painel-amanaje/api:latest
         imagePullPolicy: Always
+        env:
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: "airflow"
+        - name: POSTGRES_USER
+          value: "airflow"
+        - name: POSTGRES_HOST
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "airflow"
         ports:
         - containerPort: 8000
         envFrom:

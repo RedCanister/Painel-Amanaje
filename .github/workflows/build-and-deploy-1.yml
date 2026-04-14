@@ -1,0 +1,96 @@
+name: Build and Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACE: painel-amanaje
+
+jobs:      
+
+  build:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Declaring IMAGE and REPO
+        shell: powershell
+        run: |
+          $repo = "${{ github.repository }}".ToLower()
+          echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }} 
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
+          cache-from: type=local,src=${{ github.workspace }}/api
+          cache-to: type=local,dest=${{ github.workspace }}/api,mode=max
+
+      - name: Build and push MLflow image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mlflow-server
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:${{ github.sha }} 
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:latest
+          cache-from: type=local,src=${{ github.workspace }}/mlflow
+          cache-to: type=local,dest=${{ github.workspace }}/mlflow,mode=max
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Secret Length
+        run: echo "${{ secrets.KUBE_CONFIG }}" 
+
+      - name: Configure kubectl
+        shell: powershell
+        env:
+          KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
+        run: |
+          if (!(Test-Path "$HOME\.kube")) {
+              New-Item -ItemType Directory -Force -Path "$HOME\.kube"
+          }
+
+          $bytes = [System.Convert]::FromBase64String($env:KUBE_CONFIG_DATA)
+          [System.IO.File]::WriteAllBytes("$HOME\.kube\config", $bytes)
+
+          kubectl config use-context docker-desktop
+
+      - name: Create Namespace 
+        run : kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
+          kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} --timeout=10m
