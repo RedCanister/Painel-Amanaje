@@ -17,7 +17,7 @@ metadata:
   name: api
   namespace: painel-amanaje
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -30,7 +30,7 @@ spec:
         - name : ghcr-login
       containers:
       - name: api
-        image: ghcr.io/RedCanister/painel-amanaje/api:latest
+        image: ghcr.io/redcanister/painel-amanaje/api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -40,8 +40,8 @@ spec:
         - secretRef:
             name: painel-amanaje-secrets
         volumeMounts:
-        - name: app
-          mountPath: /app
+        #- name: app
+        #  mountPath: /app
         - name: data
           mountPath: /data
         - name: models
@@ -52,18 +52,18 @@ spec:
           httpGet:
             path: /docs
             port: 8000
-          initialDelaySeconds: 30
+          initialDelaySeconds: 45
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /docs
             port: 8000
-          initialDelaySeconds: 10
+          initialDelaySeconds: 20
           periodSeconds: 5
       volumes:
-      - name: app
-        configMap:
-          name: api-code
+      #- name: app
+      #  configMap:
+      #    name: api-code
       - name: data
         persistentVolumeClaim:
           claimName: data-pvc

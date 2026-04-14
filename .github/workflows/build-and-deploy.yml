@@ -20,6 +20,7 @@ jobs:
 
     steps:
       - name: Declaring IMAGE and REPO
+        shell: powershell
         run: |
           $repo = "${{ github.repository }}".ToLower()
           echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
@@ -62,6 +63,9 @@ jobs:
     needs: build
     runs-on: self-hosted
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        shell: powershell
 
     steps:
       - uses: actions/checkout@v4
