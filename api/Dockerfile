@@ -26,7 +26,7 @@ COPY --from=builder /opt/venv /opt/venv/
 COPY --link . /app
 
 # TODO - Correct this line to fit the dockerfile
-RUN mkdir -p /app/.mlflow_tmp && chown -R appuser:appuser /app
+RUN mkdir -p /app/.mlflow_tmp && chown -R 1000:1000 /app
 
 RUN useradd --uid 1000 --create-home appuser || true
 USER appuser
