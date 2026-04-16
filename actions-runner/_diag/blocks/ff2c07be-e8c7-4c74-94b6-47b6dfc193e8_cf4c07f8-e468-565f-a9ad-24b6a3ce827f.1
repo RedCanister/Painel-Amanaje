@@ -1,0 +1,1548 @@
+﻿2026-04-14T22:12:04.4382111Z Current runner version: '2.333.1'
+2026-04-14T22:12:04.4398093Z Runner name: 'Host-Amanaje'
+2026-04-14T22:12:04.4399300Z Runner group name: 'Default'
+2026-04-14T22:12:04.4400395Z Machine name: 'DESKTOP-GI5E75S'
+2026-04-14T22:12:04.4406382Z ##[group]GITHUB_TOKEN Permissions
+2026-04-14T22:12:04.4410414Z Contents: read
+2026-04-14T22:12:04.4411053Z Metadata: read
+2026-04-14T22:12:04.4411783Z Packages: write
+2026-04-14T22:12:04.4412473Z ##[endgroup]
+2026-04-14T22:12:04.4415799Z Secret source: Actions
+2026-04-14T22:12:04.4416844Z Prepare workflow directory
+2026-04-14T22:12:04.5366213Z Prepare all required actions
+2026-04-14T22:12:04.5430471Z Getting action download info
+2026-04-14T22:12:05.3821726Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-04-14T22:12:06.6713337Z Download action repository 'docker/setup-buildx-action@v3' (SHA:8d2750c68a42422c14e847fe6c8ac0403b4cbd6f)
+2026-04-14T22:12:08.1152016Z Download action repository 'docker/login-action@v3' (SHA:c94ce9fb468520275223c153574b00df6fe4bcc9)
+2026-04-14T22:12:09.9223874Z Download action repository 'docker/build-push-action@v5' (SHA:ca052bb54ab0790a636c9b5f226502c73d547a25)
+2026-04-14T22:12:11.8604768Z Complete job name: build
+2026-04-14T22:12:12.0474271Z ##[group]Run $repo = "RedCanister/Painel-Amanaje".ToLower()
+2026-04-14T22:12:12.0475332Z [36;1m$repo = "RedCanister/Painel-Amanaje".ToLower()[0m
+2026-04-14T22:12:12.0475835Z [36;1mecho "IMAGE_NAME=$repo" >> $env:GITHUB_ENV[0m
+2026-04-14T22:12:12.0529581Z shell: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+2026-04-14T22:12:12.0531529Z env:
+2026-04-14T22:12:12.0531873Z   REGISTRY: ghcr.io
+2026-04-14T22:12:12.0532227Z   NAMESPACE: painel-amanaje
+2026-04-14T22:12:12.0532577Z ##[endgroup]
+2026-04-14T22:12:12.7458186Z ##[group]Run actions/checkout@v4
+2026-04-14T22:12:12.7458820Z with:
+2026-04-14T22:12:12.7459286Z   repository: RedCanister/Painel-Amanaje
+2026-04-14T22:12:12.7460081Z   token: ***
+2026-04-14T22:12:12.7460399Z   ssh-strict: true
+2026-04-14T22:12:12.7460673Z   ssh-user: git
+2026-04-14T22:12:12.7460964Z   persist-credentials: true
+2026-04-14T22:12:12.7476717Z   clean: true
+2026-04-14T22:12:12.7477235Z   sparse-checkout-cone-mode: true
+2026-04-14T22:12:12.7477622Z   fetch-depth: 1
+2026-04-14T22:12:12.7477901Z   fetch-tags: false
+2026-04-14T22:12:12.7478190Z   show-progress: true
+2026-04-14T22:12:12.7478473Z   lfs: false
+2026-04-14T22:12:12.7478743Z   submodules: false
+2026-04-14T22:12:12.7479041Z   set-safe-directory: true
+2026-04-14T22:12:12.7479369Z env:
+2026-04-14T22:12:12.7479651Z   REGISTRY: ghcr.io
+2026-04-14T22:12:12.7479984Z   NAMESPACE: painel-amanaje
+2026-04-14T22:12:12.7480340Z   IMAGE_NAME: redcanister/painel-amanaje
+2026-04-14T22:12:12.7480766Z ##[endgroup]
+2026-04-14T22:12:13.1512065Z Syncing repository: RedCanister/Painel-Amanaje
+2026-04-14T22:12:13.1514334Z ##[group]Getting Git version info
+2026-04-14T22:12:13.1515831Z Working directory is 'C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje'
+2026-04-14T22:12:13.1787332Z [command]"C:\Program Files\Git\cmd\git.exe" version
+2026-04-14T22:12:13.2261971Z git version 2.47.1.windows.2
+2026-04-14T22:12:13.2328554Z ##[endgroup]
+2026-04-14T22:12:13.2354636Z Copying 'C:\Users\andma\.gitconfig' to 'C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\0c1cfec4-63e1-4fd2-aff4-f5f06dee1099\.gitconfig'
+2026-04-14T22:12:13.2394324Z Temporarily overriding HOME='C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\0c1cfec4-63e1-4fd2-aff4-f5f06dee1099' before making global git config changes
+2026-04-14T22:12:13.2396131Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-14T22:12:13.2411756Z [command]"C:\Program Files\Git\cmd\git.exe" config --global --add safe.directory "C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje"
+2026-04-14T22:12:13.3007218Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --get remote.origin.url
+2026-04-14T22:12:13.3551841Z https://github.com/RedCanister/Painel-Amanaje
+2026-04-14T22:12:13.3644837Z ##[group]Removing previously created refs, to avoid conflicts
+2026-04-14T22:12:13.3656220Z [command]"C:\Program Files\Git\cmd\git.exe" rev-parse --symbolic-full-name --verify --quiet HEAD
+2026-04-14T22:12:13.4211589Z refs/heads/main
+2026-04-14T22:12:13.4285959Z [command]"C:\Program Files\Git\cmd\git.exe" checkout --detach
+2026-04-14T22:12:13.5534179Z HEAD is now at b0ab417 Running build-and-deploy.yml
+2026-04-14T22:12:13.6823108Z ##[endgroup]
+2026-04-14T22:12:13.6833881Z [command]"C:\Program Files\Git\cmd\git.exe" submodule status
+2026-04-14T22:12:14.8543269Z ##[group]Cleaning the repository
+2026-04-14T22:12:14.8555807Z [command]"C:\Program Files\Git\cmd\git.exe" clean -ffdx
+2026-04-14T22:12:14.9618681Z [command]"C:\Program Files\Git\cmd\git.exe" reset --hard HEAD
+2026-04-14T22:12:15.3016960Z HEAD is now at b0ab417 Running build-and-deploy.yml
+2026-04-14T22:12:15.3098886Z ##[endgroup]
+2026-04-14T22:12:15.3110500Z ##[group]Disabling automatic garbage collection
+2026-04-14T22:12:15.3124825Z [command]"C:\Program Files\Git\cmd\git.exe" config --local gc.auto 0
+2026-04-14T22:12:15.3832134Z ##[endgroup]
+2026-04-14T22:12:15.3855763Z ##[group]Setting up auth
+2026-04-14T22:12:15.3858438Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-04-14T22:12:15.4478404Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-04-14T22:12:17.3308355Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-14T22:12:17.3990192Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-04-14T22:12:18.4708956Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-14T22:12:18.5218120Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-04-14T22:12:19.6998978Z [command]"C:\Program Files\Git\cmd\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-04-14T22:12:19.7832640Z ##[endgroup]
+2026-04-14T22:12:19.7833350Z ##[group]Fetching the repository
+2026-04-14T22:12:19.7854110Z [command]"C:\Program Files\Git\cmd\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +50bc6df7f6a0539a66ec4d100439b79fa376fe27:refs/remotes/origin/main
+2026-04-14T22:12:21.2410559Z From https://github.com/RedCanister/Painel-Amanaje
+2026-04-14T22:12:21.2411586Z  + b0ab417...50bc6df 50bc6df7f6a0539a66ec4d100439b79fa376fe27 -> origin/main  (forced update)
+2026-04-14T22:12:21.2797623Z ##[endgroup]
+2026-04-14T22:12:21.2797999Z ##[group]Determining the checkout info
+2026-04-14T22:12:21.2800086Z ##[endgroup]
+2026-04-14T22:12:21.2815682Z [command]"C:\Program Files\Git\cmd\git.exe" sparse-checkout disable
+2026-04-14T22:12:21.3671848Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-04-14T22:12:21.4342517Z ##[group]Checking out the ref
+2026-04-14T22:12:21.4369225Z [command]"C:\Program Files\Git\cmd\git.exe" checkout --progress --force -B main refs/remotes/origin/main
+2026-04-14T22:12:21.5528994Z branch 'main' set up to track 'origin/main'.
+2026-04-14T22:12:21.5529988Z Your branch is up to date with 'origin/main'.
+2026-04-14T22:12:21.5531150Z Previous HEAD position was b0ab417 Running build-and-deploy.yml
+2026-04-14T22:12:21.5531524Z Switched to and reset branch 'main'
+2026-04-14T22:12:21.5598613Z ##[endgroup]
+2026-04-14T22:12:21.6166659Z [command]"C:\Program Files\Git\cmd\git.exe" log -1 --format=%H
+2026-04-14T22:12:21.6586421Z 50bc6df7f6a0539a66ec4d100439b79fa376fe27
+2026-04-14T22:12:21.7301474Z ##[group]Run docker/setup-buildx-action@v3
+2026-04-14T22:12:21.7302026Z with:
+2026-04-14T22:12:21.7302291Z   driver: docker-container
+2026-04-14T22:12:21.7302549Z   use: true
+2026-04-14T22:12:21.7302690Z   keep-state: false
+2026-04-14T22:12:21.7302864Z   cache-binary: true
+2026-04-14T22:12:21.7303018Z   cleanup: true
+2026-04-14T22:12:21.7303167Z   install: false
+2026-04-14T22:12:21.7303360Z env:
+2026-04-14T22:12:21.7303573Z   REGISTRY: ghcr.io
+2026-04-14T22:12:21.7303806Z   NAMESPACE: painel-amanaje
+2026-04-14T22:12:21.7304009Z   IMAGE_NAME: redcanister/painel-amanaje
+2026-04-14T22:12:21.7304241Z ##[endgroup]
+2026-04-14T22:12:22.5262533Z ##[group]Docker info
+2026-04-14T22:12:22.5757292Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" version
+2026-04-14T22:12:22.6796894Z Client:
+2026-04-14T22:12:22.6799705Z  Version:           29.4.0
+2026-04-14T22:12:22.6800020Z  API version:       1.54
+2026-04-14T22:12:22.6800260Z  Go version:        go1.26.1
+2026-04-14T22:12:22.6800535Z  Git commit:        9d7ad9f
+2026-04-14T22:12:22.6800787Z  Built:             Tue Apr  7 08:39:39 2026
+2026-04-14T22:12:22.6801079Z  OS/Arch:           windows/amd64
+2026-04-14T22:12:22.6801314Z  Context:           desktop-linux
+2026-04-14T22:12:22.6801460Z 
+2026-04-14T22:12:22.6801596Z Server: Docker Desktop 4.69.0 (224084)
+2026-04-14T22:12:22.6801862Z  Engine:
+2026-04-14T22:12:22.6802055Z   Version:          29.4.0
+2026-04-14T22:12:22.6802342Z   API version:      1.54 (minimum version 1.40)
+2026-04-14T22:12:22.6802634Z   Go version:       go1.26.1
+2026-04-14T22:12:22.6802870Z   Git commit:       daa0cb7
+2026-04-14T22:12:22.6803111Z   Built:            Tue Apr  7 08:36:03 2026
+2026-04-14T22:12:22.6803395Z   OS/Arch:          linux/amd64
+2026-04-14T22:12:22.6803655Z   Experimental:     false
+2026-04-14T22:12:22.6804007Z  containerd:
+2026-04-14T22:12:22.6804294Z   Version:          v2.2.1
+2026-04-14T22:12:22.6804827Z   GitCommit:        dea7da592f5d1d2b7755e3a161be07f43fad8f75
+2026-04-14T22:12:22.6805282Z  runc:
+2026-04-14T22:12:22.6805559Z   Version:          1.3.4
+2026-04-14T22:12:22.6805949Z   GitCommit:        v1.3.4-0-gd6d73eb8
+2026-04-14T22:12:22.6806341Z  docker-init:
+2026-04-14T22:12:22.6806651Z   Version:          0.19.0
+2026-04-14T22:12:22.6807011Z   GitCommit:        de40ad0
+2026-04-14T22:12:22.7261570Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" info
+2026-04-14T22:12:23.5842342Z Client:
+2026-04-14T22:12:23.5842746Z  Version:    29.4.0
+2026-04-14T22:12:23.5843052Z  Context:    desktop-linux
+2026-04-14T22:12:23.5843386Z  Debug Mode: false
+2026-04-14T22:12:23.5843648Z  Plugins:
+2026-04-14T22:12:23.5843987Z   agent: Docker AI Agent Runner (Docker Inc.)
+2026-04-14T22:12:23.5844390Z     Version:  v1.42.0
+2026-04-14T22:12:23.5844924Z     Path:     C:\Program Files\Docker\cli-plugins\docker-agent.exe
+2026-04-14T22:12:23.5845543Z   ai: Docker AI Agent - Ask Gordon (Docker Inc.)
+2026-04-14T22:12:23.5846081Z     Version:  v1.20.2
+2026-04-14T22:12:23.5846554Z     Path:     C:\Program Files\Docker\cli-plugins\docker-ai.exe
+2026-04-14T22:12:23.5847091Z   buildx: Docker Buildx (Docker Inc.)
+2026-04-14T22:12:23.5847474Z     Version:  v0.33.0-desktop.1
+2026-04-14T22:12:23.5847863Z     Path:     C:\Program Files\Docker\cli-plugins\docker-buildx.exe
+2026-04-14T22:12:23.5848197Z   compose: Docker Compose (Docker Inc.)
+2026-04-14T22:12:23.5848437Z     Version:  v5.1.1
+2026-04-14T22:12:23.5848727Z     Path:     C:\Program Files\Docker\cli-plugins\docker-compose.exe
+2026-04-14T22:12:23.5849153Z   debug: Get a shell into any image or container (Docker Inc.)
+2026-04-14T22:12:23.5851920Z     Version:  0.0.47
+2026-04-14T22:12:23.5852505Z     Path:     C:\Program Files\Docker\cli-plugins\docker-debug.exe
+2026-04-14T22:12:23.5853693Z   desktop: Docker Desktop commands (Docker Inc.)
+2026-04-14T22:12:23.5854157Z     Version:  v0.3.0
+2026-04-14T22:12:23.5854645Z     Path:     C:\Program Files\Docker\cli-plugins\docker-desktop.exe
+2026-04-14T22:12:23.5858600Z   dhi: CLI for managing Docker Hardened Images (Docker Inc.)
+2026-04-14T22:12:23.5860175Z     Version:  v0.0.2
+2026-04-14T22:12:23.5860708Z     Path:     C:\Program Files\Docker\cli-plugins\docker-dhi.exe
+2026-04-14T22:12:23.5861774Z   extension: Manages Docker extensions (Docker Inc.)
+2026-04-14T22:12:23.5863308Z     Version:  v0.2.31
+2026-04-14T22:12:23.5864078Z     Path:     C:\Program Files\Docker\cli-plugins\docker-extension.exe
+2026-04-14T22:12:23.5907206Z   init: Creates Docker-related starter files for your project (Docker Inc.)
+2026-04-14T22:12:23.5908796Z     Version:  v1.4.0
+2026-04-14T22:12:23.5909283Z     Path:     C:\Program Files\Docker\cli-plugins\docker-init.exe
+2026-04-14T22:12:23.5909795Z   mcp: Docker MCP Plugin (Docker Inc.)
+2026-04-14T22:12:23.5910833Z     Version:  v0.40.3
+2026-04-14T22:12:23.5911444Z     Path:     C:\Program Files\Docker\cli-plugins\docker-mcp.exe
+2026-04-14T22:12:23.5911970Z   model: Docker Model Runner (Docker Inc.)
+2026-04-14T22:12:23.5912374Z     Version:  v1.1.29
+2026-04-14T22:12:23.5912819Z     Path:     C:\Program Files\Docker\cli-plugins\docker-model.exe
+2026-04-14T22:12:23.5913366Z   offload: Docker Offload (Docker Inc.)
+2026-04-14T22:12:23.5913765Z     Version:  v0.5.82
+2026-04-14T22:12:23.5915497Z     Path:     C:\Program Files\Docker\cli-plugins\docker-offload.exe
+2026-04-14T22:12:23.5916820Z   pass: Docker Pass Secrets Manager Plugin (beta) (Docker Inc.)
+2026-04-14T22:12:23.5919006Z     Version:  v0.0.25
+2026-04-14T22:12:23.5920063Z     Path:     C:\Program Files\Docker\cli-plugins\docker-pass.exe
+2026-04-14T22:12:23.5920721Z   sandbox: Docker Sandbox (Docker Inc.)
+2026-04-14T22:12:23.5921168Z     Version:  v0.12.0
+2026-04-14T22:12:23.5921687Z     Path:     C:\Program Files\Docker\cli-plugins\docker-sandbox.exe
+2026-04-14T22:12:23.5922662Z   sbom: View the packaged-based Software Bill Of Materials (SBOM) for an image (Anchore Inc.)
+2026-04-14T22:12:23.5923454Z     Version:  0.6.0
+2026-04-14T22:12:23.5923968Z     Path:     C:\Program Files\Docker\cli-plugins\docker-sbom.exe
+2026-04-14T22:12:23.5924552Z   scout: Docker Scout (Docker Inc.)
+2026-04-14T22:12:23.5924973Z     Version:  v1.20.4
+2026-04-14T22:12:23.5925470Z     Path:     C:\Users\andma\.docker\cli-plugins\docker-scout.exe
+2026-04-14T22:12:23.5925852Z 
+2026-04-14T22:12:23.5925999Z Server:
+2026-04-14T22:12:23.5926284Z  Containers: 13
+2026-04-14T22:12:23.5926581Z   Running: 9
+2026-04-14T22:12:23.5926862Z   Paused: 0
+2026-04-14T22:12:23.5927109Z   Stopped: 4
+2026-04-14T22:12:23.5927378Z  Images: 15
+2026-04-14T22:12:23.5927703Z  Server Version: 29.4.0
+2026-04-14T22:12:23.5928048Z  Storage Driver: overlayfs
+2026-04-14T22:12:23.5928665Z   driver-type: io.containerd.snapshotter.v1
+2026-04-14T22:12:23.5929541Z  Logging Driver: json-file
+2026-04-14T22:12:23.5930209Z  Cgroup Driver: cgroupfs
+2026-04-14T22:12:23.5930770Z  Cgroup Version: 2
+2026-04-14T22:12:23.5931143Z  Plugins:
+2026-04-14T22:12:23.5931410Z   Volume: local
+2026-04-14T22:12:23.5931804Z   Network: bridge host ipvlan macvlan null overlay
+2026-04-14T22:12:23.5932509Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-04-14T22:12:23.5933055Z  CDI spec directories:
+2026-04-14T22:12:23.5933375Z   /etc/cdi
+2026-04-14T22:12:23.5933624Z   /var/run/cdi
+2026-04-14T22:12:23.5933871Z  Discovered Devices:
+2026-04-14T22:12:23.5934195Z   cdi: docker.com/gpu=webgpu
+2026-04-14T22:12:23.5934511Z  Swarm: inactive
+2026-04-14T22:12:23.5934822Z  Runtimes: io.containerd.runc.v2 nvidia runc
+2026-04-14T22:12:23.5935139Z  Default Runtime: runc
+2026-04-14T22:12:23.5935443Z  Init Binary: docker-init
+2026-04-14T22:12:23.5935910Z  containerd version: dea7da592f5d1d2b7755e3a161be07f43fad8f75
+2026-04-14T22:12:23.5936422Z  runc version: v1.3.4-0-gd6d73eb8
+2026-04-14T22:12:23.5937580Z  init version: de40ad0
+2026-04-14T22:12:23.5939475Z  Security Options:
+2026-04-14T22:12:23.5940003Z   seccomp
+2026-04-14T22:12:23.5940318Z    Profile: builtin
+2026-04-14T22:12:23.5940856Z   cgroupns
+2026-04-14T22:12:23.5944220Z  Kernel Version: 6.6.87.2-microsoft-standard-WSL2
+2026-04-14T22:12:23.5945420Z  Operating System: Docker Desktop
+2026-04-14T22:12:23.5945778Z  OSType: linux
+2026-04-14T22:12:23.5946046Z  Architecture: x86_64
+2026-04-14T22:12:23.5946315Z  CPUs: 8
+2026-04-14T22:12:23.5946566Z  Total Memory: 15.57GiB
+2026-04-14T22:12:23.5946857Z  Name: docker-desktop
+2026-04-14T22:12:23.5947186Z  ID: 132c0f88-9482-49a0-8e22-ea43f29aecf8
+2026-04-14T22:12:23.5947583Z  Docker Root Dir: /var/lib/docker
+2026-04-14T22:12:23.5947913Z  Debug Mode: false
+2026-04-14T22:12:23.5948265Z  HTTP Proxy: http.docker.internal:3128
+2026-04-14T22:12:23.5948685Z  HTTPS Proxy: http.docker.internal:3128
+2026-04-14T22:12:23.5949150Z  No Proxy: hubproxy.docker.internal
+2026-04-14T22:12:23.5949529Z  Labels:
+2026-04-14T22:12:23.5949947Z   com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+2026-04-14T22:12:23.5950410Z  Experimental: false
+2026-04-14T22:12:23.5950736Z  Insecure Registries:
+2026-04-14T22:12:23.5951087Z   hubproxy.docker.internal:5555
+2026-04-14T22:12:23.5959402Z   ::1/128
+2026-04-14T22:12:23.5959797Z   127.0.0.0/8
+2026-04-14T22:12:23.5960129Z  Live Restore Enabled: false
+2026-04-14T22:12:23.5960527Z  Firewall Backend: iptables
+2026-04-14T22:12:23.5960992Z 
+2026-04-14T22:12:23.5990776Z ##[endgroup]
+2026-04-14T22:12:23.9897069Z ##[group]Buildx version
+2026-04-14T22:12:24.0555373Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx version
+2026-04-14T22:12:24.2424184Z github.com/docker/buildx v0.33.0-desktop.1 7f91f038ac14cbf5c4b2a6b76470860814424da1
+2026-04-14T22:12:24.2589130Z ##[endgroup]
+2026-04-14T22:12:24.3660812Z ##[group]Creating a new builder instance
+2026-04-14T22:12:25.0522431Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx create --name builder-f60d5651-86cc-4f83-9063-f37aa470fddb --driver docker-container --buildkitd-flags "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host" --use
+2026-04-14T22:12:25.3387386Z builder-f60d5651-86cc-4f83-9063-f37aa470fddb
+2026-04-14T22:12:25.3613022Z ##[endgroup]
+2026-04-14T22:12:25.3613648Z ##[group]Booting builder
+2026-04-14T22:12:25.4937290Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx inspect --bootstrap --builder builder-f60d5651-86cc-4f83-9063-f37aa470fddb
+2026-04-14T22:12:25.6934552Z #1 [internal] booting buildkit
+2026-04-14T22:12:25.8448668Z #1 pulling image moby/buildkit:buildx-stable-1
+2026-04-14T22:12:27.8333220Z #1 pulling image moby/buildkit:buildx-stable-1 2.1s done
+2026-04-14T22:12:27.9832941Z #1 creating container buildx_buildkit_builder-f60d5651-86cc-4f83-9063-f37aa470fddb0
+2026-04-14T22:12:32.3078299Z #1 creating container buildx_buildkit_builder-f60d5651-86cc-4f83-9063-f37aa470fddb0 4.5s done
+2026-04-14T22:12:32.3172209Z #1 DONE 6.6s
+2026-04-14T22:12:32.4175803Z Name:          builder-f60d5651-86cc-4f83-9063-f37aa470fddb
+2026-04-14T22:12:32.4176363Z Driver:        docker-container
+2026-04-14T22:12:32.4176798Z Last Activity: 2026-04-14 22:12:25 +0000 UTC
+2026-04-14T22:12:32.4177059Z 
+2026-04-14T22:12:32.4177191Z Nodes:
+2026-04-14T22:12:32.4177536Z Name:                  builder-f60d5651-86cc-4f83-9063-f37aa470fddb0
+2026-04-14T22:12:32.4178093Z Endpoint:              desktop-linux
+2026-04-14T22:12:32.4178499Z Status:                running
+2026-04-14T22:12:32.4179265Z BuildKit daemon flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+2026-04-14T22:12:32.4179917Z BuildKit version:      v0.29.0
+2026-04-14T22:12:32.4180551Z Platforms:             linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64le, linux/s390x, linux/386, linux/arm/v7, linux/arm/v6
+2026-04-14T22:12:32.4181355Z Labels:
+2026-04-14T22:12:32.4181756Z  org.mobyproject.buildkit.worker.executor:         oci
+2026-04-14T22:12:32.4184322Z  org.mobyproject.buildkit.worker.hostname:         98526270fa55
+2026-04-14T22:12:32.4186223Z  org.mobyproject.buildkit.worker.network:          host
+2026-04-14T22:12:32.4187116Z  org.mobyproject.buildkit.worker.oci.process-mode: sandbox
+2026-04-14T22:12:32.4187867Z  org.mobyproject.buildkit.worker.selinux.enabled:  false
+2026-04-14T22:12:32.4188692Z  org.mobyproject.buildkit.worker.snapshotter:      overlayfs
+2026-04-14T22:12:32.4189362Z GC Policy rule#0:
+2026-04-14T22:12:32.4189850Z  All:            false
+2026-04-14T22:12:32.4191102Z  Filters:        type==source.local,type==exec.cachemount,type==source.git.checkout
+2026-04-14T22:12:32.4191740Z  Keep Duration:  48h0m0s
+2026-04-14T22:12:32.4192073Z  Max Used Space: 488.3MiB
+2026-04-14T22:12:32.4192398Z GC Policy rule#1:
+2026-04-14T22:12:32.4197412Z  All:            false
+2026-04-14T22:12:32.4198921Z  Keep Duration:  1440h0m0s
+2026-04-14T22:12:32.4206439Z  Reserved Space: 9.313GiB
+2026-04-14T22:12:32.4207178Z  Max Used Space: 93.13GiB
+2026-04-14T22:12:32.4207574Z  Min Free Space: 188.1GiB
+2026-04-14T22:12:32.4207938Z GC Policy rule#2:
+2026-04-14T22:12:32.4208328Z  All:            false
+2026-04-14T22:12:32.4208704Z  Reserved Space: 9.313GiB
+2026-04-14T22:12:32.4209108Z  Max Used Space: 93.13GiB
+2026-04-14T22:12:32.4209486Z  Min Free Space: 188.1GiB
+2026-04-14T22:12:32.4209847Z GC Policy rule#3:
+2026-04-14T22:12:32.4210164Z  All:            true
+2026-04-14T22:12:32.4210737Z  Reserved Space: 9.313GiB
+2026-04-14T22:12:32.4211188Z  Max Used Space: 93.13GiB
+2026-04-14T22:12:32.4211560Z  Min Free Space: 188.1GiB
+2026-04-14T22:12:32.4392696Z ##[endgroup]
+2026-04-14T22:12:32.7993220Z ##[group]Inspect builder
+2026-04-14T22:12:32.8095803Z {
+2026-04-14T22:12:32.8096222Z   "nodes": [
+2026-04-14T22:12:32.8096394Z     {
+2026-04-14T22:12:32.8096648Z       "name": "builder-f60d5651-86cc-4f83-9063-f37aa470fddb0",
+2026-04-14T22:12:32.8096961Z       "endpoint": "desktop-linux",
+2026-04-14T22:12:32.8097213Z       "status": "running",
+2026-04-14T22:12:32.8098048Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-04-14T22:12:32.8099015Z       "buildkit": "v0.29.0",
+2026-04-14T22:12:32.8099614Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6",
+2026-04-14T22:12:32.8100147Z       "features": {
+2026-04-14T22:12:32.8100446Z         "Automatically load images to the Docker Engine image store": true,
+2026-04-14T22:12:32.8100932Z         "Cache export": true,
+2026-04-14T22:12:32.8101165Z         "Direct push": true,
+2026-04-14T22:12:32.8101388Z         "Docker exporter": true,
+2026-04-14T22:12:32.8101656Z         "Multi-platform build": true,
+2026-04-14T22:12:32.8101915Z         "OCI exporter": true
+2026-04-14T22:12:32.8102128Z       },
+2026-04-14T22:12:32.8102278Z       "labels": {
+2026-04-14T22:12:32.8102572Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-04-14T22:12:32.8103008Z         "org.mobyproject.buildkit.worker.hostname": "98526270fa55",
+2026-04-14T22:12:32.8103656Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-04-14T22:12:32.8104320Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-04-14T22:12:32.8104904Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-04-14T22:12:32.8105326Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-04-14T22:12:32.8105619Z       },
+2026-04-14T22:12:32.8105776Z       "gcPolicy": [
+2026-04-14T22:12:32.8105937Z         {
+2026-04-14T22:12:32.8106103Z           "all": false,
+2026-04-14T22:12:32.8106297Z           "filter": [
+2026-04-14T22:12:32.8106512Z             "type==source.local",
+2026-04-14T22:12:32.8106754Z             "type==exec.cachemount",
+2026-04-14T22:12:32.8107596Z             "type==source.git.checkout"
+2026-04-14T22:12:32.8107827Z           ],
+2026-04-14T22:12:32.8108424Z           "keepDuration": "48h0m0s",
+2026-04-14T22:12:32.8108696Z           "maxUsedSpace": "488.3MiB"
+2026-04-14T22:12:32.8108903Z         },
+2026-04-14T22:12:32.8109242Z         {
+2026-04-14T22:12:32.8109439Z           "all": false,
+2026-04-14T22:12:32.8109662Z           "keepDuration": "1440h0m0s",
+2026-04-14T22:12:32.8109929Z           "reservedSpace": "9.313GiB",
+2026-04-14T22:12:32.8110198Z           "maxUsedSpace": "93.13GiB",
+2026-04-14T22:12:32.8110464Z           "minFreeSpace": "188.1GiB"
+2026-04-14T22:12:32.8110673Z         },
+2026-04-14T22:12:32.8110865Z         {
+2026-04-14T22:12:32.8111147Z           "all": false,
+2026-04-14T22:12:32.8111532Z           "reservedSpace": "9.313GiB",
+2026-04-14T22:12:32.8111792Z           "maxUsedSpace": "93.13GiB",
+2026-04-14T22:12:32.8112158Z           "minFreeSpace": "188.1GiB"
+2026-04-14T22:12:32.8112369Z         },
+2026-04-14T22:12:32.8112642Z         {
+2026-04-14T22:12:32.8112885Z           "all": true,
+2026-04-14T22:12:32.8113179Z           "reservedSpace": "9.313GiB",
+2026-04-14T22:12:32.8113548Z           "maxUsedSpace": "93.13GiB",
+2026-04-14T22:12:32.8113791Z           "minFreeSpace": "188.1GiB"
+2026-04-14T22:12:32.8114014Z         }
+2026-04-14T22:12:32.8114151Z       ]
+2026-04-14T22:12:32.8114304Z     }
+2026-04-14T22:12:32.8114442Z   ],
+2026-04-14T22:12:32.8114696Z   "name": "builder-f60d5651-86cc-4f83-9063-f37aa470fddb",
+2026-04-14T22:12:32.8115125Z   "driver": "docker-container",
+2026-04-14T22:12:32.8115792Z   "lastActivity": "2026-04-14T22:12:25.000Z"
+2026-04-14T22:12:32.8116146Z }
+2026-04-14T22:12:32.8136826Z ##[endgroup]
+2026-04-14T22:12:32.8155817Z ##[group]BuildKit version
+2026-04-14T22:12:32.8170080Z builder-f60d5651-86cc-4f83-9063-f37aa470fddb0: v0.29.0
+2026-04-14T22:12:32.8177017Z ##[endgroup]
+2026-04-14T22:12:32.8732278Z ##[group]Run docker/login-action@v3
+2026-04-14T22:12:32.8732736Z with:
+2026-04-14T22:12:32.8732938Z   registry: ghcr.io
+2026-04-14T22:12:32.8733172Z   username: RedCanister
+2026-04-14T22:12:32.8733671Z   password: ***
+2026-04-14T22:12:32.8733892Z   logout: true
+2026-04-14T22:12:32.8734086Z env:
+2026-04-14T22:12:32.8734260Z   REGISTRY: ghcr.io
+2026-04-14T22:12:32.8734494Z   NAMESPACE: painel-amanaje
+2026-04-14T22:12:32.8734770Z   IMAGE_NAME: redcanister/painel-amanaje
+2026-04-14T22:12:32.8735078Z ##[endgroup]
+2026-04-14T22:12:33.6131220Z Logging into ghcr.io...
+2026-04-14T22:12:34.7794697Z Login Succeeded!
+2026-04-14T22:12:34.8463288Z ##[group]Run docker/build-push-action@v5
+2026-04-14T22:12:34.8463877Z with:
+2026-04-14T22:12:34.8464121Z   context: ./api
+2026-04-14T22:12:34.8464362Z   push: true
+2026-04-14T22:12:34.8464852Z   tags: ghcr.io/redcanister/painel-amanaje/api:50bc6df7f6a0539a66ec4d100439b79fa376fe27 
+ghcr.io/redcanister/painel-amanaje/api:latest
+
+2026-04-14T22:12:34.8465840Z   cache-from: type=local,src=C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje/api
+2026-04-14T22:12:34.8466709Z   cache-to: type=local,dest=C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje/api,mode=max
+2026-04-14T22:12:34.8467241Z   load: false
+2026-04-14T22:12:34.8467481Z   no-cache: false
+2026-04-14T22:12:34.8467630Z   pull: false
+2026-04-14T22:12:34.8468000Z   github-token: ***
+2026-04-14T22:12:34.8468158Z env:
+2026-04-14T22:12:34.8468281Z   REGISTRY: ghcr.io
+2026-04-14T22:12:34.8468485Z   NAMESPACE: painel-amanaje
+2026-04-14T22:12:34.8468686Z   IMAGE_NAME: redcanister/painel-amanaje
+2026-04-14T22:12:34.8468889Z ##[endgroup]
+2026-04-14T22:12:35.3295295Z ##[group]GitHub Actions runtime token ACs
+2026-04-14T22:12:35.3316035Z refs/heads/main: read/write
+2026-04-14T22:12:35.3318331Z ##[endgroup]
+2026-04-14T22:12:35.3318911Z ##[group]Docker info
+2026-04-14T22:12:35.3797658Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" version
+2026-04-14T22:12:35.5050887Z Client:
+2026-04-14T22:12:35.5051107Z  Version:           29.4.0
+2026-04-14T22:12:35.5051757Z  API version:       1.54
+2026-04-14T22:12:35.5054437Z  Go version:        go1.26.1
+2026-04-14T22:12:35.5054879Z  Git commit:        9d7ad9f
+2026-04-14T22:12:35.5055282Z  Built:             Tue Apr  7 08:39:39 2026
+2026-04-14T22:12:35.5055552Z  OS/Arch:           windows/amd64
+2026-04-14T22:12:35.5055793Z  Context:           desktop-linux
+2026-04-14T22:12:35.5055926Z 
+2026-04-14T22:12:35.5056061Z Server: Docker Desktop 4.69.0 (224084)
+2026-04-14T22:12:35.5056282Z  Engine:
+2026-04-14T22:12:35.5056487Z   Version:          29.4.0
+2026-04-14T22:12:35.5057857Z   API version:      1.54 (minimum version 1.40)
+2026-04-14T22:12:35.5058223Z   Go version:       go1.26.1
+2026-04-14T22:12:35.5058567Z   Git commit:       daa0cb7
+2026-04-14T22:12:35.5058957Z   Built:            Tue Apr  7 08:36:03 2026
+2026-04-14T22:12:35.5059493Z   OS/Arch:          linux/amd64
+2026-04-14T22:12:35.5059844Z   Experimental:     false
+2026-04-14T22:12:35.5060155Z  containerd:
+2026-04-14T22:12:35.5060449Z   Version:          v2.2.1
+2026-04-14T22:12:35.5060803Z   GitCommit:        dea7da592f5d1d2b7755e3a161be07f43fad8f75
+2026-04-14T22:12:35.5061310Z  runc:
+2026-04-14T22:12:35.5061468Z   Version:          1.3.4
+2026-04-14T22:12:35.5061684Z   GitCommit:        v1.3.4-0-gd6d73eb8
+2026-04-14T22:12:35.5062027Z  docker-init:
+2026-04-14T22:12:35.5062193Z   Version:          0.19.0
+2026-04-14T22:12:35.5062381Z   GitCommit:        de40ad0
+2026-04-14T22:12:35.5569341Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" info
+2026-04-14T22:12:36.1089348Z Client:
+2026-04-14T22:12:36.1089576Z  Version:    29.4.0
+2026-04-14T22:12:36.1089814Z  Context:    desktop-linux
+2026-04-14T22:12:36.1090136Z  Debug Mode: false
+2026-04-14T22:12:36.1090319Z  Plugins:
+2026-04-14T22:12:36.1090541Z   agent: Docker AI Agent Runner (Docker Inc.)
+2026-04-14T22:12:36.1090856Z     Version:  v1.42.0
+2026-04-14T22:12:36.1091300Z     Path:     C:\Program Files\Docker\cli-plugins\docker-agent.exe
+2026-04-14T22:12:36.1091863Z   ai: Docker AI Agent - Ask Gordon (Docker Inc.)
+2026-04-14T22:12:36.1092478Z     Version:  v1.20.2
+2026-04-14T22:12:36.1092902Z     Path:     C:\Program Files\Docker\cli-plugins\docker-ai.exe
+2026-04-14T22:12:36.1093420Z   buildx: Docker Buildx (Docker Inc.)
+2026-04-14T22:12:36.1093798Z     Version:  v0.33.0-desktop.1
+2026-04-14T22:12:36.1094282Z     Path:     C:\Program Files\Docker\cli-plugins\docker-buildx.exe
+2026-04-14T22:12:36.1097973Z   compose: Docker Compose (Docker Inc.)
+2026-04-14T22:12:36.1098698Z     Version:  v5.1.1
+2026-04-14T22:12:36.1099239Z     Path:     C:\Program Files\Docker\cli-plugins\docker-compose.exe
+2026-04-14T22:12:36.1099991Z   debug: Get a shell into any image or container (Docker Inc.)
+2026-04-14T22:12:36.1100554Z     Version:  0.0.47
+2026-04-14T22:12:36.1101163Z     Path:     C:\Program Files\Docker\cli-plugins\docker-debug.exe
+2026-04-14T22:12:36.1101824Z   desktop: Docker Desktop commands (Docker Inc.)
+2026-04-14T22:12:36.1102313Z     Version:  v0.3.0
+2026-04-14T22:12:36.1102842Z     Path:     C:\Program Files\Docker\cli-plugins\docker-desktop.exe
+2026-04-14T22:12:36.1103549Z   dhi: CLI for managing Docker Hardened Images (Docker Inc.)
+2026-04-14T22:12:36.1104062Z     Version:  v0.0.2
+2026-04-14T22:12:36.1104552Z     Path:     C:\Program Files\Docker\cli-plugins\docker-dhi.exe
+2026-04-14T22:12:36.1105207Z   extension: Manages Docker extensions (Docker Inc.)
+2026-04-14T22:12:36.1105706Z     Version:  v0.2.31
+2026-04-14T22:12:36.1106240Z     Path:     C:\Program Files\Docker\cli-plugins\docker-extension.exe
+2026-04-14T22:12:36.1107054Z   init: Creates Docker-related starter files for your project (Docker Inc.)
+2026-04-14T22:12:36.1107691Z     Version:  v1.4.0
+2026-04-14T22:12:36.1108169Z     Path:     C:\Program Files\Docker\cli-plugins\docker-init.exe
+2026-04-14T22:12:36.1108760Z   mcp: Docker MCP Plugin (Docker Inc.)
+2026-04-14T22:12:36.1109510Z     Version:  v0.40.3
+2026-04-14T22:12:36.1110007Z     Path:     C:\Program Files\Docker\cli-plugins\docker-mcp.exe
+2026-04-14T22:12:36.1110999Z   model: Docker Model Runner (Docker Inc.)
+2026-04-14T22:12:36.1111449Z     Version:  v1.1.29
+2026-04-14T22:12:36.1111952Z     Path:     C:\Program Files\Docker\cli-plugins\docker-model.exe
+2026-04-14T22:12:36.1112543Z   offload: Docker Offload (Docker Inc.)
+2026-04-14T22:12:36.1112972Z     Version:  v0.5.82
+2026-04-14T22:12:36.1113472Z     Path:     C:\Program Files\Docker\cli-plugins\docker-offload.exe
+2026-04-14T22:12:36.1114224Z   pass: Docker Pass Secrets Manager Plugin (beta) (Docker Inc.)
+2026-04-14T22:12:36.1114781Z     Version:  v0.0.25
+2026-04-14T22:12:36.1115300Z     Path:     C:\Program Files\Docker\cli-plugins\docker-pass.exe
+2026-04-14T22:12:36.1115912Z   sandbox: Docker Sandbox (Docker Inc.)
+2026-04-14T22:12:36.1116345Z     Version:  v0.12.0
+2026-04-14T22:12:36.1116856Z     Path:     C:\Program Files\Docker\cli-plugins\docker-sandbox.exe
+2026-04-14T22:12:36.1117716Z   sbom: View the packaged-based Software Bill Of Materials (SBOM) for an image (Anchore Inc.)
+2026-04-14T22:12:36.1118476Z     Version:  0.6.0
+2026-04-14T22:12:36.1118963Z     Path:     C:\Program Files\Docker\cli-plugins\docker-sbom.exe
+2026-04-14T22:12:36.1119556Z   scout: Docker Scout (Docker Inc.)
+2026-04-14T22:12:36.1119965Z     Version:  v1.20.4
+2026-04-14T22:12:36.1120465Z     Path:     C:\Users\andma\.docker\cli-plugins\docker-scout.exe
+2026-04-14T22:12:36.1120856Z 
+2026-04-14T22:12:36.1120998Z Server:
+2026-04-14T22:12:36.1121274Z  Containers: 14
+2026-04-14T22:12:36.1121573Z   Running: 10
+2026-04-14T22:12:36.1121850Z   Paused: 0
+2026-04-14T22:12:36.1122124Z   Stopped: 4
+2026-04-14T22:12:36.1122393Z  Images: 15
+2026-04-14T22:12:36.1122684Z  Server Version: 29.4.0
+2026-04-14T22:12:36.1123033Z  Storage Driver: overlayfs
+2026-04-14T22:12:36.1123471Z   driver-type: io.containerd.snapshotter.v1
+2026-04-14T22:12:36.1123934Z  Logging Driver: json-file
+2026-04-14T22:12:36.1124309Z  Cgroup Driver: cgroupfs
+2026-04-14T22:12:36.1124656Z  Cgroup Version: 2
+2026-04-14T22:12:36.1124955Z  Plugins:
+2026-04-14T22:12:36.1125223Z   Volume: local
+2026-04-14T22:12:36.1125617Z   Network: bridge host ipvlan macvlan null overlay
+2026-04-14T22:12:36.1126336Z   Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+2026-04-14T22:12:36.1126954Z  CDI spec directories:
+2026-04-14T22:12:36.1127266Z   /etc/cdi
+2026-04-14T22:12:36.1127531Z   /var/run/cdi
+2026-04-14T22:12:36.1127825Z  Discovered Devices:
+2026-04-14T22:12:36.1129493Z   cdi: docker.com/gpu=webgpu
+2026-04-14T22:12:36.1129940Z  Swarm: inactive
+2026-04-14T22:12:36.1130326Z  Runtimes: runc io.containerd.runc.v2 nvidia
+2026-04-14T22:12:36.1130787Z  Default Runtime: runc
+2026-04-14T22:12:36.1131137Z  Init Binary: docker-init
+2026-04-14T22:12:36.1131666Z  containerd version: dea7da592f5d1d2b7755e3a161be07f43fad8f75
+2026-04-14T22:12:36.1132247Z  runc version: v1.3.4-0-gd6d73eb8
+2026-04-14T22:12:36.1132651Z  init version: de40ad0
+2026-04-14T22:12:36.1132985Z  Security Options:
+2026-04-14T22:12:36.1133286Z   seccomp
+2026-04-14T22:12:36.1133558Z    Profile: builtin
+2026-04-14T22:12:36.1133846Z   cgroupns
+2026-04-14T22:12:36.1134160Z  Kernel Version: 6.6.87.2-microsoft-standard-WSL2
+2026-04-14T22:12:36.1134451Z  Operating System: Docker Desktop
+2026-04-14T22:12:36.1134664Z  OSType: linux
+2026-04-14T22:12:36.1134833Z  Architecture: x86_64
+2026-04-14T22:12:36.1135001Z  CPUs: 8
+2026-04-14T22:12:36.1135156Z  Total Memory: 15.57GiB
+2026-04-14T22:12:36.1135349Z  Name: docker-desktop
+2026-04-14T22:12:36.1135563Z  ID: 132c0f88-9482-49a0-8e22-ea43f29aecf8
+2026-04-14T22:12:36.1135814Z  Docker Root Dir: /var/lib/docker
+2026-04-14T22:12:36.1136020Z  Debug Mode: false
+2026-04-14T22:12:36.1136836Z  HTTP Proxy: http.docker.internal:3128
+2026-04-14T22:12:36.1137262Z  HTTPS Proxy: http.docker.internal:3128
+2026-04-14T22:12:36.1137529Z  No Proxy: hubproxy.docker.internal
+2026-04-14T22:12:36.1137742Z  Labels:
+2026-04-14T22:12:36.1143751Z   com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+2026-04-14T22:12:36.1145491Z  Experimental: false
+2026-04-14T22:12:36.1145702Z  Insecure Registries:
+2026-04-14T22:12:36.1145922Z   hubproxy.docker.internal:5555
+2026-04-14T22:12:36.1146243Z   ::1/128
+2026-04-14T22:12:36.1146387Z   127.0.0.0/8
+2026-04-14T22:12:36.1146631Z  Live Restore Enabled: false
+2026-04-14T22:12:36.1146961Z  Firewall Backend: iptables
+2026-04-14T22:12:36.1147172Z 
+2026-04-14T22:12:36.1223085Z ##[endgroup]
+2026-04-14T22:12:36.1223804Z ##[group]Proxy configuration
+2026-04-14T22:12:36.1231721Z No proxy configuration found
+2026-04-14T22:12:36.1232479Z ##[endgroup]
+2026-04-14T22:12:36.3784500Z ##[group]Buildx version
+2026-04-14T22:12:36.4538173Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx version
+2026-04-14T22:12:36.6442046Z github.com/docker/buildx v0.33.0-desktop.1 7f91f038ac14cbf5c4b2a6b76470860814424da1
+2026-04-14T22:12:36.6665500Z ##[endgroup]
+2026-04-14T22:12:36.6666166Z ##[group]Builder info
+2026-04-14T22:12:37.1077210Z {
+2026-04-14T22:12:37.1079999Z   "nodes": [
+2026-04-14T22:12:37.1084876Z     {
+2026-04-14T22:12:37.1088419Z       "name": "builder-f60d5651-86cc-4f83-9063-f37aa470fddb0",
+2026-04-14T22:12:37.1092883Z       "endpoint": "desktop-linux",
+2026-04-14T22:12:37.1093616Z       "status": "running",
+2026-04-14T22:12:37.1094511Z       "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+2026-04-14T22:12:37.1095461Z       "buildkit": "v0.29.0",
+2026-04-14T22:12:37.1097207Z       "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6",
+2026-04-14T22:12:37.1099018Z       "features": {
+2026-04-14T22:12:37.1100060Z         "Automatically load images to the Docker Engine image store": true,
+2026-04-14T22:12:37.1102303Z         "Cache export": true,
+2026-04-14T22:12:37.1105036Z         "Direct push": true,
+2026-04-14T22:12:37.1105512Z         "Docker exporter": true,
+2026-04-14T22:12:37.1105919Z         "Multi-platform build": true,
+2026-04-14T22:12:37.1106383Z         "OCI exporter": true
+2026-04-14T22:12:37.1107007Z       },
+2026-04-14T22:12:37.1107360Z       "labels": {
+2026-04-14T22:12:37.1107724Z         "org.mobyproject.buildkit.worker.executor": "oci",
+2026-04-14T22:12:37.1108310Z         "org.mobyproject.buildkit.worker.hostname": "98526270fa55",
+2026-04-14T22:12:37.1108974Z         "org.mobyproject.buildkit.worker.network": "host",
+2026-04-14T22:12:37.1111568Z         "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+2026-04-14T22:12:37.1112519Z         "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+2026-04-14T22:12:37.1114184Z         "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+2026-04-14T22:12:37.1117526Z       },
+2026-04-14T22:12:37.1119128Z       "gcPolicy": [
+2026-04-14T22:12:37.1119826Z         {
+2026-04-14T22:12:37.1120105Z           "all": false,
+2026-04-14T22:12:37.1120431Z           "filter": [
+2026-04-14T22:12:37.1120795Z             "type==source.local",
+2026-04-14T22:12:37.1121287Z             "type==exec.cachemount",
+2026-04-14T22:12:37.1124443Z             "type==source.git.checkout"
+2026-04-14T22:12:37.1124898Z           ],
+2026-04-14T22:12:37.1125571Z           "keepDuration": "48h0m0s"
+2026-04-14T22:12:37.1126034Z         },
+2026-04-14T22:12:37.1126278Z         {
+2026-04-14T22:12:37.1126532Z           "all": false,
+2026-04-14T22:12:37.1130275Z           "keepDuration": "1440h0m0s"
+2026-04-14T22:12:37.1133309Z         },
+2026-04-14T22:12:37.1133591Z         {
+2026-04-14T22:12:37.1133860Z           "all": false
+2026-04-14T22:12:37.1134178Z         },
+2026-04-14T22:12:37.1134428Z         {
+2026-04-14T22:12:37.1134681Z           "all": true
+2026-04-14T22:12:37.1135220Z         }
+2026-04-14T22:12:37.1135488Z       ]
+2026-04-14T22:12:37.1136557Z     }
+2026-04-14T22:12:37.1136949Z   ],
+2026-04-14T22:12:37.1137575Z   "name": "builder-f60d5651-86cc-4f83-9063-f37aa470fddb",
+2026-04-14T22:12:37.1147176Z   "driver": "docker-container",
+2026-04-14T22:12:37.1149899Z   "lastActivity": "2026-04-14T22:12:25.000Z"
+2026-04-14T22:12:37.1151588Z }
+2026-04-14T22:12:37.1153883Z ##[endgroup]
+2026-04-14T22:12:37.8790538Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx build --cache-from "type=local,src=C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje/api" --cache-to "type=local,dest=C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje/api,mode=max" --iidfile "C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\docker-actions-toolkit-JkqvCy\build-iidfile-33902726dc.txt" --attest type=provenance,mode=min,inline-only=true,builder-id=https://github.com/RedCanister/Painel-Amanaje/actions/runs/24425482894 --tag ghcr.io/redcanister/painel-amanaje/api:50bc6df7f6a0539a66ec4d100439b79fa376fe27 --tag ghcr.io/redcanister/painel-amanaje/api:latest --metadata-file "C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\docker-actions-toolkit-JkqvCy\build-metadata-ea4e282045.json" --push ./api
+2026-04-14T22:12:40.4566660Z #0 building with "builder-f60d5651-86cc-4f83-9063-f37aa470fddb" instance using docker-container driver
+2026-04-14T22:12:40.4567194Z 
+2026-04-14T22:12:40.4567419Z #1 [internal] load build definition from Dockerfile
+2026-04-14T22:12:40.8708022Z #1 transferring dockerfile:
+2026-04-14T22:12:41.1588891Z #1 transferring dockerfile: 827B 0.2s done
+2026-04-14T22:12:41.1592638Z #1 DONE 0.6s
+2026-04-14T22:12:41.4923752Z 
+2026-04-14T22:12:41.4924721Z #2 [internal] load metadata for docker.io/library/python:3.11-slim
+2026-04-14T22:12:44.2177618Z #2 ...
+2026-04-14T22:12:44.2177858Z 
+2026-04-14T22:12:44.2178252Z #3 [auth] library/python:pull token for registry-1.docker.io
+2026-04-14T22:12:44.2179035Z #3 DONE 0.0s
+2026-04-14T22:12:44.3675612Z 
+2026-04-14T22:12:44.3676368Z #2 [internal] load metadata for docker.io/library/python:3.11-slim
+2026-04-14T22:12:46.5421148Z #2 DONE 5.0s
+2026-04-14T22:12:46.7391314Z 
+2026-04-14T22:12:46.7391853Z #4 [internal] load .dockerignore
+2026-04-14T22:12:46.7392748Z #4 transferring context:
+2026-04-14T22:12:46.9331547Z #4 transferring context: 2B done
+2026-04-14T22:12:46.9331842Z #4 DONE 0.2s
+2026-04-14T22:12:47.6617598Z 
+2026-04-14T22:12:47.6619204Z #5 [internal] load build context
+2026-04-14T22:12:47.6619587Z #5 DONE 0.0s
+2026-04-14T22:12:47.6619717Z 
+2026-04-14T22:12:47.6620873Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:12:47.7696139Z #6 resolve docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:12:47.8956424Z #6 resolve docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf 0.1s done
+2026-04-14T22:12:47.8957491Z #6 DONE 0.5s
+2026-04-14T22:12:47.8957642Z 
+2026-04-14T22:12:47.8957893Z #5 [internal] load build context
+2026-04-14T22:12:48.8739295Z #5 ...
+2026-04-14T22:12:48.8739536Z 
+2026-04-14T22:12:48.8740273Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:12:48.8741017Z #6 DONE 1.4s
+2026-04-14T22:12:48.8741148Z 
+2026-04-14T22:12:48.8741333Z #5 [internal] load build context
+2026-04-14T22:12:51.8665978Z #5 transferring context: 51.43kB 4.0s
+2026-04-14T22:12:56.4705733Z #5 ...
+2026-04-14T22:12:56.4706706Z 
+2026-04-14T22:12:56.4710830Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:12:56.4717336Z #6 sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 24.12MB / 29.78MB 7.2s
+2026-04-14T22:12:56.4724643Z #6 sha256:37ffa6577b04e98598e2c10432eb8c66cfc1af6c7698b21c6163f8334606aa14 1.29MB / 1.29MB 1.2s done
+2026-04-14T22:12:56.4730475Z #6 sha256:0816ee351b60c03c7a77a3f50c717891eedd927f4e6a1d59f6cce05268065606 251B / 251B 0.9s done
+2026-04-14T22:12:56.4737886Z #6 sha256:d98f36ba21593a4014243f41ec9c5370abd34f4f65a5d074e41bce23f5f6a165 13.63MB / 14.37MB 5.6s
+2026-04-14T22:12:58.5586957Z #6 sha256:d98f36ba21593a4014243f41ec9c5370abd34f4f65a5d074e41bce23f5f6a165 14.37MB / 14.37MB 7.7s
+2026-04-14T22:12:59.0180414Z #6 sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 25.69MB / 29.78MB 9.9s
+2026-04-14T22:12:59.0181523Z #6 sha256:d98f36ba21593a4014243f41ec9c5370abd34f4f65a5d074e41bce23f5f6a165 14.37MB / 14.37MB 8.0s done
+2026-04-14T22:13:00.0222324Z #6 sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 27.61MB / 29.78MB 10.8s
+2026-04-14T22:13:01.8220074Z #6 sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 29.18MB / 29.78MB 12.6s
+2026-04-14T22:13:02.9189953Z #6 sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 29.78MB / 29.78MB 13.5s done
+2026-04-14T22:13:03.1580094Z #6 extracting sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976
+2026-04-14T22:13:06.5511301Z #6 ...
+2026-04-14T22:13:06.5511490Z 
+2026-04-14T22:13:06.5511617Z #5 [internal] load build context
+2026-04-14T22:13:06.5511883Z #5 transferring context: 1.50MB 18.6s
+2026-04-14T22:13:11.5910064Z #5 transferring context: 3.14MB 23.8s
+2026-04-14T22:13:12.6029227Z #5 transferring context: 3.39MB 24.8s done
+2026-04-14T22:13:20.8423448Z #5 DONE 32.4s
+2026-04-14T22:13:20.8423707Z 
+2026-04-14T22:13:20.8424366Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:15:58.6076149Z #6 extracting sha256:5435b2dcdf5cb7faa0d5b1d4d54be2c72a776fab9a605336f5067d6e9ecb5976 175.4s done
+2026-04-14T22:15:58.6076834Z #6 DONE 190.9s
+2026-04-14T22:15:58.7570089Z 
+2026-04-14T22:15:58.7570962Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:15:58.7571739Z #6 extracting sha256:37ffa6577b04e98598e2c10432eb8c66cfc1af6c7698b21c6163f8334606aa14
+2026-04-14T22:16:09.9935700Z #6 extracting sha256:37ffa6577b04e98598e2c10432eb8c66cfc1af6c7698b21c6163f8334606aa14 11.4s done
+2026-04-14T22:16:10.1434801Z #6 extracting sha256:d98f36ba21593a4014243f41ec9c5370abd34f4f65a5d074e41bce23f5f6a165
+2026-04-14T22:16:59.1165623Z #6 extracting sha256:d98f36ba21593a4014243f41ec9c5370abd34f4f65a5d074e41bce23f5f6a165 49.0s done
+2026-04-14T22:16:59.1167036Z #6 DONE 251.3s
+2026-04-14T22:16:59.2661270Z 
+2026-04-14T22:16:59.2662022Z #6 [builder 1/5] FROM docker.io/library/python:3.11-slim@sha256:233de06753d30d120b1a3ce359d8d3be8bda78524cd8f520c99883bfe33964cf
+2026-04-14T22:16:59.2662785Z #6 extracting sha256:0816ee351b60c03c7a77a3f50c717891eedd927f4e6a1d59f6cce05268065606
+2026-04-14T22:17:00.6817086Z #6 extracting sha256:0816ee351b60c03c7a77a3f50c717891eedd927f4e6a1d59f6cce05268065606 1.7s done
+2026-04-14T22:17:00.6817788Z #6 DONE 253.0s
+2026-04-14T22:17:00.8347590Z 
+2026-04-14T22:17:00.8395714Z #7 [builder 2/5] WORKDIR /app
+2026-04-14T22:17:03.4445531Z #7 DONE 2.8s
+2026-04-14T22:17:03.6774321Z 
+2026-04-14T22:17:03.6775958Z #8 [builder 3/5] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential gcc && rm -rf /var/lib/apt/lists/*
+2026-04-14T22:17:11.2763026Z #8 7.747 Hit:1 http://deb.debian.org/debian trixie InRelease
+2026-04-14T22:17:11.2764295Z #8 7.747 Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-04-14T22:17:11.4772711Z #8 7.765 Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-04-14T22:17:11.4773700Z #8 7.800 Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9671 kB]
+2026-04-14T22:17:12.1764344Z #8 8.648 Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+2026-04-14T22:17:12.3260466Z #8 8.649 Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [123 kB]
+2026-04-14T22:17:13.2320926Z #8 9.705 Fetched 9889 kB in 2s (4466 kB/s)
+2026-04-14T22:17:18.3860995Z #8 9.705 Reading package lists...
+2026-04-14T22:17:19.3728971Z #8 14.79 Reading package lists...
+2026-04-14T22:17:19.6881473Z #8 15.89 Building dependency tree...
+2026-04-14T22:17:19.6882731Z #8 16.07 Reading state information...
+2026-04-14T22:17:21.1193344Z #8 17.50 The following additional packages will be installed:
+2026-04-14T22:17:21.1194184Z #8 17.50   binutils binutils-common binutils-x86-64-linux-gnu bzip2 cpp cpp-14
+2026-04-14T22:17:21.2758569Z #8 17.50   cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev g++ g++-14
+2026-04-14T22:17:21.2759338Z #8 17.50   g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc-14 gcc-14-x86-64-linux-gnu
+2026-04-14T22:17:21.2760215Z #8 17.50   gcc-x86-64-linux-gnu libasan8 libatomic1 libbinutils libc-dev-bin libc6-dev
+2026-04-14T22:17:21.2761194Z #8 17.50   libcc1-0 libcrypt-dev libctf-nobfd0 libctf0 libdpkg-perl libgcc-14-dev
+2026-04-14T22:17:21.2761723Z #8 17.50   libgdbm-compat4t64 libgomp1 libgprofng0 libhwasan0 libisl23 libitm1
+2026-04-14T22:17:21.2762275Z #8 17.50   libjansson4 liblsan0 libmpc3 libmpfr6 libperl5.40 libquadmath0 libsframe1
+2026-04-14T22:17:21.2762777Z #8 17.50   libstdc++-14-dev libtsan2 libubsan1 linux-libc-dev make patch perl
+2026-04-14T22:17:21.2763183Z #8 17.50   perl-modules-5.40 rpcsvc-proto xz-utils
+2026-04-14T22:17:21.2763476Z #8 17.51 Suggested packages:
+2026-04-14T22:17:21.2763853Z #8 17.51   binutils-doc gprofng-gui binutils-gold bzip2-doc cpp-doc gcc-14-locales
+2026-04-14T22:17:21.2764354Z #8 17.51   cpp-14-doc debian-keyring debian-tag2upload-keyring g++-multilib
+2026-04-14T22:17:21.2764828Z #8 17.51   g++-14-multilib gcc-14-doc gcc-multilib manpages-dev autoconf automake
+2026-04-14T22:17:21.2765311Z #8 17.51   libtool flex bison gdb gcc-doc gcc-14-multilib gdb-x86-64-linux-gnu
+2026-04-14T22:17:21.2765818Z #8 17.51   libc-devtools glibc-doc sq | sqop | rsop | gosop | pgpainless-cli | gpg-sq
+2026-04-14T22:17:21.2772660Z #8 17.51   | gnupg sensible-utils git bzr libstdc++-14-doc make-doc ed diffutils-doc
+2026-04-14T22:17:21.2773512Z #8 17.51   perl-doc libterm-readline-gnu-perl | libterm-readline-perl-perl
+2026-04-14T22:17:21.2774120Z #8 17.51   libtap-harness-archive-perl
+2026-04-14T22:17:21.2774506Z #8 17.51 Recommended packages:
+2026-04-14T22:17:21.2774866Z #8 17.51   fakeroot sq | sqop | rsop | gosop | pgpainless-cli | gpg-sq | gnupg
+2026-04-14T22:17:21.2775804Z #8 17.51   libalgorithm-merge-perl manpages manpages-dev libfile-fcntllock-perl
+2026-04-14T22:17:21.2776226Z #8 17.51   liblocale-gettext-perl
+2026-04-14T22:17:21.8052216Z #8 18.19 The following NEW packages will be installed:
+2026-04-14T22:17:21.8053071Z #8 18.19   binutils binutils-common binutils-x86-64-linux-gnu build-essential bzip2 cpp
+2026-04-14T22:17:21.8054006Z #8 18.19   cpp-14 cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu dpkg-dev g++ g++-14
+2026-04-14T22:17:21.9589613Z #8 18.19   g++-14-x86-64-linux-gnu g++-x86-64-linux-gnu gcc gcc-14
+2026-04-14T22:17:21.9590455Z #8 18.19   gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu libasan8 libatomic1 libbinutils
+2026-04-14T22:17:21.9591409Z #8 18.19   libc-dev-bin libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0 libctf0
+2026-04-14T22:17:21.9592630Z #8 18.19   libdpkg-perl libgcc-14-dev libgdbm-compat4t64 libgomp1 libgprofng0
+2026-04-14T22:17:21.9593579Z #8 18.19   libhwasan0 libisl23 libitm1 libjansson4 liblsan0 libmpc3 libmpfr6
+2026-04-14T22:17:21.9594557Z #8 18.19   libperl5.40 libquadmath0 libsframe1 libstdc++-14-dev libtsan2 libubsan1
+2026-04-14T22:17:21.9595515Z #8 18.19   linux-libc-dev make patch perl perl-modules-5.40 rpcsvc-proto xz-utils
+2026-04-14T22:17:23.8046425Z #8 20.19 0 upgraded, 52 newly installed, 0 to remove and 3 not upgraded.
+2026-04-14T22:17:23.8046862Z #8 20.19 Need to get 82.4 MB of archives.
+2026-04-14T22:17:23.8047240Z #8 20.19 After this operation, 336 MB of additional disk space will be used.
+2026-04-14T22:17:23.8047780Z #8 20.19 Get:1 http://deb.debian.org/debian trixie/main amd64 bzip2 amd64 1.0.8-6 [40.5 kB]
+2026-04-14T22:17:24.0930276Z #8 20.45 Get:2 http://deb.debian.org/debian trixie/main amd64 perl-modules-5.40 all 5.40.1-6 [3019 kB]
+2026-04-14T22:17:28.1294714Z #8 24.50 Get:3 http://deb.debian.org/debian trixie/main amd64 libgdbm-compat4t64 amd64 1.24-2 [50.3 kB]
+2026-04-14T22:17:28.2792902Z #8 24.50 Get:4 http://deb.debian.org/debian trixie/main amd64 libperl5.40 amd64 5.40.1-6 [4341 kB]
+2026-04-14T22:17:29.2998509Z #8 25.68 Get:5 http://deb.debian.org/debian trixie/main amd64 perl amd64 5.40.1-6 [267 kB]
+2026-04-14T22:17:29.5213663Z #8 25.75 Get:6 http://deb.debian.org/debian trixie/main amd64 xz-utils amd64 5.8.1-1 [660 kB]
+2026-04-14T22:17:29.5214289Z #8 25.75 Get:7 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+2026-04-14T22:17:29.5214876Z #8 25.75 Get:8 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+2026-04-14T22:17:29.7020009Z #8 26.08 Get:9 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+2026-04-14T22:17:29.8107450Z #8 26.13 Get:10 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+2026-04-14T22:17:29.8108960Z #8 26.19 Get:11 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+2026-04-14T22:17:30.0218245Z #8 26.22 Get:12 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+2026-04-14T22:17:30.0219875Z #8 26.23 Get:13 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+2026-04-14T22:17:30.0221031Z #8 26.24 Get:14 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+2026-04-14T22:17:30.2478375Z #8 26.63 Get:15 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+2026-04-14T22:17:30.4373973Z #8 26.67 Get:16 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u2 [59.4 kB]
+2026-04-14T22:17:30.4375114Z #8 26.67 Get:17 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.74-2 [2746 kB]
+2026-04-14T22:17:31.0752275Z #8 27.46 Get:18 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+2026-04-14T22:17:31.2306516Z #8 27.46 Get:19 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+2026-04-14T22:17:31.2307198Z #8 27.46 Get:20 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u2 [1996 kB]
+2026-04-14T22:17:31.5477646Z #8 27.93 Get:21 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+2026-04-14T22:17:31.7920224Z #8 28.17 Get:22 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+2026-04-14T22:17:32.4024146Z #8 28.78 Get:23 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+2026-04-14T22:17:32.5135879Z #8 28.90 Get:24 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+2026-04-14T22:17:37.6589152Z #8 34.18 Get:25 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+2026-04-14T22:17:37.7652518Z #8 34.18 Get:26 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+2026-04-14T22:17:37.7655603Z #8 34.18 Get:27 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+2026-04-14T22:17:37.7658244Z #8 34.24 Get:28 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+2026-04-14T22:17:37.7659442Z #8 34.26 Get:29 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+2026-04-14T22:17:37.7662966Z #8 34.26 Get:30 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+2026-04-14T22:17:37.7668237Z #8 34.26 Get:31 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+2026-04-14T22:17:37.7671333Z #8 34.26 Get:32 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+2026-04-14T22:17:37.7675338Z #8 34.28 Get:33 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+2026-04-14T22:17:38.2392300Z #8 34.76 Get:34 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+2026-04-14T22:17:38.7681416Z #8 35.29 Get:35 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+2026-04-14T22:17:39.1213702Z #8 35.64 Get:36 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+2026-04-14T22:17:39.3266055Z #8 35.84 Get:37 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+2026-04-14T22:17:39.4786488Z #8 35.85 Get:38 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+2026-04-14T22:17:40.2878301Z #8 36.81 Get:39 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+2026-04-14T22:17:49.4891987Z #8 46.00 Get:40 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+2026-04-14T22:17:49.7744809Z #8 46.28 Get:41 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+2026-04-14T22:17:49.9683731Z #8 46.28 Get:42 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+2026-04-14T22:17:49.9684598Z #8 46.32 Get:43 http://deb.debian.org/debian trixie/main amd64 libstdc++-14-dev amd64 14.2.0-19 [2376 kB]
+2026-04-14T22:17:50.8680129Z #8 47.37 Get:44 http://deb.debian.org/debian trixie/main amd64 g++-14-x86-64-linux-gnu amd64 14.2.0-19 [12.1 MB]
+2026-04-14T22:17:56.1256436Z #8 52.63 Get:45 http://deb.debian.org/debian trixie/main amd64 g++-14 amd64 14.2.0-19 [22.5 kB]
+2026-04-14T22:17:56.2766530Z #8 52.63 Get:46 http://deb.debian.org/debian trixie/main amd64 g++-x86-64-linux-gnu amd64 4:14.2.0-1 [1200 B]
+2026-04-14T22:17:56.2767175Z #8 52.63 Get:47 http://deb.debian.org/debian trixie/main amd64 g++ amd64 4:14.2.0-1 [1344 B]
+2026-04-14T22:17:56.2767712Z #8 52.63 Get:48 http://deb.debian.org/debian trixie/main amd64 make amd64 4.4.1-2 [463 kB]
+2026-04-14T22:17:56.5379080Z #8 53.05 Get:49 http://deb.debian.org/debian trixie/main amd64 libdpkg-perl all 1.22.22 [651 kB]
+2026-04-14T22:17:57.4688001Z #8 53.98 Get:50 http://deb.debian.org/debian trixie/main amd64 patch amd64 2.8-2 [134 kB]
+2026-04-14T22:17:57.6783620Z #8 54.04 Get:51 http://deb.debian.org/debian trixie/main amd64 dpkg-dev all 1.22.22 [1337 kB]
+2026-04-14T22:17:57.6883657Z #8 54.20 Get:52 http://deb.debian.org/debian trixie/main amd64 build-essential amd64 12.12 [4624 B]
+2026-04-14T22:18:04.8036375Z #8 61.31 debconf: unable to initialize frontend: Dialog
+2026-04-14T22:18:04.8037188Z #8 61.31 debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-04-14T22:18:04.8037861Z #8 61.31 debconf: falling back to frontend: Readline
+2026-04-14T22:18:04.9620768Z #8 61.31 debconf: unable to initialize frontend: Readline
+2026-04-14T22:18:04.9622934Z #8 61.31 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 52.)
+2026-04-14T22:18:04.9625615Z #8 61.31 debconf: falling back to frontend: Teletype
+2026-04-14T22:18:04.9626252Z #8 61.32 debconf: unable to initialize frontend: Teletype
+2026-04-14T22:18:04.9626916Z #8 61.32 debconf: (This frontend requires a controlling tty.)
+2026-04-14T22:18:04.9627572Z #8 61.32 debconf: falling back to frontend: Noninteractive
+2026-04-14T22:18:26.0818379Z #8 82.59 Fetched 82.4 MB in 36s (2317 kB/s)
+2026-04-14T22:18:26.3441483Z #8 82.85 Selecting previously unselected package bzip2.
+2026-04-14T22:18:26.5458327Z #8 82.85 (Reading database ... 
+2026-04-14T22:18:26.5458632Z (Reading database ... 5%
+2026-04-14T22:18:26.5458876Z (Reading database ... 10%
+2026-04-14T22:18:26.5459224Z (Reading database ... 15%
+2026-04-14T22:18:26.5460151Z (Reading database ... 20%
+2026-04-14T22:18:26.5460479Z (Reading database ... 25%
+2026-04-14T22:18:26.5461062Z (Reading database ... 30%
+2026-04-14T22:18:26.5461387Z (Reading database ... 35%
+2026-04-14T22:18:26.5461721Z (Reading database ... 40%
+2026-04-14T22:18:26.5462032Z (Reading database ... 45%
+2026-04-14T22:18:26.5462354Z (Reading database ... 50%
+2026-04-14T22:18:26.5462680Z (Reading database ... 55%
+2026-04-14T22:18:26.5463675Z (Reading database ... 60%
+2026-04-14T22:18:26.5464194Z (Reading database ... 65%
+2026-04-14T22:18:26.7367235Z (Reading database ... 70%
+2026-04-14T22:18:26.7367837Z (Reading database ... 75%
+2026-04-14T22:18:26.7368180Z (Reading database ... 80%
+2026-04-14T22:18:26.7368520Z (Reading database ... 85%
+2026-04-14T22:18:26.7369156Z (Reading database ... 90%
+2026-04-14T22:18:26.7369834Z (Reading database ... 95%
+2026-04-14T22:18:26.7370200Z (Reading database ... 100%
+2026-04-14T22:18:26.7371043Z (Reading database ... 5645 files and directories currently installed.)
+2026-04-14T22:18:26.7378129Z #8 83.06 Preparing to unpack .../00-bzip2_1.0.8-6_amd64.deb ...
+2026-04-14T22:18:26.7378856Z #8 83.09 Unpacking bzip2 (1.0.8-6) ...
+2026-04-14T22:18:27.0786579Z #8 83.58 Selecting previously unselected package perl-modules-5.40.
+2026-04-14T22:18:27.2474273Z #8 83.58 Preparing to unpack .../01-perl-modules-5.40_5.40.1-6_all.deb ...
+2026-04-14T22:18:27.2474731Z #8 83.60 Unpacking perl-modules-5.40 (5.40.1-6) ...
+2026-04-14T22:18:38.0234195Z #8 94.53 Selecting previously unselected package libgdbm-compat4t64:amd64.
+2026-04-14T22:18:38.1856975Z #8 94.53 Preparing to unpack .../02-libgdbm-compat4t64_1.24-2_amd64.deb ...
+2026-04-14T22:18:38.1857535Z #8 94.54 Unpacking libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-04-14T22:18:38.2472902Z #8 94.76 Selecting previously unselected package libperl5.40:amd64.
+2026-04-14T22:18:38.4047320Z #8 94.76 Preparing to unpack .../03-libperl5.40_5.40.1-6_amd64.deb ...
+2026-04-14T22:18:38.4047764Z #8 94.76 Unpacking libperl5.40:amd64 (5.40.1-6) ...
+2026-04-14T22:18:47.1197219Z #8 103.6 Selecting previously unselected package perl.
+2026-04-14T22:18:47.3661441Z #8 103.6 Preparing to unpack .../04-perl_5.40.1-6_amd64.deb ...
+2026-04-14T22:18:47.3661802Z #8 103.7 Unpacking perl (5.40.1-6) ...
+2026-04-14T22:18:47.6535058Z #8 104.2 Selecting previously unselected package xz-utils.
+2026-04-14T22:18:47.8227045Z #8 104.2 Preparing to unpack .../05-xz-utils_5.8.1-1_amd64.deb ...
+2026-04-14T22:18:47.8228475Z #8 104.2 Unpacking xz-utils (5.8.1-1) ...
+2026-04-14T22:18:47.9733972Z #8 104.5 Selecting previously unselected package libsframe1:amd64.
+2026-04-14T22:18:48.1137514Z #8 104.5 Preparing to unpack .../06-libsframe1_2.44-3_amd64.deb ...
+2026-04-14T22:18:48.1138261Z #8 104.5 Unpacking libsframe1:amd64 (2.44-3) ...
+2026-04-14T22:18:48.1140788Z #8 104.6 Selecting previously unselected package binutils-common:amd64.
+2026-04-14T22:18:48.2816858Z #8 104.6 Preparing to unpack .../07-binutils-common_2.44-3_amd64.deb ...
+2026-04-14T22:18:48.2817392Z #8 104.6 Unpacking binutils-common:amd64 (2.44-3) ...
+2026-04-14T22:18:48.4396998Z #8 104.9 Selecting previously unselected package libbinutils:amd64.
+2026-04-14T22:18:48.6078226Z #8 104.9 Preparing to unpack .../08-libbinutils_2.44-3_amd64.deb ...
+2026-04-14T22:18:48.6078651Z #8 105.0 Unpacking libbinutils:amd64 (2.44-3) ...
+2026-04-14T22:18:48.6919031Z #8 105.2 Selecting previously unselected package libgprofng0:amd64.
+2026-04-14T22:18:48.8755362Z #8 105.2 Preparing to unpack .../09-libgprofng0_2.44-3_amd64.deb ...
+2026-04-14T22:18:48.8756164Z #8 105.2 Unpacking libgprofng0:amd64 (2.44-3) ...
+2026-04-14T22:18:49.1087321Z #8 105.6 Selecting previously unselected package libctf-nobfd0:amd64.
+2026-04-14T22:18:49.2776203Z #8 105.6 Preparing to unpack .../10-libctf-nobfd0_2.44-3_amd64.deb ...
+2026-04-14T22:18:49.2776634Z #8 105.6 Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+2026-04-14T22:18:49.3565701Z #8 105.9 Selecting previously unselected package libctf0:amd64.
+2026-04-14T22:18:49.5334604Z #8 105.9 Preparing to unpack .../11-libctf0_2.44-3_amd64.deb ...
+2026-04-14T22:18:49.5336234Z #8 105.9 Unpacking libctf0:amd64 (2.44-3) ...
+2026-04-14T22:18:49.5336930Z #8 106.0 Selecting previously unselected package libjansson4:amd64.
+2026-04-14T22:18:49.6661775Z #8 106.0 Preparing to unpack .../12-libjansson4_2.14-2+b3_amd64.deb ...
+2026-04-14T22:18:49.6662772Z #8 106.1 Unpacking libjansson4:amd64 (2.14-2+b3) ...
+2026-04-14T22:18:49.6664449Z #8 106.2 Selecting previously unselected package binutils-x86-64-linux-gnu.
+2026-04-14T22:18:49.8231052Z #8 106.2 Preparing to unpack .../13-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+2026-04-14T22:18:49.8231653Z #8 106.2 Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+2026-04-14T22:18:50.4806672Z #8 107.0 Selecting previously unselected package binutils.
+2026-04-14T22:18:50.6504225Z #8 107.0 Preparing to unpack .../14-binutils_2.44-3_amd64.deb ...
+2026-04-14T22:18:50.6504809Z #8 107.0 Unpacking binutils (2.44-3) ...
+2026-04-14T22:18:50.7999595Z #8 107.3 Selecting previously unselected package libc-dev-bin.
+2026-04-14T22:18:50.9476596Z #8 107.3 Preparing to unpack .../15-libc-dev-bin_2.41-12+deb13u2_amd64.deb ...
+2026-04-14T22:18:50.9477997Z #8 107.3 Unpacking libc-dev-bin (2.41-12+deb13u2) ...
+2026-04-14T22:18:50.9478865Z #8 107.5 Selecting previously unselected package linux-libc-dev.
+2026-04-14T22:18:51.1200015Z #8 107.5 Preparing to unpack .../16-linux-libc-dev_6.12.74-2_all.deb ...
+2026-04-14T22:18:51.1200650Z #8 107.5 Unpacking linux-libc-dev (6.12.74-2) ...
+2026-04-14T22:19:24.3698232Z #8 140.9 Selecting previously unselected package libcrypt-dev:amd64.
+2026-04-14T22:19:24.5828170Z #8 140.9 Preparing to unpack .../17-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+2026-04-14T22:19:24.5828645Z #8 140.9 Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-04-14T22:19:24.6584058Z #8 141.2 Selecting previously unselected package rpcsvc-proto.
+2026-04-14T22:19:24.8171025Z #8 141.2 Preparing to unpack .../18-rpcsvc-proto_1.4.3-1_amd64.deb ...
+2026-04-14T22:19:24.8171969Z #8 141.2 Unpacking rpcsvc-proto (1.4.3-1) ...
+2026-04-14T22:19:25.0044977Z #8 141.5 Selecting previously unselected package libc6-dev:amd64.
+2026-04-14T22:19:25.1614774Z #8 141.5 Preparing to unpack .../19-libc6-dev_2.41-12+deb13u2_amd64.deb ...
+2026-04-14T22:19:25.1615236Z #8 141.5 Unpacking libc6-dev:amd64 (2.41-12+deb13u2) ...
+2026-04-14T22:19:35.6426573Z #8 152.1 Selecting previously unselected package libisl23:amd64.
+2026-04-14T22:19:36.1834464Z #8 152.7 Preparing to unpack .../20-libisl23_0.27-1_amd64.deb ...
+2026-04-14T22:19:36.1835065Z #8 152.7 Unpacking libisl23:amd64 (0.27-1) ...
+2026-04-14T22:19:36.6543792Z #8 153.2 Selecting previously unselected package libmpfr6:amd64.
+2026-04-14T22:19:36.8122822Z #8 153.2 Preparing to unpack .../21-libmpfr6_4.2.2-1_amd64.deb ...
+2026-04-14T22:19:36.8123238Z #8 153.2 Unpacking libmpfr6:amd64 (4.2.2-1) ...
+2026-04-14T22:19:36.9160025Z #8 153.4 Selecting previously unselected package libmpc3:amd64.
+2026-04-14T22:19:37.0670912Z #8 153.4 Preparing to unpack .../22-libmpc3_1.3.1-1+b3_amd64.deb ...
+2026-04-14T22:19:37.9233176Z #8 154.4 Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+2026-04-14T22:19:39.8691271Z #8 156.4 Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+2026-04-14T22:19:40.0266410Z #8 156.4 Preparing to unpack .../23-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-04-14T22:19:40.0267080Z #8 156.4 Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:08.6437657Z #8 185.1 Selecting previously unselected package cpp-14.
+2026-04-14T22:20:08.8006591Z #8 185.1 Preparing to unpack .../24-cpp-14_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:08.8007294Z #8 185.1 Unpacking cpp-14 (14.2.0-19) ...
+2026-04-14T22:20:09.0524768Z #8 185.5 Selecting previously unselected package cpp-x86-64-linux-gnu.
+2026-04-14T22:20:09.2718495Z #8 185.5 Preparing to unpack .../25-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:09.2719370Z #8 185.6 Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:09.3160050Z #8 185.8 Selecting previously unselected package cpp.
+2026-04-14T22:20:09.4226702Z #8 185.8 Preparing to unpack .../26-cpp_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:09.4228607Z #8 185.8 Unpacking cpp (4:14.2.0-1) ...
+2026-04-14T22:20:09.4232173Z #8 185.9 Selecting previously unselected package libcc1-0:amd64.
+2026-04-14T22:20:09.5236851Z #8 185.9 Preparing to unpack .../27-libcc1-0_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:09.5237291Z #8 185.9 Unpacking libcc1-0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:09.5237680Z #8 186.0 Selecting previously unselected package libgomp1:amd64.
+2026-04-14T22:20:09.5238098Z #8 186.0 Preparing to unpack .../28-libgomp1_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:09.6696017Z #8 186.0 Unpacking libgomp1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:09.6698855Z #8 186.1 Selecting previously unselected package libitm1:amd64.
+2026-04-14T22:20:09.8267806Z #8 186.1 Preparing to unpack .../29-libitm1_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:09.8268283Z #8 186.1 Unpacking libitm1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:09.8959898Z #8 186.4 Selecting previously unselected package libatomic1:amd64.
+2026-04-14T22:20:09.9958218Z #8 186.4 Preparing to unpack .../30-libatomic1_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:09.9959293Z #8 186.4 Unpacking libatomic1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:09.9959966Z #8 186.5 Selecting previously unselected package libasan8:amd64.
+2026-04-14T22:20:10.1532600Z #8 186.5 Preparing to unpack .../31-libasan8_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:10.1533006Z #8 186.5 Unpacking libasan8:amd64 (14.2.0-19) ...
+2026-04-14T22:20:10.4402984Z #8 186.9 Selecting previously unselected package liblsan0:amd64.
+2026-04-14T22:20:10.6115169Z #8 186.9 Preparing to unpack .../32-liblsan0_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:10.6122196Z #8 186.9 Unpacking liblsan0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:10.6827407Z #8 187.2 Selecting previously unselected package libtsan2:amd64.
+2026-04-14T22:20:10.8504492Z #8 187.2 Preparing to unpack .../33-libtsan2_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:10.8504935Z #8 187.2 Unpacking libtsan2:amd64 (14.2.0-19) ...
+2026-04-14T22:20:11.0805059Z #8 187.6 Selecting previously unselected package libubsan1:amd64.
+2026-04-14T22:20:11.2487665Z #8 187.6 Preparing to unpack .../34-libubsan1_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:11.2488186Z #8 187.6 Unpacking libubsan1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:11.3407324Z #8 187.8 Selecting previously unselected package libhwasan0:amd64.
+2026-04-14T22:20:11.4979429Z #8 187.8 Preparing to unpack .../35-libhwasan0_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:11.4979903Z #8 187.8 Unpacking libhwasan0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:11.5143347Z #8 188.0 Selecting previously unselected package libquadmath0:amd64.
+2026-04-14T22:20:11.7222323Z #8 188.0 Preparing to unpack .../36-libquadmath0_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:11.7222932Z #8 188.0 Unpacking libquadmath0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:11.7223329Z #8 188.1 Selecting previously unselected package libgcc-14-dev:amd64.
+2026-04-14T22:20:11.7223961Z #8 188.1 Preparing to unpack .../37-libgcc-14-dev_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:11.7224378Z #8 188.1 Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-04-14T22:20:18.9655616Z #8 195.5 Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+2026-04-14T22:20:19.1350466Z #8 195.5 Preparing to unpack .../38-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:19.1350969Z #8 195.5 Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:43.3732605Z #8 219.9 Selecting previously unselected package gcc-14.
+2026-04-14T22:20:43.5307728Z #8 219.9 Preparing to unpack .../39-gcc-14_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:43.5308125Z #8 219.9 Unpacking gcc-14 (14.2.0-19) ...
+2026-04-14T22:20:44.3682883Z #8 220.9 Selecting previously unselected package gcc-x86-64-linux-gnu.
+2026-04-14T22:20:44.5372801Z #8 220.9 Preparing to unpack .../40-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:44.5374688Z #8 220.9 Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:45.5540577Z #8 222.1 Selecting previously unselected package gcc.
+2026-04-14T22:20:45.7225983Z #8 222.1 Preparing to unpack .../41-gcc_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:45.7226509Z #8 222.1 Unpacking gcc (4:14.2.0-1) ...
+2026-04-14T22:20:45.8743367Z #8 222.4 Selecting previously unselected package libstdc++-14-dev:amd64.
+2026-04-14T22:20:45.9908143Z #8 222.4 Preparing to unpack .../42-libstdc++-14-dev_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:45.9909199Z #8 222.5 Unpacking libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-04-14T22:20:49.4640198Z #8 226.0 Selecting previously unselected package g++-14-x86-64-linux-gnu.
+2026-04-14T22:20:49.6770737Z #8 226.0 Preparing to unpack .../43-g++-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:49.6771271Z #8 226.0 Unpacking g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:53.1714142Z #8 229.7 Selecting previously unselected package g++-14.
+2026-04-14T22:20:53.3399949Z #8 229.7 Preparing to unpack .../44-g++-14_14.2.0-19_amd64.deb ...
+2026-04-14T22:20:53.3400599Z #8 229.7 Unpacking g++-14 (14.2.0-19) ...
+2026-04-14T22:20:53.3525999Z #8 229.9 Selecting previously unselected package g++-x86-64-linux-gnu.
+2026-04-14T22:20:53.5219384Z #8 229.9 Preparing to unpack .../45-g++-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:53.5219880Z #8 229.9 Unpacking g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:53.8817730Z #8 230.4 Selecting previously unselected package g++.
+2026-04-14T22:20:54.0513251Z #8 230.4 Preparing to unpack .../46-g++_4%3a14.2.0-1_amd64.deb ...
+2026-04-14T22:20:54.0514016Z #8 230.4 Unpacking g++ (4:14.2.0-1) ...
+2026-04-14T22:20:54.3911477Z #8 230.9 Selecting previously unselected package make.
+2026-04-14T22:20:54.5638623Z #8 230.9 Preparing to unpack .../47-make_4.4.1-2_amd64.deb ...
+2026-04-14T22:20:54.5639116Z #8 230.9 Unpacking make (4.4.1-2) ...
+2026-04-14T22:20:54.6516513Z #8 231.2 Selecting previously unselected package libdpkg-perl.
+2026-04-14T22:20:54.8211209Z #8 231.2 Preparing to unpack .../48-libdpkg-perl_1.22.22_all.deb ...
+2026-04-14T22:20:54.8211654Z #8 231.2 Unpacking libdpkg-perl (1.22.22) ...
+2026-04-14T22:20:55.2731866Z #8 231.8 Selecting previously unselected package patch.
+2026-04-14T22:20:55.4427336Z #8 231.8 Preparing to unpack .../49-patch_2.8-2_amd64.deb ...
+2026-04-14T22:20:55.4427700Z #8 231.8 Unpacking patch (2.8-2) ...
+2026-04-14T22:20:55.4489274Z #8 232.0 Selecting previously unselected package dpkg-dev.
+2026-04-14T22:20:55.6056439Z #8 232.0 Preparing to unpack .../50-dpkg-dev_1.22.22_all.deb ...
+2026-04-14T22:20:55.6056822Z #8 232.0 Unpacking dpkg-dev (1.22.22) ...
+2026-04-14T22:20:55.6195521Z #8 232.1 Selecting previously unselected package build-essential.
+2026-04-14T22:20:55.7765050Z #8 232.1 Preparing to unpack .../51-build-essential_12.12_amd64.deb ...
+2026-04-14T22:20:55.7765457Z #8 232.1 Unpacking build-essential (12.12) ...
+2026-04-14T22:20:55.8215858Z #8 232.3 Setting up libgdbm-compat4t64:amd64 (1.24-2) ...
+2026-04-14T22:20:55.9289286Z #8 232.3 Setting up binutils-common:amd64 (2.44-3) ...
+2026-04-14T22:20:55.9292237Z #8 232.4 Setting up linux-libc-dev (6.12.74-2) ...
+2026-04-14T22:20:55.9293706Z #8 232.4 Setting up libctf-nobfd0:amd64 (2.44-3) ...
+2026-04-14T22:20:55.9294302Z #8 232.4 Setting up libgomp1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:55.9294804Z #8 232.4 Setting up bzip2 (1.0.8-6) ...
+2026-04-14T22:20:56.0672504Z #8 232.5 Setting up libsframe1:amd64 (2.44-3) ...
+2026-04-14T22:20:56.0673286Z #8 232.6 Setting up libjansson4:amd64 (2.14-2+b3) ...
+2026-04-14T22:20:56.1880845Z #8 232.6 Setting up rpcsvc-proto (1.4.3-1) ...
+2026-04-14T22:20:56.1881691Z #8 232.6 Setting up make (4.4.1-2) ...
+2026-04-14T22:20:56.1882287Z #8 232.6 Setting up libmpfr6:amd64 (4.2.2-1) ...
+2026-04-14T22:20:56.1882779Z #8 232.6 Setting up xz-utils (5.8.1-1) ...
+2026-04-14T22:20:56.1883377Z #8 232.7 update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+2026-04-14T22:20:56.3012237Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3015649Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3018138Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3020610Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3022307Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3024119Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3025868Z #8 232.7 update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3027032Z #8 232.8 update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3028788Z #8 232.8 update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3030181Z #8 232.8 update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+2026-04-14T22:20:56.3031129Z #8 232.8 Setting up libquadmath0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.3031620Z #8 232.8 Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+2026-04-14T22:20:56.4229518Z #8 232.8 Setting up libatomic1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.4230123Z #8 232.8 Setting up patch (2.8-2) ...
+2026-04-14T22:20:56.4230609Z #8 232.9 Setting up libubsan1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.4233245Z #8 232.9 Setting up perl-modules-5.40 (5.40.1-6) ...
+2026-04-14T22:20:56.4234550Z #8 232.9 Setting up libhwasan0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.4235742Z #8 232.9 Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+2026-04-14T22:20:56.4236311Z #8 232.9 Setting up libasan8:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.5260028Z #8 232.9 Setting up libtsan2:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.5260727Z #8 233.0 Setting up libbinutils:amd64 (2.44-3) ...
+2026-04-14T22:20:56.5261189Z #8 233.0 Setting up libisl23:amd64 (0.27-1) ...
+2026-04-14T22:20:56.5261743Z #8 233.0 Setting up libc-dev-bin (2.41-12+deb13u2) ...
+2026-04-14T22:20:56.5262542Z #8 233.0 Setting up libcc1-0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.5263678Z #8 233.0 Setting up liblsan0:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.6291289Z #8 233.1 Setting up libitm1:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.6291907Z #8 233.1 Setting up libctf0:amd64 (2.44-3) ...
+2026-04-14T22:20:56.6292441Z #8 233.1 Setting up libperl5.40:amd64 (5.40.1-6) ...
+2026-04-14T22:20:56.6292917Z #8 233.1 Setting up perl (5.40.1-6) ...
+2026-04-14T22:20:56.6293284Z #8 233.1 Setting up libgprofng0:amd64 (2.44-3) ...
+2026-04-14T22:20:56.7767982Z #8 233.2 Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:56.7768667Z #8 233.2 Setting up libdpkg-perl (1.22.22) ...
+2026-04-14T22:20:56.7769799Z #8 233.3 Setting up cpp-14 (14.2.0-19) ...
+2026-04-14T22:20:56.8812673Z #8 233.3 Setting up libc6-dev:amd64 (2.41-12+deb13u2) ...
+2026-04-14T22:20:56.8813261Z #8 233.3 Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.8816846Z #8 233.3 Setting up libstdc++-14-dev:amd64 (14.2.0-19) ...
+2026-04-14T22:20:56.8818074Z #8 233.4 Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+2026-04-14T22:20:56.8818709Z #8 233.4 Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:56.8819202Z #8 233.4 Setting up binutils (2.44-3) ...
+2026-04-14T22:20:56.9894141Z #8 233.4 Setting up dpkg-dev (1.22.22) ...
+2026-04-14T22:20:56.9894751Z #8 233.5 Setting up cpp (4:14.2.0-1) ...
+2026-04-14T22:20:56.9895311Z #8 233.5 Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:56.9896183Z #8 233.5 Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:57.0972816Z #8 233.5 Setting up gcc-14 (14.2.0-19) ...
+2026-04-14T22:20:57.0973874Z #8 233.5 Setting up g++-14-x86-64-linux-gnu (14.2.0-19) ...
+2026-04-14T22:20:57.0984060Z #8 233.5 Setting up g++-x86-64-linux-gnu (4:14.2.0-1) ...
+2026-04-14T22:20:57.0984462Z #8 233.6 Setting up g++-14 (14.2.0-19) ...
+2026-04-14T22:20:57.0984900Z #8 233.6 Setting up gcc (4:14.2.0-1) ...
+2026-04-14T22:20:57.0985295Z #8 233.6 Setting up g++ (4:14.2.0-1) ...
+2026-04-14T22:20:57.2831766Z #8 233.6 update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+2026-04-14T22:20:57.2832263Z #8 233.6 Setting up build-essential (12.12) ...
+2026-04-14T22:20:57.2832981Z #8 233.6 Processing triggers for libc-bin (2.41-12+deb13u2) ...
+2026-04-14T22:20:57.4866088Z #8 DONE 234.0s
+2026-04-14T22:20:57.6398018Z 
+2026-04-14T22:20:57.6398708Z #9 [builder 4/5] COPY requirements.txt /app/requirements.txt
+2026-04-14T22:20:57.6693519Z #9 DONE 0.2s
+2026-04-14T22:20:57.8229546Z 
+2026-04-14T22:20:57.8230822Z #10 [builder 5/5] RUN python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+2026-04-14T22:21:11.2211529Z #10 13.55 Requirement already satisfied: pip in /opt/venv/lib/python3.11/site-packages (24.0)
+2026-04-14T22:21:11.5975893Z #10 13.93 Collecting pip
+2026-04-14T22:21:11.8028808Z #10 14.13   Downloading pip-26.0.1-py3-none-any.whl.metadata (4.7 kB)
+2026-04-14T22:21:11.9316543Z #10 14.26 Downloading pip-26.0.1-py3-none-any.whl (1.8 MB)
+2026-04-14T22:21:12.4981011Z #10 14.66    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 4.6 MB/s eta 0:00:00
+2026-04-14T22:21:12.4981849Z #10 14.71 Installing collected packages: pip
+2026-04-14T22:21:12.4982340Z #10 14.71   Attempting uninstall: pip
+2026-04-14T22:21:12.4984091Z #10 14.72     Found existing installation: pip 24.0
+2026-04-14T22:21:12.4985049Z #10 14.83     Uninstalling pip-24.0:
+2026-04-14T22:21:12.7048937Z #10 14.89       Successfully uninstalled pip-24.0
+2026-04-14T22:21:16.2519213Z #10 18.58 Successfully installed pip-26.0.1
+2026-04-14T22:21:17.5114872Z #10 19.84 Collecting fastapi==0.135.1 (from -r requirements.txt (line 1))
+2026-04-14T22:21:17.6823857Z #10 20.01   Downloading fastapi-0.135.1-py3-none-any.whl.metadata (30 kB)
+2026-04-14T22:21:17.8079293Z #10 20.10 Collecting uvicorn==0.41.0 (from -r requirements.txt (line 2))
+2026-04-14T22:21:17.8080240Z #10 20.13   Downloading uvicorn-0.41.0-py3-none-any.whl.metadata (6.7 kB)
+2026-04-14T22:21:17.9838552Z #10 20.31 Collecting mlflow~=3.10.0 (from -r requirements.txt (line 3))
+2026-04-14T22:21:18.1705135Z #10 20.35   Downloading mlflow-3.10.1-py3-none-any.whl.metadata (31 kB)
+2026-04-14T22:21:18.2096201Z #10 20.53 Collecting pydantic==2.12.5 (from -r requirements.txt (line 4))
+2026-04-14T22:21:18.3695731Z #10 20.57   Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+2026-04-14T22:21:18.3696663Z #10 20.69 Collecting asyncpg==0.30.0 (from -r requirements.txt (line 5))
+2026-04-14T22:21:18.5576917Z #10 20.73   Downloading asyncpg-0.30.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.0 kB)
+2026-04-14T22:21:18.7617198Z #10 21.09 Collecting SQLAlchemy==2.0.45 (from -r requirements.txt (line 6))
+2026-04-14T22:21:18.8987269Z #10 21.13   Downloading sqlalchemy-2.0.45-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+2026-04-14T22:21:18.8989673Z #10 21.19 Collecting optuna==4.7.0 (from -r requirements.txt (line 7))
+2026-04-14T22:21:18.8990306Z #10 21.22   Downloading optuna-4.7.0-py3-none-any.whl.metadata (17 kB)
+2026-04-14T22:21:19.0310263Z #10 21.31 Collecting aiofiles==25.1.0 (from -r requirements.txt (line 8))
+2026-04-14T22:21:19.0311153Z #10 21.36   Downloading aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+2026-04-14T22:21:19.2144857Z #10 21.40 Collecting jinja2==3.1.6 (from -r requirements.txt (line 9))
+2026-04-14T22:21:19.2145641Z #10 21.44   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+2026-04-14T22:21:19.2146094Z #10 21.54 Collecting onnx==1.19.1 (from -r requirements.txt (line 10))
+2026-04-14T22:21:19.4410265Z #10 21.62   Downloading onnx-1.19.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (7.0 kB)
+2026-04-14T22:21:19.5279771Z #10 21.85 Collecting onnxscript==0.6.2 (from -r requirements.txt (line 11))
+2026-04-14T22:21:19.6923981Z #10 21.89   Downloading onnxscript-0.6.2-py3-none-any.whl.metadata (13 kB)
+2026-04-14T22:21:19.6924872Z #10 22.02 Collecting scikit-learn==1.7.2 (from -r requirements.txt (line 12))
+2026-04-14T22:21:19.8832206Z #10 22.06   Downloading scikit_learn-1.7.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+2026-04-14T22:21:19.8992695Z #10 22.22 Collecting pytorch-forecasting==1.5.0 (from -r requirements.txt (line 13))
+2026-04-14T22:21:20.0618717Z #10 22.26   Downloading pytorch_forecasting-1.5.0-py3-none-any.whl.metadata (13 kB)
+2026-04-14T22:21:20.0619832Z #10 22.39 Collecting python-multipart==0.0.22 (from -r requirements.txt (line 14))
+2026-04-14T22:21:20.1884972Z #10 22.43   Downloading python_multipart-0.0.22-py3-none-any.whl.metadata (1.8 kB)
+2026-04-14T22:21:20.1885876Z #10 22.51 Collecting torch==2.9.0 (from -r requirements.txt (line 15))
+2026-04-14T22:21:20.3823003Z #10 22.56   Downloading torch-2.9.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+2026-04-14T22:21:20.5113660Z #10 22.84 Collecting numpy==2.4.3 (from -r requirements.txt (line 16))
+2026-04-14T22:21:20.7001247Z #10 22.88   Downloading numpy-2.4.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-04-14T22:21:20.7370901Z #10 23.06 Collecting pandas<3 (from -r requirements.txt (line 17))
+2026-04-14T22:21:20.8779286Z #10 23.10   Downloading pandas-2.3.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (91 kB)
+2026-04-14T22:21:20.8780861Z #10 23.20 Collecting pytest==9.0.2 (from -r requirements.txt (line 18))
+2026-04-14T22:21:21.0102477Z #10 23.24   Downloading pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+2026-04-14T22:21:21.0103085Z #10 23.30 Collecting starlette>=0.46.0 (from fastapi==0.135.1->-r requirements.txt (line 1))
+2026-04-14T22:21:21.0103645Z #10 23.34   Downloading starlette-1.0.0-py3-none-any.whl.metadata (6.3 kB)
+2026-04-14T22:21:21.1445962Z #10 23.39 Collecting typing-extensions>=4.8.0 (from fastapi==0.135.1->-r requirements.txt (line 1))
+2026-04-14T22:21:21.1447023Z #10 23.43   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2026-04-14T22:21:21.1447900Z #10 23.47 Collecting typing-inspection>=0.4.2 (from fastapi==0.135.1->-r requirements.txt (line 1))
+2026-04-14T22:21:21.2619966Z #10 23.51   Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+2026-04-14T22:21:21.2621017Z #10 23.55 Collecting annotated-doc>=0.0.2 (from fastapi==0.135.1->-r requirements.txt (line 1))
+2026-04-14T22:21:21.2621620Z #10 23.59   Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+2026-04-14T22:21:21.3919955Z #10 23.64 Collecting click>=7.0 (from uvicorn==0.41.0->-r requirements.txt (line 2))
+2026-04-14T22:21:21.3921203Z #10 23.67   Downloading click-8.3.2-py3-none-any.whl.metadata (2.6 kB)
+2026-04-14T22:21:21.3922053Z #10 23.72 Collecting h11>=0.8 (from uvicorn==0.41.0->-r requirements.txt (line 2))
+2026-04-14T22:21:21.4969699Z #10 23.76   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-04-14T22:21:21.4976941Z #10 23.82 Collecting annotated-types>=0.6.0 (from pydantic==2.12.5->-r requirements.txt (line 4))
+2026-04-14T22:21:21.6844493Z #10 23.86   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2026-04-14T22:21:22.4409693Z #10 24.77 Collecting pydantic-core==2.41.5 (from pydantic==2.12.5->-r requirements.txt (line 4))
+2026-04-14T22:21:22.6285513Z #10 24.80   Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-04-14T22:21:22.6757166Z #10 25.00 Collecting greenlet>=1 (from SQLAlchemy==2.0.45->-r requirements.txt (line 6))
+2026-04-14T22:21:22.9136271Z #10 25.04   Downloading greenlet-3.4.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.7 kB)
+2026-04-14T22:21:22.9137401Z #10 25.10 Collecting alembic>=1.5.0 (from optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:22.9143452Z #10 25.24   Downloading alembic-1.18.4-py3-none-any.whl.metadata (7.2 kB)
+2026-04-14T22:21:23.0467944Z #10 25.29 Collecting colorlog (from optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:23.0468840Z #10 25.32   Downloading colorlog-6.10.1-py3-none-any.whl.metadata (11 kB)
+2026-04-14T22:21:23.0470493Z #10 25.37 Collecting packaging>=20.0 (from optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:23.1622318Z #10 25.42   Downloading packaging-26.1-py3-none-any.whl.metadata (3.5 kB)
+2026-04-14T22:21:23.1624153Z #10 25.49 Collecting tqdm (from optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:23.2813008Z #10 25.52   Downloading tqdm-4.67.3-py3-none-any.whl.metadata (57 kB)
+2026-04-14T22:21:23.2813980Z #10 25.61 Collecting PyYAML (from optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:23.4030536Z #10 25.65   Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-04-14T22:21:23.4031964Z #10 25.73 Collecting MarkupSafe>=2.0 (from jinja2==3.1.6->-r requirements.txt (line 9))
+2026-04-14T22:21:23.5919009Z #10 25.77   Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-04-14T22:21:23.7403381Z #10 26.07 Collecting protobuf>=4.25.1 (from onnx==1.19.1->-r requirements.txt (line 10))
+2026-04-14T22:21:23.8509355Z #10 26.10   Downloading protobuf-7.34.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+2026-04-14T22:21:23.8511431Z #10 26.18 Collecting ml_dtypes>=0.5.0 (from onnx==1.19.1->-r requirements.txt (line 10))
+2026-04-14T22:21:24.0381894Z #10 26.21   Downloading ml_dtypes-0.5.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.9 kB)
+2026-04-14T22:21:24.0494611Z #10 26.38 Collecting onnx_ir<2,>=0.1.15 (from onnxscript==0.6.2->-r requirements.txt (line 11))
+2026-04-14T22:21:24.2372645Z #10 26.41   Downloading onnx_ir-0.2.0-py3-none-any.whl.metadata (3.3 kB)
+2026-04-14T22:21:24.2868096Z #10 26.61 Collecting scipy>=1.8.0 (from scikit-learn==1.7.2->-r requirements.txt (line 12))
+2026-04-14T22:21:24.4007729Z #10 26.65   Downloading scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+2026-04-14T22:21:24.4011502Z #10 26.73 Collecting joblib>=1.2.0 (from scikit-learn==1.7.2->-r requirements.txt (line 12))
+2026-04-14T22:21:24.5247620Z #10 26.77   Downloading joblib-1.5.3-py3-none-any.whl.metadata (5.5 kB)
+2026-04-14T22:21:24.5248753Z #10 26.81 Collecting threadpoolctl>=3.1.0 (from scikit-learn==1.7.2->-r requirements.txt (line 12))
+2026-04-14T22:21:24.5250671Z #10 26.85   Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+2026-04-14T22:21:24.6289627Z #10 26.92 Collecting lightning<3.0.0,>=2.0.0 (from pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:24.6291472Z #10 26.95   Downloading lightning-2.6.1-py3-none-any.whl.metadata (44 kB)
+2026-04-14T22:21:24.7450603Z #10 27.07 Collecting filelock (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:24.8463903Z #10 27.12   Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+2026-04-14T22:21:24.8465284Z #10 27.17 Collecting sympy>=1.13.3 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:24.9826249Z #10 27.21   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-04-14T22:21:24.9827168Z #10 27.27 Collecting networkx>=2.5.1 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:24.9828409Z #10 27.31   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+2026-04-14T22:21:25.0916271Z #10 27.38 Collecting fsspec>=0.8.5 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.0916974Z #10 27.42   Downloading fsspec-2026.3.0-py3-none-any.whl.metadata (10 kB)
+2026-04-14T22:21:25.2448291Z #10 27.48 Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.2450509Z #10 27.57   Downloading nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.3516330Z #10 27.62 Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.3517657Z #10 27.68   Downloading nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.5178800Z #10 27.72 Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.5180305Z #10 27.77   Downloading nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.5181838Z #10 27.84 Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.6616984Z #10 27.88   Downloading nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+2026-04-14T22:21:25.6621987Z #10 27.94 Collecting nvidia-cublas-cu12==12.8.4.1 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.6639051Z #10 27.98   Downloading nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.7891799Z #10 28.03 Collecting nvidia-cufft-cu12==11.3.3.83 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.7892908Z #10 28.07   Downloading nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.7895425Z #10 28.12 Collecting nvidia-curand-cu12==10.3.9.90 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.9304374Z #10 28.16   Downloading nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:25.9305380Z #10 28.21 Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:25.9306419Z #10 28.26   Downloading nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl.metadata (1.8 kB)
+2026-04-14T22:21:26.0616716Z #10 28.31 Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.0617958Z #10 28.35   Downloading nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+2026-04-14T22:21:26.0618904Z #10 28.39 Collecting nvidia-cusparselt-cu12==0.7.1 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.1962677Z #10 28.43   Downloading nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl.metadata (7.0 kB)
+2026-04-14T22:21:26.1963706Z #10 28.48 Collecting nvidia-nccl-cu12==2.27.5 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.1964855Z #10 28.52   Downloading nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.0 kB)
+2026-04-14T22:21:26.3556610Z #10 28.68 Collecting nvidia-nvshmem-cu12==3.3.20 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.4862454Z #10 28.72   Downloading nvidia_nvshmem_cu12-3.3.20-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.1 kB)
+2026-04-14T22:21:26.4863814Z #10 28.77 Collecting nvidia-nvtx-cu12==12.8.90 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.4866167Z #10 28.81   Downloading nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.8 kB)
+2026-04-14T22:21:26.7228209Z #10 28.86 Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.7229000Z #10 28.90   Downloading nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:26.7336428Z #10 29.06 Collecting nvidia-cufile-cu12==1.13.1.3 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.8619267Z #10 29.10   Downloading nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:26.8620085Z #10 29.15 Collecting triton==3.5.0 (from torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:26.8620973Z #10 29.19   Downloading triton-3.5.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+2026-04-14T22:21:27.0191098Z #10 29.23 Collecting iniconfig>=1.0.1 (from pytest==9.0.2->-r requirements.txt (line 18))
+2026-04-14T22:21:27.0192695Z #10 29.27   Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+2026-04-14T22:21:27.0194318Z #10 29.35 Collecting pluggy<2,>=1.5 (from pytest==9.0.2->-r requirements.txt (line 18))
+2026-04-14T22:21:27.1508702Z #10 29.38   Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+2026-04-14T22:21:27.1509604Z #10 29.48 Collecting pygments>=2.7.2 (from pytest==9.0.2->-r requirements.txt (line 18))
+2026-04-14T22:21:27.3430444Z #10 29.52   Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+2026-04-14T22:21:27.3729941Z #10 29.70 Collecting mlflow-skinny==3.10.1 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:27.5617105Z #10 29.74   Downloading mlflow_skinny-3.10.1-py3-none-any.whl.metadata (32 kB)
+2026-04-14T22:21:27.5938528Z #10 29.92 Collecting mlflow-tracing==3.10.1 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:27.7409781Z #10 29.96   Downloading mlflow_tracing-3.10.1-py3-none-any.whl.metadata (19 kB)
+2026-04-14T22:21:27.7410803Z #10 30.07 Collecting Flask-CORS<7 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:27.8731511Z #10 30.10   Downloading flask_cors-6.0.2-py3-none-any.whl.metadata (5.3 kB)
+2026-04-14T22:21:27.8734924Z #10 30.16 Collecting Flask<4 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:27.8737569Z #10 30.20   Downloading flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+2026-04-14T22:21:28.1506434Z #10 30.48 Collecting cryptography<47,>=43.0.0 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:28.2893535Z #10 30.52   Downloading cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+2026-04-14T22:21:28.2900693Z #10 30.57 Collecting docker<8,>=4.0.0 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:28.2904073Z #10 30.62   Downloading docker-7.1.0-py3-none-any.whl.metadata (3.8 kB)
+2026-04-14T22:21:28.4597198Z #10 30.79 Collecting graphene<4 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:28.6479978Z #10 30.82   Downloading graphene-3.4.3-py2.py3-none-any.whl.metadata (6.9 kB)
+2026-04-14T22:21:28.6640270Z #10 30.99 Collecting gunicorn<26 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:28.7888105Z #10 31.03   Downloading gunicorn-25.3.0-py3-none-any.whl.metadata (5.5 kB)
+2026-04-14T22:21:28.7888788Z #10 31.08 Collecting huey<3,>=2.5.4 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:28.7889537Z #10 31.12   Downloading huey-2.6.0-py3-none-any.whl.metadata (4.3 kB)
+2026-04-14T22:21:28.9619164Z #10 31.29 Collecting matplotlib<4 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.1323593Z #10 31.32   Downloading matplotlib-3.10.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (52 kB)
+2026-04-14T22:21:29.1325110Z #10 31.46 Collecting pyarrow<24,>=4.0.0 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.3199189Z #10 31.50   Downloading pyarrow-23.0.1-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.1 kB)
+2026-04-14T22:21:29.3250167Z #10 31.65 Collecting skops<1 (from mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.4607615Z #10 31.69   Downloading skops-0.13.0-py3-none-any.whl.metadata (5.6 kB)
+2026-04-14T22:21:29.4608557Z #10 31.75 Collecting cachetools<8,>=5.0.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.4609329Z #10 31.79   Downloading cachetools-7.0.5-py3-none-any.whl.metadata (5.6 kB)
+2026-04-14T22:21:29.5801732Z #10 31.83 Collecting cloudpickle<4 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.5803005Z #10 31.91   Downloading cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+2026-04-14T22:21:29.6826050Z #10 31.97 Collecting databricks-sdk<1,>=0.20.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.6830602Z #10 32.01   Downloading databricks_sdk-0.102.0-py3-none-any.whl.metadata (40 kB)
+2026-04-14T22:21:29.8492387Z #10 32.07 Collecting gitpython<4,>=3.1.9 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.8494420Z #10 32.11   Downloading gitpython-3.1.46-py3-none-any.whl.metadata (13 kB)
+2026-04-14T22:21:29.8496507Z #10 32.18 Collecting importlib_metadata!=4.7.0,<9,>=3.7.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.9789336Z #10 32.21   Downloading importlib_metadata-8.9.0-py3-none-any.whl.metadata (4.5 kB)
+2026-04-14T22:21:29.9790585Z #10 32.27 Collecting opentelemetry-api<3,>=1.9.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:29.9791685Z #10 32.31   Downloading opentelemetry_api-1.41.0-py3-none-any.whl.metadata (1.5 kB)
+2026-04-14T22:21:30.1290147Z #10 32.36 Collecting opentelemetry-proto<3,>=1.9.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:30.1290902Z #10 32.41   Downloading opentelemetry_proto-1.41.0-py3-none-any.whl.metadata (2.4 kB)
+2026-04-14T22:21:30.1291806Z #10 32.46 Collecting opentelemetry-sdk<3,>=1.9.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:30.2909446Z #10 32.50   Downloading opentelemetry_sdk-1.41.0-py3-none-any.whl.metadata (1.7 kB)
+2026-04-14T22:21:30.2911020Z #10 32.51 Collecting protobuf>=4.25.1 (from onnx==1.19.1->-r requirements.txt (line 10))
+2026-04-14T22:21:30.2911994Z #10 32.54   Downloading protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+2026-04-14T22:21:30.2913129Z #10 32.62 Collecting python-dotenv<2,>=0.19.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:30.4241908Z #10 32.66   Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+2026-04-14T22:21:30.4251905Z #10 32.71 Collecting requests<3,>=2.17.3 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:30.4258214Z #10 32.75   Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+2026-04-14T22:21:30.6653477Z #10 32.80 Collecting sqlparse<1,>=0.4.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:30.6654074Z #10 32.84   Downloading sqlparse-0.5.5-py3-none-any.whl.metadata (4.7 kB)
+2026-04-14T22:21:30.6738689Z #10 33.00 Collecting python-dateutil>=2.8.2 (from pandas<3->-r requirements.txt (line 17))
+2026-04-14T22:21:30.7916329Z #10 33.04   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2026-04-14T22:21:30.7917387Z #10 33.12 Collecting pytz>=2020.1 (from pandas<3->-r requirements.txt (line 17))
+2026-04-14T22:21:30.9203392Z #10 33.16   Downloading pytz-2026.1.post1-py2.py3-none-any.whl.metadata (22 kB)
+2026-04-14T22:21:30.9204232Z #10 33.21 Collecting tzdata>=2022.7 (from pandas<3->-r requirements.txt (line 17))
+2026-04-14T22:21:30.9205607Z #10 33.25   Downloading tzdata-2026.1-py2.py3-none-any.whl.metadata (1.4 kB)
+2026-04-14T22:21:31.0214474Z #10 33.35 Collecting Mako (from alembic>=1.5.0->optuna==4.7.0->-r requirements.txt (line 7))
+2026-04-14T22:21:31.2105825Z #10 33.39   Downloading mako-1.3.11-py3-none-any.whl.metadata (2.9 kB)
+2026-04-14T22:21:31.6601928Z #10 33.99 Collecting cffi>=2.0.0 (from cryptography<47,>=43.0.0->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:31.8010422Z #10 34.04   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+2026-04-14T22:21:31.8012788Z #10 34.13 Collecting google-auth~=2.0 (from databricks-sdk<1,>=0.20.0->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:31.9169700Z #10 34.16   Downloading google_auth-2.49.2-py3-none-any.whl.metadata (6.2 kB)
+2026-04-14T22:21:31.9170694Z #10 34.24 Collecting urllib3>=1.26.0 (from docker<8,>=4.0.0->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.0445388Z #10 34.28   Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+2026-04-14T22:21:32.0446010Z #10 34.33 Collecting blinker>=1.9.0 (from Flask<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.0446855Z #10 34.37   Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+2026-04-14T22:21:32.1817398Z #10 34.42 Collecting itsdangerous>=2.2.0 (from Flask<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.1818421Z #10 34.46   Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+2026-04-14T22:21:32.1819289Z #10 34.51 Collecting werkzeug>=3.1.0 (from Flask<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.3092357Z #10 34.54   Downloading werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+2026-04-14T22:21:32.3093660Z #10 34.59 Collecting gitdb<5,>=4.0.1 (from gitpython<4,>=3.1.9->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.3095094Z #10 34.64   Downloading gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+2026-04-14T22:21:32.4415264Z #10 34.68 Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython<4,>=3.1.9->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.4415965Z #10 34.71   Downloading smmap-5.0.3-py3-none-any.whl.metadata (4.6 kB)
+2026-04-14T22:21:32.4418030Z #10 34.77 Collecting pyasn1-modules>=0.2.1 (from google-auth~=2.0->databricks-sdk<1,>=0.20.0->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.6557999Z #10 34.83   Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+2026-04-14T22:21:32.6849266Z #10 35.01 Collecting graphql-core<3.3,>=3.1 (from graphene<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.8761229Z #10 35.05   Downloading graphql_core-3.2.8-py3-none-any.whl.metadata (11 kB)
+2026-04-14T22:21:32.8819283Z #10 35.21 Collecting graphql-relay<3.3,>=3.1 (from graphene<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:32.9908097Z #10 35.26   Downloading graphql_relay-3.2.0-py3-none-any.whl.metadata (12 kB)
+2026-04-14T22:21:32.9909427Z #10 35.32 Collecting zipp>=3.20 (from importlib_metadata!=4.7.0,<9,>=3.7.0->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:33.0919912Z #10 35.36   Downloading zipp-3.23.1-py3-none-any.whl.metadata (3.6 kB)
+2026-04-14T22:21:33.0921166Z #10 35.42 Collecting lightning-utilities<2.0,>=0.10.0 (from lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:33.2420488Z #10 35.47   Downloading lightning_utilities-0.15.3-py3-none-any.whl.metadata (5.5 kB)
+2026-04-14T22:21:33.2421836Z #10 35.57 Collecting torchmetrics<3.0,>0.7.0 (from lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:33.4596327Z #10 35.64   Downloading torchmetrics-1.9.0-py3-none-any.whl.metadata (23 kB)
+2026-04-14T22:21:35.1369200Z #10 37.47 Collecting pytorch-lightning (from lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:35.3274992Z #10 37.50   Downloading pytorch_lightning-2.6.1-py3-none-any.whl.metadata (21 kB)
+2026-04-14T22:21:43.5295499Z #10 45.86 Collecting aiohttp!=4.0.0a0,!=4.0.0a1 (from fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:43.6736521Z #10 45.89   Downloading aiohttp-3.13.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+2026-04-14T22:21:43.6737725Z #10 46.00 Collecting contourpy>=1.0.1 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:43.8184848Z #10 46.04   Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+2026-04-14T22:21:43.8186176Z #10 46.08 Collecting cycler>=0.10 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:43.8198342Z #10 46.15   Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+2026-04-14T22:21:44.6413834Z #10 46.97 Collecting fonttools>=4.22.0 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:44.7964609Z #10 47.01   Downloading fonttools-4.62.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (117 kB)
+2026-04-14T22:21:44.7967610Z #10 47.12 Collecting kiwisolver>=1.3.1 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:44.9870048Z #10 47.16   Downloading kiwisolver-1.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.1 kB)
+2026-04-14T22:21:45.2418272Z #10 47.57 Collecting pillow>=8 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.3756595Z #10 47.61   Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+2026-04-14T22:21:45.3757792Z #10 47.67 Collecting pyparsing>=3 (from matplotlib<4->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.3758719Z #10 47.70   Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+2026-04-14T22:21:45.4913414Z #10 47.71 Collecting importlib_metadata!=4.7.0,<9,>=3.7.0 (from mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.4914607Z #10 47.75   Downloading importlib_metadata-8.7.1-py3-none-any.whl.metadata (4.7 kB)
+2026-04-14T22:21:45.4916715Z #10 47.82 Collecting opentelemetry-semantic-conventions==0.62b0 (from opentelemetry-sdk<3,>=1.9.0->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.6241524Z #10 47.86   Downloading opentelemetry_semantic_conventions-0.62b0-py3-none-any.whl.metadata (2.5 kB)
+2026-04-14T22:21:45.6242310Z #10 47.91 Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas<3->-r requirements.txt (line 17))
+2026-04-14T22:21:45.6243089Z #10 47.95   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-04-14T22:21:45.7762855Z #10 48.10 Collecting charset_normalizer<4,>=2 (from requests<3,>=2.17.3->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.9025194Z #10 48.14   Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-04-14T22:21:45.9028105Z #10 48.19 Collecting idna<4,>=2.5 (from requests<3,>=2.17.3->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:45.9029148Z #10 48.23   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+2026-04-14T22:21:46.0040350Z #10 48.30 Collecting certifi>=2023.5.7 (from requests<3,>=2.17.3->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:46.0041461Z #10 48.33   Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+2026-04-14T22:21:46.1627018Z #10 48.39 Collecting prettytable>=3.9 (from skops<1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:46.1628142Z #10 48.43   Downloading prettytable-3.17.0-py3-none-any.whl.metadata (34 kB)
+2026-04-14T22:21:46.1630343Z #10 48.49 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:46.3051451Z #10 48.53   Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+2026-04-14T22:21:46.3053150Z #10 48.57 Collecting aiosignal>=1.4.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:46.3054800Z #10 48.63   Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+2026-04-14T22:21:46.4268702Z #10 48.72 Collecting attrs>=17.3.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:46.4270107Z #10 48.75   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+2026-04-14T22:21:46.5921009Z #10 48.92 Collecting frozenlist>=1.1.1 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:46.7794196Z #10 48.96   Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+2026-04-14T22:21:48.4857442Z #10 50.81 Collecting multidict<7.0,>=4.5 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:48.6186468Z #10 50.85   Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+2026-04-14T22:21:48.6187997Z #10 50.94 Collecting propcache>=0.2.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:48.8619463Z #10 51.04   Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+2026-04-14T22:21:52.6304940Z #10 54.96 Collecting yarl<2.0,>=1.17.0 (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<2028.0,>=2022.5.0->lightning<3.0.0,>=2.0.0->pytorch-forecasting==1.5.0->-r requirements.txt (line 13))
+2026-04-14T22:21:52.8287543Z #10 55.00   Downloading yarl-1.23.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (79 kB)
+2026-04-14T22:21:53.1223857Z #10 55.45 Collecting pycparser (from cffi>=2.0.0->cryptography<47,>=43.0.0->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:53.2355871Z #10 55.49   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+2026-04-14T22:21:53.2356780Z #10 55.56 Collecting wcwidth (from prettytable>=3.9->skops<1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:53.4145539Z #10 55.60   Downloading wcwidth-0.6.0-py3-none-any.whl.metadata (30 kB)
+2026-04-14T22:21:53.4147143Z #10 55.74 Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth~=2.0->databricks-sdk<1,>=0.20.0->mlflow-skinny==3.10.1->mlflow~=3.10.0->-r requirements.txt (line 3))
+2026-04-14T22:21:53.6353138Z #10 55.81   Downloading pyasn1-0.6.3-py3-none-any.whl.metadata (8.4 kB)
+2026-04-14T22:21:53.6363870Z #10 55.96 Collecting anyio<5,>=3.6.2 (from starlette>=0.46.0->fastapi==0.135.1->-r requirements.txt (line 1))
+2026-04-14T22:21:53.7383188Z #10 56.02   Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+2026-04-14T22:21:53.7384563Z #10 56.06 Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.9.0->-r requirements.txt (line 15))
+2026-04-14T22:21:53.8464765Z #10 56.11   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-04-14T22:21:53.8468152Z #10 56.17 Downloading fastapi-0.135.1-py3-none-any.whl (116 kB)
+2026-04-14T22:21:53.9740406Z #10 56.25 Downloading uvicorn-0.41.0-py3-none-any.whl (68 kB)
+2026-04-14T22:21:53.9741775Z #10 56.30 Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+2026-04-14T22:21:54.0832642Z #10 56.41 Downloading asyncpg-0.30.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.1 MB)
+2026-04-14T22:21:54.6654082Z #10 56.80    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 8.1 MB/s  0:00:00
+2026-04-14T22:21:54.6654951Z #10 56.84 Downloading sqlalchemy-2.0.45-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+2026-04-14T22:21:54.9867435Z #10 57.16    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 11.1 MB/s  0:00:00
+2026-04-14T22:21:54.9868060Z #10 57.19 Downloading optuna-4.7.0-py3-none-any.whl (413 kB)
+2026-04-14T22:21:54.9868537Z #10 57.31 Downloading aiofiles-25.1.0-py3-none-any.whl (14 kB)
+2026-04-14T22:21:55.2228995Z #10 57.34 Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+2026-04-14T22:21:55.2229682Z #10 57.40 Downloading onnx-1.19.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (18.2 MB)
+2026-04-14T22:21:58.0711083Z #10 60.40    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.2/18.2 MB 6.1 MB/s  0:00:02
+2026-04-14T22:21:58.2589016Z #10 60.43 Downloading onnxscript-0.6.2-py3-none-any.whl (689 kB)
+2026-04-14T22:21:58.4553875Z #10 60.59    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 689.1/689.1 kB 5.5 MB/s  0:00:00
+2026-04-14T22:21:58.4556936Z #10 60.63 Downloading scikit_learn-1.7.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.7 MB)
+2026-04-14T22:21:59.5826105Z #10 61.75    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.7/9.7 MB 8.6 MB/s  0:00:01
+2026-04-14T22:21:59.5829310Z #10 61.79 Downloading pytorch_forecasting-1.5.0-py3-none-any.whl (391 kB)
+2026-04-14T22:21:59.5830462Z #10 61.91 Downloading torch-2.9.0-cp311-cp311-manylinux_2_28_x86_64.whl (899.8 MB)
+2026-04-14T22:24:00.8492775Z #10 182.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 899.8/899.8 MB 9.6 MB/s  0:02:00
+2026-04-14T22:24:00.8495240Z #10 182.9 Downloading numpy-2.4.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+2026-04-14T22:24:02.1819700Z #10 184.4    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 11.4 MB/s  0:00:01
+2026-04-14T22:24:02.1820677Z #10 184.4 Downloading python_multipart-0.0.22-py3-none-any.whl (24 kB)
+2026-04-14T22:24:02.1821366Z #10 184.4 Downloading pytest-9.0.2-py3-none-any.whl (374 kB)
+2026-04-14T22:24:02.1822184Z #10 184.5 Downloading nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+2026-04-14T22:25:03.9296662Z #10 246.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 594.3/594.3 MB 10.0 MB/s  0:01:01
+2026-04-14T22:25:03.9297821Z #10 246.1 Downloading nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+2026-04-14T22:25:04.8064673Z #10 247.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 10.5 MB/s  0:00:01
+2026-04-14T22:25:05.0385824Z #10 247.2 Downloading nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+2026-04-14T22:25:13.3708984Z #10 255.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 88.0/88.0 MB 10.6 MB/s  0:00:08
+2026-04-14T22:25:13.3709713Z #10 255.5 Downloading nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+2026-04-14T22:25:13.6457210Z #10 255.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 954.8/954.8 kB 10.1 MB/s  0:00:00
+2026-04-14T22:25:13.6458551Z #10 255.8 Downloading nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+2026-04-14T22:26:16.9670406Z #10 319.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 706.8/706.8 MB 11.4 MB/s  0:01:03
+2026-04-14T22:26:17.1411795Z #10 319.3 Downloading nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+2026-04-14T22:26:34.4817075Z #10 336.7    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 193.1/193.1 MB 11.1 MB/s  0:00:17
+2026-04-14T22:26:34.4823211Z #10 336.7 Downloading nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+2026-04-14T22:26:34.4823888Z #10 336.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 10.4 MB/s  0:00:00
+2026-04-14T22:26:34.6904878Z #10 336.9 Downloading nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+2026-04-14T22:26:40.1664880Z #10 342.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.6/63.6 MB 11.6 MB/s  0:00:05
+2026-04-14T22:26:40.1666437Z #10 342.3 Downloading nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+2026-04-14T22:27:03.9292277Z #10 366.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 267.5/267.5 MB 11.3 MB/s  0:00:23
+2026-04-14T22:27:03.9294392Z #10 366.1 Downloading nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+2026-04-14T22:27:30.4028796Z #10 392.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 288.2/288.2 MB 10.8 MB/s  0:00:26
+2026-04-14T22:27:30.4029574Z #10 392.6 Downloading nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+2026-04-14T22:27:55.2990637Z #10 417.4    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 287.2/287.2 MB 11.6 MB/s  0:00:24
+2026-04-14T22:27:55.2992242Z #10 417.5 Downloading nvidia_nccl_cu12-2.27.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.3 MB)
+2026-04-14T22:28:27.6104420Z #10 449.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 322.3/322.3 MB 9.7 MB/s  0:00:32
+2026-04-14T22:28:27.7882217Z #10 450.0 Downloading nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+2026-04-14T22:28:31.1656137Z #10 453.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.3/39.3 MB 11.8 MB/s  0:00:03
+2026-04-14T22:28:31.1660317Z #10 453.3 Downloading nvidia_nvshmem_cu12-3.3.20-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (124.7 MB)
+2026-04-14T22:28:41.8304806Z #10 464.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 124.7/124.7 MB 11.6 MB/s  0:00:10
+2026-04-14T22:28:41.8309892Z #10 464.1 Downloading nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+2026-04-14T22:28:41.8313543Z #10 464.1 Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-04-14T22:28:42.1831424Z #10 464.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 12.6 MB/s  0:00:00
+2026-04-14T22:28:42.1833485Z #10 464.4 Downloading triton-3.5.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (170.4 MB)
+2026-04-14T22:28:56.5947254Z #10 478.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 170.4/170.4 MB 11.7 MB/s  0:00:14
+2026-04-14T22:28:56.7801687Z #10 479.0 Downloading mlflow-3.10.1-py3-none-any.whl (10.2 MB)
+2026-04-14T22:28:57.7128868Z #10 479.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 11.5 MB/s  0:00:00
+2026-04-14T22:28:57.7130527Z #10 479.9 Downloading mlflow_skinny-3.10.1-py3-none-any.whl (3.0 MB)
+2026-04-14T22:28:57.9962873Z #10 480.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 13.7 MB/s  0:00:00
+2026-04-14T22:28:57.9963951Z #10 480.2 Downloading mlflow_tracing-3.10.1-py3-none-any.whl (1.5 MB)
+2026-04-14T22:28:58.1865187Z #10 480.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 16.3 MB/s  0:00:00
+2026-04-14T22:28:58.1868544Z #10 480.4 Downloading pandas-2.3.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+2026-04-14T22:28:59.2645981Z #10 481.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 11.5 MB/s  0:00:01
+2026-04-14T22:28:59.2649801Z #10 481.5 Downloading alembic-1.18.4-py3-none-any.whl (263 kB)
+2026-04-14T22:28:59.2655105Z #10 481.6 Downloading cachetools-7.0.5-py3-none-any.whl (13 kB)
+2026-04-14T22:28:59.3989222Z #10 481.6 Downloading click-8.3.2-py3-none-any.whl (108 kB)
+2026-04-14T22:28:59.3990359Z #10 481.7 Downloading cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+2026-04-14T22:28:59.3991519Z #10 481.7 Downloading cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+2026-04-14T22:29:00.0702023Z #10 482.3    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 9.6 MB/s  0:00:00
+2026-04-14T22:29:00.0702926Z #10 482.3 Downloading databricks_sdk-0.102.0-py3-none-any.whl (838 kB)
+2026-04-14T22:29:00.2031166Z #10 482.4    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 838.5/838.5 kB 8.7 MB/s  0:00:00
+2026-04-14T22:29:00.2032204Z #10 482.4 Downloading docker-7.1.0-py3-none-any.whl (147 kB)
+2026-04-14T22:29:00.2033637Z #10 482.5 Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+2026-04-14T22:29:00.3418529Z #10 482.6 Downloading flask_cors-6.0.2-py3-none-any.whl (13 kB)
+2026-04-14T22:29:00.3420424Z #10 482.6 Downloading gitpython-3.1.46-py3-none-any.whl (208 kB)
+2026-04-14T22:29:00.3421245Z #10 482.7 Downloading gitdb-4.0.12-py3-none-any.whl (62 kB)
+2026-04-14T22:29:00.4490766Z #10 482.7 Downloading google_auth-2.49.2-py3-none-any.whl (240 kB)
+2026-04-14T22:29:00.4493581Z #10 482.8 Downloading graphene-3.4.3-py2.py3-none-any.whl (114 kB)
+2026-04-14T22:29:00.5586170Z #10 482.8 Downloading graphql_core-3.2.8-py3-none-any.whl (207 kB)
+2026-04-14T22:29:00.5587645Z #10 482.9 Downloading graphql_relay-3.2.0-py3-none-any.whl (16 kB)
+2026-04-14T22:29:00.7010236Z #10 482.9 Downloading gunicorn-25.3.0-py3-none-any.whl (208 kB)
+2026-04-14T22:29:00.7017430Z #10 483.0 Downloading huey-2.6.0-py3-none-any.whl (76 kB)
+2026-04-14T22:29:00.7033658Z #10 483.0 Downloading lightning-2.6.1-py3-none-any.whl (853 kB)
+2026-04-14T22:29:00.8126091Z #10 483.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 853.6/853.6 kB 12.8 MB/s  0:00:00
+2026-04-14T22:29:00.8127000Z #10 483.1 Downloading fsspec-2026.3.0-py3-none-any.whl (202 kB)
+2026-04-14T22:29:01.0568250Z #10 483.2 Downloading lightning_utilities-0.15.3-py3-none-any.whl (31 kB)
+2026-04-14T22:29:01.0571727Z #10 483.2 Downloading matplotlib-3.10.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
+2026-04-14T22:29:01.7825059Z #10 484.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 11.9 MB/s  0:00:00
+2026-04-14T22:29:01.7825811Z #10 484.0 Downloading onnx_ir-0.2.0-py3-none-any.whl (164 kB)
+2026-04-14T22:29:01.7826535Z #10 484.1 Downloading opentelemetry_api-1.41.0-py3-none-any.whl (69 kB)
+2026-04-14T22:29:01.7827282Z #10 484.1 Downloading importlib_metadata-8.7.1-py3-none-any.whl (27 kB)
+2026-04-14T22:29:01.8978412Z #10 484.2 Downloading opentelemetry_proto-1.41.0-py3-none-any.whl (72 kB)
+2026-04-14T22:29:01.8983470Z #10 484.2 Downloading opentelemetry_sdk-1.41.0-py3-none-any.whl (180 kB)
+2026-04-14T22:29:02.0544363Z #10 484.3 Downloading opentelemetry_semantic_conventions-0.62b0-py3-none-any.whl (231 kB)
+2026-04-14T22:29:02.0549626Z #10 484.4 Downloading packaging-26.1-py3-none-any.whl (95 kB)
+2026-04-14T22:29:02.2404457Z #10 484.4 Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+2026-04-14T22:29:02.2406881Z #10 484.5 Downloading protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
+2026-04-14T22:29:02.2409331Z #10 484.6 Downloading pyarrow-23.0.1-cp311-cp311-manylinux_2_28_x86_64.whl (47.6 MB)
+2026-04-14T22:29:06.4992173Z #10 488.7    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.6/47.6 MB 11.5 MB/s  0:00:04
+2026-04-14T22:29:06.4993171Z #10 488.8 Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2026-04-14T22:29:06.4994053Z #10 488.8 Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+2026-04-14T22:29:06.6519476Z #10 488.9 Downloading pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+2026-04-14T22:29:06.6520198Z #10 489.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 806.6/806.6 kB 7.1 MB/s  0:00:00
+2026-04-14T22:29:06.8226838Z #10 489.0 Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+2026-04-14T22:29:06.8229197Z #10 489.1 Downloading charset_normalizer-3.4.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (214 kB)
+2026-04-14T22:29:06.8232720Z #10 489.1 Downloading idna-3.11-py3-none-any.whl (71 kB)
+2026-04-14T22:29:07.0178375Z #10 489.2 Downloading scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+2026-04-14T22:29:10.0185686Z #10 492.2    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 11.8 MB/s  0:00:03
+2026-04-14T22:29:10.0191158Z #10 492.2 Downloading skops-0.13.0-py3-none-any.whl (131 kB)
+2026-04-14T22:29:10.0198106Z #10 492.3 Downloading smmap-5.0.3-py3-none-any.whl (24 kB)
+2026-04-14T22:29:10.0199946Z #10 492.3 Downloading sqlparse-0.5.5-py3-none-any.whl (46 kB)
+2026-04-14T22:29:10.1635476Z #10 492.4 Downloading torchmetrics-1.9.0-py3-none-any.whl (983 kB)
+2026-04-14T22:29:10.2977201Z #10 492.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 983.4/983.4 kB 9.8 MB/s  0:00:00
+2026-04-14T22:29:10.2983262Z #10 492.5 Downloading tqdm-4.67.3-py3-none-any.whl (78 kB)
+2026-04-14T22:29:10.2989143Z #10 492.6 Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-04-14T22:29:10.3007293Z #10 492.6 Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+2026-04-14T22:29:10.5019408Z #10 492.7 Downloading aiohttp-3.13.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+2026-04-14T22:29:10.5020810Z #10 492.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 12.2 MB/s  0:00:00
+2026-04-14T22:29:10.6476229Z #10 492.9 Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+2026-04-14T22:29:10.6479016Z #10 492.9 Downloading yarl-1.23.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (102 kB)
+2026-04-14T22:29:10.6480429Z #10 493.0 Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+2026-04-14T22:29:10.7575421Z #10 493.0 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-04-14T22:29:10.7577714Z #10 493.1 Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+2026-04-14T22:29:10.8731677Z #10 493.1 Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2026-04-14T22:29:10.8732734Z #10 493.2 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-04-14T22:29:10.8733388Z #10 493.2 Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+2026-04-14T22:29:11.0298071Z #10 493.2 Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+2026-04-14T22:29:11.0307051Z #10 493.3 Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+2026-04-14T22:29:11.0312887Z #10 493.4 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+2026-04-14T22:29:11.1303939Z #10 493.4 Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+2026-04-14T22:29:11.1305216Z #10 493.5 Downloading fonttools-4.62.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.1 MB)
+2026-04-14T22:29:11.7722350Z #10 493.9    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 10.4 MB/s  0:00:00
+2026-04-14T22:29:11.7724838Z #10 494.0 Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+2026-04-14T22:29:11.7726541Z #10 494.0 Downloading greenlet-3.4.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (613 kB)
+2026-04-14T22:29:11.8970738Z #10 494.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 613.5/613.5 kB 11.6 MB/s  0:00:00
+2026-04-14T22:29:11.8971595Z #10 494.1 Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-04-14T22:29:11.8972413Z #10 494.2 Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+2026-04-14T22:29:11.8974636Z #10 494.2 Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+2026-04-14T22:29:12.0139481Z #10 494.3 Downloading joblib-1.5.3-py3-none-any.whl (309 kB)
+2026-04-14T22:29:12.0142547Z #10 494.3 Downloading kiwisolver-1.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+2026-04-14T22:29:12.3629517Z #10 494.5    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 12.0 MB/s  0:00:00
+2026-04-14T22:29:12.3632402Z #10 494.5 Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-04-14T22:29:12.3635421Z #10 494.5 Downloading ml_dtypes-0.5.4-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (5.0 MB)
+2026-04-14T22:29:12.8300089Z #10 495.0    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 11.9 MB/s  0:00:00
+2026-04-14T22:29:12.8300926Z #10 495.0 Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+2026-04-14T22:29:13.0404413Z #10 495.2    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 12.0 MB/s  0:00:00
+2026-04-14T22:29:13.0405483Z #10 495.2 Downloading pillow-12.2.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-04-14T22:29:13.6480096Z #10 495.8    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 11.9 MB/s  0:00:00
+2026-04-14T22:29:13.6480940Z #10 495.9 Downloading prettytable-3.17.0-py3-none-any.whl (34 kB)
+2026-04-14T22:29:13.6482040Z #10 495.9 Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (210 kB)
+2026-04-14T22:29:13.6483093Z #10 496.0 Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+2026-04-14T22:29:13.7534997Z #10 496.0 Downloading pyasn1-0.6.3-py3-none-any.whl (83 kB)
+2026-04-14T22:29:13.7536544Z #10 496.1 Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+2026-04-14T22:29:14.0443431Z #10 496.2    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 11.6 MB/s  0:00:00
+2026-04-14T22:29:14.0448603Z #10 496.2 Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
+2026-04-14T22:29:14.0457376Z #10 496.3 Downloading pytz-2026.1.post1-py2.py3-none-any.whl (510 kB)
+2026-04-14T22:29:14.0458433Z #10 496.4 Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2026-04-14T22:29:14.1886339Z #10 496.4 Downloading starlette-1.0.0-py3-none-any.whl (72 kB)
+2026-04-14T22:29:14.1887338Z #10 496.5 Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+2026-04-14T22:29:14.1891315Z #10 496.5 Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-04-14T22:29:14.8767892Z #10 497.1    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 10.8 MB/s  0:00:00
+2026-04-14T22:29:14.8769580Z #10 497.1 Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-04-14T22:29:14.9923403Z #10 497.2    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 13.9 MB/s  0:00:00
+2026-04-14T22:29:14.9924441Z #10 497.2 Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+2026-04-14T22:29:14.9926385Z #10 497.3 Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+2026-04-14T22:29:14.9928986Z #10 497.3 Downloading tzdata-2026.1-py2.py3-none-any.whl (348 kB)
+2026-04-14T22:29:15.1162235Z #10 497.4 Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+2026-04-14T22:29:15.1162988Z #10 497.4 Downloading zipp-3.23.1-py3-none-any.whl (10 kB)
+2026-04-14T22:29:15.2316540Z #10 497.5 Downloading colorlog-6.10.1-py3-none-any.whl (11 kB)
+2026-04-14T22:29:15.2318834Z #10 497.5 Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+2026-04-14T22:29:15.2323431Z #10 497.6 Downloading mako-1.3.11-py3-none-any.whl (78 kB)
+2026-04-14T22:29:15.4217505Z #10 497.6 Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+2026-04-14T22:29:15.4220063Z #10 497.7 Downloading pytorch_lightning-2.6.1-py3-none-any.whl (857 kB)
+2026-04-14T22:29:15.6093207Z #10 497.7    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 857.3/857.3 kB 29.8 MB/s  0:00:00
+2026-04-14T22:29:15.6093714Z #10 497.8 Downloading wcwidth-0.6.0-py3-none-any.whl (94 kB)
+2026-04-14T22:33:47.8966774Z #10 770.2 Installing collected packages: pytz, nvidia-cusparselt-cu12, mpmath, huey, zipp, wcwidth, urllib3, tzdata, typing-extensions, triton, tqdm, threadpoolctl, sympy, sqlparse, smmap, six, PyYAML, python-multipart, python-dotenv, pyparsing, pygments, pycparser, pyasn1, pyarrow, protobuf, propcache, pluggy, pillow, packaging, nvidia-nvtx-cu12, nvidia-nvshmem-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, multidict, MarkupSafe, kiwisolver, joblib, itsdangerous, iniconfig, idna, h11, greenlet, graphql-core, fsspec, frozenlist, fonttools, filelock, cycler, colorlog, cloudpickle, click, charset_normalizer, certifi, cachetools, blinker, attrs, asyncpg, annotated-types, annotated-doc, aiohappyeyeballs, aiofiles, yarl, werkzeug, uvicorn, typing-inspection, SQLAlchemy, scipy, requests, python-dateutil, pytest, pydantic-core, pyasn1-modules, prettytable, opentelemetry-proto, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, ml_dtypes, Mako, lightning-utilities, jinja2, importlib_metadata, gunicorn, graphql-relay, gitdb, contourpy, cffi, anyio, aiosignal, starlette, scikit-learn, pydantic, pandas, opentelemetry-api, onnx, nvidia-cusolver-cu12, matplotlib, graphene, gitpython, Flask, docker, cryptography, alembic, aiohttp, torch, skops, optuna, opentelemetry-semantic-conventions, onnx_ir, google-auth, Flask-CORS, fastapi, torchmetrics, opentelemetry-sdk, onnxscript, databricks-sdk, pytorch-lightning, mlflow-tracing, mlflow-skinny, mlflow, lightning, pytorch-forecasting
+2026-04-14T23:16:02.1588284Z #10 3304.5 
+2026-04-14T23:16:02.1599060Z #10 3304.5 Successfully installed Flask-3.1.3 Flask-CORS-6.0.2 Mako-1.3.11 MarkupSafe-3.0.3 PyYAML-6.0.3 SQLAlchemy-2.0.45 aiofiles-25.1.0 aiohappyeyeballs-2.6.1 aiohttp-3.13.5 aiosignal-1.4.0 alembic-1.18.4 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.13.0 asyncpg-0.30.0 attrs-26.1.0 blinker-1.9.0 cachetools-7.0.5 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.7 click-8.3.2 cloudpickle-3.1.2 colorlog-6.10.1 contourpy-1.3.3 cryptography-46.0.7 cycler-0.12.1 databricks-sdk-0.102.0 docker-7.1.0 fastapi-0.135.1 filelock-3.25.2 fonttools-4.62.1 frozenlist-1.8.0 fsspec-2026.3.0 gitdb-4.0.12 gitpython-3.1.46 google-auth-2.49.2 graphene-3.4.3 graphql-core-3.2.8 graphql-relay-3.2.0 greenlet-3.4.0 gunicorn-25.3.0 h11-0.16.0 huey-2.6.0 idna-3.11 importlib_metadata-8.7.1 iniconfig-2.3.0 itsdangerous-2.2.0 jinja2-3.1.6 joblib-1.5.3 kiwisolver-1.5.0 lightning-2.6.1 lightning-utilities-0.15.3 matplotlib-3.10.8 ml_dtypes-0.5.4 mlflow-3.10.1 mlflow-skinny-3.10.1 mlflow-tracing-3.10.1 mpmath-1.3.0 multidict-6.7.1 networkx-3.6.1 numpy-2.4.3 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.5 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvshmem-cu12-3.3.20 nvidia-nvtx-cu12-12.8.90 onnx-1.19.1 onnx_ir-0.2.0 onnxscript-0.6.2 opentelemetry-api-1.41.0 opentelemetry-proto-1.41.0 opentelemetry-sdk-1.41.0 opentelemetry-semantic-conventions-0.62b0 optuna-4.7.0 packaging-26.1 pandas-2.3.3 pillow-12.2.0 pluggy-1.6.0 prettytable-3.17.0 propcache-0.4.1 protobuf-6.33.6 pyarrow-23.0.1 pyasn1-0.6.3 pyasn1-modules-0.4.2 pycparser-3.0 pydantic-2.12.5 pydantic-core-2.41.5 pygments-2.20.0 pyparsing-3.3.2 pytest-9.0.2 python-dateutil-2.9.0.post0 python-dotenv-1.2.2 python-multipart-0.0.22 pytorch-forecasting-1.5.0 pytorch-lightning-2.6.1 pytz-2026.1.post1 requests-2.33.1 scikit-learn-1.7.2 scipy-1.17.1 six-1.17.0 skops-0.13.0 smmap-5.0.3 sqlparse-0.5.5 starlette-1.0.0 sympy-1.14.0 threadpoolctl-3.6.0 torch-2.9.0 torchmetrics-1.9.0 tqdm-4.67.3 triton-3.5.0 typing-extensions-4.15.0 typing-inspection-0.4.2 tzdata-2026.1 urllib3-2.6.3 uvicorn-0.41.0 wcwidth-0.6.0 werkzeug-3.1.8 yarl-1.23.0 zipp-3.23.1
+2026-04-14T23:16:04.3902473Z #10 DONE 3306.7s
+2026-04-14T23:21:35.7806222Z 
+2026-04-14T23:21:35.7807703Z #11 [final 3/5] COPY --from=builder /opt/venv /opt/venv/
+2026-04-15T11:39:55.4886541Z ##[error]The operation was canceled.
+2026-04-15T11:40:00.8460936Z Post job cleanup.
+2026-04-15T11:40:07.5447677Z ##[group]Removing temp folder C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\docker-actions-toolkit-JkqvCy
+2026-04-15T11:40:07.5525471Z ##[endgroup]
+2026-04-15T11:40:07.5528314Z ##[group]Post cache
+2026-04-15T11:40:07.5537491Z State not set
+2026-04-15T11:40:07.5539196Z ##[endgroup]
+2026-04-15T11:40:09.4430343Z Post job cleanup.
+2026-04-15T11:40:11.4978670Z ##[group]Logout from ghcr.io
+2026-04-15T11:40:11.5433311Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" logout ghcr.io
+2026-04-15T11:40:11.7343487Z Removing login credentials for ghcr.io
+2026-04-15T11:40:18.2253509Z ##[endgroup]
+2026-04-15T11:40:18.2254114Z ##[group]Post cache
+2026-04-15T11:40:18.2255920Z State not set
+2026-04-15T11:40:18.2257819Z ##[endgroup]
+2026-04-15T11:40:21.0675824Z Post job cleanup.
+2026-04-15T11:40:22.2561233Z ##[group]Removing builder
+2026-04-15T11:40:26.3682261Z [command]"C:\Program Files\Docker\Docker\resources\bin\docker.exe" buildx rm builder-f60d5651-86cc-4f83-9063-f37aa470fddb
+2026-04-15T11:41:08.3897255Z builder-f60d5651-86cc-4f83-9063-f37aa470fddb removed
+2026-04-15T11:41:08.4123365Z ##[endgroup]
+2026-04-15T11:41:08.4125703Z ##[group]Cleaning up certificates
+2026-04-15T11:41:08.4153646Z ##[endgroup]
+2026-04-15T11:41:08.4154296Z ##[group]Post cache
+2026-04-15T11:41:08.4157178Z State not set
+2026-04-15T11:41:08.4159671Z ##[endgroup]
+2026-04-15T11:41:10.8443790Z Post job cleanup.
+2026-04-15T11:41:12.3239903Z [command]"C:\Program Files\Git\cmd\git.exe" version
+2026-04-15T11:41:12.4697665Z git version 2.47.1.windows.2
+2026-04-15T11:41:12.4812976Z Copying 'C:\Users\andma\.gitconfig' to 'C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\1e3050ef-f499-4901-92bf-1ecc993325db\.gitconfig'
+2026-04-15T11:41:12.4858535Z Temporarily overriding HOME='C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\1e3050ef-f499-4901-92bf-1ecc993325db' before making global git config changes
+2026-04-15T11:41:12.4860198Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T11:41:12.4873729Z [command]"C:\Program Files\Git\cmd\git.exe" config --global --add safe.directory "C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje"
+2026-04-15T11:41:12.5492832Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T11:41:12.6014321Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-04-15T11:41:14.4798661Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T11:41:14.5617602Z http.https://github.com/.extraheader
+2026-04-15T11:41:14.5719851Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-04-15T11:41:14.6424097Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-04-15T11:41:15.8446884Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T11:41:15.9118242Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-04-15T11:41:20.8619267Z Cleaning up orphan processes
+2026-04-15T11:41:21.6743938Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, docker/build-push-action@v5, docker/login-action@v3, docker/setup-buildx-action@v3. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

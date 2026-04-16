@@ -8,7 +8,8 @@ spec:
     app: api
   type: NodePort
   ports:
-  - port: 8000
+  - name: http
+    port: 8000
     targetPort: 8000
   
 ---
@@ -28,24 +29,20 @@ spec:
         app: api
     spec:
       imagePullSecrets:
-        - name : ghcr-login
+        - name: ghcr-login
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
 
       containers:
-        
       - name: api
         image: ghcr.io/redcanister/painel-amanaje/api:latest
         imagePullPolicy: Always
-        env:
-        - name: POSTGRES_PORT
-          value: "5432"
-        - name: POSTGRES_DB
-          value: "airflow"
-        - name: POSTGRES_USER
-          value: "airflow"
-        - name: POSTGRES_HOST
-          value: "postgres"
-        - name: POSTGRES_PASSWORD
-          value: "airflow"
+        securityContext:
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
         ports:
         - containerPort: 8000
         envFrom:
@@ -62,23 +59,24 @@ spec:
           mountPath: /models
         - name: mlruns
           mountPath: /mlruns
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 30
+          periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /docs
+            path: /health
             port: 8000
-          initialDelaySeconds: 60
           periodSeconds: 30
         readinessProbe:
           httpGet:
-            path: /docs
+            path: /health/ready
             port: 8000
-          initialDelaySeconds: 60
-          periodSeconds: 30
+          periodSeconds: 15
 
       volumes:
-      #- name: app
-      #  configMap:
-      #    name: api-code
       - name: data
         persistentVolumeClaim:
           claimName: data-pvc

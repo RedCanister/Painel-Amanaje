@@ -10,9 +10,9 @@ x-airflow-common-env: &airflow-common-env
   AIRFLOW__CORE__PLUGINS_FOLDER: "/opt/airflow/plugins"
   
   # DATABASE AND CELERY CONFIGURATION
-  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres/airflow"
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:${POSTGRES_PASSWORD:-airflow}@postgres/airflow"
   AIRFLOW__CELERY__BROKER_URL: "redis://redis:6379/0"
-  AIRFLOW__CELERY__RESULT_BACKEND: "db+postgresql://airflow:${POSTGRES_PASSWORD}@postgres/airflow"
+  AIRFLOW__CELERY__RESULT_BACKEND: "db+postgresql://airflow:${POSTGRES_PASSWORD:-airflow}@postgres/airflow"
   AIRFLOW__LOGGING__BASE_LOG_FOLDER: "/opt/airflow/logs"
   
   # NETWORK PORT CONFIGURATION
@@ -175,11 +175,12 @@ services:
   mlflow:
     build:
       context: ./mlflow-server
+    environment:
+      MLFLOW_ALLOWED_HOSTS: "mlflow,mlflow:5000,localhost,localhost:5000,127.0.0.1,127.0.0.1:5000"
     ports:
       - "5000:5000"
     volumes:
       - ./mlruns:/mlruns
-      - ./mlflow-server:/app:cached
     env_file:
       - .env
     restart: unless-stopped
@@ -190,6 +191,9 @@ services:
   api:
     build:
       context: ./api
+    environment:
+      MLFLOW_LOCAL_DIR: "/mlruns"
+      MLFLOW_TMP_DIR: "/app/.mlflow_tmp"
     env_file:
       - .env
     volumes:

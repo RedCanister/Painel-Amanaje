@@ -23,6 +23,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_session import AsyncSessionLocal, get_db, init_models
@@ -100,6 +101,13 @@ REPO_ROOT = PROJECT_ROOT.parent
 
 STATIC_DIR = PROJECT_ROOT / "static"
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
+
+
+def _ensure_env_path(env_key: str, default_path: Path) -> Path:
+    override = os.getenv(env_key)
+    return ensure_dir(Path(override) if override else default_path)
+
+
 RUNTIME_DIR = ensure_dir(PROJECT_ROOT / "runtime_artifacts")
 
 CONFIG_SNAPSHOT_DIR = ensure_dir(RUNTIME_DIR / "config")
@@ -111,7 +119,7 @@ PLOT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "plots")
 SERVING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "serving")
 
 LOG_DIR = ensure_dir(PROJECT_ROOT / "logs")
-MLRUNS_DIR = ensure_dir(PROJECT_ROOT / "mlruns")
+MLRUNS_DIR = _ensure_env_path("MLFLOW_LOCAL_DIR", PROJECT_ROOT / "mlruns")
 
 DATASET_OPERATION = "datasets"
 MODEL_OPERATION = "models"
@@ -305,6 +313,15 @@ def _json_response(payload: Any, status_code: int = 200) -> JSONResponse:
 
 def _json_error(detail: str, status_code: int = 400, **extra: Any) -> JSONResponse:
     return _json_response({"status": "error", "detail": detail, **extra}, status_code=status_code)
+
+
+async def _database_healthcheck() -> tuple[bool, Optional[str]]:
+    try:
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("SELECT 1"))
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
 
 
 def _append_history(history: Any, entry: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -1788,6 +1805,35 @@ async def startup_event() -> None:
 @app.get("/", response_class=HTMLResponse)
 async def page_home(request: Request) -> HTMLResponse:
     return _render_page("base_template.html", request, )
+
+
+@app.get("/health", response_class=JSONResponse)
+async def health_live() -> JSONResponse:
+    return _json_response(
+        {
+            "status": "ok",
+            "app": RUNTIME_CONFIG["app"],
+            "checks": {
+                "static_dir": STATIC_DIR.exists(),
+                "templates_dir": TEMPLATES_DIR.exists(),
+            },
+        }
+    )
+
+
+@app.get("/health/ready", response_class=JSONResponse)
+async def health_ready() -> JSONResponse:
+    database_ready, database_error = await _database_healthcheck()
+    status_code = 200 if database_ready else 503
+    payload = {
+        "status": "ready" if database_ready else "degraded",
+        "checks": {
+            "database": "ok" if database_ready else "error",
+        },
+    }
+    if database_error:
+        LOGGER.warning("Database readiness check failed: %s", database_error)
+    return _json_response(payload, status_code=status_code)
 
 
 @app.get("/upload", response_class=HTMLResponse)

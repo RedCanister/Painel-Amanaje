@@ -6,6 +6,7 @@ Utility functions and decorators to simplify MLflow experiment tracking.
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import socket
@@ -19,10 +20,17 @@ from .logging import get_logger
 from .serialization import safe_log_params, to_json
 
 logger = get_logger("mlflow_utils")
-_WORKSPACE_TMP_DIR = Path.cwd() / ".mlflow_tmp"
-_WORKSPACE_TMP_DIR.mkdir(parents=True, exist_ok=True)
-_LOCAL_MLFLOW_DIR = Path.cwd() / "mlruns"
-_LOCAL_MLFLOW_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _resolve_workspace_dir(env_key: str, default_path: Path) -> Path:
+    override = os.getenv(env_key)
+    resolved = Path(override) if override else default_path
+    resolved.mkdir(parents=True, exist_ok=True)
+    return resolved
+
+
+_WORKSPACE_TMP_DIR = _resolve_workspace_dir("MLFLOW_TMP_DIR", Path.cwd() / ".mlflow_tmp")
+_LOCAL_MLFLOW_DIR = _resolve_workspace_dir("MLFLOW_LOCAL_DIR", Path.cwd() / "mlruns")
 _LOCAL_MLFLOW_URI = _LOCAL_MLFLOW_DIR.resolve().as_uri()
 _ARTIFACT_FALLBACK_DIR = Path.cwd() / "runtime_artifacts" / "mlflow_fallback"
 _ARTIFACT_FALLBACK_DIR.mkdir(parents=True, exist_ok=True)

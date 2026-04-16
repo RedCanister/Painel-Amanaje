@@ -1,62 +1,13 @@
-name: Build and Deploy to Kubernetes
+name: Legacy Kubernetes Workflow
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  NAMESPACE: painel-amanaje
-
-jobs:      
-  build:
-    runs-on: self-hosted
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Set IMAGE_NAME to lowercase
-        shell: powershell
-        run: |
-          $repo = "${{ github.repository }}".ToLower()
-          echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
-
-      - uses: actions/checkout@v4
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push API image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./api
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
-
-  deploy:
-    needs: build
+jobs:
+  notice:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure kubectl
-        shell: powershell
-        env:
-          KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
-        run: |
-          if (!(Test-Path "$HOME\.kube")) { New-Item -ItemType Directory -Force -Path "$HOME\.kube" }
-          $bytes = [System.Convert]::FromBase64String($env:KUBE_CONFIG_DATA)
-          [System.IO.File]::WriteAllBytes("$HOME\.kube\config", $bytes)
-          kubectl config use-context docker-desktop
-
-      - name: Deploy to Kubernetes
+      - name: Show migration notice
         shell: powershell
         run: |
-          # Apply the directory (includes api.yml, configmap.yml, secrets.yml)
-          kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
-          # Check rollout
-          kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} --timeout=5m
+          Write-Host "Use .github/workflows/build-and-deploy-1.yml for active Kubernetes builds and deployments."

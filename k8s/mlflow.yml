@@ -8,7 +8,8 @@ spec:
     app: mlflow
   type: NodePort
   ports:
-  - port: 5000
+  - name: http
+    port: 5000
     targetPort: 5000
   
 ---
@@ -27,9 +28,12 @@ spec:
       labels:
         app: mlflow
     spec:
+      imagePullSecrets:
+      - name: ghcr-login
       containers:
       - name: mlflow
         image: ghcr.io/redcanister/painel-amanaje/mlflow:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         envFrom:
@@ -45,6 +49,12 @@ spec:
             path: /
             port: 5000
           initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
           periodSeconds: 10
       volumes:
       - name: mlruns

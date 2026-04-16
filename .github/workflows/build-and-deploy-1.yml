@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: kubernetes-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   NAMESPACE: painel-amanaje
@@ -17,13 +21,20 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      api_image: ${{ steps.image_meta.outputs.api_image }}
+      mlflow_image: ${{ steps.image_meta.outputs.mlflow_image }}
 
     steps:
-      - name: Declaring IMAGE and REPO
+      - name: Prepare image names
+        id: image_meta
         shell: powershell
         run: |
           $repo = "${{ github.repository }}".ToLower()
-          echo "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
+          "IMAGE_NAME=$repo" >> $env:GITHUB_ENV
+          "IMAGE_REPO=${{ env.REGISTRY }}/$repo" >> $env:GITHUB_ENV
+          "api_image=${{ env.REGISTRY }}/$repo/api:${{ github.sha }}" >> $env:GITHUB_OUTPUT
+          "mlflow_image=${{ env.REGISTRY }}/$repo/mlflow:${{ github.sha }}" >> $env:GITHUB_OUTPUT
 
       - uses: actions/checkout@v4
 
@@ -43,10 +54,10 @@ jobs:
           context: ./api
           push: ${{ github.event_name == 'push' }}
           tags: |
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }} 
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:latest
-          cache-from: type=local,src=${{ github.workspace }}/api
-          cache-to: type=local,dest=${{ github.workspace }}/api,mode=max
+              ${{ steps.image_meta.outputs.api_image }}
+              ${{ env.IMAGE_REPO }}/api:latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
 
       - name: Build and push MLflow image
         uses: docker/build-push-action@v5
@@ -54,10 +65,10 @@ jobs:
           context: ./mlflow-server
           push: ${{ github.event_name == 'push' }}
           tags: |
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:${{ github.sha }} 
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mlflow:latest
-          cache-from: type=local,src=${{ github.workspace }}/mlflow
-          cache-to: type=local,dest=${{ github.workspace }}/mlflow,mode=max
+              ${{ steps.image_meta.outputs.mlflow_image }}
+              ${{ env.IMAGE_REPO }}/mlflow:latest
+          cache-from: type=gha,scope=mlflow
+          cache-to: type=gha,scope=mlflow,mode=max
 
   deploy:
     needs: build
@@ -70,13 +81,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Secret Length
-        run: echo "${{ secrets.KUBE_CONFIG }}" 
-
       - name: Configure kubectl
         shell: powershell
         env:
           KUBE_CONFIG_DATA: "${{ secrets.KUBE_CONFIG }}"
+          KUBE_CONTEXT: "${{ secrets.KUBE_CONTEXT }}"
         run: |
           if (!(Test-Path "$HOME\.kube")) {
               New-Item -ItemType Directory -Force -Path "$HOME\.kube"
@@ -85,7 +94,9 @@ jobs:
           $bytes = [System.Convert]::FromBase64String($env:KUBE_CONFIG_DATA)
           [System.IO.File]::WriteAllBytes("$HOME\.kube\config", $bytes)
 
-          kubectl config use-context docker-desktop
+          if ($env:KUBE_CONTEXT) {
+              kubectl config use-context $env:KUBE_CONTEXT
+          }
 
       - name: Create Namespace 
         run : kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
@@ -93,4 +104,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
+          kubectl set image deployment/mlflow mlflow=${{ needs.build.outputs.mlflow_image }} -n ${{ env.NAMESPACE }}
+          kubectl set image deployment/api api=${{ needs.build.outputs.api_image }} -n ${{ env.NAMESPACE }}
+          kubectl rollout status deployment/mlflow -n ${{ env.NAMESPACE }} --timeout=10m
           kubectl rollout status deployment/api -n ${{ env.NAMESPACE }} --timeout=10m

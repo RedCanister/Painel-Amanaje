@@ -1,0 +1,15 @@
+﻿2026-04-15T11:41:10.8443746Z Post job cleanup.
+2026-04-15T11:41:12.3239878Z [command]"C:\Program Files\Git\cmd\git.exe" version
+2026-04-15T11:41:12.4697634Z git version 2.47.1.windows.2
+2026-04-15T11:41:12.4812946Z Copying 'C:\Users\andma\.gitconfig' to 'C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\1e3050ef-f499-4901-92bf-1ecc993325db\.gitconfig'
+2026-04-15T11:41:12.4858505Z Temporarily overriding HOME='C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\_temp\1e3050ef-f499-4901-92bf-1ecc993325db' before making global git config changes
+2026-04-15T11:41:12.4860188Z Adding repository directory to the temporary git global config as a safe directory
+2026-04-15T11:41:12.4873703Z [command]"C:\Program Files\Git\cmd\git.exe" config --global --add safe.directory "C:\Users\andma\Documents\Painel Amanaje\Painel-Amanaje\actions-runner\_work\Painel-Amanaje\Painel-Amanaje"
+2026-04-15T11:41:12.5492720Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-04-15T11:41:12.6014272Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-04-15T11:41:14.4798613Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-04-15T11:41:14.5617563Z http.https://github.com/.extraheader
+2026-04-15T11:41:14.5719806Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --unset-all http.https://github.com/.extraheader
+2026-04-15T11:41:14.6424051Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-04-15T11:41:15.8446820Z [command]"C:\Program Files\Git\cmd\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-04-15T11:41:15.9118212Z [command]"C:\Program Files\Git\cmd\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
