@@ -28,6 +28,9 @@
 
 {% block content %}
 <div class="mlops-operations">
+
+    <!-- TODO - This production control interface should be replaced with a inference monitor where the trained model can be used to predict future values in a simulation. -->
+    <!-- When selected, the inference model should have their metrics and most likely plots clearly shown in a tab, with the simulation option being in another. -->
     <section class="mlops-section" id="productionSection">
         <h3>Production Control</h3>
         <div id="productionStatus" style="margin-bottom: 1rem;"></div>
@@ -79,6 +82,8 @@
         </div>
     </section>
 
+    <!-- TODO - Monitoring and retraining should be a list down of every model's run summarized run history, and it should also be formatted to fit the app's aesthetic
+     besides raw JSON text. -->
     <section class="mlops-section" id="monitoringSection">
         <h3>Monitoring and Retraining</h3>
         <div class="actions-row">
@@ -99,6 +104,7 @@
         <div id="experimentResults" class="json-display" style="margin-top:1rem;">No experiment selected.</div>
     </section>
 
+    <!-- TODO - The activity log should be updated with painel amanaje's lifetime activity log.-->
     <section class="mlops-section" id="logsSection">
         <h3>Activity Log</h3>
         <div id="productionLogs" class="log-display">No production activity yet.</div>

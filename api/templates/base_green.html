@@ -125,7 +125,7 @@
                     </div>
                     
                     <!-- TODO - I'd like for Input Features and Output Features to be populated
-                    with the names of the features in the dataset, automatically, with multiple selection -->
+                    with the names of the features in the dataset, automatically, with multiple selection lists instead of plain text -->
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="inputFeatures">Input Features</label>
@@ -206,6 +206,7 @@
                 <h4>Create StudyModel</h4>
                 <p class="muted-text">Register a reusable study object so the same dataset/model pair can be replayed across PyTorch, ONNX export preparation, or scikit-learn tuning.</p>
 
+                <!-- TODO - Selecting the Study from a list of studymodels by name should fill in the learning and dataset model automatically, unless when creating a new one. -->
                 <form id="studyForm">
                     <div class="inline-grid">
                         <div class="form-group">
@@ -311,7 +312,7 @@
     </section>
 
 
-    <!-- TODO - The shown tracking results must be collapsed when viewing large datasets. Think of a better parsing wway to show this to the user. -->
+    <!-- TODO - The shown tracking results must be collapsed when viewing large datasets. A scrolling list or a simple popup should fit everything on the screen. -->
     <section class="training-section" id="trackingSection">
         <h3>Training Tracking</h3>
         <div class="registry-grid">

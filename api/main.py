@@ -35,23 +35,6 @@ except Exception:
 
 tracemalloc.start()
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     # mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
-
-#     ModelRegistry.register_model(DatasetModel, DatasetORM)
-#     ModelRegistry.register_model(LearningModel, LearningORM)
-
-#     print("DatasetModel registered:", ModelRegistry.get_orm(DatasetModel))
-#     print("LearningModel registered:", ModelRegistry.get_orm(LearningModel))
-
-#     registry = ModelRegistry._registry
-#     print("Tipo da var", type(registry))
-#     print("Registry:", registry) 
-
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
-
 
 app = FastAPI(title="Painel Amanajé API", version="0.1", )
 

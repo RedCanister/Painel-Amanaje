@@ -1,0 +1,13 @@
+{
+    "model_id": 5,
+    "dataset_id": null,
+    "study_id": null,
+    "framework": "pytorch",
+    "export_target": "onnx",
+    "parameters": {
+        "epochs": 50,
+        "batch_size": 32,
+        "learning_rate": 0.001
+    },
+    "prepared_at": "2026-04-20T06:22:11.819015"
+}

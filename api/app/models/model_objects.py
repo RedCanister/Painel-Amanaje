@@ -112,6 +112,10 @@ class CodeModel(ObjectModel):
     def _validate_code_dicts(cls, value: Any) -> Any:
         return _coerce_dict_field(value)
     
+# TODO - Include the InferenceORM Model match here for the registry
+class InfereceModel(ObjectModel):
+    # fill in
+    id: int
 
 class StudyModel(ObjectModel):
 

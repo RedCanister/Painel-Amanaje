@@ -3,7 +3,7 @@
     "dataset_id": 4,
     "model_name": "lstm_finance",
     "artifact_path": "/models/LSTM_treinado_modelo_2.pkl",
-    "started_at": "2026-04-08T21:26:16.658719",
+    "started_at": "2026-04-20T05:53:27.655822",
     "status": "active",
     "artifact_metadata": {
         "error": "Unsupported file type: .pkl"

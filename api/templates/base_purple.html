@@ -453,6 +453,9 @@
             <h3>Create New Model Entry</h3>
             <p>Register a new dataset or learning model using the fields expected by the API.</p>
 
+            <!-- TODO - I would like for the upload route to be implemented in the model registry. Besides the create tab, 
+                 it has a upload version that allows a file to be sent just like in the /upload route. -->
+
             <form id="createForm">
                 <div class="form-group">
                     <label for="modelType">Model Type *</label>
@@ -519,6 +522,8 @@
                                 <option value="mixed_dataset">Mixed Dataset</option>
                             </select>
                         </div>
+
+                        <!-- TODO - In the upload version, the shape must be infered from the actual dataset file.-->
                         <div class="form-group">
                             <label for="datasetShape">Shape (JSON Array) *</label>
                             <input type="text" id="datasetShape" name="datasetShape" placeholder='e.g., [150, 4]'>
@@ -561,6 +566,7 @@
                             <input type="text" id="referenceData" name="referenceData" placeholder="e.g., iris_dataset">
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="inputFeatures">Input Features (JSON Array)</label>
@@ -571,6 +577,8 @@
                             <input type="text" id="outputFeatures" name="outputFeatures" placeholder='e.g., ["approved"]'>
                         </div>
                     </div>
+
+
                     <div class="form-group">
                         <label for="parameters">Parameters (JSON) *</label>
                         <textarea id="parameters" name="parameters" placeholder='{"n_estimators": 100, "max_depth": 10}'></textarea>
@@ -659,6 +667,8 @@
         <div id="listContainer" class="items-grid"></div>
     </div>
 
+
+    <!-- TODO - I would like for table view to be the easy way to one-click download the basic files in the models back to the local user's pc -->
     <div id="table" class="tab-content">
         <h3>Table View - All Models</h3>
         <div id="tableLoading" class="loading" style="display: none;"></div>
@@ -712,6 +722,8 @@
 
 {% block extra_js %}
 <script>
+
+    // TODO - Extend the REGISTRY_CONFIG to recieve the InferenceModel and ORM
     const REGISTRY_CONFIG = {
         DatasetModel: {
             endpoint: '/datasetmodel',
