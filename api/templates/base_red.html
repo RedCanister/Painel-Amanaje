@@ -2,15 +2,175 @@
 
 {% block title %}Data Operations - Painel Amanajé{% endblock %}
 
+{% block body_class %}red-theme{% endblock %}
+
 {% block extra_css %}
 <style>
-    .form-section { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; }
-    .form-section h3 { color: #e63946; margin-top: 0; }
-    .upload-area { border: 2px dashed #ccc; padding: 2rem; text-align: center; margin: 1rem 0; }
-    .upload-area.dragover { border-color: #e63946; background: #fff5f5; }
-    .feature-list { list-style: none; padding: 0; }
-    .feature-item { padding: 0.5rem; border-bottom: 1px solid #eee; }
+    :root {
+        --amanaje-primary: #e63946;
+        --amanaje-primary-strong: #991b1b;
+        --amanaje-primary-soft: #ffe4e6;
+        --amanaje-primary-softer: #fff5f5;
+        --amanaje-primary-mid: #fecdd3;
+        --amanaje-primary-border: #fda4af;
+        --amanaje-primary-border-soft: #fecdd3;
+        --amanaje-primary-accent: #fb7185;
+        --amanaje-primary-gradient: #e63946;
+        --amanaje-primary-bar-gradient: #e63946;
+        --amanaje-primary-shadow: rgba(230, 57, 70, 0.08);
+        --amanaje-primary-shadow-strong: rgba(230, 57, 70, 0.2);
+        --amanaje-code-bg: #3f0d12;
+        --amanaje-code-fg: #ffe4e6;
+        --amanaje-code-border: #7f1d1d;
+        --amanaje-body-bg: #fffafa;
+    }
+
+    .data-operations { display: grid; gap: 1.25rem; }
+    .form-section {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        margin-bottom: 0;
+        padding: 1.5rem;
+    }
+    .form-section h3 { color: var(--amanaje-primary); margin-top: 0; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .analysis-controls select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: white;
+    }
+    .form-group textarea { min-height: 110px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .upload-area {
+        border: 1px dashed var(--amanaje-primary-border);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        margin: 1rem 0;
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+    }
+    .upload-area.dragover { border-color: var(--amanaje-primary); background: var(--amanaje-primary-soft); }
+    .feature-controls, .model-controls, .analysis-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+    .analysis-controls select { max-width: 320px; }
+    .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
+    .feature-item, .model-item, .analysis-result {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.9rem;
+    }
+    .feature-item h4, .model-item h4, .analysis-result h4 { color: var(--amanaje-primary); }
+    .feature-item p, .model-item p { color: #6b7280 !important; }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .btn {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+    }
+    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
+    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
+    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .analysis-result table { background: white; border-radius: 14px; overflow: hidden; }
+    .analysis-result table tr:first-child { background: var(--amanaje-primary-softer) !important; border-bottom: 2px solid var(--amanaje-primary-border-soft) !important; }
+    .analysis-result table tr { border-bottom: 1px solid var(--amanaje-primary-soft) !important; }
+    .analysis-result th, .analysis-result td { color: #1f2937; }
+    .support-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .support-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 1rem;
+    }
+    .support-card h4 { margin: 0 0 0.45rem; color: var(--amanaje-primary-strong); }
+    .support-badges, .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .support-badge, .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        border: 1px solid var(--amanaje-primary-border);
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+    .small-text { color: #6b7280; font-size: 0.92rem; }
+    .analysis-kpis {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        margin: 1rem 0;
+    }
+    .analysis-kpi {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        padding: 0.8rem;
+    }
+    .analysis-kpi span {
+        display: block;
+        color: #6b7280;
+        font-size: 0.82rem;
+        margin-bottom: 0.25rem;
+    }
+    .analysis-kpi strong { color: var(--amanaje-primary-strong); font-size: 1.05rem; }
+    .analysis-warning {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        border-radius: 12px;
+        padding: 0.7rem 0.9rem;
+        margin-bottom: 0.6rem;
+    }
+    .analysis-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .analysis-table th,
+    .analysis-table td {
+        padding: 0.7rem;
+        border-bottom: 1px solid var(--amanaje-primary-soft);
+        text-align: left;
+        vertical-align: top;
+    }
+    .analysis-table th {
+        color: var(--amanaje-primary-strong);
+        background: var(--amanaje-primary-softer);
+    }
+    .json-block {
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        padding: 1rem;
+        border-radius: 14px;
+        white-space: pre-wrap;
+        overflow: auto;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+    }
 </style>
 {% endblock %}
 
@@ -114,9 +274,15 @@
         <div id="uploadResult"></div>
     </section>
 
+    <section class="form-section" id="supportSection">
+        <h3>Supported File Types</h3>
+        <p class="small-text">Support is capability-based. A file can be registrable and inspectable without being safe to run for prediction, simulation, or monitoring.</p>
+        <div id="supportMatrix" class="support-grid"></div>
+    </section>
+
     <!-- Features Section -->
     <section class="form-section" id="featuresSection">
-        <h3>Upload History</h3>
+        <h3>Dataset History</h3>
         <div class="feature-controls">
             <button onclick="refreshFeatures()" class="btn">Refresh Features</button>
 
@@ -132,14 +298,14 @@
 
     <!-- TODO - This section is causing some trouble, needs to be analyzed -->
     <section class="form-section" id="modelsSection">
-        <h3>Upload History</h3>
+        <h3>Model History</h3>
         <div class="model-controls">
             <button onclick="refreshModels()" class="btn">Refresh Model</button>
 
             <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
              <!-- TODO - Feature extraction allows the user to choose a dataset that the user can insert into postgresql in full, 
               with full control-->
-            <button onclick="extractFeatures()" class="btn">Extract Features</button>
+            <button onclick="analyzeModel()" class="btn">Analyze Selected Model</button>
         </div>
         <div class="model-list" id="modelList">
             <!-- Features will be populated here -->
@@ -396,16 +562,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    MultiObjectSelector ({
-        containerId: 'featureSelector',
-        objectType: 'datasetmodel',
-        endpoint: '/datasetmodel/list',
-        labelField: 'name',
-        valueField: 'id',
-        roles: ['input', 'output'],
-        maxSelection: 10,
-        onSelectionChange: (selected) => console.log('Selected:', selected)
-    });
+    const featureSelector = document.getElementById('featureSelector');
+    if (featureSelector && typeof MultiObjectSelector !== 'undefined') {
+        new MultiObjectSelector({
+            containerId: featureSelector,
+            objectType: 'datasetmodel',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            roles: ['input', 'output'],
+            maxSelection: 10,
+            onSelectionChange: (selected) => console.log('Selected:', selected)
+        });
+    }
 
     // Initial feature list load (upload history)
     refreshFeatures();
@@ -544,7 +713,7 @@ async function analyzeData() {
         document.getElementById('datasetAnalysisResults').innerHTML = 
             '<div class="alert alert-info">⏳ Analyzing dataset...</div>';
 
-        const response = await fetch(`/analysis?dataset_id=${datasetId}`);
+        const response = await fetch(`/analysis/data?dataset_id=${datasetId}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const results = await response.json();
@@ -572,7 +741,7 @@ async function analyzeData() {
         `;
     } catch (error) {
         console.error('❌ Analysis error:', error);
-        document.getElementById('analysisResults').innerHTML = 
+        document.getElementById('datasetAnalysisResults').innerHTML = 
             `<div class="alert alert-error">Analysis failed: ${error.message}</div>`;
     }
 }
@@ -588,7 +757,7 @@ async function analyzeModel() {
         document.getElementById('modelAnalysisResults').innerHTML = 
             '<div class="alert alert-info">⏳ Analyzing model...</div>';
 
-        const response = await fetch(`/analysis?model_id=${modelId}`);
+        const response = await fetch(`/analysis/model?model_id=${modelId}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const results = await response.json();
@@ -617,5 +786,457 @@ async function analyzeModel() {
     }
 }
 
+</script>
+<script>
+(() => {
+    let uploadFormEl;
+    let dropZoneEl;
+    let fileInputEl;
+    let datasetCache = [];
+    let modelCache = [];
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderSupportMatrixSection(title, entries) {
+        const cards = Object.entries(entries || {}).map(([extension, details]) => `
+            <div class="support-card">
+                <h4>${escapeHtml(`${details.label || 'Artifact'} ${extension}`)}</h4>
+                <div class="small-text">${escapeHtml((details.notes || []).join(' ') || 'Capability-based support.')}</div>
+                <div class="support-badges">
+                    ${['register', 'inspect', 'train', 'predict', 'simulate', 'monitor'].map((capability) => `
+                        <span class="support-badge">${escapeHtml(`${capability}: ${details[capability]}`)}</span>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div class="support-card" style="grid-column: 1 / -1;">
+                <h4>${escapeHtml(title)}</h4>
+                <div class="support-grid">${cards}</div>
+            </div>
+        `;
+    }
+
+    function renderWarnings(warnings = []) {
+        if (!Array.isArray(warnings) || !warnings.length) return '';
+        return warnings.slice(0, 8).map((warning) => `
+            <div class="analysis-warning">${escapeHtml(warning)}</div>
+        `).join('');
+    }
+
+    function renderDatasetAnalysis(summary = {}) {
+        const explorer = Array.isArray(summary.column_explorer) ? summary.column_explorer.slice(0, 14) : [];
+        return `
+            <div class="analysis-result" style="grid-column: 1 / -1;">
+                <h4>Column Explorer</h4>
+                <div class="analysis-kpis">
+                    <div class="analysis-kpi"><span>Rows</span><strong>${escapeHtml(summary.rows ?? 0)}</strong></div>
+                    <div class="analysis-kpi"><span>Columns</span><strong>${escapeHtml(summary.columns ?? 0)}</strong></div>
+                    <div class="analysis-kpi"><span>Missing Values</span><strong>${escapeHtml(summary.missing_values ?? 0)}</strong></div>
+                    <div class="analysis-kpi"><span>Recommended Target</span><strong>${escapeHtml(summary.profile?.recommended_target || '-')}</strong></div>
+                </div>
+                ${renderWarnings(summary.top_warnings || summary.parser_report?.warnings || [])}
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Family</th>
+                            <th>Nulls</th>
+                            <th>Unique</th>
+                            <th>Flags</th>
+                            <th>Samples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${explorer.map((column) => `
+                            <tr>
+                                <td><strong>${escapeHtml(column.name)}</strong><br><span class="small-text">${escapeHtml(column.dtype)}</span></td>
+                                <td>${escapeHtml(column.family)}</td>
+                                <td>${escapeHtml(column.null_count)}</td>
+                                <td>${escapeHtml(column.unique_count)}</td>
+                                <td>${escapeHtml([
+                                    column.mixed_type ? 'mixed' : '',
+                                    column.high_cardinality ? 'high-cardinality' : '',
+                                    column.datetime_confidence >= 0.8 ? `date:${column.datetime_confidence}` : ''
+                                ].filter(Boolean).join(', ') || 'stable')}</td>
+                                <td>${escapeHtml((column.sample_values || []).join(', '))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderModelAnalysis(summary = {}) {
+        const manifest = summary.artifact_manifest || summary.artifact_metadata || {};
+        const metrics = summary.metrics || {};
+        return `
+            <div class="analysis-result" style="grid-column: 1 / -1;">
+                <h4>Artifact Manifest</h4>
+                <div class="analysis-kpis">
+                    <div class="analysis-kpi"><span>Format</span><strong>${escapeHtml(manifest.artifact_format || '-')}</strong></div>
+                    <div class="analysis-kpi"><span>Framework</span><strong>${escapeHtml(manifest.framework || summary.parameters?.framework || '-')}</strong></div>
+                    <div class="analysis-kpi"><span>Loader</span><strong>${escapeHtml(manifest.loader || '-')}</strong></div>
+                    <div class="analysis-kpi"><span>Metrics</span><strong>${escapeHtml(Object.keys(metrics).length)}</strong></div>
+                </div>
+                ${renderWarnings(manifest.warnings || [])}
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Capability</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(manifest.runtime_capabilities || {}).map(([key, value]) => `
+                            <tr>
+                                <td>${escapeHtml(key)}</td>
+                                <td>${escapeHtml(String(value))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="json-block" style="margin-top:1rem;">${escapeHtml(JSON.stringify(manifest.metadata || {}, null, 2))}</div>
+            </div>
+        `;
+    }
+
+    function buildDatasetUploadSummary(result = {}) {
+        const featureList = Array.isArray(result.features_list) ? result.features_list : [];
+        return {
+            rows: Array.isArray(result.shape) ? result.shape[0] : 0,
+            columns: Array.isArray(result.shape) ? result.shape[1] : featureList.length,
+            missing_values: 0,
+            column_names: featureList,
+            profile: {
+                recommended_target: featureList[featureList.length - 1] || '',
+                recommended_inputs: featureList.slice(0, Math.max(featureList.length - 1, 0))
+            },
+            parser_report: result.parser_report || {},
+            column_explorer: result.column_explorer || [],
+            top_warnings: (result.parser_report || {}).warnings || []
+        };
+    }
+
+    function buildModelUploadSummary(result = {}) {
+        const manifest = result.artifact_manifest || {};
+        return {
+            metrics: {},
+            parameters: {
+                framework: manifest.framework || '-'
+            },
+            artifact_manifest: {
+                ...manifest,
+                runtime_capabilities: result.runtime_capabilities || manifest.runtime_capabilities || {}
+            }
+        };
+    }
+
+    function renderFeatureExtraction(result = {}) {
+        const manifest = result.manifest || {};
+        const previewRows = Array.isArray(manifest.preview_rows) ? manifest.preview_rows.slice(0, 8) : [];
+        return `
+            <div class="analysis-result" style="grid-column: 1 / -1;">
+                <h4>Feature Workspace Seed</h4>
+                <div class="pill-row">
+                    <span class="pill">${escapeHtml(result.dataset_name || `Dataset #${result.dataset_id || '-'}`)}</span>
+                    <span class="pill">${escapeHtml(manifest.table_name || 'table:n/a')}</span>
+                    ${Array.isArray(manifest.available_edits) ? manifest.available_edits.slice(0, 4).map((editName) => `<span class="pill">${escapeHtml(editName)}</span>`).join('') : ''}
+                </div>
+                ${renderDatasetAnalysis(manifest.analysis || {})}
+                ${previewRows.length ? `<div class="json-block" style="margin-top:1rem;">${escapeHtml(JSON.stringify(previewRows, null, 2))}</div>` : ''}
+            </div>
+        `;
+    }
+
+    function renderUploadResponse(result, operationId) {
+        if (operationId === 'datasets') {
+            const parserReport = result.parser_report || {};
+            const summary = buildDatasetUploadSummary(result);
+            return `
+                <div class="alert alert-success">
+                    <strong>Upload successful.</strong><br>
+                    Dataset <code>${escapeHtml(result.id || 'n/a')}</code> saved to <code>${escapeHtml(result.path || 'n/a')}</code>.
+                </div>
+                <div class="analysis-result" style="margin-top:1rem;">
+                    <h4>Parser Report</h4>
+                    <div class="pill-row">
+                        <span class="pill">loader: ${escapeHtml(parserReport.loader || '-')}</span>
+                        <span class="pill">delimiter: ${escapeHtml(parserReport.delimiter || ',')}</span>
+                        <span class="pill">encoding: ${escapeHtml(parserReport.encoding || 'utf-8')}</span>
+                        <span class="pill">rows: ${escapeHtml(summary.rows)}</span>
+                        <span class="pill">columns: ${escapeHtml(summary.columns)}</span>
+                    </div>
+                    ${renderWarnings(parserReport.warnings || [])}
+                </div>
+                ${renderDatasetAnalysis(summary)}
+            `;
+        }
+
+        return `
+            <div class="alert alert-success">
+                <strong>Upload successful.</strong><br>
+                Model <code>${escapeHtml(result.id || 'n/a')}</code> saved to <code>${escapeHtml(result.path || 'n/a')}</code>.
+            </div>
+            ${renderModelAnalysis(buildModelUploadSummary(result))}
+        `;
+    }
+
+    async function loadSupportMatrix() {
+        const target = document.getElementById('supportMatrix');
+        if (!target) return;
+
+        try {
+            const response = await fetch('/upload/support');
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.detail || `HTTP ${response.status}`);
+            target.innerHTML = `
+                ${renderSupportMatrixSection('Datasets', result.datasets || {})}
+                ${renderSupportMatrixSection('Models', result.models || {})}
+            `;
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Failed to load support matrix: ${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    async function refreshSelectors() {
+        await PopulateListOptions({
+            selectElement: '#datasetSelect',
+            endpoint: '/features',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a Dataset'
+        });
+
+        await PopulateListOptions({
+            selectElement: '#modelSelect',
+            endpoint: '/list/model',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a Model'
+        });
+    }
+
+    function resolveDatasetSelection() {
+        return document.getElementById('datasetSelect').value || (datasetCache[0]?.id ? String(datasetCache[0].id) : '');
+    }
+
+    function resolveModelSelection() {
+        return document.getElementById('modelSelect').value || (modelCache[0]?.id ? String(modelCache[0].id) : '');
+    }
+
+    window.refreshFeatures = async function refreshFeaturesOverride() {
+        const target = document.getElementById('featureList');
+        try {
+            const response = await fetch('/features');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const features = await response.json();
+            datasetCache = Array.isArray(features) ? features : [];
+            if (!datasetCache.length) {
+                target.innerHTML = '<div class="feature-item">No datasets uploaded yet.</div>';
+                return;
+            }
+            target.innerHTML = datasetCache.map((feature) => `
+                <div class="feature-item">
+                    <h4 style="margin:0.25rem 0;">${escapeHtml(feature.name || 'Unnamed dataset')}</h4>
+                    <p style="margin:0.5rem 0; font-size:0.9em; color:#666;">${escapeHtml(feature.description || 'No description provided.')}</p>
+                    <div class="pill-row">
+                        <span class="pill">${escapeHtml(feature.dataset_type || 'dataset')}</span>
+                        <span class="pill">${escapeHtml(`${Number(feature.size || 0).toFixed(2)} MB`)}</span>
+                        <span class="pill">id ${escapeHtml(feature.id)}</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Failed to load dataset history: ${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    window.refreshModels = async function refreshModelsOverride() {
+        const target = document.getElementById('modelList');
+        try {
+            const response = await fetch('/list/model');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const models = await response.json();
+            modelCache = Array.isArray(models) ? models : [];
+            if (!modelCache.length) {
+                target.innerHTML = '<div class="model-item">No models uploaded yet.</div>';
+                return;
+            }
+            target.innerHTML = modelCache.map((model) => `
+                <div class="model-item">
+                    <h4 style="margin:0.25rem 0;">${escapeHtml(model.name || 'Unnamed model')}</h4>
+                    <p style="margin:0.5rem 0; font-size:0.9em; color:#666;">${escapeHtml(model.description || 'No description provided.')}</p>
+                    <div class="pill-row">
+                        <span class="pill">${escapeHtml(model.model_type || 'model')}</span>
+                        <span class="pill">${escapeHtml(`${Number(model.size || 0).toFixed(2)} MB`)}</span>
+                        <span class="pill">id ${escapeHtml(model.id)}</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Failed to load model history: ${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    window.extractFeatures = async function extractFeaturesOverride() {
+        const datasetId = resolveDatasetSelection();
+        const target = document.getElementById('datasetAnalysisResults');
+        if (!datasetId) {
+            target.innerHTML = '<div class="alert alert-error">Select a dataset before extracting feature candidates.</div>';
+            return;
+        }
+        try {
+            target.innerHTML = '<div class="alert alert-info">Extracting feature candidates...</div>';
+            const response = await fetch(`/features/extract?dataset_id=${encodeURIComponent(datasetId)}`);
+            const result = await response.json();
+            if (!response.ok || result.status === 'error') {
+                throw new Error(result.detail || `HTTP ${response.status}`);
+            }
+            document.getElementById('datasetSelect').value = String(datasetId);
+            target.innerHTML = renderFeatureExtraction(result);
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Feature extraction failed: ${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    window.analyzeData = async function analyzeDataOverride() {
+        const datasetId = resolveDatasetSelection();
+        const target = document.getElementById('datasetAnalysisResults');
+        if (!datasetId) {
+            target.innerHTML = '<div class="alert alert-error">Select a dataset first.</div>';
+            return;
+        }
+        try {
+            target.innerHTML = '<div class="alert alert-info">Analyzing dataset...</div>';
+            const response = await fetch(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
+            const result = await response.json();
+            if (!response.ok || result.status === 'error') {
+                throw new Error(result.detail || `HTTP ${response.status}`);
+            }
+            document.getElementById('datasetSelect').value = String(datasetId);
+            target.innerHTML = renderDatasetAnalysis(result.summary || {});
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Analysis failed: ${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    window.analyzeModel = async function analyzeModelOverride() {
+        const modelId = resolveModelSelection();
+        const target = document.getElementById('modelAnalysisResults');
+        if (!modelId) {
+            target.innerHTML = '<div class="alert alert-error">Select a model first.</div>';
+            return;
+        }
+        try {
+            target.innerHTML = '<div class="alert alert-info">Analyzing model...</div>';
+            const response = await fetch(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
+            const result = await response.json();
+            if (!response.ok || result.status === 'error') {
+                throw new Error(result.detail || `HTTP ${response.status}`);
+            }
+            document.getElementById('modelSelect').value = String(modelId);
+            target.innerHTML = renderModelAnalysis(result.summary || {});
+        } catch (error) {
+            target.innerHTML = `<div class="alert alert-error">Analysis failed: ${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    function rebindUploadSurface() {
+        const currentForm = document.getElementById('uploadForm');
+        const clonedForm = currentForm.cloneNode(true);
+        currentForm.parentNode.replaceChild(clonedForm, currentForm);
+        uploadFormEl = clonedForm;
+        dropZoneEl = document.getElementById('dropZone');
+        fileInputEl = document.getElementById('fileInput');
+    }
+
+    function bindUploadSurface() {
+        dropZoneEl.addEventListener('click', () => fileInputEl.click());
+        dropZoneEl.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZoneEl.classList.add('dragover');
+        });
+        dropZoneEl.addEventListener('dragleave', () => {
+            dropZoneEl.classList.remove('dragover');
+        });
+        dropZoneEl.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropZoneEl.classList.remove('dragover');
+            fileInputEl.files = event.dataTransfer.files;
+        });
+
+        uploadFormEl.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const file = fileInputEl.files[0];
+            const operationId = document.getElementById('operationId').value;
+            const target = document.getElementById('uploadResult');
+
+            if (!file) {
+                target.innerHTML = '<div class="alert alert-error">No file selected. Choose a file to upload.</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('operationId', operationId);
+
+            if (operationId === 'datasets') {
+                formData.append('objectName', document.getElementById('datasetObjectName').value);
+                formData.append('description', document.getElementById('datasetDescription').value);
+                formData.append('datasetType', document.getElementById('datasetType').value);
+                formData.append('connectionString', document.getElementById('connectionString').value);
+            } else {
+                formData.append('objectName', document.getElementById('modelObjectName').value);
+                formData.append('description', document.getElementById('modelDescription').value);
+                formData.append('modelType', document.getElementById('modelType').value);
+                formData.append('parameters', document.getElementById('parameters').value);
+                formData.append('metrics', document.getElementById('metrics').value);
+                formData.append('referenceData', document.getElementById('referenceData').value);
+            }
+
+            try {
+                target.innerHTML = '<div class="alert alert-info">Uploading...</div>';
+                const response = await fetch(`/upload/${operationId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok || result.status === 'error') {
+                    throw new Error(result.detail || `HTTP ${response.status}`);
+                }
+                target.innerHTML = renderUploadResponse(result, operationId);
+                uploadFormEl.reset();
+                fileInputEl.value = '';
+                await Promise.all([refreshSelectors(), window.refreshFeatures(), window.refreshModels(), loadSupportMatrix()]);
+            } catch (error) {
+                target.innerHTML = `<div class="alert alert-error">Upload failed: ${escapeHtml(error.message)}</div>`;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        rebindUploadSurface();
+        bindUploadSurface();
+        ToggleFormOptions({
+            triggerElement: '#operationId',
+            mapping: {
+                datasets: ['datasetFields', 'featuresSection', 'datasetAnalysis'],
+                models: ['modelFields', 'modelsSection', 'modelAnalysis']
+            },
+            allFields: ['datasetFields', 'modelFields', 'featuresSection', 'modelsSection', 'datasetAnalysis', 'modelAnalysis']
+        });
+        await Promise.all([loadSupportMatrix(), refreshSelectors(), window.refreshFeatures(), window.refreshModels()]);
+    });
+})();
 </script>
 {% endblock %}

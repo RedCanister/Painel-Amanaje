@@ -16,6 +16,8 @@ POLYMORPHIC_IDENTITY_ALIASES = {
     "object_type": {
         "code": "code_model",
         "codes": "code_model",
+        "inference": "inference_model",
+        "monitor": "inference_model",
         "model": "learning_model",
         "models": "learning_model",
         "study": "study_model",
@@ -75,6 +77,11 @@ JSONB_CONTAINER_COLUMNS = {
         "metrics": "{",
         "input_features": "[",
         "output_features": "[",
+    },
+    "inference_models": {
+        "input_features": "[",
+        "output_features": "[",
+        "inference_params": "{",
     },
     "code_models": {
         "variables": "{",

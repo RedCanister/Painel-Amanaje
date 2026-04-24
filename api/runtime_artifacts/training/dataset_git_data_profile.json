@@ -1,0 +1,263 @@
+{
+    "rows": 222420,
+    "columns": 23,
+    "column_names": [
+        "user",
+        "event_id",
+        "event_type",
+        "repo",
+        "event_url",
+        "event_watchs",
+        "event_stars",
+        "event_forks",
+        "event_issues",
+        "event_isfork",
+        "event_projects",
+        "event_downloads",
+        "event_wiki",
+        "event_pages",
+        "event_discussions",
+        "date_",
+        "time",
+        "language_1",
+        "lang_count_1",
+        "language_2",
+        "lang_count_2",
+        "language_3",
+        "lang_count_3"
+    ],
+    "dtypes": {
+        "user": "object",
+        "event_id": "int64",
+        "event_type": "object",
+        "repo": "object",
+        "event_url": "object",
+        "event_watchs": "float64",
+        "event_stars": "float64",
+        "event_forks": "float64",
+        "event_issues": "float64",
+        "event_isfork": "object",
+        "event_projects": "object",
+        "event_downloads": "object",
+        "event_wiki": "object",
+        "event_pages": "object",
+        "event_discussions": "object",
+        "date_": "object",
+        "time": "object",
+        "language_1": "object",
+        "lang_count_1": "object",
+        "language_2": "object",
+        "lang_count_2": "object",
+        "language_3": "object",
+        "lang_count_3": "float64"
+    },
+    "missing_values": 609693,
+    "stats": {
+        "user": {
+            "type": "categorical",
+            "unique_values": 5817,
+            "null_count": 0,
+            "mode": "github-actions[bot]"
+        },
+        "event_id": {
+            "type": "numeric",
+            "mean": 42310990548.67442,
+            "std": 7596238.140910582,
+            "min": 42271873085.0,
+            "max": 42317717437.0,
+            "null_count": 0
+        },
+        "event_type": {
+            "type": "categorical",
+            "unique_values": 15,
+            "null_count": 0,
+            "mode": "PushEvent"
+        },
+        "repo": {
+            "type": "categorical",
+            "unique_values": 7643,
+            "null_count": 0,
+            "mode": "uk"
+        },
+        "event_url": {
+            "type": "categorical",
+            "unique_values": 8075,
+            "null_count": 2225,
+            "mode": "https://github.com/freeukapp/uk"
+        },
+        "event_watchs": {
+            "type": "numeric",
+            "mean": 31.901641726651377,
+            "std": 281.80194062667147,
+            "min": 0.0,
+            "max": 9778.0,
+            "null_count": 2225
+        },
+        "event_stars": {
+            "type": "numeric",
+            "mean": 1321.4779490905787,
+            "std": 10772.705247368216,
+            "min": 0.0,
+            "max": 334471.0,
+            "null_count": 2225
+        },
+        "event_forks": {
+            "type": "numeric",
+            "mean": 328.63499625332094,
+            "std": 3322.6498360925325,
+            "min": 0.0,
+            "max": 145858.0,
+            "null_count": 2225
+        },
+        "event_issues": {
+            "type": "numeric",
+            "mean": 245.63338404595927,
+            "std": 3283.0030619948134,
+            "min": 0.0,
+            "max": 110026.0,
+            "null_count": 2225
+        },
+        "event_isfork": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "False"
+        },
+        "event_projects": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "True"
+        },
+        "event_downloads": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "True"
+        },
+        "event_wiki": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "True"
+        },
+        "event_pages": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "False"
+        },
+        "event_discussions": {
+            "type": "categorical",
+            "unique_values": 2,
+            "null_count": 2225,
+            "mode": "False"
+        },
+        "date_": {
+            "type": "categorical",
+            "unique_values": 3,
+            "null_count": 0,
+            "mode": "2024-09-26"
+        },
+        "time": {
+            "type": "categorical",
+            "unique_values": 617,
+            "null_count": 0,
+            "mode": "01:04:43"
+        },
+        "language_1": {
+            "type": "categorical",
+            "unique_values": 124,
+            "null_count": 53580,
+            "mode": "Python"
+        },
+        "lang_count_1": {
+            "type": "categorical",
+            "unique_values": 11603,
+            "null_count": 53580,
+            "mode": "2165"
+        },
+        "language_2": {
+            "type": "categorical",
+            "unique_values": 154,
+            "null_count": 106565,
+            "mode": "CSS"
+        },
+        "lang_count_2": {
+            "type": "categorical",
+            "unique_values": 7827,
+            "null_count": 106565,
+            "mode": "647"
+        },
+        "language_3": {
+            "type": "categorical",
+            "unique_values": 141,
+            "null_count": 132464,
+            "mode": "JavaScript"
+        },
+        "lang_count_3": {
+            "type": "numeric",
+            "mean": 1282778.3786517854,
+            "std": 13250134.566971213,
+            "min": 1.0,
+            "max": 194844636.0,
+            "null_count": 132464
+        }
+    },
+    "path": "/data/datasets/git_data.csv",
+    "profile": {
+        "numeric_columns": [
+            "event_id",
+            "event_watchs",
+            "event_stars",
+            "event_forks",
+            "event_issues",
+            "lang_count_3"
+        ],
+        "categorical_columns": [
+            "user",
+            "event_type",
+            "repo",
+            "event_url",
+            "event_isfork",
+            "event_projects",
+            "event_downloads",
+            "event_wiki",
+            "event_pages",
+            "event_discussions",
+            "date_",
+            "time",
+            "language_1",
+            "lang_count_1",
+            "language_2",
+            "lang_count_2",
+            "language_3"
+        ],
+        "datetime_columns": [],
+        "recommended_target": "lang_count_3",
+        "recommended_inputs": [
+            "user",
+            "event_id",
+            "event_type",
+            "repo",
+            "event_url",
+            "event_watchs",
+            "event_stars",
+            "event_forks",
+            "event_issues",
+            "event_isfork",
+            "event_projects",
+            "event_downloads",
+            "event_wiki",
+            "event_pages",
+            "event_discussions",
+            "date_",
+            "time",
+            "language_1",
+            "lang_count_1",
+            "language_2",
+            "lang_count_2",
+            "language_3"
+        ]
+    }
+}

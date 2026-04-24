@@ -1,5 +1,29 @@
 let extractedVariables = {};
 
+function buildEditorDocumentPayload(filename) {
+    const metadata = getUploadMetadata();
+    const script = window.editor ? window.editor.getValue() : '';
+    const normalizedName = filename || metadata.name || `script_${new Date().toISOString().split('T')[0]}`;
+    const version = Number(metadata.version || 1);
+
+    return {
+        name: normalizedName,
+        description: metadata.description || 'Saved from the Create workspace',
+        object_type: 'code_model',
+        size: 0.0,
+        path: metadata.path || 'editor',
+        date: new Date().toISOString(),
+        version: Number.isFinite(version) ? version : 1,
+        history: Array.isArray(metadata.history) ? metadata.history : [{ operation: 'save_script', when: new Date().toISOString() }],
+        variables: extractedVariables || {},
+        code: {
+            script,
+            language: 'python',
+            metadata
+        }
+    };
+}
+
 async function executeCode() {
     if (!window.editor) {
         showStatus('Please wait for Monaco Editor to finish loading.', 'error');
@@ -150,45 +174,36 @@ function escapeHtml(text) {
 
 async function saveVariablesToFile() {
     const filename = prompt(
-        'Enter filename to save variables:',
-        `variables_${new Date().toISOString().split('T')[0]}`
+        'Enter filename to save the script:',
+        `script_${new Date().toISOString().split('T')[0]}`
     );
 
     if (!filename) return;
 
-    if (!extractedVariables || Object.keys(extractedVariables).length === 0) {
-        showStatus('No variables to save. Execute code first.', 'error');
+    if (!window.editor) await window.editorReady;
+    const script = window.editor ? window.editor.getValue() : '';
+    if (!script.trim()) {
+        showStatus('No script to save.', 'error');
         return;
     }
 
-    if (!window.editor) await window.editorReady;
-    const script = window.editor ? window.editor.getValue() : '';
-
     try {
-        const saveData = {
-            name: filename,
-            description: 'uploaded code',
-            object_type: 'code_model',
-            size: 0.0,
-            path: 'editor',
-            date: new Date().toISOString(),
-            version: 0,
-            history: [{ uploaded: 'now' }],
-            variables: extractedVariables,
-            code: { script }
-        };
-
         const response = await fetch('/codemodel/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(saveData)
+            body: JSON.stringify(buildEditorDocumentPayload(filename))
         });
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        showStatus(`Variables saved as ${filename}.`, 'success');
+        showStatus(
+            Object.keys(extractedVariables || {}).length
+                ? `Script and extracted variables saved as ${filename}.`
+                : `Script saved as ${filename}.`,
+            'success'
+        );
         loadFileList();
     } catch (error) {
         console.error('Save error:', error);
@@ -308,15 +323,14 @@ async function deleteVariableFile(filename) {
 }
 
 function exportVariablesAsJSON() {
-    if (!extractedVariables || Object.keys(extractedVariables).length === 0) {
-        showStatus('No variables to export.', 'error');
+    if (!window.editor || !window.editor.getValue().trim()) {
+        showStatus('No script to export.', 'error');
         return;
     }
 
     const exportData = {
         exportedAt: new Date().toISOString(),
-        variables: extractedVariables,
-        code: window.editor ? window.editor.getValue() : ''
+        document: buildEditorDocumentPayload(getUploadMetadata().name || `script_export_${Date.now()}`)
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -371,7 +385,16 @@ function parsePythonLiteral(rawValue) {
 }
 
 function isMaterializedEditorField(fieldName) {
-    return fieldName === 'csv_text' || fieldName === 'pytorch_bytes' || fieldName === 'torch_bytes' || fieldName === 'model_bytes';
+    return [
+        'csv_text',
+        'pytorch_bytes',
+        'torch_bytes',
+        'model_bytes',
+        'torchscript_bytes',
+        'joblib_bytes',
+        'pickle_bytes',
+        'onnx_bytes'
+    ].includes(fieldName);
 }
 
 function isQuotedPythonString(rawValue) {
@@ -405,6 +428,10 @@ function extractMetadataFromEditor(allowedFields = null) {
         'pytorch_bytes',
         'torch_bytes',
         'model_bytes',
+        'torchscript_bytes',
+        'joblib_bytes',
+        'pickle_bytes',
+        'onnx_bytes',
         'parameters',
         'metrics',
         'reference_data',
@@ -509,28 +536,26 @@ connection_string = ""
 `;
 
     const modelTemplate = `# Model creation template
-# Materialize a PyTorch model file into base64 and assign it to pytorch_bytes before creating the object.
+# Default path: create a scikit-learn artifact with joblib_bytes.
+# Alternative PyTorch TorchScript example is included below.
 
-import torch.nn as nn
+import base64
+import io
+import joblib
+from sklearn.ensemble import RandomForestRegressor
 
-class MyModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(MyModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = self.relu(self.fc1(x))
-        return self.fc2(x)
+model = RandomForestRegressor(n_estimators=50, random_state=42)
+buffer = io.BytesIO()
+joblib.dump(model, buffer)
+buffer.seek(0)
 
 name = "sample_model"
 description = "Model created from the editor"
 object_type = "learning_model"
-path = "generated/sample_model.pt"
+path = "generated/sample_model.joblib"
 version = 1
 model_type = "supervised_model"
-parameters = {"framework": "pytorch", "input_size": 1, "output_size": 1}
+parameters = {"framework": "sklearn", "estimator_class": "RandomForestRegressor"}
 metrics = {"task": "regression"}
 reference_data = "sample_dataset.csv"
 input_features = ["input"]
@@ -538,7 +563,27 @@ output_features = ["output"]
 is_trained = False
 is_tested = False
 is_deployed = False
-pytorch_bytes = ""
+joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
+
+# PyTorch TorchScript alternative:
+# import torch
+# import torch.nn as nn
+# class MyModel(nn.Module):
+#     def __init__(self, input_size=1, hidden_size=8, output_size=1):
+#         super().__init__()
+#         self.fc1 = nn.Linear(input_size, hidden_size)
+#         self.relu = nn.ReLU()
+#         self.fc2 = nn.Linear(hidden_size, output_size)
+#     def forward(self, x):
+#         return self.fc2(self.relu(self.fc1(x)))
+# model = MyModel()
+# scripted = torch.jit.script(model)
+# torch_buffer = io.BytesIO()
+# torch.jit.save(scripted, torch_buffer)
+# torch_buffer.seek(0)
+# path = "generated/sample_model.pt"
+# parameters = {"framework": "pytorch", "input_size": 1, "output_size": 1}
+# torchscript_bytes = base64.b64encode(torch_buffer.read()).decode("utf-8")
 `;
 
     if (!window.editor) {

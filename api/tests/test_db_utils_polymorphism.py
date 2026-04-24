@@ -1,5 +1,20 @@
+import sys
+from types import ModuleType
 from datetime import datetime
 import asyncio
+
+from sqlalchemy.orm import declarative_base
+
+db_session_stub = ModuleType("app.database.db_session")
+db_session_stub.Base = declarative_base()
+
+
+async def _fake_get_db():
+    yield object()
+
+
+db_session_stub.get_db = _fake_get_db
+sys.modules.setdefault("app.database.db_session", db_session_stub)
 
 from app.database.db_utils import (
     JSONB_CONTAINER_COLUMNS,
@@ -122,6 +137,7 @@ def test_normalize_legacy_jsonb_containers_repairs_stringified_json():
     assert "objects" in JSONB_CONTAINER_COLUMNS
     assert normalized["objects"] == 1
     assert normalized["learning_models"] == 2
+    assert normalized["inference_models"] == 2
     assert fake_db.commit_count == 1
     assert any("::jsonb" in statement for statement, _ in fake_db.calls)
 
@@ -155,4 +171,5 @@ def test_get_entry_uses_numeric_string_as_id_before_name_lookup():
 
     assert entry == {"id": 1, "name": "dataset-1"}
     assert len(fake_db.calls) == 1
-    assert "WHERE objects.id =" in fake_db.calls[0]
+    assert "WHERE" in fake_db.calls[0]
+    assert "datasets.id" in fake_db.calls[0]

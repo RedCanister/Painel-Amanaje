@@ -1,0 +1,75 @@
+{
+  "run_id": "training_d90e65ee2d27",
+  "run_type": "training",
+  "status": "running",
+  "stage": "training",
+  "created_at": "2026-04-24T03:06:04.939472",
+  "updated_at": "2026-04-24T03:06:05.087256",
+  "started_at": "2026-04-24T03:06:04.962706",
+  "completed_at": null,
+  "context": {
+    "model_id": 18,
+    "dataset_id": 13,
+    "study_id": null
+  },
+  "parameters": {
+    "epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "framework": "sklearn",
+    "input_features": [
+      "user",
+      "event_id",
+      "event_type",
+      "repo",
+      "event_url",
+      "event_watchs",
+      "event_stars",
+      "event_forks",
+      "event_issues",
+      "event_isfork",
+      "event_projects",
+      "event_downloads",
+      "event_wiki",
+      "event_pages",
+      "event_discussions",
+      "date_",
+      "time",
+      "language_1",
+      "lang_count_1",
+      "language_2",
+      "lang_count_2",
+      "language_3",
+      "lang_count_3"
+    ],
+    "output_features": [
+      "event_stars"
+    ],
+    "model_type": "GradientBoosting",
+    "features_count": 23
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-24T03:06:04.939472",
+      "message": "training run created."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-04-24T03:06:04.962706",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T03:06:05.087256",
+      "message": "Training workflow started."
+    }
+  ]
+}

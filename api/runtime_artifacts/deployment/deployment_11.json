@@ -1,0 +1,13 @@
+{
+    "model_id": 11,
+    "dataset_id": 4,
+    "inference_id": 12,
+    "model_name": "lightfm_recommendation",
+    "dataset_name": "stock_data",
+    "artifact_path": "/models/lightfm_model.pkl",
+    "started_at": "2026-04-22T21:20:41.811676",
+    "status": "active",
+    "artifact_metadata": {
+        "error": "Unsupported file type: .pkl"
+    }
+}

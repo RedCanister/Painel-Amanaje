@@ -1,5 +1,6 @@
 import sys
 from types import ModuleType
+from types import SimpleNamespace
 
 from sqlalchemy.orm import declarative_base
 
@@ -15,9 +16,13 @@ async def _fake_get_db():
 db_session_stub.get_db = _fake_get_db
 sys.modules.setdefault("app.database.db_session", db_session_stub)
 
+optuna_stub = ModuleType("optuna")
+optuna_stub.trial = SimpleNamespace(Trial=object)
+sys.modules.setdefault("optuna", optuna_stub)
 
-from app.models.model_objects import LearningModel, StudyModel
-from app.models.model_orm import StudyORM
+
+from app.models.model_objects import InferenceModel, LearningModel, StudyModel
+from app.models.model_orm import InferenceORM, StudyORM
 from app.models.model_registry import ModelRegistry
 
 
@@ -83,6 +88,63 @@ def test_study_model_accepts_registry_payload_with_flexible_study_params():
     assert study.learning_model is None
     assert study.dataset is None
     assert study.study_params == payload["study_params"]
+
+
+def test_inference_orm_to_dict_includes_runtime_fields():
+    inference = InferenceORM(
+        id=12,
+        name="model-a :: dataset-b",
+        description="linked runtime pair",
+        object_type="inference_model",
+        size=1.5,
+        path="/tmp/model.pkl",
+        learning_model_id=6,
+        dataset_id=1,
+        input_features=["Date", "Open"],
+        output_features=["MACD_Under"],
+        inference_params={
+            "status": "active",
+            "latest_metrics": {"accuracy": 0.82},
+        },
+    )
+
+    payload = ModelRegistry._orm_to_dict(inference)
+
+    assert payload["id"] == 12
+    assert payload["object_type"] == "inference_model"
+    assert payload["learning_model_id"] == 6
+    assert payload["dataset_id"] == 1
+    assert payload["inference_params"]["status"] == "active"
+
+
+def test_inference_model_coerces_stringified_runtime_fields():
+    payload = {
+        "id": 12,
+        "name": "model-a :: dataset-b",
+        "description": "linked runtime pair",
+        "object_type": "inference_model",
+        "size": 1.5,
+        "path": "/tmp/model.pkl",
+        "date": "2026-04-04T00:00:00",
+        "version": 1,
+        "history": "[]",
+        "learning_model_id": 6,
+        "dataset_id": 1,
+        "input_features": "[\"Date\", \"Open\"]",
+        "output_features": "[\"MACD_Under\"]",
+        "inference_params": "{\"status\": \"active\", \"latest_metrics\": {\"accuracy\": 0.82}}",
+    }
+
+    inference = InferenceModel.model_validate(payload)
+
+    assert inference.history == []
+    assert inference.input_features == ["Date", "Open"]
+    assert inference.output_features == ["MACD_Under"]
+    assert inference.inference_params == {"status": "active", "latest_metrics": {"accuracy": 0.82}}
+
+
+def test_inference_model_is_registered_with_its_orm_pair():
+    assert ModelRegistry.get_orm(InferenceModel) is InferenceORM
 
 
 def test_learning_model_coerces_stringified_feature_lists():

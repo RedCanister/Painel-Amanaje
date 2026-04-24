@@ -34,6 +34,11 @@ from .model_schemas import (
 LOGGER = logging.getLogger(__name__)
 
 
+async def _get_db_dependency():
+    async for db in get_db():
+        yield db
+
+
 @dataclass(frozen=True)
 class ModelRegistration:
     create_schema: Type[BaseModel]
@@ -122,7 +127,7 @@ class ModelRegistry:
         router = APIRouter(prefix=f"/{registration.prefix}", tags=[registration.tag])
 
         @router.post("/create", response_model=registration.read_schema, status_code=status.HTTP_201_CREATED)
-        async def create_item(request: Request, db: AsyncSession = Depends(get_db)):
+        async def create_item(request: Request, db: AsyncSession = Depends(_get_db_dependency)):
             payload = await cls._read_json_payload(request)
             validated_payload = cls._validate_payload(registration.create_schema, payload, partial=False)
 
@@ -138,7 +143,7 @@ class ModelRegistry:
             return registration.read_schema.model_validate(created, from_attributes=True)
 
         @router.get("/get/{item_id}", response_model=registration.read_schema)
-        async def read_item(item_id: int | str, db: AsyncSession = Depends(get_db)):
+        async def read_item(item_id: int | str, db: AsyncSession = Depends(_get_db_dependency)):
             try:
                 obj = await get_entry(db, registration.orm_model, item_id)
             except Exception as exc:
@@ -151,7 +156,7 @@ class ModelRegistry:
             return registration.read_schema.model_validate(obj, from_attributes=True)
 
         @router.get("/list", response_model=List[registration.read_schema])
-        async def list_items(db: AsyncSession = Depends(get_db)):
+        async def list_items(db: AsyncSession = Depends(_get_db_dependency)):
             try:
                 objects = await get_all_entries(db, registration.orm_model)
             except Exception as exc:
@@ -164,7 +169,7 @@ class ModelRegistry:
             ]
 
         @router.put("/update/{item_id}", response_model=registration.read_schema)
-        async def update_item(item_id: int | str, request: Request, db: AsyncSession = Depends(get_db)):
+        async def update_item(item_id: int | str, request: Request, db: AsyncSession = Depends(_get_db_dependency)):
             payload = await cls._read_json_payload(request)
             validated_payload = cls._validate_payload(registration.update_schema, payload, partial=True)
 
@@ -183,7 +188,7 @@ class ModelRegistry:
             return registration.read_schema.model_validate(updated, from_attributes=True)
 
         @router.delete("/delete/{item_id}", response_model=Dict[str, Any])
-        async def delete_item(item_id: int | str, db: AsyncSession = Depends(get_db)):
+        async def delete_item(item_id: int | str, db: AsyncSession = Depends(_get_db_dependency)):
             try:
                 deleted = await delete_entry(db, registration.orm_model, item_id)
             except Exception as exc:

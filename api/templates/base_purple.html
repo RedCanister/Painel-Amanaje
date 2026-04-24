@@ -5,429 +5,169 @@
 {% block extra_css %}
 <style>
     .registry-container { max-width: 1400px; margin: 0 auto; padding: 2rem 0; }
-
     .registry-header {
-        background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
+        background: #6d28d9;
         color: white;
         padding: 2rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-    }
-
-    .registry-header h2 { margin: 0 0 0.5rem 0; font-size: 2em; }
-    .registry-header p { margin: 0; opacity: 0.9; }
-
-    .tabs-container {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #e5e7eb;
-        flex-wrap: wrap;
-    }
-
-    .tab-button {
-        padding: 1rem 1.5rem;
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 500;
-        color: #6b7280;
-        border-bottom: 3px solid transparent;
-        transition: all 0.3s ease;
-    }
-
-    .tab-button.active {
-        color: #9945ff;
-        border-bottom-color: #9945ff;
-    }
-
-    .tab-button:hover {
-        color: #7c3aed;
-    }
-
-    .tab-content { display: none; animation: fadeIn 0.3s ease; }
-    .tab-content.active { display: block; }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .form-section {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 2rem;
-    }
-
-    .form-group {
+        border-radius: 18px;
         margin-bottom: 1.5rem;
+        box-shadow: 0 18px 40px rgba(109, 40, 217, 0.2);
     }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #374151;
+    .registry-header h2 { margin: 0 0 0.5rem; }
+    .tabs-container, .mode-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .tab-button, .mode-button {
+        padding: 0.85rem 1.1rem;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
     }
-
+    .tab-button { background: #f3e8ff; color: #6d28d9; }
+    .tab-button.active { background: #6d28d9; color: white; }
+    .mode-button { background: #ede9fe; color: #5b21b6; }
+    .mode-button.active { background: #9333ea; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-section, .detail-section, .table-wrapper, .item-card, .modal-content {
+        background: white;
+        border: 1px solid #e9d5ff;
+        border-radius: 18px;
+        box-shadow: 0 12px 28px rgba(109, 40, 217, 0.08);
+    }
+    .form-section, .detail-section, .modal-content { padding: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: #581c87; }
     .form-group input,
     .form-group select,
     .form-group textarea {
         width: 100%;
         padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-family: inherit;
+        border: 1px solid #d8b4fe;
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: white;
     }
-
-    .form-group textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-        outline: none;
-        border-color: #9945ff;
-        box-shadow: 0 0 0 3px rgba(153, 69, 255, 0.1);
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .button-group {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-
-    .checkbox-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
-    }
-
+    .form-group textarea { min-height: 110px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .helper-text { color: #6b7280; font-size: 0.9rem; margin-top: 0.35rem; }
+    .form-row, .reference-grid, .status-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .checkbox-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .checkbox-card {
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        border: 1px solid #e9d5ff;
+        border-radius: 14px;
         padding: 0.85rem 1rem;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
         background: #faf5ff;
     }
-
-    .checkbox-card input[type="checkbox"] {
-        width: auto;
-        margin: 0;
-        accent-color: #9945ff;
-    }
-
-    .checkbox-card label {
-        margin: 0;
-        cursor: pointer;
-    }
-
+    .checkbox-card input[type="checkbox"] { width: auto; margin: 0; accent-color: #7c3aed; }
+    .button-group, .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
     .btn {
-        padding: 0.75rem 1.5rem;
+        padding: 0.8rem 1rem;
         border: none;
-        border-radius: 4px;
+        border-radius: 12px;
         cursor: pointer;
-        font-size: 1rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
+        font-weight: 700;
     }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #9945ff 0%, #7c3aed 100%);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(153, 69, 255, 0.3);
-    }
-
-    .btn-secondary {
-        background: #f3f4f6;
-        color: #374151;
-        border: 1px solid #d1d5db;
-    }
-
-    .btn-secondary:hover {
-        background: #e5e7eb;
-    }
-
-    .btn-danger {
-        background: #ef4444;
-        color: white;
-    }
-
-    .btn-danger:hover {
-        background: #dc2626;
-    }
-
-    .btn-edit {
-        background: #3b82f6;
-        color: white;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-    }
-
-    .btn-edit:hover {
-        background: #2563eb;
-    }
-
-    .items-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .item-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .item-card:hover {
-        border-color: #9945ff;
-        box-shadow: 0 4px 12px rgba(153, 69, 255, 0.1);
-    }
-
-    .item-card h3 {
-        margin: 0 0 0.5rem 0;
-        color: #9945ff;
-        font-size: 1.25rem;
-    }
-
-    .item-meta {
-        color: #6b7280;
-        font-size: 0.875rem;
+    .btn-primary { background: #7c3aed; color: white; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-edit { background: #2563eb; color: white; }
+    .btn-link { background: #ede9fe; color: #5b21b6; }
+    .upload-panel {
+        display: none;
+        padding: 1rem;
+        border: 1px dashed #c4b5fd;
+        border-radius: 16px;
+        background: #faf5ff;
         margin-bottom: 1rem;
     }
-
-    .item-description {
-        color: #374151;
-        margin-bottom: 1rem;
-        line-height: 1.5;
+    .upload-panel.active { display: block; }
+    .upload-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #6d28d9;
+        border: 1px solid #d8b4fe;
+        font-size: 0.82rem;
+        font-weight: 700;
     }
-
-    .item-actions {
-        display: flex;
-        gap: 0.5rem;
+    .items-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .item-card { padding: 1.25rem; }
+    .item-card h3 { margin: 0 0 0.4rem; color: #6d28d9; }
+    .item-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .table-wrapper { overflow-x: auto; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #f3e8ff; }
+    thead { background: #faf5ff; }
+    .detail-row { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid #f3e8ff; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-weight: 700; color: #581c87; }
+    .detail-value code, .json-view {
+        display: block;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: #1e1b4b;
+        color: #ede9fe;
+        padding: 0.85rem;
+        border-radius: 14px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.88rem;
     }
-
-    .item-actions .btn {
-        flex: 1;
-        padding: 0.5rem;
-        font-size: 0.875rem;
-        text-align: center;
+    .alert { padding: 1rem; border-radius: 14px; margin-bottom: 1rem; }
+    .alert-success { background: #ede9fe; color: #5b21b6; border: 1px solid #d8b4fe; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .loading { text-align: center; padding: 2rem; color: #7c3aed; font-weight: 700; }
+    .empty-state { text-align: center; padding: 2rem; color: #9ca3af; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        background: #f3e8ff;
+        color: #6d28d9;
+        border: 1px solid #d8b4fe;
+        font-size: 0.82rem;
+        font-weight: 700;
     }
-
-    .table-wrapper {
-        overflow-x: auto;
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    thead {
-        background: #f9fafb;
-        border-bottom: 2px solid #e5e7eb;
-    }
-
-    th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #374151;
-    }
-
-    td {
-        padding: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-        color: #6b7280;
-    }
-
-    tr:hover {
-        background: #f9fafb;
-    }
-    .detail-section {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 2rem;
-    }
-
-    .detail-section h3 {
-        margin: 0 0 1rem 0;
-        color: #9945ff;
-        border-bottom: 2px solid #f3e8ff;
-        padding-bottom: 0.5rem;
-    }
-
-    .detail-row {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .detail-row:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
-
-    .detail-label {
-        font-weight: 600;
-        color: #374151;
-    }
-
-    .detail-value {
-        color: #6b7280;
-        word-break: break-all;
-    }
-
-    .detail-value.json {
-        background: #1e1e1e;
-        color: #d4d4d4;
-        padding: 1rem;
-        border-radius: 4px;
-        font-family: monospace;
-        font-size: 0.875rem;
-        overflow-x: auto;
-        margin: 0;
-    }
-
-    .alert {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1.5rem;
-    }
-
-    .alert-success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #6ee7b7;
-    }
-
-    .alert-error {
-        background: #fee2e2;
-        color: #7f1d1d;
-        border: 1px solid #fca5a5;
-    }
-
-    .alert-info {
-        background: #dbeafe;
-        color: #0c2340;
-        border: 1px solid #93c5fd;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 2rem;
-        color: #9945ff;
-    }
-
-    .loading::after {
-        content: "...";
-        animation: dots 1.5s steps(4, end) infinite;
-    }
-
-    @keyframes dots {
-        0%, 20% { content: "."; }
-        40% { content: ".."; }
-        60%, 100% { content: "..."; }
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: #9ca3af;
-    }
-
     .modal {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        inset: 0;
+        background: rgba(17, 24, 39, 0.55);
         z-index: 1000;
         align-items: center;
         justify-content: center;
+        padding: 1rem;
     }
-
-    .modal.active {
-        display: flex;
-    }
-
+    .modal.active { display: flex; }
     .modal-content {
-        background: white;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
-        padding: 2rem;
+        width: min(760px, 100%);
+        max-height: 84vh;
+        overflow: auto;
         position: relative;
     }
-
     .modal-header {
-        margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
-
-    .modal-header h2 {
-        margin: 0;
-        color: #9945ff;
-    }
-
     .modal-close {
-        background: none;
         border: none;
-        font-size: 1.5rem;
+        background: #ede9fe;
+        color: #5b21b6;
+        border-radius: 999px;
+        width: 2rem;
+        height: 2rem;
         cursor: pointer;
-        color: #9ca3af;
-    }
-
-    .modal-close:hover {
-        color: #374151;
-    }
-
-    @media (max-width: 768px) {
-        .form-row,
-        .detail-row {
-            grid-template-columns: 1fr;
-        }
-
-        .item-actions,
-        .button-group {
-            flex-direction: column;
-        }
+        font-size: 1.2rem;
+        font-weight: 800;
     }
 </style>
 {% endblock %}
@@ -436,7 +176,7 @@
 <div class="registry-container">
     <div class="registry-header">
         <h2>Model Registry - CRUD Management</h2>
-        <p>Create, read, update, and delete registry objects in the Painel Amanaje system.</p>
+        <p>Create, upload, inspect, edit, download, and organize dataset, learning, inference, study, and code entries in a single registry workspace.</p>
     </div>
 
     <div id="alertContainer"></div>
@@ -450,19 +190,34 @@
 
     <div id="create" class="tab-content active">
         <div class="form-section">
-            <h3>Create New Model Entry</h3>
-            <p>Register a new dataset or learning model using the fields expected by the API.</p>
+            <h3>Create or Upload Registry Entry</h3>
+            <p class="helper-text">Switch between manual metadata entry and file upload. Upload mode is available for dataset and learning models and auto-generates the path, size, and dataset shape from the selected file.</p>
 
-            <!-- TODO - I would like for the upload route to be implemented in the model registry. Besides the create tab, 
-                 it has a upload version that allows a file to be sent just like in the /upload route. -->
+            <div class="mode-tabs">
+                <button class="mode-button active" type="button" data-mode="manual">Manual Entry</button>
+                <button class="mode-button" type="button" data-mode="upload">Upload and Register</button>
+            </div>
+
+            <div id="uploadPanel" class="upload-panel">
+                <div class="form-group">
+                    <label for="registryFile">Registry File</label>
+                    <input type="file" id="registryFile" accept=".csv,.txt,.json,.pkl,.pt,.onnx,.yaml,.yml">
+                    <div class="helper-text">Dataset uploads infer shape and features from CSV content. Model uploads reuse the same upload backend used by the dedicated upload page.</div>
+                </div>
+                <div class="pill-row">
+                    <span class="upload-badge" id="uploadModeBadge">Upload mode ready</span>
+                    <span class="upload-badge" id="uploadTargetBadge">Supported: DatasetModel, LearningModel</span>
+                </div>
+            </div>
 
             <form id="createForm">
                 <div class="form-group">
                     <label for="modelType">Model Type *</label>
-                    <select id="modelType" name="modelType" required onchange="updateFieldsForType()">
+                    <select id="modelType" name="modelType" required>
                         <option value="">Select a type...</option>
                         <option value="DatasetModel">Dataset Model</option>
                         <option value="LearningModel">Learning Model</option>
+                        <option value="InferenceModel">Inference Model</option>
                         <option value="StudyModel">Study Model</option>
                         <option value="CodeModel">Code Model</option>
                     </select>
@@ -480,21 +235,19 @@
                         </div>
                     </div>
 
-                    <!-- TODO - Both the path and the size need to be generated after the file is created. -->
                     <div class="form-row">
                         <div class="form-group">
                             <label for="objectPath">Path *</label>
-
-                            <!-- TODO - The placeholder must be of a different folder per model type. -->
-                            <input type="text" id="objectPath" name="objectPath" required placeholder="e.g., data/iris.csv">
+                            <input type="text" id="objectPath" name="objectPath" required placeholder="Select a model type to generate a default path">
+                            <div class="helper-text">The placeholder and generated default path change with the selected registry type.</div>
                         </div>
                         <div class="form-group">
                             <label for="objectSize">Size (MB) *</label>
-
-                            <!-- TODO - The size must be calculated after the file is recieved. -->
-                            <input type="number" id="objectSize" name="objectSize" min="0" step="0.01" required placeholder="e.g., 1.25">
+                            <input type="number" id="objectSize" name="objectSize" min="0" step="0.01" required placeholder="Calculated automatically in upload mode">
+                            <div class="helper-text">In upload mode the selected file size is calculated on the client and confirmed by the backend response.</div>
                         </div>
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="objectVersion">Version</label>
@@ -507,7 +260,7 @@
                     </div>
                 </div>
 
-                <div id="datasetFields" style="display: none;">
+                <div id="datasetFields" style="display:none;">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="datasetType">Dataset Type</label>
@@ -522,11 +275,10 @@
                                 <option value="mixed_dataset">Mixed Dataset</option>
                             </select>
                         </div>
-
-                        <!-- TODO - In the upload version, the shape must be infered from the actual dataset file.-->
                         <div class="form-group">
                             <label for="datasetShape">Shape (JSON Array) *</label>
                             <input type="text" id="datasetShape" name="datasetShape" placeholder='e.g., [150, 4]'>
+                            <div class="helper-text">When a CSV is uploaded the shape is inferred from the file automatically.</div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -547,7 +299,7 @@
                     </div>
                 </div>
 
-                <div id="modelFields" style="display: none;">
+                <div id="modelFields" style="display:none;">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="learningModelType">Learning Model Type</label>
@@ -578,7 +330,6 @@
                         </div>
                     </div>
 
-
                     <div class="form-group">
                         <label for="parameters">Parameters (JSON) *</label>
                         <textarea id="parameters" name="parameters" placeholder='{"n_estimators": 100, "max_depth": 10}'></textarea>
@@ -603,19 +354,50 @@
                     </div>
                 </div>
 
-                <div id="studyFields" style="display: none;">
+                <div id="inferenceFields" style="display:none;">
                     <div class="form-row">
                         <div class="form-group">
-
-                            <!-- TODO -  The identification of the Learning model's should be by name -->
-                            <label for="studyLearningModelId">Learning Model ID</label>
-                            <input type="number" id="studyLearningModelId" name="studyLearningModelId" min="1" placeholder="e.g., 1">
+                            <label for="inferenceLearningModelId">Linked Learning Model</label>
+                            <select id="inferenceLearningModelId" name="inferenceLearningModelId">
+                                <option value="">Select a learning model</option>
+                            </select>
                         </div>
                         <div class="form-group">
+                            <label for="inferenceDatasetId">Linked Dataset</label>
+                            <select id="inferenceDatasetId" name="inferenceDatasetId">
+                                <option value="">Select a dataset</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="inferenceInputFeatures">Input Features (JSON Array)</label>
+                            <input type="text" id="inferenceInputFeatures" placeholder='e.g., ["sepal_length", "petal_width"]'>
+                        </div>
+                        <div class="form-group">
+                            <label for="inferenceOutputFeatures">Output Features (JSON Array)</label>
+                            <input type="text" id="inferenceOutputFeatures" placeholder='e.g., ["species"]'>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inferenceParams">Inference Params (JSON)</label>
+                        <textarea id="inferenceParams" placeholder='{"status":"idle","latest_metrics":{"accuracy":0.93}}'></textarea>
+                    </div>
+                </div>
 
-                            <!-- TODO -  The identification of the Learning model's should be by name -->
-                            <label for="studyDatasetId">Dataset ID</label>
-                            <input type="number" id="studyDatasetId" name="studyDatasetId" min="1" placeholder="e.g., 2">
+                <div id="studyFields" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studyLearningModelId">Learning Model</label>
+                            <select id="studyLearningModelId" name="studyLearningModelId">
+                                <option value="">Select a learning model</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studyDatasetId">Dataset</label>
+                            <select id="studyDatasetId" name="studyDatasetId">
+                                <option value="">Select a dataset</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row">
@@ -642,7 +424,7 @@
                     </div>
                 </div>
 
-                <div id="codeFields" style="display: none;">
+                <div id="codeFields" style="display:none;">
                     <div class="form-group">
                         <label for="codeVariables">Variables (JSON)</label>
                         <textarea id="codeVariables" name="codeVariables" placeholder='{"name": {"value": "example"}}'></textarea>
@@ -654,7 +436,7 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">Create Entry</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">Create Entry</button>
                     <button type="reset" class="btn btn-secondary">Clear Form</button>
                 </div>
             </form>
@@ -663,15 +445,13 @@
 
     <div id="list" class="tab-content">
         <h3>All Registered Models</h3>
-        <div id="listLoading" class="loading" style="display: none;"></div>
+        <div id="listLoading" class="loading" style="display:none;"></div>
         <div id="listContainer" class="items-grid"></div>
     </div>
 
-
-    <!-- TODO - I would like for table view to be the easy way to one-click download the basic files in the models back to the local user's pc -->
     <div id="table" class="tab-content">
         <h3>Table View - All Models</h3>
-        <div id="tableLoading" class="loading" style="display: none;"></div>
+        <div id="tableLoading" class="loading" style="display:none;"></div>
         <div id="tableContainer" class="table-wrapper"></div>
     </div>
 
@@ -685,15 +465,16 @@
                         <option value="">All Types</option>
                         <option value="DatasetModel">Datasets</option>
                         <option value="LearningModel">Learning Models</option>
+                        <option value="InferenceModel">Inference Models</option>
                         <option value="StudyModel">Studies</option>
                         <option value="CodeModel">Code Models</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="searchSelect">Select Entry</label>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <select id="searchSelect" style="flex: 1;" onchange="loadDetail()"></select>
-                        <button type="button" onclick="loadDetailById()" class="btn btn-primary" style="flex: 0 0 auto;">Load</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <select id="searchSelect" style="flex:1;" onchange="loadDetail()"></select>
+                        <button type="button" onclick="loadDetailById()" class="btn btn-primary">Load</button>
                     </div>
                 </div>
             </div>
@@ -711,7 +492,7 @@
         </div>
         <form id="editForm">
             <div id="editFormContent"></div>
-            <div class="button-group" style="margin-top: 2rem;">
+            <div class="button-group">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
             </div>
@@ -722,34 +503,51 @@
 
 {% block extra_js %}
 <script>
-
-    // TODO - Extend the REGISTRY_CONFIG to recieve the InferenceModel and ORM
     const REGISTRY_CONFIG = {
         DatasetModel: {
             endpoint: '/datasetmodel',
             label: 'Dataset Model',
-            objectType: 'dataset'
+            objectType: 'dataset',
+            defaultFolder: 'data/datasets',
+            supportsUpload: true
         },
         LearningModel: {
             endpoint: '/learningmodel',
             label: 'Learning Model',
-            objectType: 'learning_model'
+            objectType: 'learning_model',
+            defaultFolder: 'models',
+            supportsUpload: true
+        },
+        InferenceModel: {
+            endpoint: '/inferencemodel',
+            label: 'Inference Model',
+            objectType: 'inference_model',
+            defaultFolder: 'runtime_artifacts/inference',
+            supportsUpload: false
         },
         StudyModel: {
             endpoint: '/studymodel',
             label: 'Study Model',
-            objectType: 'study_model'
+            objectType: 'study_model',
+            defaultFolder: 'studies',
+            supportsUpload: false
         },
         CodeModel: {
             endpoint: '/codemodel',
             label: 'Code Model',
-            objectType: 'code_model'
+            objectType: 'code_model',
+            defaultFolder: 'code',
+            supportsUpload: false
         }
     };
 
     let currentEditContext = null;
+    let createMode = 'manual';
+    let learningModelOptions = [];
+    let datasetOptions = [];
+
     const ARRAY_FIELDS = new Set(['shape', 'features_list', 'input_features', 'output_features', 'history']);
-    const OBJECT_FIELDS = new Set(['parameters', 'metrics', 'best_trial', 'best_params', 'study_params', 'variables', 'code']);
+    const OBJECT_FIELDS = new Set(['parameters', 'metrics', 'best_trial', 'best_params', 'study_params', 'variables', 'code', 'inference_params']);
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -767,14 +565,12 @@
     function getConfigForType(type) {
         if (!type) return null;
         if (REGISTRY_CONFIG[type]) return REGISTRY_CONFIG[type];
-
         const normalizedType = String(type).trim().toLowerCase();
         const matchedEntry = Object.entries(REGISTRY_CONFIG).find(([key, config]) => {
             const normalizedKey = key.toLowerCase();
             const normalizedEndpoint = String(config.endpoint || '').replace(/^\//, '').toLowerCase();
             return normalizedKey === normalizedType || normalizedEndpoint === normalizedType;
         });
-
         return matchedEntry ? matchedEntry[1] : null;
     }
 
@@ -786,12 +582,9 @@
     }
 
     async function fetchJson(url, options = {}) {
-
         const response = await fetch(url, options);
-
         const text = await response.text();
         let data = null;
-
         if (text) {
             try {
                 data = JSON.parse(text);
@@ -799,18 +592,15 @@
                 data = { detail: text };
             }
         }
-        
-        if (!response.ok) {
+        if (!response.ok || data?.status === 'error') {
             throw new Error(data?.detail || data?.message || `Request failed with status ${response.status}`);
         }
-
         return data;
     }
 
     function parseJsonField(rawValue, fallback, fieldLabel) {
         const trimmed = String(rawValue || '').trim();
         if (!trimmed) return fallback;
-
         try {
             return JSON.parse(trimmed);
         } catch (error) {
@@ -835,59 +625,26 @@
     }
 
     function coerceByExample(fieldName, rawValue, exampleValue) {
-        if (rawValue === '' && exampleValue !== false && exampleValue !== 0) {
-            return null;
-        }
-
-        if (ARRAY_FIELDS.has(fieldName)) {
-            const parsed = parseArrayField(rawValue, formatLabel(fieldName));
-            if ((fieldName === 'shape') || (Array.isArray(exampleValue) && exampleValue.every((item) => typeof item === 'number'))) {
-                const numericValues = parsed.map((value) => Number(value));
-                if (numericValues.some((value) => Number.isNaN(value))) {
-                    throw new Error(`${formatLabel(fieldName)} must contain only numbers.`);
-                }
-                return numericValues;
-            }
-            return parsed;
-        }
-
-        if (OBJECT_FIELDS.has(fieldName)) {
-            return parseObjectField(rawValue, formatLabel(fieldName));
-        }
-
-        if (Array.isArray(exampleValue)) {
-            return parseArrayField(rawValue, formatLabel(fieldName));
-        }
-
-        if (exampleValue && typeof exampleValue === 'object') {
-            return parseObjectField(rawValue, formatLabel(fieldName));
-        }
-
-        if (typeof exampleValue === 'boolean') {
-            return rawValue === 'true';
-        }
-
+        if (rawValue === '' && exampleValue !== false && exampleValue !== 0) return null;
+        if (ARRAY_FIELDS.has(fieldName) || Array.isArray(exampleValue)) return parseArrayField(rawValue, formatLabel(fieldName));
+        if (OBJECT_FIELDS.has(fieldName) || (exampleValue && typeof exampleValue === 'object')) return parseObjectField(rawValue, formatLabel(fieldName));
+        if (typeof exampleValue === 'boolean') return rawValue === 'true';
         if (typeof exampleValue === 'number') {
             if (rawValue === '') return null;
             const numberValue = Number(rawValue);
-            if (Number.isNaN(numberValue)) {
-                throw new Error(`${formatLabel(fieldName)} must be a number.`);
-            }
+            if (Number.isNaN(numberValue)) throw new Error(`${formatLabel(fieldName)} must be a number.`);
             return numberValue;
         }
-
         return rawValue;
     }
 
     function renderValue(value) {
         if (value === null || value === undefined || value === '') {
-            return '<span style="opacity: 0.7;">Not provided</span>';
+            return '<span style="opacity:0.7;">Not provided</span>';
         }
-
         if (typeof value === 'object') {
-            return `<pre class="detail-value json">${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
+            return `<div class="json-view">${escapeHtml(JSON.stringify(value, null, 2))}</div>`;
         }
-
         return escapeHtml(value);
     }
 
@@ -896,52 +653,136 @@
         return description.length > 50 ? `${description.slice(0, 50)}...` : (description || 'No description');
     }
 
-    async function fetchRegistryEntries(typeFilter = '') {
-        const keys = typeFilter ? [typeFilter] : Object.keys(REGISTRY_CONFIG);
-
-        const responses = await Promise.all(
-            keys.map(async (key) => {
-                const config = getConfigForType(key);
-                try {
-                    const response = await fetchJson(`${config.endpoint}/list`);
-                    return normalizeListResponse(response).map((entry) => ({
-                        ...entry,
-                        registryType: key,
-                        registryLabel: config.label
-                    }));
-                } catch (error) {
-                    throw new Error(`${config.label} entries failed to load: ${error.message}`);
-                }
-            })
-        );
-
-        return responses.flat().sort((a, b) => (a.id || 0) - (b.id || 0));
-    }
-
     function showAlert(message, type = 'info') {
         const container = document.getElementById('alertContainer');
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
         alert.textContent = message;
         container.appendChild(alert);
-        setTimeout(() => alert.remove(), 50000);
+        setTimeout(() => alert.remove(), 12000);
+    }
+
+    function slugify(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '') || 'artifact';
+    }
+
+    function getDefaultPath(type, name = '', fileName = '') {
+        const config = getConfigForType(type);
+        if (!config) return '';
+        const targetName = fileName || `${slugify(name || config.label)}.json`;
+        return `${config.defaultFolder}/${targetName}`;
+    }
+
+    function updateGeneratedFields() {
+        const type = document.getElementById('modelType').value;
+        const config = getConfigForType(type);
+        const name = document.getElementById('objectName').value.trim();
+        const file = document.getElementById('registryFile').files?.[0];
+        const pathField = document.getElementById('objectPath');
+        const sizeField = document.getElementById('objectSize');
+        const fileName = file?.name || '';
+        const fallbackExtension = type === 'DatasetModel' ? '.csv' : '.json';
+        const generatedPath = getDefaultPath(type, name, fileName || `${slugify(name || 'artifact')}${fallbackExtension}`);
+
+        pathField.placeholder = generatedPath || 'Select a model type to generate a default path';
+        if (!pathField.value || createMode === 'upload') {
+            pathField.value = generatedPath;
+        }
+
+        if (createMode === 'upload' && file) {
+            sizeField.value = (file.size / (1024 * 1024)).toFixed(4);
+        } else if (!sizeField.value && type && type !== 'DatasetModel' && type !== 'LearningModel') {
+            sizeField.value = '0';
+        }
+
+        const uploadSupported = Boolean(config?.supportsUpload);
+        document.getElementById('uploadModeBadge').textContent = createMode === 'upload'
+            ? (uploadSupported ? 'Upload mode ready' : 'This type uses manual entry only')
+            : 'Manual entry mode';
+        document.getElementById('uploadTargetBadge').textContent = config
+            ? `Folder: ${config.defaultFolder}`
+            : 'Supported: DatasetModel, LearningModel';
+
+        pathField.readOnly = createMode === 'upload' && uploadSupported;
+        sizeField.readOnly = createMode === 'upload' && uploadSupported;
+    }
+
+    async function inferDatasetShapeFromFile(file) {
+        if (!file || document.getElementById('modelType').value !== 'DatasetModel') return;
+        try {
+            const text = await file.text();
+            const lines = text.trim().split(/\r?\n/).filter(Boolean);
+            if (!lines.length) return;
+            const headers = lines[0].split(',').map((item) => item.trim()).filter(Boolean);
+            document.getElementById('datasetShape').value = JSON.stringify([Math.max(lines.length - 1, 0), headers.length]);
+            document.getElementById('featuresList').value = JSON.stringify(headers);
+            document.getElementById('hasFeatures').checked = headers.length > 0;
+        } catch (error) {
+            showAlert(`Could not infer dataset shape from file: ${error.message}`, 'error');
+        }
+    }
+
+    async function populateReferenceSelects() {
+        const [models, datasets] = await Promise.all([
+            fetchJson('/learningmodel/list').then(normalizeListResponse).catch(() => []),
+            fetchJson('/datasetmodel/list').then(normalizeListResponse).catch(() => [])
+        ]);
+        learningModelOptions = models;
+        datasetOptions = datasets;
+
+        const modelOptionsMarkup = `
+            <option value="">Select a learning model</option>
+            ${learningModelOptions.map((item) => `<option value="${item.id}">${escapeHtml(item.name || `Model #${item.id}`)}</option>`).join('')}
+        `;
+        const datasetOptionsMarkup = `
+            <option value="">Select a dataset</option>
+            ${datasetOptions.map((item) => `<option value="${item.id}">${escapeHtml(item.name || `Dataset #${item.id}`)}</option>`).join('')}
+        `;
+
+        ['studyLearningModelId', 'inferenceLearningModelId'].forEach((id) => {
+            const select = document.getElementById(id);
+            if (select) select.innerHTML = modelOptionsMarkup;
+        });
+        ['studyDatasetId', 'inferenceDatasetId'].forEach((id) => {
+            const select = document.getElementById(id);
+            if (select) select.innerHTML = datasetOptionsMarkup;
+        });
+    }
+
+    function setCreateMode(mode) {
+        createMode = mode;
+        document.querySelectorAll('.mode-button').forEach((button) => {
+            button.classList.toggle('active', button.dataset.mode === mode);
+        });
+        document.getElementById('uploadPanel').classList.toggle('active', mode === 'upload');
+        document.getElementById('submitButton').textContent = mode === 'upload' ? 'Upload and Register Entry' : 'Create Entry';
+        updateGeneratedFields();
     }
 
     function updateFieldsForType() {
         const type = document.getElementById('modelType').value;
         document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
         document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+        document.getElementById('inferenceFields').style.display = type === 'InferenceModel' ? 'block' : 'none';
         document.getElementById('studyFields').style.display = type === 'StudyModel' ? 'block' : 'none';
         document.getElementById('codeFields').style.display = type === 'CodeModel' ? 'block' : 'none';
+
+        const config = getConfigForType(type);
+        if (createMode === 'upload' && config && !config.supportsUpload) {
+            setCreateMode('manual');
+            showAlert(`${config.label} uses manual entry because upload mode is only supported for datasets and learning models.`, 'info');
+        }
+        updateGeneratedFields();
     }
 
     function buildCreatePayload() {
         const modelType = document.getElementById('modelType').value;
         const config = getConfigForType(modelType);
-
-        if (!modelType) {
-            throw new Error('Select a model type before creating an entry.');
-        }
+        if (!modelType) throw new Error('Select a model type before creating an entry.');
 
         const payload = {
             name: document.getElementById('objectName').value.trim(),
@@ -960,9 +801,7 @@
         if (modelType === 'DatasetModel') {
             payload.dataset_type = document.getElementById('datasetType').value || 'dataset';
             payload.shape = parseArrayField(document.getElementById('datasetShape').value, 'Shape').map((value) => Number(value));
-            if (payload.shape.some((value) => Number.isNaN(value))) {
-                throw new Error('Shape must contain only numbers.');
-            }
+            if (payload.shape.some((value) => Number.isNaN(value))) throw new Error('Shape must contain only numbers.');
             payload.has_features = document.getElementById('hasFeatures').checked;
             payload.features_list = parseArrayField(document.getElementById('featuresList').value, 'Features List');
             payload.connection_string = document.getElementById('connectionString').value.trim() || null;
@@ -978,6 +817,14 @@
             payload.is_trained = document.getElementById('isTrained').checked;
             payload.is_tested = document.getElementById('isTested').checked;
             payload.is_deployed = document.getElementById('isDeployed').checked;
+        }
+
+        if (modelType === 'InferenceModel') {
+            payload.learning_model_id = Number(document.getElementById('inferenceLearningModelId').value);
+            payload.dataset_id = Number(document.getElementById('inferenceDatasetId').value);
+            payload.input_features = parseArrayField(document.getElementById('inferenceInputFeatures').value, 'Inference Input Features');
+            payload.output_features = parseArrayField(document.getElementById('inferenceOutputFeatures').value, 'Inference Output Features');
+            payload.inference_params = parseObjectField(document.getElementById('inferenceParams').value, 'Inference Params');
         }
 
         if (modelType === 'StudyModel') {
@@ -998,13 +845,52 @@
         return { modelType, payload };
     }
 
+    function buildUploadFormData(modelType) {
+        const config = getConfigForType(modelType);
+        if (!config?.supportsUpload) {
+            throw new Error(`${config?.label || modelType} does not support upload mode.`);
+        }
+
+        const file = document.getElementById('registryFile').files?.[0];
+        if (!file) throw new Error('Select a file before uploading.');
+
+        const formData = new FormData();
+        const operationId = modelType === 'DatasetModel' ? 'datasets' : 'models';
+        formData.append('operationId', operationId);
+        formData.append('file', file);
+        formData.append('objectName', document.getElementById('objectName').value.trim() || file.name);
+        formData.append('description', document.getElementById('description').value.trim());
+        formData.append('version', document.getElementById('objectVersion').value || '1');
+        formData.append('history', document.getElementById('history').value || JSON.stringify([{ event: 'uploaded', when: new Date().toISOString() }]));
+
+        if (modelType === 'DatasetModel') {
+            formData.append('datasetType', document.getElementById('datasetType').value);
+            formData.append('connectionString', document.getElementById('connectionString').value.trim());
+            formData.append('featuresList', document.getElementById('featuresList').value.trim());
+            formData.append('hasFeatures', document.getElementById('hasFeatures').checked ? 'true' : 'false');
+        }
+
+        if (modelType === 'LearningModel') {
+            formData.append('modelType', document.getElementById('learningModelType').value);
+            formData.append('referenceData', document.getElementById('referenceData').value.trim());
+            formData.append('parameters', document.getElementById('parameters').value.trim() || '{}');
+            formData.append('metrics', document.getElementById('metrics').value.trim() || '{}');
+            formData.append('inputFeatures', document.getElementById('inputFeatures').value.trim() || '[]');
+            formData.append('outputFeatures', document.getElementById('outputFeatures').value.trim() || '[]');
+            formData.append('isTrained', document.getElementById('isTrained').checked ? 'true' : 'false');
+            formData.append('isTested', document.getElementById('isTested').checked ? 'true' : 'false');
+            formData.append('isDeployed', document.getElementById('isDeployed').checked ? 'true' : 'false');
+        }
+
+        return { operationId, formData };
+    }
+
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach((tab) => tab.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach((button) => button.classList.remove('active'));
 
         const nextTab = document.getElementById(tabName);
         const nextButton = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`);
-
         if (nextTab) nextTab.classList.add('active');
         if (nextButton) nextButton.classList.add('active');
 
@@ -1013,35 +899,50 @@
         if (tabName === 'search') loadSearchList();
     }
 
+    async function fetchRegistryEntries(typeFilter = '') {
+        const keys = typeFilter ? [typeFilter] : Object.keys(REGISTRY_CONFIG);
+        const responses = await Promise.all(keys.map(async (key) => {
+            const config = getConfigForType(key);
+            const response = await fetchJson(`${config.endpoint}/list`);
+            return normalizeListResponse(response).map((entry) => ({
+                ...entry,
+                registryType: key,
+                registryLabel: config.label
+            }));
+        }));
+        return responses.flat().sort((a, b) => (a.id || 0) - (b.id || 0));
+    }
+
     async function loadList() {
         const container = document.getElementById('listContainer');
         const loading = document.getElementById('listLoading');
-
         loading.style.display = 'block';
         container.innerHTML = '';
-
         try {
             const entries = await fetchRegistryEntries();
-
             if (!entries.length) {
-                container.innerHTML = '<div class="empty-state"><p>No entries found. Create one using the Create tab.</p></div>';
+                container.innerHTML = '<div class="empty-state">No entries found. Create or upload one using the Create tab.</div>';
                 return;
             }
-
             container.innerHTML = entries.map((entry) => `
                 <div class="item-card">
                     <h3>${escapeHtml(entry.name || 'Unnamed')}</h3>
-                    <div class="item-meta">Type: ${escapeHtml(entry.registryLabel)} | ID: ${escapeHtml(entry.id)}</div>
-                    <div class="item-description">${escapeHtml(entry.description || 'No description')}</div>
+                    <div class="helper-text">Type: ${escapeHtml(entry.registryLabel)} | ID: ${escapeHtml(entry.id)}</div>
+                    <div style="margin-top:0.75rem;">${escapeHtml(entry.description || 'No description')}</div>
+                    <div class="pill-row">
+                        <span class="pill">${escapeHtml(entry.object_type || entry.registryType)}</span>
+                        <span class="pill">${escapeHtml(entry.path || 'no path')}</span>
+                    </div>
                     <div class="item-actions">
                         <button type="button" class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.registryType}')">View</button>
+                        <button type="button" class="btn btn-link" onclick="downloadEntry(${entry.id}, '${entry.registryType}')">Download</button>
                         <button type="button" class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.registryType}')">Edit</button>
                         <button type="button" class="btn btn-danger" onclick="deleteEntry(${entry.id}, '${entry.registryType}')">Delete</button>
                     </div>
                 </div>
             `).join('');
         } catch (error) {
-            showAlert(`Failed to load entries: ${error.stack}`, 'error');
+            showAlert(`Failed to load entries: ${error.message}`, 'error');
         } finally {
             loading.style.display = 'none';
         }
@@ -1050,18 +951,14 @@
     async function loadTable() {
         const container = document.getElementById('tableContainer');
         const loading = document.getElementById('tableLoading');
-
         loading.style.display = 'block';
         container.innerHTML = '';
-
         try {
             const entries = await fetchRegistryEntries();
-
             if (!entries.length) {
-                container.innerHTML = '<div class="empty-state"><p>No entries found.</p></div>';
+                container.innerHTML = '<div class="empty-state">No entries found.</div>';
                 return;
             }
-
             container.innerHTML = `
                 <table>
                     <thead>
@@ -1070,6 +967,7 @@
                             <th>Name</th>
                             <th>Type</th>
                             <th>Description</th>
+                            <th>Path</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1080,9 +978,13 @@
                                 <td>${escapeHtml(entry.name || 'Unnamed')}</td>
                                 <td>${escapeHtml(entry.registryLabel)}</td>
                                 <td>${escapeHtml(summarizeDescription(entry))}</td>
+                                <td>${escapeHtml(entry.path || 'Not provided')}</td>
                                 <td>
-                                    <button type="button" class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.registryType}')">View</button>
-                                    <button type="button" class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.registryType}')">Edit</button>
+                                    <div class="actions-row">
+                                        <button type="button" class="btn btn-link" onclick="downloadEntry(${entry.id}, '${entry.registryType}')">Download</button>
+                                        <button type="button" class="btn btn-edit" onclick="viewDetail(${entry.id}, '${entry.registryType}')">View</button>
+                                        <button type="button" class="btn btn-edit" onclick="editEntry(${entry.id}, '${entry.registryType}')">Edit</button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
@@ -1099,18 +1001,14 @@
     async function loadSearchList() {
         const select = document.getElementById('searchSelect');
         const type = document.getElementById('searchType').value;
-
         select.innerHTML = '<option value="">Loading...</option>';
-
         try {
             const entries = await fetchRegistryEntries(type);
-
             if (!entries.length) {
                 select.innerHTML = '<option value="">No entries found</option>';
                 document.getElementById('detailContainer').innerHTML = '';
                 return;
             }
-
             select.innerHTML = '<option value="">Select an entry...</option>';
             entries.forEach((entry) => {
                 const option = document.createElement('option');
@@ -1128,25 +1026,18 @@
         const select = document.getElementById('searchSelect');
         const container = document.getElementById('detailContainer');
         const [id, registryType] = (select.value || '').split('|');
-
         if (!id || !registryType) {
             container.innerHTML = '';
             return;
         }
 
         const config = getConfigForType(registryType);
-        if (!config) {
-            container.innerHTML = '';
-            showAlert(`Unknown registry type: ${registryType}`, 'error');
-            return;
-        }
-
         try {
             const data = await fetchJson(`${config.endpoint}/get/${id}`);
             displayDetail(data, registryType);
         } catch (error) {
             container.innerHTML = '';
-            showAlert(`Failed to load detail: ${error.stack}`, 'error');
+            showAlert(`Failed to load detail: ${error.message}`, 'error');
         }
     }
 
@@ -1156,9 +1047,7 @@
 
     function displayDetail(data, registryType) {
         const config = getConfigForType(registryType);
-        const container = document.getElementById('detailContainer');
         const label = config?.label || formatLabel(registryType || 'entry');
-
         const rows = Object.entries(data).map(([key, value]) => `
             <div class="detail-row">
                 <div class="detail-label">${escapeHtml(formatLabel(key))}</div>
@@ -1166,11 +1055,12 @@
             </div>
         `).join('');
 
-        container.innerHTML = `
+        document.getElementById('detailContainer').innerHTML = `
             <div class="detail-section">
                 <h3>${escapeHtml(label)} Details</h3>
                 ${rows}
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <div class="button-group">
+                    <button type="button" class="btn btn-link" onclick="downloadEntry(${data.id}, '${registryType}')">Download</button>
                     <button type="button" class="btn btn-primary" onclick="editEntry(${data.id}, '${registryType}')">Edit</button>
                     <button type="button" class="btn btn-danger" onclick="deleteEntry(${data.id}, '${registryType}')">Delete</button>
                 </div>
@@ -1180,7 +1070,6 @@
 
     function buildEditField(fieldName, value) {
         const label = escapeHtml(formatLabel(fieldName));
-
         if (typeof value === 'boolean') {
             return `
                 <div class="form-group">
@@ -1192,7 +1081,6 @@
                 </div>
             `;
         }
-
         if (Array.isArray(value) || (value && typeof value === 'object')) {
             return `
                 <div class="form-group">
@@ -1201,10 +1089,8 @@
                 </div>
             `;
         }
-
         const inputType = typeof value === 'number' ? 'number' : 'text';
         const step = typeof value === 'number' ? 'step="any"' : '';
-
         return `
             <div class="form-group">
                 <label for="edit_${fieldName}">${label}</label>
@@ -1215,7 +1101,6 @@
 
     async function editEntry(id, registryType) {
         const config = getConfigForType(registryType);
-
         try {
             const data = await fetchJson(`${config.endpoint}/get/${id}`);
             currentEditContext = { id, registryType, originalData: data };
@@ -1231,11 +1116,7 @@
 
     async function deleteEntry(id, registryType) {
         const config = getConfigForType(registryType);
-
-        if (!confirm(`Are you sure you want to delete this ${config.label.toLowerCase()}?`)) {
-            return;
-        }
-
+        if (!confirm(`Are you sure you want to delete this ${config.label.toLowerCase()}?`)) return;
         try {
             await fetchJson(`${config.endpoint}/delete/${id}`, { method: 'DELETE' });
             showAlert('Entry deleted successfully.', 'success');
@@ -1261,9 +1142,12 @@
         await loadDetail();
     }
 
+    function downloadEntry(id, registryType) {
+        window.location.href = `/registry/download/${registryType}/${id}`;
+    }
+
     async function refreshVisibleData() {
         const activeTab = document.querySelector('.tab-content.active')?.id;
-
         if (activeTab === 'list') await loadList();
         if (activeTab === 'table') await loadTable();
         if (activeTab === 'search') await loadSearchList();
@@ -1271,20 +1155,41 @@
 
     document.getElementById('createForm').addEventListener('submit', async (event) => {
         event.preventDefault();
+        const modelType = document.getElementById('modelType').value;
+        const config = getConfigForType(modelType);
+        if (!config) {
+            showAlert('Select a model type before creating an entry.', 'error');
+            return;
+        }
 
         try {
-            const { modelType, payload } = buildCreatePayload();
-            const config = getConfigForType(modelType);
+            if (createMode === 'upload') {
+                const { operationId, formData } = buildUploadFormData(modelType);
+                const result = await fetchJson(`/upload/${operationId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                document.getElementById('objectPath').value = result.path || document.getElementById('objectPath').value;
+                document.getElementById('objectSize').value = result.size ?? document.getElementById('objectSize').value;
+                if (modelType === 'DatasetModel' && result.shape) {
+                    document.getElementById('datasetShape').value = JSON.stringify(result.shape);
+                }
+                showAlert(`Upload completed and registry entry created (ID: ${result.id ?? 'unknown'}).`, 'success');
+            } else {
+                const { payload } = buildCreatePayload();
+                const result = await fetchJson(`${config.endpoint}/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showAlert(`Entry created successfully (ID: ${result?.id ?? 'unknown'}).`, 'success');
+            }
 
-            const result = await fetchJson(`${config.endpoint}/create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            showAlert(`Entry created successfully (ID: ${result?.id ?? 'unknown'}).`, 'success');
             document.getElementById('createForm').reset();
+            document.getElementById('registryFile').value = '';
+            setCreateMode('manual');
             updateFieldsForType();
+            await populateReferenceSelects();
             await refreshVisibleData();
         } catch (error) {
             showAlert(error.message, 'error');
@@ -1292,12 +1197,14 @@
     });
 
     document.getElementById('createForm').addEventListener('reset', () => {
-        window.setTimeout(updateFieldsForType, 0);
+        window.setTimeout(() => {
+            setCreateMode('manual');
+            updateFieldsForType();
+        }, 0);
     });
 
     document.getElementById('editForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-
         if (!currentEditContext) {
             showAlert('No entry is currently selected for editing.', 'error');
             return;
@@ -1305,7 +1212,6 @@
 
         try {
             const updateData = {};
-
             Object.entries(currentEditContext.originalData).forEach(([key, originalValue]) => {
                 if (key === 'id') return;
                 const field = document.getElementById(`edit_${key}`);
@@ -1314,10 +1220,7 @@
             });
 
             const config = getConfigForType(currentEditContext.registryType);
-            const editedId = currentEditContext.id;
-            const editedType = currentEditContext.registryType;
-
-            await fetchJson(`${config.endpoint}/update/${editedId}`, {
+            await fetchJson(`${config.endpoint}/update/${currentEditContext.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
@@ -1326,8 +1229,7 @@
             showAlert('Entry updated successfully.', 'success');
             closeEditModal();
             await refreshVisibleData();
-
-            if (document.getElementById('searchSelect').value === `${editedId}|${editedType}`) {
+            if (document.getElementById('searchSelect').value === `${currentEditContext.id}|${currentEditContext.registryType}`) {
                 await loadDetail();
             }
         } catch (error) {
@@ -1335,10 +1237,19 @@
         }
     });
 
+    document.querySelectorAll('.mode-button').forEach((button) => {
+        button.addEventListener('click', () => setCreateMode(button.dataset.mode));
+    });
+
+    document.getElementById('modelType').addEventListener('change', updateFieldsForType);
+    document.getElementById('objectName').addEventListener('input', updateGeneratedFields);
+    document.getElementById('registryFile').addEventListener('change', async (event) => {
+        updateGeneratedFields();
+        await inferDatasetShapeFromFile(event.target.files?.[0]);
+    });
+
     document.getElementById('editModal').addEventListener('click', (event) => {
-        if (event.target.id === 'editModal') {
-            closeEditModal();
-        }
+        if (event.target.id === 'editModal') closeEditModal();
     });
 
     document.addEventListener('keydown', (event) => {
@@ -1347,7 +1258,10 @@
         }
     });
 
-    updateFieldsForType();
+    document.addEventListener('DOMContentLoaded', async () => {
+        updateFieldsForType();
+        setCreateMode('manual');
+        await populateReferenceSelects();
+    });
 </script>
 {% endblock %}
-

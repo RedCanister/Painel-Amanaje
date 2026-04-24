@@ -25,7 +25,10 @@ class ObjectORM(Base):
         "polymorphic_on": object_type,
     }
 
-# TODO - Consider an ORM that can recieve any kind of table shape in both columns and rows to accept extracted .csv data into from any possible dataset.
+# Dataset extraction keeps the raw file on disk and stores flexible tabular
+# metadata through existing JSON-compatible columns and runtime artifacts so the
+# registry can describe arbitrary CSV shapes without requiring per-dataset ORM
+# migrations.
 
 # Classe de conjuntos de dados ORM
 class DatasetORM(ObjectORM):
@@ -33,7 +36,6 @@ class DatasetORM(ObjectORM):
     
     id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
 
-    # TODO - Get rid of the legacy name
     # Legacy schema compatibility: the persisted datasets table still carries a
     # duplicated name column in addition to objects.name.
     legacy_name = Column("name", String, nullable=False)
@@ -111,7 +113,6 @@ class MixedDatasetORM(DatasetORM):
     }
 
 
-# TODO - When applying the InfereceModel TODO update, consider to remove Input and Output features from the LearningORM, and leave it only to the InfereceORM for organization
 class LearningORM(ObjectORM):
     __tablename__ = "learning_models"
 
@@ -200,33 +201,6 @@ class CodeORM(ObjectORM):
         "polymorphic_identity": "code_model"
     }
 
-# TODO - Discard this StudyORM when updating to the InferenceORM
-class StudyORM(ObjectORM):
-    __tablename__ = "study_models"
-
-    id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
-    
-    learning_model_id = Column(Integer, ForeignKey("learning_models.id"), nullable=False)
-    dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=False)
-
-    sampler = Column(String, nullable=False)
-    objective = Column(String, nullable=False)
-    best_trial = Column(JSONB, nullable=True)
-    best_params = Column(JSONB, nullable=True)
-    study_params = Column(JSONB, nullable=True)
-
-    learning_model = relationship("LearningORM", foreign_keys=[learning_model_id])
-    dataset = relationship("DatasetORM", foreign_keys=[dataset_id])
-
-    __mapper_args__ = {
-        "polymorphic_identity" : "study_model"
-    }
-
-
-
-# TODO - Whenever there is a training operation, the Inference ORM should be the object to connect and relate the dataset and the model to keep it's data. 
-# the reference to the InferenceORM is the easier way to reference both. In the case of a study, the StudyORM extends the InferenceORM to give it practical 
-# columns that makes it's operation easier.
 class InferenceORM(ObjectORM):
     __tablename__ = "inference_models"
 
@@ -238,27 +212,31 @@ class InferenceORM(ObjectORM):
     input_features = Column(JSONB, nullable=True)
     output_features = Column(JSONB, nullable=True)
 
-    inference_params = Column(JSONB, nullable=False)
+    inference_params = Column(JSONB, nullable=False, default=dict)
 
-    learning_model = relationship("LearningORM", foreign_keys=[learning_model_id])
-    dataset = relationship("DatasetORM", foreign_keys=[dataset_id])
+    learning_model = relationship(LearningORM, foreign_keys=[learning_model_id], lazy="joined")
+    dataset = relationship(DatasetORM, foreign_keys=[dataset_id], lazy="joined")
 
     __mapper_args__ = {
         "polymorphic_identity" : "inference_model"
     }
 
-# TODO - In this update, the StudyORM extends from the InferenceORM only to give it hierarchy and to absorb some import characteristics like the Input and Output features and
-# simpler referencing and comparison of training and studying processes within painel amanaje
-class StudyORM(InferenceORM):
+
+class StudyORM(ObjectORM):
     __tablename__ = "study_models"
 
     id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
 
+    learning_model_id = Column(Integer, ForeignKey("learning_models.id"), nullable=False)
+    dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=False)
     sampler = Column(String, nullable=False)
     objective = Column(String, nullable=False)
     best_trial = Column(JSONB, nullable=True)
     best_params = Column(JSONB, nullable=True)
     study_params = Column(JSONB, nullable=True)
+
+    learning_model = relationship(LearningORM, foreign_keys=[learning_model_id], lazy="joined")
+    dataset = relationship(DatasetORM, foreign_keys=[dataset_id], lazy="joined")
 
     __mapper_args__ = {
         "polymorphic_identity" : "study_model"

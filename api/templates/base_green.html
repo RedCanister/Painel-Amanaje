@@ -1,102 +1,305 @@
 {% extends "base_template.html" %}
 
-{% block title %}Training Orchestration - Painel Amanajé{% endblock %}
+{% block title %}Training Orchestration - Painel Amanaje{% endblock %}
+
+{% block body_class %}green-theme{% endblock %}
 
 {% block extra_css %}
 <style>
-    .training-section { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid #ddd; border-radius: 4px; }
-    .training-section h3 { color: #2a9d8f; margin-top: 0; }
-    .pipeline-grid, .registry-grid, .framework-grid, .results-grid { display: grid; gap: 1rem; }
-    .pipeline-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-    .registry-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .framework-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
-    .results-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .pipeline-card, .status-card, .study-card, .framework-card {
-        background: #f8f9fa;
-        border: 1px solid #e5e7eb;
-        border-radius: 4px;
+    :root {
+        --amanaje-primary: #2a9d8f;
+        --amanaje-primary-strong: #115e59;
+        --amanaje-primary-soft: #ccfbf1;
+        --amanaje-primary-softer: #f0fdfa;
+        --amanaje-primary-mid: #99f6e4;
+        --amanaje-primary-border: #5eead4;
+        --amanaje-primary-border-soft: #99f6e4;
+        --amanaje-primary-accent: #14b8a6;
+        --amanaje-primary-gradient: #2a9d8f;
+        --amanaje-primary-bar-gradient: #2a9d8f;
+        --amanaje-primary-shadow: rgba(42, 157, 143, 0.08);
+        --amanaje-primary-shadow-strong: rgba(42, 157, 143, 0.2);
+        --amanaje-code-bg: #0f2f2a;
+        --amanaje-code-fg: #ccfbf1;
+        --amanaje-code-border: #115e59;
+        --amanaje-body-bg: #f7fffd;
+    }
+
+    .training-shell { display: grid; gap: 1.25rem; }
+    .global-context {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+    }
+    .global-context h3 { margin-top: 0; color: var(--amanaje-primary); }
+    .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .workspace-tab {
+        border: 1px solid var(--amanaje-primary-border);
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .workspace-tab.active { background: var(--amanaje-primary); color: white; border-color: var(--amanaje-primary); }
+    .training-panel {
+        display: none;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        padding: 1.5rem;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+    }
+    .training-panel.active { display: block; }
+    .panel-title { margin: 0 0 0.45rem; color: var(--amanaje-primary); }
+    .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
+    .pipeline-grid, .summary-grid, .tracking-grid { display: grid; gap: 1rem; }
+    .pipeline-grid { grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr); }
+    .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .tracking-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .surface-card, .status-card, .inventory-card, .snapshot-card, .search-space-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
         padding: 1rem;
     }
-    .btn { padding: 0.75rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: #2a9d8f; color: white; }
-    .pipeline-card h4, .status-card h4, .study-card h4, .framework-card h4 { margin-top: 0; }
-    .metric-value { font-size: 1.5rem; font-weight: 700; color: #2a9d8f; }
+    .surface-card h4, .status-card h4, .inventory-card h4, .snapshot-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .muted-text, .helper-text { color: #6b7280; }
+    .helper-text { font-size: 0.92rem; margin-top: 0.35rem; }
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
-    .form-group input, .form-group select, .form-group textarea {
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
         width: 100%;
-        padding: 0.65rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
+        padding: 0.75rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
         box-sizing: border-box;
+        background: white;
     }
-    .form-group textarea { min-height: 110px; resize: vertical; }
-    .inline-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
-    .status-stack { display: grid; gap: 0.75rem; }
-    .study-list { display: grid; gap: 0.75rem; }
-    .study-card small, .muted-text { color: #6b7280; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .form-group textarea { min-height: 140px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .form-group select[multiple] { min-height: 150px; }
+    .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .btn {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-ghost { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--amanaje-primary); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
     .pill {
         display: inline-flex;
         align-items: center;
-        padding: 0.3rem 0.65rem;
-        background: #e6fffa;
-        color: #115e59;
-        border: 1px solid #99f6e4;
+        padding: 0.35rem 0.7rem;
         border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        border: 1px solid var(--amanaje-primary-border);
         font-size: 0.85rem;
+        font-weight: 700;
     }
+    .timeline-list { display: grid; gap: 0.75rem; margin-top: 1rem; }
+    .timeline-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+        padding: 0.8rem;
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+    }
+    .timeline-badge {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 800;
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+    }
+    .timeline-item.pending .timeline-badge { background: #e5e7eb; color: #6b7280; }
+    .timeline-item.active .timeline-badge { background: var(--amanaje-primary-soft); color: var(--amanaje-primary); }
+    .timeline-item.done .timeline-badge { background: var(--amanaje-primary); color: white; }
+    .inventory-list { display: grid; gap: 0.9rem; }
+    .inventory-row {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
+        padding: 0.9rem;
+    }
+    .inventory-row strong { color: var(--amanaje-primary-strong); }
+    .builder-grid, .plot-grid { display: grid; gap: 0.9rem; }
+    .builder-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .plot-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 1rem; }
+    .plot-card {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.9rem;
+        background: white;
+    }
+    .plot-card h5 { margin: 0 0 0.4rem; color: var(--amanaje-primary-strong); }
+    .plot-card p { margin: 0 0 0.75rem; color: #6b7280; font-size: 0.88rem; }
+    .plot-bars { display: grid; gap: 0.55rem; }
+    .plot-bar-row { display: grid; gap: 0.35rem; }
+    .plot-bar-meta { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.84rem; color: var(--amanaje-primary-strong); }
+    .plot-bar-track { height: 0.65rem; background: var(--amanaje-primary-mid); border-radius: 999px; overflow: hidden; }
+    .plot-bar-fill { height: 100%; background: var(--amanaje-primary-bar-gradient); }
+    .snapshot-body {
+        max-height: 280px;
+        overflow: auto;
+        padding-right: 0.3rem;
+    }
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
+    .summary-table td:first-child { font-weight: 700; color: var(--amanaje-primary-strong); width: 38%; }
+    .summary-table code { white-space: pre-wrap; word-break: break-word; }
     .json-block {
-        background: #111827;
-        color: #f9fafb;
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
         padding: 1rem;
-        border-radius: 4px;
+        border-radius: 14px;
         white-space: pre-wrap;
-        overflow-x: auto;
+        overflow: auto;
         font-family: Consolas, "Courier New", monospace;
         font-size: 0.9rem;
     }
-    .empty-state {
+    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
+    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .detail-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 7, 18, 0.55);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
         padding: 1rem;
-        border: 1px dashed #cbd5e1;
-        border-radius: 4px;
-        background: #f8fafc;
-        color: #475569;
     }
-    .alert { padding: 1rem; border-radius: 4px; }
-    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-    .alert-error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
-    .alert-info { background: #dbeafe; color: #0c2340; border: 1px solid #93c5fd; }
-    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .detail-modal.active { display: flex; }
+    .detail-dialog {
+        width: min(980px, 100%);
+        max-height: 86vh;
+        overflow: auto;
+        background: white;
+        border-radius: 20px;
+        padding: 1.25rem;
+        box-shadow: 0 22px 44px var(--amanaje-primary-shadow-strong);
+    }
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .detail-close {
+        border: none;
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+        border-radius: 999px;
+        width: 2rem;
+        height: 2rem;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    @media (max-width: 980px) {
+        .pipeline-grid { grid-template-columns: 1fr; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="training-operations">
+<div class="training-shell">
+    <section class="global-context">
+        <h3>Global Training Context</h3>
+        <p class="panel-subtitle">Keep the active inference pair context stable while switching tabs. Tabs now refine the current context instead of owning separate selections.</p>
+        <div class="inline-grid">
+            <div class="form-group">
+                <label for="globalInferencePairId">Inference Pair</label>
+                <select id="globalInferencePairId">
+                    <option value="">Select an inference pair</option>
+                </select>
+                <div class="helper-text">Pick a registered inference pair to hydrate the model and dataset automatically.</div>
+            </div>
+            <div class="form-group">
+                <label for="globalModelId">Learning Model</label>
+                <select id="globalModelId">
+                    <option value="">Select a model</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalDatasetId">Dataset</label>
+                <select id="globalDatasetId">
+                    <option value="">Select a dataset</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalStudyId">Study</label>
+                <select id="globalStudyId">
+                    <option value="">Optional study</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalFramework">Framework</label>
+                <select id="globalFramework">
+                    <option value="pytorch">PyTorch</option>
+                    <option value="sklearn">scikit-learn</option>
+                    <option value="onnx">ONNX</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btnGlobalTrain">Train From Global Context</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalRunStudy">Run Study From Global Context</button>
+        </div>
+    </section>
 
-    <!-- TODO - Is it possible for the sections to be on different tabs
-     and not on top of each other? -->
-    <section class="training-section" id="orchestrationSection">
-        <h3>Study-Orchestrated Training</h3>
+    <div class="workspace-tabs">
+        <button class="workspace-tab active" type="button" data-tab="orchestration">Training</button>
+        <button class="workspace-tab" type="button" data-tab="study">Study Registry</button>
+        <button class="workspace-tab" type="button" data-tab="tracking">Tracking and ONNX</button>
+    </div>
+
+    <section class="training-panel active" id="panel-orchestration">
+        <h3 class="panel-title">Study-Orchestrated Training</h3>
+        <p class="panel-subtitle">Select a registered model and dataset, hydrate parameters from an existing study when needed, and keep the pipeline summary in sync while the job runs.</p>
+
         <div class="pipeline-grid">
-            <div class="pipeline-card">
+            <div class="surface-card">
                 <h4>Training Job</h4>
-                <p class="muted-text">Use a `StudyModel` to bind a PostgreSQL dataset to a registered `LearningModel`, then submit the training run with manual parameters or an existing study.</p>
-
                 <form id="trainingForm">
-                    <div class="form-group">
-                        <label for="modelId">Learning Model</label>
-                        <select id="modelId" name="modelId" required>
-                            <option value="">Select a model</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="datasetId">Dataset From PostgreSQL Registry</label>
-                        <select id="datasetId" name="datasetId" required>
-                            <option value="">Select a dataset</option>
-                        </select>
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="modelId">Learning Model</label>
+                            <select id="modelId" name="modelId" required>
+                                <option value="">Select a model</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="datasetId">Dataset From PostgreSQL Registry</label>
+                            <select id="datasetId" name="datasetId" required>
+                                <option value="">Select a dataset</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="inline-grid">
@@ -122,24 +325,35 @@
                         <select id="studyId" name="studyId">
                             <option value="">Select a study</option>
                         </select>
+                        <div class="helper-text">Choosing a study hydrates the model, dataset, and best known parameter envelope automatically.</div>
                     </div>
-                    
-                    <!-- TODO - I'd like for Input Features and Output Features to be populated
-                    with the names of the features in the dataset, automatically, with multiple selection lists instead of plain text -->
+
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="inputFeatures">Input Features</label>
-                            <input id="inputFeatures" name="inputFeatures" type="text" placeholder="feature_a, feature_b">
+                            <select id="inputFeatures" name="inputFeatures" multiple></select>
+                            <div class="helper-text">The feature list is populated from the selected dataset profile.</div>
                         </div>
                         <div class="form-group">
                             <label for="outputFeatures">Output Features</label>
-                            <input id="outputFeatures" name="outputFeatures" type="text" placeholder="target">
+                            <select id="outputFeatures" name="outputFeatures" multiple></select>
+                            <div class="helper-text">Choose the target feature for training and any additional outputs you want to keep visible in the inference summary.</div>
                         </div>
                     </div>
 
-                    <!-- TODO - Runtime Parameters are updated dynamically according to the selected model's available parameters -->
+                    <div class="surface-card" style="margin-bottom:1rem;">
+                        <div class="toolbar-row">
+                            <div>
+                                <h4 style="margin:0;">Runtime Parameters</h4>
+                                <div class="helper-text">The controls below mirror the selected model’s available parameters and stay synchronized with the JSON payload.</div>
+                            </div>
+                            <button class="btn btn-ghost" type="button" id="btnResetRuntimeParameters">Reset From Model</button>
+                        </div>
+                        <div id="runtimeParameterFields" class="builder-grid"></div>
+                    </div>
+
                     <div class="form-group">
-                        <label for="parametersJson">Runtime Parameters</label>
+                        <label for="parametersJson">Runtime Parameters JSON</label>
                         <textarea id="parametersJson" name="parametersJson" spellcheck="false">{
   "epochs": 50,
   "batch_size": 32,
@@ -149,16 +363,15 @@
 
                     <div class="actions-row">
                         <button type="submit" class="btn btn-primary">Start Training</button>
-                        <button type="button" class="btn" id="btnHydrateFromStudy">Load Best Params From Study</button>
-                        <button type="button" class="btn" id="btnRefreshTrainingData">Refresh Registry</button>
+                        <button type="button" class="btn btn-secondary" id="btnHydrateFromStudy">Load Best Params From Study</button>
+                        <button type="button" class="btn btn-ghost" id="btnRefreshTrainingData">Refresh Registry</button>
                     </div>
                 </form>
             </div>
 
-            <!-- TODO -  Use the Pipeline Summary to track the execution of the training process at runtime -->
-            <div class="pipeline-card">
+            <div class="surface-card">
                 <h4>Pipeline Summary</h4>
-                <div class="status-stack">
+                <div class="summary-grid">
                     <div class="status-card">
                         <small>Selected Model</small>
                         <div class="metric-value" id="summaryModel">-</div>
@@ -171,43 +384,42 @@
                         <small>Study Coordination</small>
                         <div class="metric-value" id="summaryStudy">Manual</div>
                     </div>
-                </div>
-
-                <div class="framework-grid">
-                    <div class="framework-card">
-                        <h4>PyTorch</h4>
-                        <p class="muted-text">Use for trainable deep-learning runs that need epochs, optimizers, and tensor-based batching.</p>
-                    </div>
-                    <div class="framework-card">
-                        <h4>scikit-learn</h4>
-                        <p class="muted-text">Use for classical estimators where the study should tune compact parameter sets against the stored dataset.</p>
-                    </div>
-                    <div class="framework-card">
-                        <h4>ONNX</h4>
-                        <p class="muted-text">Use when the selected model should be exported or validated as a portable artifact after training.</p>
+                    <div class="status-card">
+                        <small>Active Framework</small>
+                        <div class="metric-value" id="activeFramework">pytorch</div>
                     </div>
                 </div>
 
                 <div class="pill-row" id="pipelinePills">
                     <span class="pill">postgresql dataset registry</span>
                     <span class="pill">StudyModel coordination</span>
-                    <span class="pill">ML training execution</span>
+                    <span class="pill">runtime parameter sync</span>
+                    <span class="pill">inference registry handoff</span>
                 </div>
+
+                <div class="timeline-list" id="pipelineTimeline"></div>
             </div>
         </div>
 
-        <div id="trainingResult" style="margin-top:1rem;"></div>
+        <div id="trainingResult"></div>
     </section>
 
-    <section class="training-section" id="studyRegistrySection">
-        <h3>Study Registry</h3>
-        <div class="pipeline-grid">
-            <div class="pipeline-card">
-                <h4>Create StudyModel</h4>
-                <p class="muted-text">Register a reusable study object so the same dataset/model pair can be replayed across PyTorch, ONNX export preparation, or scikit-learn tuning.</p>
+    <section class="training-panel" id="panel-study">
+        <h3 class="panel-title">Study Registry</h3>
+        <p class="panel-subtitle">Reuse an existing study by name, or create a new study and define a parameter search space derived from the linked model.</p>
 
-                <!-- TODO - Selecting the Study from a list of studymodels by name should fill in the learning and dataset model automatically, unless when creating a new one. -->
+        <div class="pipeline-grid">
+            <div class="surface-card">
+                <h4>Create or Reuse StudyModel</h4>
                 <form id="studyForm">
+                    <div class="form-group">
+                        <label for="existingStudyId">Reuse Existing Study</label>
+                        <select id="existingStudyId">
+                            <option value="">Create a new study</option>
+                        </select>
+                        <div class="helper-text">Selecting a saved study fills the linked model, dataset, and parameter controls. Leave it empty to create a brand-new study.</div>
+                    </div>
+
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="studyName">Study Name</label>
@@ -253,25 +465,20 @@
                         <label for="studyDescription">Description</label>
                         <textarea id="studyDescription" name="studyDescription" spellcheck="false">StudyModel linking dataset ingestion from PostgreSQL to registered training models.</textarea>
                     </div>
-                    
-                    
-                    <!-- TODO - When selecting the model in this section, the user needs to be able to
-                     define the min-max value to be used in the study. 
-                     
-                    Consider extra form fields for user in Pytorch models: 
-                     - nn_criterion
-                     - nn_optimizer
-                     - with_grad() or no_grad()
-                     For each __init__ (initialization) variable for pytorch model:
-                     - Min value
-                     - Max value
-                     - Step value
-                     - Categorical choices
-                     -->
-                    <div class="form-group">
-                        <label for="studyParamsJson">Study Parameters</label>
 
-                        <!-- TODO - The study parameters must be shown in whole, or described to the user. It needs to update dynamically to input -->
+                    <div class="surface-card" style="margin-bottom:1rem;">
+                        <div class="toolbar-row">
+                            <div>
+                                <h4 style="margin:0;">Study Parameter Builder</h4>
+                                <div class="helper-text">Search-space controls are generated from the selected model and expanded with framework-specific fields for optimizer, loss, and gradient mode.</div>
+                            </div>
+                            <button type="button" class="btn btn-ghost" id="btnResetStudyBuilder">Reset Search Space</button>
+                        </div>
+                        <div id="studyControlBuilder" class="builder-grid"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studyParamsJson">Study Parameters JSON</label>
                         <textarea id="studyParamsJson" name="studyParamsJson" spellcheck="false">{
   "n_trials": 25,
   "direction": "maximize",
@@ -282,15 +489,15 @@
 
                     <div class="actions-row">
                         <button type="submit" class="btn btn-primary">Create StudyModel</button>
-                        <button type="button" class="btn" id="btnSyncStudyForm">Use Selected Training Pair</button>
-                        <button type="button" class="btn" id="btnRunStudy">Run Selected Study</button>
+                        <button type="button" class="btn btn-secondary" id="btnSyncStudyForm">Use Selected Training Pair</button>
+                        <button type="button" class="btn btn-ghost" id="btnRunStudy">Run Selected Study</button>
                     </div>
                 </form>
             </div>
 
-            <div class="pipeline-card">
+            <div class="surface-card">
                 <h4>StudyModel Inventory</h4>
-                <div class="results-grid">
+                <div class="summary-grid">
                     <div class="status-card">
                         <small>Total Studies</small>
                         <div class="metric-value" id="studyCount">0</div>
@@ -301,59 +508,136 @@
                     </div>
                     <div class="status-card">
                         <small>Active Framework</small>
-                        <div class="metric-value" id="activeFramework">pytorch</div>
+                        <div class="metric-value" id="studyFrameworkSummary">pytorch</div>
                     </div>
                 </div>
-                <div id="studyList" class="study-list" style="margin-top:1rem;"></div>
+                <div id="studyList" class="inventory-list" style="margin-top:1rem;"></div>
             </div>
         </div>
 
-        <div id="studyResult" style="margin-top:1rem;"></div>
+        <div id="studyResult"></div>
     </section>
 
+    <section class="training-panel" id="panel-tracking">
+        <h3 class="panel-title">Tracking and ONNX</h3>
+        <p class="panel-subtitle">Snapshots stay collapsed by default so large dataset summaries remain readable, with one-click expansion into a dedicated detail modal.</p>
 
-    <!-- TODO - The shown tracking results must be collapsed when viewing large datasets. A scrolling list or a simple popup should fit everything on the screen. -->
-    <section class="training-section" id="trackingSection">
-        <h3>Training Tracking</h3>
-        <div class="registry-grid">
-            <div class="pipeline-card">
-                <h4>Model Snapshot</h4>
-                <div id="modelSnapshot" class="empty-state">Select a model to load its current registry summary.</div>
-            </div>
-            <div class="pipeline-card">
-                <h4>Dataset Snapshot</h4>
-                <div id="datasetSnapshot" class="empty-state">Select a dataset to review the stored dataset summary from PostgreSQL.</div>
-            </div>
-            <div class="pipeline-card" id="onnxSection">
-                <h4>ONNX Readiness</h4>
-                <p class="muted-text">Prepare an ONNX export payload from the active training context, then validate the currently registered model artifact when one is available.</p>
-                <div class="actions-row">
-                    <button type="button" class="btn" id="btnPrepareOnnx">Prepare ONNX Payload</button>
-                    <button type="button" class="btn" id="btnValidateOnnx">Validate ONNX Artifact</button>
+        <div class="tracking-grid">
+            <div class="snapshot-card">
+                <div class="toolbar-row">
+                    <h4>Model Snapshot</h4>
+                    <button type="button" class="btn btn-ghost" data-expand-target="modelSnapshot">Expand</button>
                 </div>
-                <div id="onnxResults" style="margin-top:1rem;"></div>
+                <div id="modelSnapshot" class="snapshot-body">Select a model to load its current registry summary.</div>
+            </div>
+            <div class="snapshot-card">
+                <div class="toolbar-row">
+                    <h4>Dataset Snapshot</h4>
+                    <button type="button" class="btn btn-ghost" data-expand-target="datasetSnapshot">Expand</button>
+                </div>
+                <div id="datasetSnapshot" class="snapshot-body">Select a dataset to review the stored dataset summary from PostgreSQL.</div>
+            </div>
+            <div class="snapshot-card" id="onnxSection">
+                <div class="toolbar-row">
+                    <h4>ONNX Readiness</h4>
+                    <button type="button" class="btn btn-ghost" data-expand-target="onnxResults">Expand</button>
+                </div>
+                <div class="actions-row" style="margin-bottom:0.9rem;">
+                    <button type="button" class="btn btn-secondary" id="btnPrepareOnnx">Prepare ONNX Payload</button>
+                    <button type="button" class="btn btn-ghost" id="btnValidateOnnx">Validate ONNX Artifact</button>
+                </div>
+                <div id="onnxResults" class="snapshot-body">Prepare an ONNX payload or validate a registered artifact to inspect the current export controls.</div>
             </div>
         </div>
     </section>
+
+    <section class="training-panel active" style="display:block;">
+        <h3 class="panel-title">Run Ledger</h3>
+        <p class="panel-subtitle">Training and study runs now return immediately and keep their status here while you keep working on the page.</p>
+        <div id="runLedgerResults"></div>
+    </section>
+</div>
+
+<div class="detail-modal" id="trainingDetailModal">
+    <div class="detail-dialog">
+        <div class="detail-header">
+            <h3 id="trainingDetailTitle" class="panel-title" style="margin:0;">Expanded View</h3>
+            <button type="button" class="detail-close" id="btnCloseTrainingDetail">&times;</button>
+        </div>
+        <div id="trainingDetailBody"></div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
-
 <script>
 const trainingForm = document.getElementById('trainingForm');
 const studyForm = document.getElementById('studyForm');
+const globalInferencePairIdSelect = document.getElementById('globalInferencePairId');
+const globalModelIdSelect = document.getElementById('globalModelId');
+const globalDatasetIdSelect = document.getElementById('globalDatasetId');
+const globalStudyIdSelect = document.getElementById('globalStudyId');
+const globalFrameworkSelect = document.getElementById('globalFramework');
 const modelIdSelect = document.getElementById('modelId');
 const datasetIdSelect = document.getElementById('datasetId');
 const studyIdSelect = document.getElementById('studyId');
+const existingStudyIdSelect = document.getElementById('existingStudyId');
+const studyModelIdSelect = document.getElementById('studyModelId');
+const studyDatasetIdSelect = document.getElementById('studyDatasetId');
 const inputTypeSelect = document.getElementById('inputType');
 const frameworkSelect = document.getElementById('framework');
 const parametersJson = document.getElementById('parametersJson');
+const studyParamsJson = document.getElementById('studyParamsJson');
+const inputFeatureSelect = document.getElementById('inputFeatures');
+const outputFeatureSelect = document.getElementById('outputFeatures');
+const runtimeParameterFields = document.getElementById('runtimeParameterFields');
+const studyControlBuilder = document.getElementById('studyControlBuilder');
 
 let modelCache = [];
 let datasetCache = [];
 let studyCache = [];
+let inferenceCache = [];
+let runLedgerPollTimer = null;
+
+const FRAMEWORK_DEFAULTS = {
+    pytorch: {
+        epochs: 50,
+        batch_size: 32,
+        learning_rate: 0.001,
+        hidden_dim: 64,
+        hidden_layers: 2,
+        dropout: 0.1
+    },
+    sklearn: {
+        estimator_class: 'RandomForestRegressor',
+        n_estimators: 100,
+        max_depth: 8,
+        random_state: 42,
+        test_size: 0.2
+    },
+    onnx: {
+        export_target: 'onnx',
+        base_framework: 'sklearn',
+        dynamic_axes: true
+    }
+};
+
+const PIPELINE_STAGES = [
+    { id: 'registry', title: 'Registry Context', detail: 'Model, dataset, and optional study selections are synchronized.' },
+    { id: 'features', title: 'Feature Mapping', detail: 'Input and output features are aligned to the selected dataset.' },
+    { id: 'training', title: 'Training Run', detail: 'Runtime parameters are executed through the selected framework.' },
+    { id: 'inference', title: 'Inference Sync', detail: 'The trained pair is mirrored into the inference registry for production.' }
+];
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 function renderAlert(targetId, type, message) {
     const target = document.getElementById(targetId);
@@ -366,17 +650,163 @@ function safeParseJson(value, fallback = {}) {
     return JSON.parse(value);
 }
 
-function setStudyVisibility() {
-    const showStudy = inputTypeSelect.value === 'Study';
-    document.getElementById('studySelectionGroup').style.display = showStudy ? 'block' : 'none';
-    document.getElementById('summaryStudy').textContent = showStudy
-        ? (studyIdSelect.options[studyIdSelect.selectedIndex]?.text || 'Study')
-        : 'Manual';
+function resolveModel(id) {
+    return modelCache.find((item) => String(item.id) === String(id)) || null;
+}
+
+function resolveDataset(id) {
+    return datasetCache.find((item) => String(item.id) === String(id)) || null;
+}
+
+function resolveStudy(id) {
+    return studyCache.find((item) => String(item.id) === String(id)) || null;
+}
+
+function resolveInference(id) {
+    return inferenceCache.find((item) => String(item.id) === String(id)) || null;
+}
+
+function findInferenceByPair(modelId, datasetId) {
+    if (!modelId || !datasetId) return null;
+    return inferenceCache.find((item) =>
+        String(item.learning_model_id) === String(modelId)
+        && String(item.dataset_id) === String(datasetId)
+    ) || null;
+}
+
+function findStudyByPair(modelId, datasetId) {
+    if (!modelId || !datasetId) return null;
+    return studyCache.find((item) =>
+        String(item.learning_model_id) === String(modelId)
+        && String(item.dataset_id) === String(datasetId)
+    ) || null;
 }
 
 function getSelectedLabel(selectElement) {
     if (!selectElement || selectElement.selectedIndex < 0) return '-';
     return selectElement.options[selectElement.selectedIndex]?.text || '-';
+}
+
+function setTrainingTab(tabName) {
+    document.querySelectorAll('.workspace-tab').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.training-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+    });
+}
+
+function renderPipelineTimeline(activeStage = 'registry', statusLabel = 'Ready') {
+    const activeIndex = PIPELINE_STAGES.findIndex((stage) => stage.id === activeStage);
+    document.getElementById('pipelineTimeline').innerHTML = PIPELINE_STAGES.map((stage, index) => {
+        let state = 'pending';
+        if (activeIndex > index) state = 'done';
+        if (activeIndex === index) state = 'active';
+        if (statusLabel === 'Completed' && activeIndex >= index) state = 'done';
+        return `
+            <div class="timeline-item ${state}">
+                <div class="timeline-badge">${index + 1}</div>
+                <div>
+                    <strong>${escapeHtml(stage.title)}</strong>
+                    <div class="helper-text">${escapeHtml(stage.detail)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function setMultiSelectOptions(selectElement, options, selectedValues = []) {
+    const normalizedSelected = new Set((selectedValues || []).map((item) => String(item)));
+    selectElement.innerHTML = options.map((item) => `
+        <option value="${escapeHtml(item)}" ${normalizedSelected.has(String(item)) ? 'selected' : ''}>${escapeHtml(item)}</option>
+    `).join('');
+}
+
+function getSelectedValues(selectElement) {
+    return Array.from(selectElement.selectedOptions || []).map((option) => option.value).filter(Boolean);
+}
+
+function renderPlotDeck(plots = []) {
+    const usablePlots = Array.isArray(plots) ? plots.filter((plot) => Array.isArray(plot.series) && plot.series.length) : [];
+    if (!usablePlots.length) return '';
+
+    return `
+        <div class="plot-grid">
+            ${usablePlots.map((plot) => {
+                const maxValue = Math.max(...plot.series.map((item) => Number(item.value) || 0), 1);
+                return `
+                    <div class="plot-card">
+                        <h5>${escapeHtml(plot.title || 'Generated Plot')}</h5>
+                        <p>${escapeHtml(plot.description || 'Automatic summary plot')}</p>
+                        <div class="plot-bars">
+                            ${plot.series.map((item) => {
+                                const value = Number(item.value) || 0;
+                                const width = Math.max((value / maxValue) * 100, value > 0 ? 6 : 0);
+                                return `
+                                    <div class="plot-bar-row">
+                                        <div class="plot-bar-meta">
+                                            <span>${escapeHtml(item.label)}</span>
+                                            <span>${escapeHtml(value.toFixed(3).replace(/\.000$/, ''))}</span>
+                                        </div>
+                                        <div class="plot-bar-track">
+                                            <div class="plot-bar-fill" style="width:${width}%;"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function buildSummaryTable(summary) {
+    const rows = Object.entries(summary || {}).map(([key, value]) => {
+        const renderedValue = typeof value === 'object'
+            ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`
+            : escapeHtml(value);
+        return `
+            <tr>
+                <td>${escapeHtml(key.replace(/_/g, ' '))}</td>
+                <td>${renderedValue}</td>
+            </tr>
+        `;
+    }).join('');
+
+    return `<table class="summary-table">${rows}</table>`;
+}
+
+function buildSnapshotMarkup(title, summary, plots = []) {
+    return `
+        <div>
+            <div class="pill-row">
+                <span class="pill">${escapeHtml(title)}</span>
+                <span class="pill">${escapeHtml(`${Object.keys(summary || {}).length} fields`)}</span>
+            </div>
+            ${buildSummaryTable(summary)}
+            ${renderPlotDeck(plots)}
+        </div>
+    `;
+}
+
+function openTrainingDetail(title, markup) {
+    document.getElementById('trainingDetailTitle').textContent = title;
+    document.getElementById('trainingDetailBody').innerHTML = markup;
+    document.getElementById('trainingDetailModal').classList.add('active');
+}
+
+function closeTrainingDetail() {
+    document.getElementById('trainingDetailModal').classList.remove('active');
+}
+
+function updateStudyVisibility() {
+    const showStudy = inputTypeSelect.value === 'Study';
+    document.getElementById('studySelectionGroup').style.display = showStudy ? 'block' : 'none';
+    document.getElementById('summaryStudy').textContent = showStudy
+        ? (studyIdSelect.value ? getSelectedLabel(studyIdSelect) : 'Study required')
+        : 'Manual';
 }
 
 function updatePipelineSummary() {
@@ -386,39 +816,417 @@ function updatePipelineSummary() {
         ? (studyIdSelect.value ? getSelectedLabel(studyIdSelect) : 'Study required')
         : 'Manual';
     document.getElementById('activeFramework').textContent = frameworkSelect.value;
+    document.getElementById('studyFrameworkSummary').textContent = frameworkSelect.value;
 }
 
-function buildRegistryCard(title, summary) {
-    const lines = Object.entries(summary || {}).map(([key, value]) => `
-        <tr style="border-bottom:1px solid #e5e7eb;">
-            <td style="padding:0.5rem; font-weight:600;">${key.replace(/_/g, ' ')}</td>
-            <td style="padding:0.5rem;">${typeof value === 'object' ? JSON.stringify(value) : value}</td>
-        </tr>
-    `).join('');
+function syncGlobalContextFromLocal() {
+    const matchingInference = findInferenceByPair(modelIdSelect.value, datasetIdSelect.value);
+    globalInferencePairIdSelect.value = matchingInference ? String(matchingInference.id) : '';
+    globalModelIdSelect.value = modelIdSelect.value || '';
+    globalDatasetIdSelect.value = datasetIdSelect.value || '';
+    globalStudyIdSelect.value = studyIdSelect.value || existingStudyIdSelect.value || '';
+    globalFrameworkSelect.value = frameworkSelect.value || 'pytorch';
+}
 
-    return `
-        <div style="background:#f8fafc; border-radius:4px; padding:1rem;">
-            <h4 style="margin-top:0;">${title}</h4>
-            <table style="width:100%; border-collapse:collapse;">${lines}</table>
+async function syncLocalContextFromGlobal() {
+    const selectedInference = resolveInference(globalInferencePairIdSelect.value);
+    if (selectedInference) {
+        const inferredModelId = selectedInference.learning_model_id ? String(selectedInference.learning_model_id) : '';
+        const inferredDatasetId = selectedInference.dataset_id ? String(selectedInference.dataset_id) : '';
+        globalModelIdSelect.value = inferredModelId;
+        globalDatasetIdSelect.value = inferredDatasetId;
+        modelIdSelect.value = inferredModelId;
+        datasetIdSelect.value = inferredDatasetId;
+        if (!globalStudyIdSelect.value) {
+            const matchedStudy = findStudyByPair(inferredModelId, inferredDatasetId);
+            if (matchedStudy) {
+                globalStudyIdSelect.value = String(matchedStudy.id);
+            }
+        }
+    } else {
+        if (globalModelIdSelect.value) modelIdSelect.value = globalModelIdSelect.value;
+        if (globalDatasetIdSelect.value) datasetIdSelect.value = globalDatasetIdSelect.value;
+    }
+    frameworkSelect.value = globalFrameworkSelect.value;
+    if (globalStudyIdSelect.value) {
+        studyIdSelect.value = globalStudyIdSelect.value;
+        existingStudyIdSelect.value = globalStudyIdSelect.value;
+        inputTypeSelect.value = 'Study';
+    } else if (inputTypeSelect.value === 'Study') {
+        studyIdSelect.value = '';
+        existingStudyIdSelect.value = '';
+        inputTypeSelect.value = 'Manual';
+    }
+    updateStudyVisibility();
+    updatePipelineSummary();
+    renderRuntimeParameterFields();
+    await loadModelSnapshot();
+    await loadDatasetSnapshot();
+}
+
+function renderRunLedger(runs = []) {
+    const target = document.getElementById('runLedgerResults');
+    if (!runs.length) {
+        target.innerHTML = '<div class="helper-text">No training or study runs have been started in this workspace yet.</div>';
+        return;
+    }
+
+    target.innerHTML = runs.map((run) => `
+        <div class="surface-card" style="margin-bottom:1rem;">
+            <div class="toolbar-row">
+                <div>
+                    <h4 style="margin:0;">${escapeHtml(run.run_type || 'run')} <code>${escapeHtml(run.run_id)}</code></h4>
+                    <div class="helper-text">Status: ${escapeHtml(run.status || 'queued')} | Stage: ${escapeHtml(run.stage || '-')}</div>
+                </div>
+                <div class="pill-row">
+                    ${run.context?.inference_id ? `<span class="pill">inference ${escapeHtml(run.context.inference_id)}</span>` : ''}
+                    <span class="pill">model ${escapeHtml(run.context?.model_id || '-')}</span>
+                    <span class="pill">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
+                    ${run.context?.study_id ? `<span class="pill">study ${escapeHtml(run.context.study_id)}</span>` : ''}
+                </div>
+            </div>
+            ${run.error ? `<div class="alert alert-error">${escapeHtml(run.error)}</div>` : ''}
+            ${run.result && Object.keys(run.result).length ? buildSnapshotMarkup('Run Result', run.result, []) : ''}
+        </div>
+    `).join('');
+}
+
+async function loadRunLedger() {
+    try {
+        const query = new URLSearchParams();
+        if (globalInferencePairIdSelect.value) query.set('inference_id', globalInferencePairIdSelect.value);
+        if (globalModelIdSelect.value) query.set('model_id', globalModelIdSelect.value);
+        if (globalDatasetIdSelect.value) query.set('dataset_id', globalDatasetIdSelect.value);
+        const response = await fetch(`/runs/list?${query.toString()}`);
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        renderRunLedger(result.runs || []);
+        const hasActiveRuns = (result.runs || []).some((run) => ['queued', 'running'].includes(run.status));
+        if (runLedgerPollTimer) {
+            clearTimeout(runLedgerPollTimer);
+            runLedgerPollTimer = null;
+        }
+        if (hasActiveRuns) {
+            runLedgerPollTimer = setTimeout(loadRunLedger, 2500);
+        }
+    } catch (error) {
+        document.getElementById('runLedgerResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function waitForRunCompletion(runId, targetId, successMessagePrefix) {
+    const target = document.getElementById(targetId);
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < 30 * 60 * 1000) {
+        const response = await fetch(`/runs/get/${encodeURIComponent(runId)}`);
+        const run = await response.json();
+        if (!response.ok || run.status === 'error') {
+            throw new Error(run.detail || `Unable to load run ${runId}`);
+        }
+        await loadRunLedger();
+        if (run.status === 'completed') {
+            target.innerHTML = `
+                <div class="alert alert-success">${escapeHtml(successMessagePrefix)} <code>${escapeHtml(runId)}</code></div>
+                ${run.result ? buildSnapshotMarkup('Run Result', run.result, []) : ''}
+            `;
+            return run;
+        }
+        if (run.status === 'failed') {
+            throw new Error(run.error || 'The background run failed.');
+        }
+        target.innerHTML = `<div class="alert alert-info">Run <code>${escapeHtml(runId)}</code> is ${escapeHtml(run.status)} at stage <code>${escapeHtml(run.stage || '-')}</code>.</div>`;
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+    throw new Error('The run did not finish within the polling window.');
+}
+
+function getRuntimeSeed() {
+    const selectedModel = resolveModel(modelIdSelect.value);
+    const defaults = FRAMEWORK_DEFAULTS[frameworkSelect.value] || {};
+    const modelParameters = selectedModel?.parameters && typeof selectedModel.parameters === 'object'
+        ? selectedModel.parameters
+        : {};
+    return { ...defaults, ...modelParameters, framework: frameworkSelect.value };
+}
+
+function renderRuntimeParameterFields() {
+    let currentPayload = {};
+    try {
+        currentPayload = safeParseJson(parametersJson.value, {});
+    } catch (error) {
+        currentPayload = {};
+    }
+
+    const seed = { ...getRuntimeSeed(), ...currentPayload };
+    const entries = Object.entries(seed).filter(([key, value]) => !Array.isArray(value) && value !== null && typeof value !== 'object');
+    runtimeParameterFields.innerHTML = entries.map(([key, value]) => {
+        const valueType = typeof value;
+        const inputType = valueType === 'number' ? 'number' : 'text';
+        const step = valueType === 'number' && !Number.isInteger(value) ? 'step="any"' : '';
+        return `
+            <div class="search-space-card">
+                <label for="runtime_${escapeHtml(key)}">${escapeHtml(key)}</label>
+                <input
+                    id="runtime_${escapeHtml(key)}"
+                    data-runtime-key="${escapeHtml(key)}"
+                    data-runtime-type="${escapeHtml(valueType)}"
+                    type="${inputType}"
+                    value="${escapeHtml(value)}"
+                    ${step}
+                >
+            </div>
+        `;
+    }).join('');
+
+    if (!entries.length) {
+        runtimeParameterFields.innerHTML = '<div class="helper-text">Select a model to generate runtime parameters automatically.</div>';
+    }
+}
+
+function syncRuntimeParametersFromFields() {
+    let payload = {};
+    try {
+        payload = safeParseJson(parametersJson.value, {});
+    } catch (error) {
+        payload = {};
+    }
+
+    runtimeParameterFields.querySelectorAll('[data-runtime-key]').forEach((field) => {
+        const key = field.dataset.runtimeKey;
+        const type = field.dataset.runtimeType;
+        if (!key) return;
+        if (type === 'number') {
+            payload[key] = field.value === '' ? null : Number(field.value);
+        } else {
+            payload[key] = field.value;
+        }
+    });
+    payload.framework = frameworkSelect.value;
+    parametersJson.value = JSON.stringify(payload, null, 2);
+}
+
+function defaultSearchConfig(key, value) {
+    if (typeof value === 'number') {
+        const isInteger = Number.isInteger(value);
+        const low = isInteger ? Math.max(1, value - Math.max(1, Math.floor(value * 0.4))) : Math.max(0.0001, value * 0.4);
+        const high = isInteger ? value + Math.max(2, Math.floor(value * 0.8)) : value * 1.8;
+        return {
+            type: isInteger ? 'int' : 'float',
+            low: Number(low.toFixed(4)),
+            high: Number(high.toFixed(4)),
+            step: isInteger ? 1 : Number(Math.max(value * 0.1, 0.0001).toFixed(4))
+        };
+    }
+    if (typeof value === 'boolean') {
+        return { type: 'categorical', choices: [true, false] };
+    }
+    if (typeof value === 'string' && value.trim()) {
+        return { type: 'categorical', choices: [value] };
+    }
+    return { type: 'categorical', choices: [] };
+}
+
+function getStudySeed() {
+    const selectedModel = resolveModel(studyModelIdSelect.value) || resolveModel(modelIdSelect.value);
+    const baseParameters = selectedModel?.parameters && typeof selectedModel.parameters === 'object'
+        ? selectedModel.parameters
+        : (FRAMEWORK_DEFAULTS[frameworkSelect.value] || {});
+    let currentPayload = {};
+    try {
+        currentPayload = safeParseJson(studyParamsJson.value, {});
+    } catch (error) {
+        currentPayload = {};
+    }
+
+    const searchSpace = currentPayload.search_space && typeof currentPayload.search_space === 'object'
+        ? currentPayload.search_space
+        : Object.fromEntries(Object.entries(baseParameters).map(([key, value]) => [key, defaultSearchConfig(key, value)]));
+
+    return {
+        n_trials: currentPayload.n_trials ?? 25,
+        direction: currentPayload.direction ?? 'maximize',
+        metric: currentPayload.metric ?? 'accuracy',
+        framework: frameworkSelect.value,
+        nn_criterion: currentPayload.nn_criterion ?? 'CrossEntropyLoss',
+        nn_optimizer: currentPayload.nn_optimizer ?? 'Adam',
+        grad_mode: currentPayload.grad_mode ?? 'with_grad',
+        search_space: searchSpace
+    };
+}
+
+function renderStudyControlBuilder() {
+    const seed = getStudySeed();
+    const searchEntries = Object.entries(seed.search_space || {});
+
+    const topControls = `
+        <div class="search-space-card">
+            <label for="builder_trials">n_trials</label>
+            <input id="builder_trials" data-study-meta="n_trials" type="number" min="1" value="${escapeHtml(seed.n_trials)}">
+        </div>
+        <div class="search-space-card">
+            <label for="builder_direction">direction</label>
+            <select id="builder_direction" data-study-meta="direction">
+                <option value="maximize" ${seed.direction === 'maximize' ? 'selected' : ''}>maximize</option>
+                <option value="minimize" ${seed.direction === 'minimize' ? 'selected' : ''}>minimize</option>
+            </select>
+        </div>
+        <div class="search-space-card">
+            <label for="builder_metric">metric</label>
+            <input id="builder_metric" data-study-meta="metric" type="text" value="${escapeHtml(seed.metric)}">
+        </div>
+        <div class="search-space-card">
+            <label for="builder_framework">framework</label>
+            <input id="builder_framework" data-study-meta="framework" type="text" value="${escapeHtml(seed.framework)}" readonly>
         </div>
     `;
+
+    const pytorchControls = frameworkSelect.value === 'pytorch' ? `
+        <div class="search-space-card">
+            <label for="builder_criterion">nn_criterion</label>
+            <select id="builder_criterion" data-study-meta="nn_criterion">
+                <option value="CrossEntropyLoss" ${seed.nn_criterion === 'CrossEntropyLoss' ? 'selected' : ''}>CrossEntropyLoss</option>
+                <option value="MSELoss" ${seed.nn_criterion === 'MSELoss' ? 'selected' : ''}>MSELoss</option>
+                <option value="BCEWithLogitsLoss" ${seed.nn_criterion === 'BCEWithLogitsLoss' ? 'selected' : ''}>BCEWithLogitsLoss</option>
+            </select>
+        </div>
+        <div class="search-space-card">
+            <label for="builder_optimizer">nn_optimizer</label>
+            <select id="builder_optimizer" data-study-meta="nn_optimizer">
+                <option value="Adam" ${seed.nn_optimizer === 'Adam' ? 'selected' : ''}>Adam</option>
+                <option value="SGD" ${seed.nn_optimizer === 'SGD' ? 'selected' : ''}>SGD</option>
+                <option value="AdamW" ${seed.nn_optimizer === 'AdamW' ? 'selected' : ''}>AdamW</option>
+            </select>
+        </div>
+        <div class="search-space-card">
+            <label for="builder_grad_mode">grad_mode</label>
+            <select id="builder_grad_mode" data-study-meta="grad_mode">
+                <option value="with_grad" ${seed.grad_mode === 'with_grad' ? 'selected' : ''}>with_grad</option>
+                <option value="no_grad" ${seed.grad_mode === 'no_grad' ? 'selected' : ''}>no_grad</option>
+            </select>
+        </div>
+    ` : '';
+
+    const searchControls = searchEntries.map(([key, config]) => `
+        <div class="search-space-card" data-search-space="${escapeHtml(key)}">
+            <label>${escapeHtml(key)}</label>
+            <select data-space-field="type">
+                <option value="int" ${config.type === 'int' ? 'selected' : ''}>int</option>
+                <option value="float" ${config.type === 'float' ? 'selected' : ''}>float</option>
+                <option value="categorical" ${config.type === 'categorical' ? 'selected' : ''}>categorical</option>
+            </select>
+            <div class="inline-grid" style="margin-top:0.75rem;">
+                <div>
+                    <label class="helper-text">low</label>
+                    <input data-space-field="low" type="number" step="any" value="${escapeHtml(config.low ?? '')}">
+                </div>
+                <div>
+                    <label class="helper-text">high</label>
+                    <input data-space-field="high" type="number" step="any" value="${escapeHtml(config.high ?? '')}">
+                </div>
+                <div>
+                    <label class="helper-text">step</label>
+                    <input data-space-field="step" type="number" step="any" value="${escapeHtml(config.step ?? '')}">
+                </div>
+            </div>
+            <div style="margin-top:0.75rem;">
+                <label class="helper-text">choices</label>
+                <input data-space-field="choices" type="text" value="${escapeHtml((config.choices || []).join(', '))}" placeholder="choice_a, choice_b">
+            </div>
+        </div>
+    `).join('');
+
+    studyControlBuilder.innerHTML = topControls + pytorchControls + searchControls;
+}
+
+function syncStudyParamsFromBuilder() {
+    const payload = {};
+    studyControlBuilder.querySelectorAll('[data-study-meta]').forEach((field) => {
+        const key = field.dataset.studyMeta;
+        if (!key) return;
+        if (key === 'n_trials') {
+            payload[key] = Number(field.value || 0);
+        } else {
+            payload[key] = field.value;
+        }
+    });
+
+    const searchSpace = {};
+    studyControlBuilder.querySelectorAll('[data-search-space]').forEach((card) => {
+        const key = card.dataset.searchSpace;
+        const type = card.querySelector('[data-space-field="type"]').value;
+        const low = card.querySelector('[data-space-field="low"]').value;
+        const high = card.querySelector('[data-space-field="high"]').value;
+        const step = card.querySelector('[data-space-field="step"]').value;
+        const choices = card.querySelector('[data-space-field="choices"]').value;
+        const config = { type };
+        if (type === 'categorical') {
+            config.choices = choices.split(',').map((item) => item.trim()).filter(Boolean);
+        } else {
+            config.low = low === '' ? null : Number(low);
+            config.high = high === '' ? null : Number(high);
+            if (step !== '') config.step = Number(step);
+        }
+        searchSpace[key] = config;
+    });
+
+    payload.search_space = searchSpace;
+    studyParamsJson.value = JSON.stringify(payload, null, 2);
+}
+
+function renderStudyInventory() {
+    document.getElementById('studyCount').textContent = studyCache.length;
+    const pairs = new Set(studyCache.map((study) => `${study.learning_model_id || 'x'}:${study.dataset_id || 'y'}`));
+    document.getElementById('pairCount').textContent = studyCache.length ? pairs.size : 0;
+
+    if (!studyCache.length) {
+        document.getElementById('studyList').innerHTML = '<div class="helper-text">No StudyModel objects registered yet.</div>';
+        return;
+    }
+
+    document.getElementById('studyList').innerHTML = studyCache.map((study) => {
+        const modelLabel = resolveModel(study.learning_model_id)?.name || `Model #${study.learning_model_id || '-'}`;
+        const datasetLabel = resolveDataset(study.dataset_id)?.name || `Dataset #${study.dataset_id || '-'}`;
+        return `
+            <div class="inventory-row">
+                <strong>${escapeHtml(study.name || 'Unnamed study')}</strong>
+                <div class="helper-text">${escapeHtml(modelLabel)} paired with ${escapeHtml(datasetLabel)}</div>
+                <div class="pill-row">
+                    <span class="pill">${escapeHtml(study.sampler || 'sampler:n/a')}</span>
+                    <span class="pill">${escapeHtml(study.objective || 'objective:n/a')}</span>
+                    <span class="pill">${escapeHtml((study.study_params || {}).framework || 'framework:auto')}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function applyDatasetSuggestions(summary) {
     const profile = summary?.profile || {};
-    const recommendedInputs = Array.isArray(profile.recommended_inputs) ? profile.recommended_inputs : [];
-    const recommendedTarget = profile.recommended_target || '';
-
-    if (recommendedInputs.length) {
-        document.getElementById('inputFeatures').value = recommendedInputs.join(', ');
-    }
-    if (recommendedTarget) {
-        document.getElementById('outputFeatures').value = recommendedTarget;
-    }
+    const columns = summary?.column_names || [];
+    const recommendedInputs = Array.isArray(profile.recommended_inputs) ? profile.recommended_inputs : columns.slice(0, Math.max(columns.length - 1, 1));
+    const recommendedTarget = profile.recommended_target || columns[columns.length - 1] || '';
+    setMultiSelectOptions(inputFeatureSelect, columns, recommendedInputs);
+    setMultiSelectOptions(outputFeatureSelect, columns, recommendedTarget ? [recommendedTarget] : []);
 }
 
 async function populateRegistryOptions() {
     await Promise.all([
+        PopulateListOptions({
+            selectElement: '#globalInferencePairId',
+            endpoint: '/inferencemodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select an inference pair',
+            onSuccess: (data) => { inferenceCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#globalModelId',
+            endpoint: '/learningmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a model',
+            onSuccess: (data) => { modelCache = data; }
+        }),
         PopulateListOptions({
             selectElement: '#modelId',
             endpoint: '/learningmodel/list',
@@ -434,6 +1242,14 @@ async function populateRegistryOptions() {
             valueField: 'id',
             placeholderText: 'Select a model',
             onSuccess: (data) => { modelCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#globalDatasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset',
+            onSuccess: (data) => { datasetCache = data; }
         }),
         PopulateListOptions({
             selectElement: '#datasetId',
@@ -452,50 +1268,37 @@ async function populateRegistryOptions() {
             onSuccess: (data) => { datasetCache = data; }
         }),
         PopulateListOptions({
+            selectElement: '#globalStudyId',
+            endpoint: '/studymodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Optional study',
+            onSuccess: (data) => { studyCache = data; }
+        }),
+        PopulateListOptions({
             selectElement: '#studyId',
             endpoint: '/studymodel/list',
             labelField: 'name',
             valueField: 'id',
             placeholderText: 'Select a study',
-            onSuccess: (data) => {
-                studyCache = data;
-                renderStudyInventory();
-            },
-            onError: () => {
-                studyCache = [];
-                renderStudyInventory();
-            }
+            onSuccess: (data) => { studyCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#existingStudyId',
+            endpoint: '/studymodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Create a new study',
+            onSuccess: (data) => { studyCache = data; }
         })
     ]);
 
+    renderStudyInventory();
+    syncGlobalContextFromLocal();
     updatePipelineSummary();
-}
-
-function renderStudyInventory() {
-    const studyList = document.getElementById('studyList');
-    document.getElementById('studyCount').textContent = studyCache.length;
-
-    const pairs = new Set(
-        studyCache.map(study => `${study.learning_model_id || 'x'}:${study.dataset_id || 'y'}`)
-    );
-    document.getElementById('pairCount').textContent = studyCache.length ? pairs.size : 0;
-
-    if (!studyCache.length) {
-        studyList.innerHTML = '<div class="empty-state">No StudyModel objects registered yet.</div>';
-        return;
-    }
-
-    studyList.innerHTML = studyCache.map(study => `
-        <div class="study-card">
-            <h4>${study.name || 'Unnamed study'}</h4>
-            <small>ID ${study.id || '-'} | model ${study.learning_model_id || '-'} | dataset ${study.dataset_id || '-'}</small>
-            <div class="pill-row">
-                <span class="pill">${study.sampler || 'sampler:n/a'}</span>
-                <span class="pill">${study.objective || 'objective:n/a'}</span>
-            </div>
-            <div class="json-block" style="margin-top:0.75rem;">${JSON.stringify(study.study_params || {}, null, 2)}</div>
-        </div>
-    `).join('');
+    renderRuntimeParameterFields();
+    renderStudyControlBuilder();
+    await loadRunLedger();
 }
 
 async function loadModelSnapshot() {
@@ -507,10 +1310,10 @@ async function loadModelSnapshot() {
     try {
         const response = await fetch(`/analysis/model?model_id=${modelIdSelect.value}`);
         const result = await response.json();
-        if (!response.ok || result.error) throw new Error(result.error || `HTTP ${response.status}`);
-        document.getElementById('modelSnapshot').innerHTML = buildRegistryCard('LearningModel Summary', result.summary || {});
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        document.getElementById('modelSnapshot').innerHTML = buildSnapshotMarkup('LearningModel Summary', result.summary || {}, result.plots || []);
     } catch (error) {
-        document.getElementById('modelSnapshot').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        document.getElementById('modelSnapshot').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
@@ -523,11 +1326,11 @@ async function loadDatasetSnapshot() {
     try {
         const response = await fetch(`/analysis/data?dataset_id=${datasetIdSelect.value}`);
         const result = await response.json();
-        if (!response.ok || result.error) throw new Error(result.error || `HTTP ${response.status}`);
-        document.getElementById('datasetSnapshot').innerHTML = buildRegistryCard('DatasetModel Summary', result.summary || {});
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        document.getElementById('datasetSnapshot').innerHTML = buildSnapshotMarkup('DatasetModel Summary', result.summary || {}, result.plots || []);
         applyDatasetSuggestions(result.summary || {});
     } catch (error) {
-        document.getElementById('datasetSnapshot').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        document.getElementById('datasetSnapshot').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
@@ -537,7 +1340,7 @@ function hydrateParametersFromStudy() {
         return;
     }
 
-    const selectedStudy = studyCache.find(study => String(study.id) === String(studyIdSelect.value));
+    const selectedStudy = resolveStudy(studyIdSelect.value);
     if (!selectedStudy) {
         renderAlert('trainingResult', 'warning', 'The selected study is not available in the current cache.');
         return;
@@ -548,17 +1351,51 @@ function hydrateParametersFromStudy() {
         ...(selectedStudy.best_params || {})
     };
     parametersJson.value = JSON.stringify(nextPayload, null, 2);
-    renderAlert('trainingResult', 'success', `Loaded parameter payload from study <code>${selectedStudy.name || selectedStudy.id}</code>.`);
+    renderRuntimeParameterFields();
+    renderAlert('trainingResult', 'success', `Loaded parameter payload from study <code>${escapeHtml(selectedStudy.name || selectedStudy.id)}</code>.`);
 }
 
 function syncStudyFormWithTrainingSelection() {
-    document.getElementById('studyModelId').value = modelIdSelect.value || '';
-    document.getElementById('studyDatasetId').value = datasetIdSelect.value || '';
-    document.getElementById('studyPath').value = `studies/${document.getElementById('studyName').value || 'study'}.json`;
+    studyModelIdSelect.value = modelIdSelect.value || '';
+    studyDatasetIdSelect.value = datasetIdSelect.value || '';
+    const cleanName = document.getElementById('studyName').value.trim() || 'study';
+    document.getElementById('studyPath').value = `studies/${cleanName}.json`;
+    renderStudyControlBuilder();
+}
+
+function loadStudyIntoForm(study) {
+    if (!study) return;
+    document.getElementById('studyName').value = study.name || '';
+    document.getElementById('studySampler').value = study.sampler || 'TPESampler';
+    studyModelIdSelect.value = study.learning_model_id || '';
+    studyDatasetIdSelect.value = study.dataset_id || '';
+    document.getElementById('studyObjective').value = study.objective || 'maximize_accuracy';
+    document.getElementById('studyPath').value = study.path || `studies/${study.name || 'study'}.json`;
+    document.getElementById('studyDescription').value = study.description || '';
+    studyParamsJson.value = JSON.stringify(study.study_params || getStudySeed(), null, 2);
+    renderStudyControlBuilder();
+}
+
+async function applyStudyToTraining(study) {
+    if (!study) return;
+    modelIdSelect.value = study.learning_model_id || '';
+    datasetIdSelect.value = study.dataset_id || '';
+    studyIdSelect.value = study.id || '';
+    globalStudyIdSelect.value = study.id || '';
+    const matchingInference = findInferenceByPair(study.learning_model_id, study.dataset_id);
+    globalInferencePairIdSelect.value = matchingInference ? String(matchingInference.id) : '';
+    inputTypeSelect.value = 'Study';
+    updateStudyVisibility();
+    updatePipelineSummary();
+    syncGlobalContextFromLocal();
+    await loadModelSnapshot();
+    await loadDatasetSnapshot();
+    hydrateParametersFromStudy();
 }
 
 async function runSelectedStudy() {
-    if (!studyIdSelect.value) {
+    const selectedStudyId = globalStudyIdSelect.value || existingStudyIdSelect.value || studyIdSelect.value;
+    if (!selectedStudyId) {
         renderAlert('studyResult', 'error', 'Select a StudyModel before running optimization.');
         return;
     }
@@ -566,26 +1403,22 @@ async function runSelectedStudy() {
     renderAlert('studyResult', 'info', 'Running Optuna study...');
 
     try {
-        const response = await fetch(`/studies/${studyIdSelect.value}/optimize`, {
+        const response = await fetch(`/studies/${selectedStudyId}/optimize`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            body: JSON.stringify({
+                inferenceId: globalInferencePairIdSelect.value ? Number(globalInferencePairIdSelect.value) : null
+            })
         });
         const result = await response.json();
-
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'Study optimization failed');
         }
-
-        if (result.summary?.best_params) {
-            parametersJson.value = JSON.stringify(result.summary.best_params, null, 2);
+        const finalRun = await waitForRunCompletion(result.run_id, 'studyResult', 'Study run completed.');
+        if (finalRun.result?.summary?.best_params) {
+            parametersJson.value = JSON.stringify(finalRun.result.summary.best_params, null, 2);
+            renderRuntimeParameterFields();
         }
-
-        renderAlert(
-            'studyResult',
-            'success',
-            `Study completed. Best value: <code>${result.summary?.best_value ?? 'n/a'}</code>`
-        );
         await populateRegistryOptions();
     } catch (error) {
         renderAlert('studyResult', 'error', error.message);
@@ -618,18 +1451,23 @@ trainingForm.addEventListener('submit', async (event) => {
         return;
     }
 
+    const inputFeatures = getSelectedValues(inputFeatureSelect);
+    const outputFeatures = getSelectedValues(outputFeatureSelect);
+
     const payload = {
         datasetId: Number(datasetIdSelect.value),
+        inferenceId: globalInferencePairIdSelect.value ? Number(globalInferencePairIdSelect.value) : null,
         inputType: inputTypeSelect.value,
         studyId: inputTypeSelect.value === 'Study' ? String(studyIdSelect.value) : null,
         parameters: {
             ...runtimeParameters,
-            framework: frameworkSelect.value,
-            input_features: document.getElementById('inputFeatures').value.split(',').map(v => v.trim()).filter(Boolean),
-            output_features: document.getElementById('outputFeatures').value.split(',').map(v => v.trim()).filter(Boolean)
+            framework: frameworkSelect.value
         }
     };
+    if (inputFeatures.length) payload.parameters.input_features = inputFeatures;
+    if (outputFeatures.length) payload.parameters.output_features = outputFeatures;
 
+    renderPipelineTimeline('training', 'Running');
     renderAlert('trainingResult', 'info', 'Submitting training job...');
 
     try {
@@ -639,17 +1477,16 @@ trainingForm.addEventListener('submit', async (event) => {
             body: JSON.stringify(payload)
         });
         const result = await response.json();
-
-        if (!response.ok) {
+        if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'Training submission failed');
         }
-
-        renderAlert(
-            'trainingResult',
-            'success',
-            `Training submitted. Job ID: <code>${result.job_id}</code><br>Model: <code>${result.model_id}</code> | Dataset: <code>${result.dataset_id}</code> | Study: <code>${result.study_id || 'manual'}</code>`
-        );
+        const finalRun = await waitForRunCompletion(result.run_id, 'trainingResult', 'Training run completed.');
+        renderPipelineTimeline('inference', 'Completed');
+        await populateRegistryOptions();
+        await loadModelSnapshot();
+        await loadDatasetSnapshot();
     } catch (error) {
+        renderPipelineTimeline('training', 'Failed');
         renderAlert('trainingResult', 'error', error.message);
     }
 });
@@ -659,7 +1496,7 @@ studyForm.addEventListener('submit', async (event) => {
 
     let studyParams;
     try {
-        studyParams = safeParseJson(document.getElementById('studyParamsJson').value, {});
+        studyParams = safeParseJson(studyParamsJson.value, {});
     } catch (error) {
         renderAlert('studyResult', 'error', `Study parameters must be valid JSON: ${error.message}`);
         return;
@@ -667,7 +1504,6 @@ studyForm.addEventListener('submit', async (event) => {
 
     const studyName = document.getElementById('studyName').value.trim();
     const path = document.getElementById('studyPath').value.trim() || `studies/${studyName || 'study'}.json`;
-
     const payload = {
         name: studyName,
         description: document.getElementById('studyDescription').value.trim(),
@@ -676,8 +1512,8 @@ studyForm.addEventListener('submit', async (event) => {
         path: path,
         version: 1,
         history: [{ action: 'create', when: new Date().toISOString() }],
-        learning_model_id: Number(document.getElementById('studyModelId').value),
-        dataset_id: Number(document.getElementById('studyDatasetId').value),
+        learning_model_id: Number(studyModelIdSelect.value),
+        dataset_id: Number(studyDatasetIdSelect.value),
         sampler: document.getElementById('studySampler').value,
         objective: document.getElementById('studyObjective').value.trim(),
         best_trial: null,
@@ -697,18 +1533,38 @@ studyForm.addEventListener('submit', async (event) => {
             body: JSON.stringify(payload)
         });
         const result = await response.json();
-
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'StudyModel creation failed');
         }
 
-        renderAlert('studyResult', 'success', `StudyModel created successfully. ID: <code>${result.id || 'created'}</code>`);
+        renderAlert('studyResult', 'success', `StudyModel created successfully. ID: <code>${escapeHtml(result.id || 'created')}</code>`);
         await populateRegistryOptions();
     } catch (error) {
         renderAlert('studyResult', 'error', error.message);
     }
 });
 
+document.querySelectorAll('.workspace-tab').forEach((button) => {
+    button.addEventListener('click', () => setTrainingTab(button.dataset.tab));
+});
+
+globalInferencePairIdSelect.addEventListener('change', syncLocalContextFromGlobal);
+globalModelIdSelect.addEventListener('change', async () => {
+    if (globalInferencePairIdSelect.value) globalInferencePairIdSelect.value = '';
+    await syncLocalContextFromGlobal();
+    await loadRunLedger();
+});
+globalDatasetIdSelect.addEventListener('change', async () => {
+    if (globalInferencePairIdSelect.value) globalInferencePairIdSelect.value = '';
+    await syncLocalContextFromGlobal();
+    await loadRunLedger();
+});
+globalStudyIdSelect.addEventListener('change', syncLocalContextFromGlobal);
+globalFrameworkSelect.addEventListener('change', syncLocalContextFromGlobal);
+document.getElementById('btnGlobalTrain').addEventListener('click', () => {
+    trainingForm.dispatchEvent(new Event('submit', { cancelable: true }));
+});
+document.getElementById('btnGlobalRunStudy').addEventListener('click', runSelectedStudy);
 document.getElementById('btnHydrateFromStudy').addEventListener('click', hydrateParametersFromStudy);
 document.getElementById('btnRefreshTrainingData').addEventListener('click', async () => {
     await populateRegistryOptions();
@@ -716,6 +1572,15 @@ document.getElementById('btnRefreshTrainingData').addEventListener('click', asyn
 });
 document.getElementById('btnSyncStudyForm').addEventListener('click', syncStudyFormWithTrainingSelection);
 document.getElementById('btnRunStudy').addEventListener('click', runSelectedStudy);
+document.getElementById('btnResetRuntimeParameters').addEventListener('click', () => {
+    parametersJson.value = JSON.stringify(getRuntimeSeed(), null, 2);
+    renderRuntimeParameterFields();
+});
+document.getElementById('btnResetStudyBuilder').addEventListener('click', () => {
+    studyParamsJson.value = JSON.stringify(getStudySeed(), null, 2);
+    renderStudyControlBuilder();
+});
+
 document.getElementById('btnPrepareOnnx').addEventListener('click', async () => {
     let parsed;
     try {
@@ -742,11 +1607,15 @@ document.getElementById('btnPrepareOnnx').addEventListener('click', async () => 
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'Unable to prepare ONNX payload');
         }
-        document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(result.payload, null, 2)}</div>`;
+        document.getElementById('onnxResults').innerHTML = `
+            ${buildSnapshotMarkup('ONNX Preparation Payload', result.payload || {}, [])}
+            ${buildSnapshotMarkup('Export Control Plan', result.controls || {}, [])}
+        `;
     } catch (error) {
         renderAlert('onnxResults', 'error', error.message);
     }
 });
+
 document.getElementById('btnValidateOnnx').addEventListener('click', async () => {
     if (!modelIdSelect.value) {
         renderAlert('onnxResults', 'error', 'Select a model before validating the ONNX artifact.');
@@ -759,35 +1628,97 @@ document.getElementById('btnValidateOnnx').addEventListener('click', async () =>
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'ONNX validation failed');
         }
-        document.getElementById('onnxResults').innerHTML = `<div class="json-block">${JSON.stringify(result, null, 2)}</div>`;
+        document.getElementById('onnxResults').innerHTML = buildSnapshotMarkup('ONNX Validation', result, []);
     } catch (error) {
         renderAlert('onnxResults', 'error', error.message);
     }
 });
 
 modelIdSelect.addEventListener('change', async () => {
+    syncGlobalContextFromLocal();
     updatePipelineSummary();
+    renderRuntimeParameterFields();
+    renderPipelineTimeline('registry');
     await loadModelSnapshot();
+    await loadRunLedger();
 });
+
 datasetIdSelect.addEventListener('change', async () => {
+    syncGlobalContextFromLocal();
     updatePipelineSummary();
+    renderPipelineTimeline('features');
     await loadDatasetSnapshot();
+    await loadRunLedger();
 });
-studyIdSelect.addEventListener('change', updatePipelineSummary);
+
+studyIdSelect.addEventListener('change', async () => {
+    syncGlobalContextFromLocal();
+    updatePipelineSummary();
+    if (inputTypeSelect.value === 'Study') {
+        await applyStudyToTraining(resolveStudy(studyIdSelect.value));
+    }
+});
+
+existingStudyIdSelect.addEventListener('change', () => {
+    globalStudyIdSelect.value = existingStudyIdSelect.value || '';
+    loadStudyIntoForm(resolveStudy(existingStudyIdSelect.value));
+});
+
+studyModelIdSelect.addEventListener('change', () => {
+    renderStudyControlBuilder();
+    syncStudyParamsFromBuilder();
+});
+
+studyDatasetIdSelect.addEventListener('change', syncStudyParamsFromBuilder);
+
 inputTypeSelect.addEventListener('change', () => {
-    setStudyVisibility();
+    updateStudyVisibility();
     updatePipelineSummary();
 });
-frameworkSelect.addEventListener('change', updatePipelineSummary);
+
+frameworkSelect.addEventListener('change', () => {
+    syncGlobalContextFromLocal();
+    updatePipelineSummary();
+    renderRuntimeParameterFields();
+    renderStudyControlBuilder();
+    syncStudyParamsFromBuilder();
+});
+
+parametersJson.addEventListener('input', renderRuntimeParameterFields);
+runtimeParameterFields.addEventListener('input', syncRuntimeParametersFromFields);
+studyControlBuilder.addEventListener('input', syncStudyParamsFromBuilder);
+studyControlBuilder.addEventListener('change', syncStudyParamsFromBuilder);
+studyParamsJson.addEventListener('input', renderStudyControlBuilder);
+
 document.getElementById('studyName').addEventListener('input', (event) => {
     const cleanName = event.target.value.trim() || 'study';
     document.getElementById('studyPath').value = `studies/${cleanName}.json`;
 });
 
+document.querySelectorAll('[data-expand-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const target = document.getElementById(button.dataset.expandTarget);
+        if (!target) return;
+        const title = button.dataset.expandTarget === 'onnxResults'
+            ? 'ONNX Detail'
+            : button.dataset.expandTarget === 'modelSnapshot'
+                ? 'Model Snapshot'
+                : 'Dataset Snapshot';
+        openTrainingDetail(title, target.innerHTML);
+    });
+});
+
+document.getElementById('btnCloseTrainingDetail').addEventListener('click', closeTrainingDetail);
+document.getElementById('trainingDetailModal').addEventListener('click', (event) => {
+    if (event.target.id === 'trainingDetailModal') closeTrainingDetail();
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
-    setStudyVisibility();
+    updateStudyVisibility();
+    renderPipelineTimeline('registry');
     await populateRegistryOptions();
     syncStudyFormWithTrainingSelection();
+    syncGlobalContextFromLocal();
 });
 </script>
 {% endblock %}

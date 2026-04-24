@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import json
-from io import StringIO
 from pathlib import Path
 from pprint import pformat
 from typing import Any, Mapping, Optional
@@ -25,7 +24,9 @@ except Exception:  # pragma: no cover - only used when pandas is unavailable.
     pd = None  # type: ignore[assignment]
     PANDAS_AVAILABLE = False
 
+from .artifact_utils import inspect_model_artifact
 from .io import load_json, load_yaml
+from .tabular_utils import load_tabular_from_bytes
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MODEL_UPLOAD_DIR = REPO_ROOT / "models"
@@ -123,31 +124,13 @@ def _load_model_metadata_from_onnx(file_path: Path) -> dict[str, Any]:
 
 def recover_model_params(file_path: str | Path) -> dict[str, Any]:
     """
-    Recover metadata from model-related files such as JSON, YAML, and ONNX.
+    Recover metadata and runtime capability details from a persisted model artifact.
     """
 
     path = Path(file_path)
-    extension = get_file_extension(path)
 
     try:
-        if extension == ".json":
-            params = load_json(path)
-            if isinstance(params, dict):
-                params.setdefault("framework", "config")
-                return params
-            return {"framework": "config", "payload": params}
-
-        if extension in {".yaml", ".yml"}:
-            params = load_yaml(path)
-            if isinstance(params, dict):
-                params.setdefault("framework", "config")
-                return params
-            return {"framework": "config", "payload": params}
-
-        if extension == ".onnx":
-            return _load_model_metadata_from_onnx(path)
-
-        return {"error": f"Unsupported file type: {extension}"}
+        return inspect_model_artifact(path, load_runtime=False)
     except Exception as exc:
         return {"error": str(exc)}
 
@@ -236,7 +219,7 @@ async def build_payload_data(
     common: Mapping[str, Any],
     form_data: Any,
     uploaded_file: Any,
-) -> tuple[dict[str, Any], pd.DataFrame]:
+) -> tuple[dict[str, Any], pd.DataFrame, dict[str, Any]]:
     """
     Build a normalized dataset payload and return the parsed DataFrame.
     """
@@ -246,23 +229,8 @@ async def build_payload_data(
     content = await uploaded_file.read()
     await _seek_to_start(uploaded_file)
 
-    decoded_content = content.decode("utf-8-sig")
-    normalized_content = decoded_content.strip()
-    if normalized_content in {"df.to_csv(index=False)", "csv_text = df.to_csv(index=False)"}:
-        raise ValueError(
-            "The uploaded dataset is a Python expression, not CSV data. "
-            "Run the editor code first so `csv_text` contains the materialized CSV content."
-        )
-
-    dataframe = pd.read_csv(StringIO(decoded_content), header=0)
-    suspicious_single_expression = (
-        list(dataframe.columns) == ["df.to_csv(index=False)"] and dataframe.empty
-    )
-    if suspicious_single_expression:
-        raise ValueError(
-            "The uploaded dataset is a Python expression, not CSV data. "
-            "Run the editor code first so `csv_text` contains the materialized CSV content."
-        )
+    filename = getattr(uploaded_file, "filename", None) or str(common.get("name") or "dataset.csv")
+    dataframe, parser_report = load_tabular_from_bytes(content, filename=filename)
 
     payload = {
         **dict(common),
@@ -273,7 +241,7 @@ async def build_payload_data(
         "connection_string": form_data.get("connectionString") or form_data.get("connection_string"),
     }
 
-    return payload, dataframe
+    return payload, dataframe, parser_report
 
 
 def _get_object_name(obj: Any) -> str:

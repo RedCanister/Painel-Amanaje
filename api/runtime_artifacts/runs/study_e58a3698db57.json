@@ -1,0 +1,46 @@
+{
+  "run_id": "study_e58a3698db57",
+  "run_type": "study",
+  "status": "running",
+  "stage": "study_optimization",
+  "created_at": "2026-04-24T03:10:43.614196",
+  "updated_at": "2026-04-24T03:10:43.941970",
+  "started_at": "2026-04-24T03:10:43.649659",
+  "completed_at": null,
+  "context": {
+    "study_id": 19,
+    "model_id": 18,
+    "dataset_id": 13,
+    "inference_id": null
+  },
+  "parameters": {
+    "nTrials": null,
+    "outputDir": null,
+    "plotResults": true,
+    "inferenceId": null
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-24T03:10:43.614196",
+      "message": "study run created."
+    },
+    {
+      "status": "running",
+      "stage": "study_optimization",
+      "timestamp": "2026-04-24T03:10:43.649659",
+      "message": "Study optimization started."
+    },
+    {
+      "status": "running",
+      "stage": "study_optimization",
+      "timestamp": "2026-04-24T03:10:43.941970",
+      "message": "Study context resolved."
+    }
+  ]
+}

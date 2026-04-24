@@ -84,8 +84,8 @@ class StudyORM(ObjectORM):
     best_params = Column(JSONB, nullable=True)
     study_params = Column(JSONB, nullable=True)
 
-    learning_model = relationship("LearningORM", foreign_keys=[learning_model_id], lazy="joined")
-    dataset = relationship("DatasetORM", foreign_keys=[dataset_id], lazy="joined")
+    learning_model = relationship(LearningORM, foreign_keys=[learning_model_id], lazy="joined")
+    dataset = relationship(DatasetORM, foreign_keys=[dataset_id], lazy="joined")
 
     __mapper_args__ = {
         "polymorphic_identity": "study_model",

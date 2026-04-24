@@ -1,0 +1,235 @@
+{% extends "base_template.html" %}
+
+{% block title %}Feature Workspace - Painel Amanaje{% endblock %}
+
+{% block body_class %}red-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-shell { display: grid; gap: 1.25rem; }
+    .feature-panel {
+        background: white;
+        border: 1px solid #fecdd3;
+        border-radius: 18px;
+        padding: 1.5rem;
+        box-shadow: 0 12px 28px rgba(230, 57, 70, 0.08);
+    }
+    .feature-panel h3 { margin-top: 0; color: #b91c1c; }
+    .inline-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: #7f1d1d; }
+    .form-group select, .form-group textarea, .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #fda4af;
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: white;
+    }
+    .form-group textarea { min-height: 220px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .btn {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .btn-primary { background: #e63946; color: white; }
+    .btn-secondary { background: #fecdd3; color: #7f1d1d; }
+    .summary-card {
+        background: #fff5f5;
+        border: 1px solid #fecdd3;
+        border-radius: 14px;
+        padding: 1rem;
+    }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    .summary-table td, .summary-table th { padding: 0.55rem; border-bottom: 1px solid #ffe4e6; text-align: left; vertical-align: top; }
+    .status { margin-top: 1rem; }
+    .status .ok, .status .error {
+        padding: 0.85rem;
+        border-radius: 12px;
+        display: block;
+    }
+    .status .ok { background: #ecfdf5; color: #065f46; }
+    .status .error { background: #fef2f2; color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feature-shell">
+    <section class="feature-panel">
+        <h3>Feature Workspace</h3>
+        <p>Preview tabular transformations before materializing a new dataset view. This workspace keeps the operations explicit so the resulting Postgres table and registry entry are easy to audit.</p>
+
+        <div class="inline-grid">
+            <div class="form-group">
+                <label for="featureDatasetId">Dataset</label>
+                <select id="featureDatasetId">
+                    <option value="">Select a dataset</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="featureViewName">Materialized Name</label>
+                <input id="featureViewName" type="text" placeholder="customer_churn_feature_view">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="featureOperations">Operations JSON</label>
+            <textarea id="featureOperations" spellcheck="false">{
+  "rename_columns": {},
+  "cast_types": {},
+  "fill_missing_values": {},
+  "drop_columns": [],
+  "filters": [],
+  "sort_by": { "column": "", "ascending": true },
+  "limit_rows": 200
+}</textarea>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btnPreviewFeatureView">Preview Transform</button>
+            <button type="button" class="btn btn-secondary" id="btnMaterializeFeatureView">Materialize View</button>
+        </div>
+        <div id="featureWorkspaceStatus" class="status"></div>
+    </section>
+
+    <section class="feature-panel">
+        <h3>Preview and Materialization</h3>
+        <div id="featureWorkspaceResults" class="summary-card">Choose a dataset and preview the transformation plan.</div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
+<script>
+const featureDatasetId = document.getElementById('featureDatasetId');
+const featureOperations = document.getElementById('featureOperations');
+const featureViewName = document.getElementById('featureViewName');
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function setFeatureWorkspaceStatus(message, isError = false) {
+    document.getElementById('featureWorkspaceStatus').innerHTML = `<span class="${isError ? 'error' : 'ok'}">${escapeHtml(message)}</span>`;
+}
+
+function renderSummaryTable(payload = {}) {
+    return `
+        <table class="summary-table">
+            <tbody>
+                ${Object.entries(payload).map(([key, value]) => `
+                    <tr>
+                        <th>${escapeHtml(key.replace(/_/g, ' '))}</th>
+                        <td>${typeof value === 'object' ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>` : escapeHtml(value)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderFeatureResults(result = {}) {
+    const preview = result.preview || {};
+    const manifest = result.manifest || {};
+    document.getElementById('featureWorkspaceResults').innerHTML = `
+        <h4 style="margin-top:0; color:#7f1d1d;">Preview Summary</h4>
+        ${renderSummaryTable({
+            shape_before: preview.shape_before,
+            shape_after: preview.shape_after,
+            steps: preview.steps,
+            table_name: manifest.table_name,
+            available_edits: manifest.available_edits
+        })}
+        <h4 style="color:#7f1d1d;">Column Explorer</h4>
+        ${renderSummaryTable({ columns: (manifest.columns || []).slice(0, 12) })}
+    `;
+}
+
+function parseOperations() {
+    return JSON.parse(featureOperations.value || '{}');
+}
+
+async function previewFeatureView() {
+    if (!featureDatasetId.value) {
+        setFeatureWorkspaceStatus('Select a dataset first.', true);
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Previewing transformation plan...');
+        const response = await fetch('/features/preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                datasetId: Number(featureDatasetId.value),
+                operations: parseOperations()
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        renderFeatureResults(result);
+        setFeatureWorkspaceStatus('Preview generated.');
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
+}
+
+async function materializeFeatureView() {
+    if (!featureDatasetId.value) {
+        setFeatureWorkspaceStatus('Select a dataset first.', true);
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Materializing dataset view...');
+        const response = await fetch('/features/materialize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                datasetId: Number(featureDatasetId.value),
+                name: featureViewName.value || undefined,
+                operations: parseOperations()
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        renderFeatureResults({ preview: result.preview, manifest: { columns: result.analysis?.column_explorer || [], table_name: result.postgres?.table_name, available_edits: [] } });
+        setFeatureWorkspaceStatus(
+            result.postgres?.materialized
+                ? `Materialized ${result.dataset?.name || 'dataset view'} and synced table ${result.postgres.table_name}.`
+                : `Materialized ${result.dataset?.name || 'dataset view'} in the registry. Postgres sync warning: ${result.postgres?.warning || 'not available'}.`
+        );
+        await PopulateListOptions({
+            selectElement: '#featureDatasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset'
+        });
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await PopulateListOptions({
+        selectElement: '#featureDatasetId',
+        endpoint: '/datasetmodel/list',
+        labelField: 'name',
+        valueField: 'id',
+        placeholderText: 'Select a dataset'
+    });
+    document.getElementById('btnPreviewFeatureView')?.addEventListener('click', previewFeatureView);
+    document.getElementById('btnMaterializeFeatureView')?.addEventListener('click', materializeFeatureView);
+});
+</script>
+{% endblock %}

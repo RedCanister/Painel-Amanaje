@@ -1,0 +1,58 @@
+{
+    "registry_type": "StudyModel",
+    "item_id": 15,
+    "summary": {
+        "id": 15,
+        "name": "github_predictor",
+        "description": "StudyModel linking dataset ingestion from PostgreSQL to registered training models.",
+        "learning_model_id": 14,
+        "dataset_id": 13,
+        "sampler": "RandomSampler",
+        "objective": "maximize_accuracy",
+        "best_trial": null,
+        "best_params": null,
+        "study_params": {
+            "metric": "accuracy",
+            "n_trials": 25,
+            "direction": "maximize",
+            "framework": "pytorch",
+            "grad_mode": "with_grad",
+            "nn_criterion": "CrossEntropyLoss",
+            "nn_optimizer": "Adam",
+            "search_space": {
+                "framework": {
+                    "type": "categorical",
+                    "choices": [
+                        "sklearn"
+                    ]
+                },
+                "cat_features": {
+                    "low": 2,
+                    "high": 5,
+                    "step": 1,
+                    "type": "int"
+                },
+                "num_features": {
+                    "low": 2,
+                    "high": 5,
+                    "step": 1,
+                    "type": "int"
+                }
+            }
+        },
+        "path": "studies/github_predictor.json"
+    },
+    "plots": [
+        {
+            "kind": "bar",
+            "title": "Study Controls",
+            "description": "Optimization controls and the latest best objective value.",
+            "series": [
+                {
+                    "label": "Trials",
+                    "value": 25.0
+                }
+            ]
+        }
+    ]
+}

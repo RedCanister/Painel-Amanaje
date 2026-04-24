@@ -9,6 +9,7 @@ import textwrap
 import traceback
 import tracemalloc
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from io import StringIO
@@ -25,7 +26,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.db_session import AsyncSessionLocal, get_db, init_models
+from app.database.db_session import AsyncSessionLocal, get_db, init_models, wait_for_database
 from app.database.db_utils import (
     create_entry,
     get_all_entries,
@@ -33,8 +34,8 @@ from app.database.db_utils import (
     normalize_legacy_polymorphic_identities,
     update_entry,
 )
-from app.models.model_objects import CodeModel, DatasetModel, LearningModel, StudyModel
-from app.models.model_orm import CodeORM, DatasetORM, LearningORM, StudyORM
+from app.models.model_objects import CodeModel, DatasetModel, InferenceModel, LearningModel, StudyModel
+from app.models.model_orm import CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
 from app.models.model_registry import ModelRegistry
 from app.utils.config import merge_env_overrides, save_config_snapshot
 from app.utils.deployment_utils import (
@@ -43,7 +44,12 @@ from app.utils.deployment_utils import (
     save_deployment_summary,
     save_model_local,
 )
-from app.utils.io import ensure_dir, load_csv, save_json
+from app.utils.artifact_utils import (
+    get_model_capability_matrix,
+    inspect_model_artifact,
+    load_runtime_artifact,
+)
+from app.utils.io import ensure_dir, save_json
 from app.utils.logging import get_logger, init_global_logging, log_to_mlflow
 from app.utils.metrics import evaluate_and_log_metrics, pretty_print_metrics
 from app.utils.mlflow_utils import (
@@ -66,7 +72,17 @@ from app.utils.monitoring import (
 from app.utils.optuna_utils import optimize_with_tracking
 from app.utils.plotting import plot_loss_curve, plot_metric_comparison, plot_predictions_vs_actual
 from app.utils.retrain_utils import monitor_and_retrain, should_retrain
+from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
 from app.utils.serialization import to_json
+from app.utils.tabular_utils import (
+    apply_feature_operations,
+    build_dataset_analysis_summary,
+    build_feature_extraction_summary,
+    build_column_explorer,
+    dataset_profile,
+    get_dataset_capability_matrix,
+    load_tabular_from_path,
+)
 from app.utils.training import (
     TrainingResult,
     run_training_pipeline,
@@ -92,10 +108,53 @@ except Exception:
     mlflow = None  # type: ignore[assignment]
     MLFLOW_DIRECT_AVAILABLE = False
 
+try:
+    import torch
+    import torch.nn as nn
+
+    TORCH_RUNTIME_AVAILABLE = True
+except Exception:
+    torch = None  # type: ignore[assignment]
+    nn = None  # type: ignore[assignment]
+    TORCH_RUNTIME_AVAILABLE = False
+
+
+if TORCH_RUNTIME_AVAILABLE and nn is not None and torch is not None:
+
+    class FeedForwardNet(nn.Module):
+        def __init__(
+            self,
+            input_dim: int,
+            hidden_dim: int,
+            hidden_layers: int,
+            output_dim: int,
+            dropout: float,
+        ) -> None:
+            super().__init__()
+            layers: list[nn.Module] = []
+            current_dim = input_dim
+            for _ in range(max(hidden_layers, 1)):
+                layers.append(nn.Linear(current_dim, hidden_dim))
+                layers.append(nn.ReLU())
+                if dropout > 0:
+                    layers.append(nn.Dropout(dropout))
+                current_dim = hidden_dim
+            layers.append(nn.Linear(current_dim, output_dim))
+            self.network = nn.Sequential(*layers)
+
+        def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+            return self.network(inputs)
+
+else:
+
+    class FeedForwardNet:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            raise RuntimeError("PyTorch is not available in the current environment.")
+
 
 tracemalloc.start()
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = PROJECT_ROOT.parent
 
 STATIC_DIR = PROJECT_ROOT / "static"
@@ -109,9 +168,13 @@ DEPLOYMENT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "deployment")
 OPTUNA_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "optuna")
 PLOT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "plots")
 SERVING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "serving")
+EXPORT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "exports")
+FEATURE_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "features")
+RUN_LEDGER_DIR = ensure_dir(RUNTIME_DIR / "runs")
 
 LOG_DIR = ensure_dir(PROJECT_ROOT / "logs")
 MLRUNS_DIR = ensure_dir(PROJECT_ROOT / "mlruns")
+ACTIVITY_LOG_PATH = MONITORING_ARTIFACT_DIR / "activity_log.jsonl"
 
 DATASET_OPERATION = "datasets"
 MODEL_OPERATION = "models"
@@ -142,9 +205,21 @@ CONTROL_PARAMETER_KEYS = {
     "plot_results",
 }
 
-
 APP_LOGGER = init_global_logging(log_dir=str(LOG_DIR), logger_name="painel_amanaje")
 LOGGER = get_logger("main_app", log_file=str(LOG_DIR / "main_app.log"))
+
+REGISTRY_MODEL_MAP: dict[str, dict[str, Any]] = {
+    "datasetmodel": {"model": DatasetModel, "orm": DatasetORM, "label": "DatasetModel"},
+    "dataset": {"model": DatasetModel, "orm": DatasetORM, "label": "DatasetModel"},
+    "learningmodel": {"model": LearningModel, "orm": LearningORM, "label": "LearningModel"},
+    "learning": {"model": LearningModel, "orm": LearningORM, "label": "LearningModel"},
+    "inferencemodel": {"model": InferenceModel, "orm": InferenceORM, "label": "InferenceModel"},
+    "inference": {"model": InferenceModel, "orm": InferenceORM, "label": "InferenceModel"},
+    "studymodel": {"model": StudyModel, "orm": StudyORM, "label": "StudyModel"},
+    "study": {"model": StudyModel, "orm": StudyORM, "label": "StudyModel"},
+    "codemodel": {"model": CodeModel, "orm": CodeORM, "label": "CodeModel"},
+    "code": {"model": CodeModel, "orm": CodeORM, "label": "CodeModel"},
+}
 
 
 def _build_runtime_config() -> dict[str, Any]:
@@ -172,13 +247,46 @@ def _build_runtime_config() -> dict[str, Any]:
     save_config_snapshot(runtime_config, str(CONFIG_SNAPSHOT_DIR / "runtime_config.json"))
     return runtime_config
 
-
 RUNTIME_CONFIG = _build_runtime_config()
 configure_tracking(
     tracking_uri=RUNTIME_CONFIG["mlflow"]["tracking_uri"],
     registry_uri=RUNTIME_CONFIG["mlflow"]["registry_uri"],
 )
 
+
+def _register_models() -> None:
+    registry_pairs = (
+        (DatasetModel, DatasetORM),
+        (LearningModel, LearningORM),
+        (InferenceModel, InferenceORM),
+        (CodeModel, CodeORM),
+        (StudyModel, StudyORM),
+    )
+    for pydantic_model, orm_model in registry_pairs:
+        if ModelRegistry._registry.get(pydantic_model) is not orm_model:
+            ModelRegistry.register_model(pydantic_model, orm_model)
+
+
+def _include_registry_routers() -> None:
+    existing_prefixes = {route.path for route in app.router.routes}
+    for router in ModelRegistry.generate_all_routers():
+        first_route = next(iter(router.routes), None)
+        if first_route and first_route.path not in existing_prefixes:
+            app.include_router(router)
+            existing_prefixes.update(route.path for route in router.routes)
+
+
+def _create_application() -> FastAPI:
+    fastapi_app = FastAPI(title="Painel Amanaje API", version="0.3.0")
+    STATIC_DIR.mkdir(parents=True, exist_ok=True)
+    fastapi_app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    return fastapi_app
+
+
+app = _create_application()
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+_register_models()
+_include_registry_routers()
 
 class ExecuteRequest(BaseModel):
     code: str = ""
@@ -244,14 +352,11 @@ class PreparedDataset:
     label_mapping: dict[str, int] = field(default_factory=dict)
 
 
-app = FastAPI(title="Painel Amanaje API", version="0.5.0")
-
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
-
-
 PRODUCTION_STATE: dict[str, Any] = {
     "running": False,
     "status": "inactive",
+    "active_watch_context_id": None,
+    "inference_id": None,
     "model_id": None,
     "dataset_id": None,
     "started_at": None,
@@ -260,7 +365,10 @@ PRODUCTION_STATE: dict[str, Any] = {
     "metrics": {},
     "monitoring": {},
     "active_model": None,
+    "active_inference": None,
+    "simulation": {},
     "logs": [],
+    "watchlist": {},
 }
 
 def _render_page(template_name: str, request_: Request, **context: Any) -> HTMLResponse:
@@ -295,6 +403,15 @@ def _append_production_log(message: str) -> None:
     LOGGER.info(message)
 
 
+def _watch_context_id(
+    *,
+    model_id: Any = None,
+    dataset_id: Any = None,
+    inference_id: Any = None,
+) -> str:
+    return f"inference:{inference_id or 'na'}|model:{model_id or 'na'}|dataset:{dataset_id or 'na'}"
+
+
 def _serialize_dataset_summary(dataset: Any) -> dict[str, Any]:
     return {
         "id": getattr(dataset, "id", None),
@@ -310,6 +427,8 @@ def _serialize_dataset_summary(dataset: Any) -> dict[str, Any]:
 
 
 def _serialize_model_summary(model: Any) -> dict[str, Any]:
+    parameters = dict(getattr(model, "parameters", {}) or {})
+    artifact_manifest = parameters.get("artifact_manifest") if isinstance(parameters.get("artifact_manifest"), Mapping) else None
     return {
         "id": getattr(model, "id", None),
         "name": getattr(model, "name", None),
@@ -319,11 +438,13 @@ def _serialize_model_summary(model: Any) -> dict[str, Any]:
         "is_tested": getattr(model, "is_tested", False),
         "is_deployed": getattr(model, "is_deployed", False),
         "metrics": getattr(model, "metrics", {}) or {},
-        "parameters": getattr(model, "parameters", {}) or {},
+        "parameters": parameters,
         "input_features": getattr(model, "input_features", None),
         "output_features": getattr(model, "output_features", None),
         "size": getattr(model, "size", None),
         "path": getattr(model, "path", None),
+        "artifact_manifest": artifact_manifest,
+        "runtime_capabilities": dict((artifact_manifest or {}).get("runtime_capabilities", {}) or {}),
     }
 
 
@@ -341,6 +462,473 @@ def _serialize_study_summary(study: Any) -> dict[str, Any]:
         "study_params": getattr(study, "study_params", None),
         "path": getattr(study, "path", None),
     }
+
+
+def _normalize_registry_type(registry_type: str) -> str:
+    return "".join(character for character in str(registry_type or "").lower() if character.isalnum())
+
+
+def _get_registry_binding(registry_type: str) -> dict[str, Any]:
+    normalized = _normalize_registry_type(registry_type)
+    binding = REGISTRY_MODEL_MAP.get(normalized)
+    if binding is None:
+        raise ValueError(f"Unsupported registry type: {registry_type}")
+    return binding
+
+
+def _slugify(value: str) -> str:
+    text = "".join(character.lower() if character.isalnum() else "_" for character in str(value or "").strip())
+    return "_".join(part for part in text.split("_") if part) or "artifact"
+
+
+def _json_safe(value: Any) -> Any:
+    try:
+        return json.loads(to_json(value))
+    except Exception:
+        if isinstance(value, Mapping):
+            return {str(key): _json_safe(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [_json_safe(item) for item in value]
+        return value
+
+
+def _read_activity_log(limit: Optional[int] = None) -> list[dict[str, Any]]:
+    if not ACTIVITY_LOG_PATH.exists():
+        return []
+
+    entries: list[dict[str, Any]] = []
+    try:
+        with ACTIVITY_LOG_PATH.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(payload, dict):
+                    entries.append(payload)
+    except OSError:
+        LOGGER.exception("Unable to read the lifetime activity log.")
+        return []
+
+    return entries[-limit:] if limit else entries
+
+
+def _append_activity_log(
+    message: str,
+    *,
+    event_type: str,
+    details: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    timestamp = datetime.now().isoformat()
+    entry = {
+        "timestamp": timestamp,
+        "event_type": event_type,
+        "message": message,
+        "details": _json_safe(dict(details or {})),
+    }
+    ACTIVITY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with ACTIVITY_LOG_PATH.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=True) + "\n")
+    except OSError:
+        LOGGER.exception("Unable to append to the lifetime activity log.")
+
+    PRODUCTION_STATE["logs"] = list(PRODUCTION_STATE.get("logs", []))[-99:] + [f"{timestamp} | {message}"]
+    LOGGER.info(message)
+    return entry
+
+
+def _build_mlflow_health_snapshot() -> dict[str, Any]:
+    tracking_uri = str(RUNTIME_CONFIG.get("mlflow", {}).get("tracking_uri", ""))
+    health = {
+        "tracking_uri": tracking_uri,
+        "status": "ok",
+        "warnings": [],
+        "repair_hints": [],
+    }
+
+    if not MLFLOW_DIRECT_AVAILABLE or mlflow is None:
+        health["status"] = "degraded"
+        health["warnings"].append("MLflow is not importable in the current environment.")
+        health["repair_hints"].append("Install the MLflow dependencies from api/requirements.txt and restart the app.")
+        return health
+
+    try:
+        experiments = list_experiments()
+        stale_locations = [
+            experiment["artifact_location"]
+            for experiment in experiments
+            if str(experiment.get("artifact_location") or "").startswith("file:///app/mlruns/")
+        ]
+        if stale_locations:
+            health["status"] = "warning"
+            health["warnings"].append(
+                f"{len(stale_locations)} experiment(s) still reference container-local paths such as file:///app/mlruns/."
+            )
+            health["repair_hints"].append(
+                "Repoint the tracking URI or repair the stored artifact_location entries so they match the current workspace."
+            )
+    except Exception as exc:
+        health["status"] = "degraded"
+        health["warnings"].append(str(exc))
+        health["repair_hints"].append(
+            "Check whether the tracking URI is reachable and whether the mlruns directory still exists after the last reset."
+        )
+
+    if tracking_uri.startswith("file:///app/mlruns/"):
+        health["status"] = "warning"
+        health["warnings"].append("The active tracking URI still points to a container-local /app/mlruns path.")
+        health["repair_hints"].append("Update MLFLOW_TRACKING_URI to the current workspace mlruns directory.")
+
+    return health
+
+
+async def _find_inference_record(
+    db: AsyncSession,
+    *,
+    inference_id: Optional[int] = None,
+    model_id: Optional[int] = None,
+    dataset_id: Optional[int] = None,
+) -> Any | None:
+    if inference_id not in (None, 0, "0", ""):
+        return await InferenceModel.read(db, int(inference_id))
+
+    if model_id is None or dataset_id is None:
+        return None
+
+    inference_records = await get_all_entries(db, InferenceORM)
+    for record in inference_records:
+        if int(getattr(record, "learning_model_id", 0) or 0) == int(model_id) and int(getattr(record, "dataset_id", 0) or 0) == int(dataset_id):
+            return record
+    return None
+
+
+def _serialize_inference_summary(record: Any) -> dict[str, Any]:
+    params = dict(getattr(record, "inference_params", {}) or {})
+    latest_metrics = _normalize_numeric_metrics(params.get("latest_metrics", {}) or {})
+    latest_monitoring = params.get("monitoring", {}) or {}
+    simulation_defaults = params.get("simulation_defaults", {}) or {}
+    artifact_manifest = params.get("artifact_manifest") if isinstance(params.get("artifact_manifest"), Mapping) else {}
+    return {
+        "id": getattr(record, "id", None),
+        "name": getattr(record, "name", None),
+        "description": getattr(record, "description", None),
+        "learning_model_id": getattr(record, "learning_model_id", None),
+        "dataset_id": getattr(record, "dataset_id", None),
+        "input_features": getattr(record, "input_features", None),
+        "output_features": getattr(record, "output_features", None),
+        "path": getattr(record, "path", None),
+        "status": params.get("status", "idle"),
+        "latest_metrics": latest_metrics,
+        "latest_monitoring": latest_monitoring,
+        "simulation_defaults": simulation_defaults,
+        "artifact_manifest": artifact_manifest,
+        "runtime_capabilities": dict((artifact_manifest or {}).get("runtime_capabilities", {}) or {}),
+        "history": list(getattr(record, "history", None) or []),
+        "inference_params": params,
+    }
+
+
+async def _upsert_inference_record(
+    db: AsyncSession,
+    *,
+    model_record: Any,
+    dataset_record: Any,
+    input_features: Optional[list[str]] = None,
+    output_features: Optional[list[str]] = None,
+    inference_updates: Optional[Mapping[str, Any]] = None,
+    history_entry: Optional[Mapping[str, Any]] = None,
+    artifact_path: Optional[str] = None,
+) -> Any:
+    existing = await _find_inference_record(
+        db,
+        model_id=int(getattr(model_record, "id")),
+        dataset_id=int(getattr(dataset_record, "id")),
+    )
+    inference_params = {
+        **dict(getattr(existing, "inference_params", {}) or {}),
+        **dict(inference_updates or {}),
+    }
+    record_name = f"{getattr(model_record, 'name', 'model')} :: {getattr(dataset_record, 'name', 'dataset')}"
+    payload = {
+        "name": getattr(existing, "name", None) or record_name,
+        "description": getattr(existing, "description", None) or f"Inference pair for {record_name}",
+        "object_type": "inference_model",
+        "size": float(getattr(model_record, "size", 0.0) or 0.0),
+        "path": artifact_path or getattr(existing, "path", None) or getattr(model_record, "path", None) or f"runtime_artifacts/inference/{_slugify(record_name)}.json",
+        "date": datetime.now(),
+        "version": getattr(existing, "version", None) or getattr(model_record, "version", None) or 1,
+        "history": _append_history(getattr(existing, "history", None), history_entry or {"operation": "sync", "when": datetime.now().isoformat()}),
+        "learning_model_id": int(getattr(model_record, "id")),
+        "dataset_id": int(getattr(dataset_record, "id")),
+        "input_features": input_features if input_features is not None else getattr(existing, "input_features", None),
+        "output_features": output_features if output_features is not None else getattr(existing, "output_features", None),
+        "inference_params": inference_params or {},
+    }
+
+    if existing is not None:
+        return await update_entry(db, InferenceORM, existing.id, payload)
+    return await create_entry(db, InferenceORM, payload)
+
+
+def _build_bar_plot(title: str, series: list[tuple[str, Any]], *, description: Optional[str] = None) -> dict[str, Any]:
+    points = []
+    for label, value in series:
+        if value in (None, ""):
+            continue
+        try:
+            points.append({"label": str(label), "value": float(value)})
+        except (TypeError, ValueError):
+            continue
+    return {"kind": "bar", "title": title, "description": description, "series": points}
+
+
+def _build_line_plot(title: str, series: list[tuple[Any, Any]], *, description: Optional[str] = None) -> dict[str, Any]:
+    points = []
+    for label, value in series:
+        try:
+            points.append({"label": str(label), "value": float(value)})
+        except (TypeError, ValueError):
+            continue
+    return {"kind": "line", "title": title, "description": description, "series": points}
+
+
+def _build_dataset_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    plots: list[dict[str, Any]] = []
+    profile = dict(summary.get("profile", {}) or {})
+    plots.append(
+        _build_bar_plot(
+            "Column Types",
+            [
+                ("Numeric", len(profile.get("numeric_columns", []) or [])),
+                ("Categorical", len(profile.get("categorical_columns", []) or [])),
+                ("Datetime", len(profile.get("datetime_columns", []) or [])),
+            ],
+            description="Automatic type balance from the extracted dataset profile.",
+        )
+    )
+
+    stats = dict(summary.get("stats", {}) or {})
+    missing_series = sorted(
+        (
+            (column_name, details.get("null_count", 0))
+            for column_name, details in stats.items()
+            if isinstance(details, Mapping)
+        ),
+        key=lambda item: item[1],
+        reverse=True,
+    )[:8]
+    plots.append(
+        _build_bar_plot(
+            "Missing Values by Column",
+            missing_series,
+            description="Top columns ranked by missing-value count.",
+        )
+    )
+
+    mean_series = [
+        (column_name, details.get("mean"))
+        for column_name, details in stats.items()
+        if isinstance(details, Mapping) and details.get("type") == "numeric"
+    ][:8]
+    plots.append(
+        _build_bar_plot(
+            "Numeric Mean Snapshot",
+            mean_series,
+            description="Quick mean comparison for the first numeric columns in the analysis.",
+        )
+    )
+    return [plot for plot in plots if plot["series"]]
+
+
+def _build_model_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    plots = [
+        _build_bar_plot(
+            "Model Metrics",
+            list(_normalize_numeric_metrics(summary.get("metrics", {}) or {}).items()),
+            description="All numeric metrics currently persisted for this learning model.",
+        ),
+        _build_bar_plot(
+            "Lifecycle Flags",
+            [
+                ("Trained", 1 if summary.get("is_trained") else 0),
+                ("Tested", 1 if summary.get("is_tested") else 0),
+                ("Deployed", 1 if summary.get("is_deployed") else 0),
+            ],
+            description="Binary view of the current model lifecycle state.",
+        ),
+    ]
+    return [plot for plot in plots if plot["series"]]
+
+
+def _build_study_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    plots: list[dict[str, Any]] = []
+    study_params = dict(summary.get("study_params", {}) or {})
+    plots.append(
+        _build_bar_plot(
+            "Study Controls",
+            [
+                ("Trials", study_params.get("n_trials")),
+                ("Best Value", (summary.get("best_trial") or {}).get("value") if isinstance(summary.get("best_trial"), Mapping) else None),
+            ],
+            description="Optimization controls and the latest best objective value.",
+        )
+    )
+    plots.append(
+        _build_bar_plot(
+            "Best Numeric Parameters",
+            [
+                (key, value)
+                for key, value in dict(summary.get("best_params", {}) or {}).items()
+                if isinstance(value, (int, float))
+            ],
+            description="Only numeric best parameters are charted automatically.",
+        )
+    )
+    return [plot for plot in plots if plot["series"]]
+
+
+def _build_inference_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    monitoring_summary = dict((summary.get("latest_monitoring") or {}).get("summary", {}) or {})
+    plots = [
+        _build_bar_plot(
+            "Latest Inference Metrics",
+            list((summary.get("latest_metrics") or {}).items()),
+            description="Most recent numeric metrics captured for this inference pair.",
+        ),
+        _build_bar_plot(
+            "Monitoring Snapshot",
+            [
+                ("Drifted Features", monitoring_summary.get("drifted_features", 0)),
+                ("Degraded Metrics", monitoring_summary.get("degraded_metrics", 0)),
+                ("Runs Logged", len(summary.get("history", []) or [])),
+            ],
+            description="Current monitoring pressure and inference activity volume.",
+        ),
+    ]
+    return [plot for plot in plots if plot["series"]]
+
+
+def _build_code_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    variables = dict(summary.get("variables", {}) or {})
+    document = dict(summary.get("code", {}) or {})
+    return [
+        _build_bar_plot(
+            "Code Asset Footprint",
+            [
+                ("Variables", len(variables)),
+                ("Document Keys", len(document)),
+            ],
+            description="Stored object counts extracted from the saved code payload.",
+        )
+    ]
+
+
+def _build_extraction_manifest(dataset: Any, dataframe: pd.DataFrame) -> dict[str, Any]:
+    preview_rows = _json_safe(dataframe.head(20).replace({np.nan: None}).to_dict(orient="records"))
+    column_details = _json_safe(build_column_explorer(dataframe))
+
+    return {
+        "dataset_id": getattr(dataset, "id", None),
+        "dataset_name": getattr(dataset, "name", None),
+        "table_name": f"dataset_{getattr(dataset, 'id', 'new')}_{_slugify(getattr(dataset, 'name', 'dataset'))}",
+        "shape": [int(dataframe.shape[0]), int(dataframe.shape[1])],
+        "columns": column_details,
+        "preview_rows": preview_rows,
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows",
+        ],
+        "analysis": _dataset_analysis_summary(
+            dataframe,
+            str(_resolve_fs_path(getattr(dataset, "path", None), default_parent=REPO_ROOT) or getattr(dataset, "path", "")),
+        ),
+    }
+
+
+async def _build_registry_analysis(db: AsyncSession, registry_type: str, item_id: int) -> dict[str, Any]:
+    binding = _get_registry_binding(registry_type)
+    record = await binding["model"].read(db, item_id)
+    if record is None:
+        raise ValueError(f"{binding['label']} not found")
+
+    normalized_type = _normalize_registry_type(registry_type)
+    if normalized_type in {"datasetmodel", "dataset"}:
+        dataframe = _load_dataset_frame_from_record(record)
+        summary = _dataset_analysis_summary(
+            dataframe,
+            str(_resolve_fs_path(getattr(record, "path", None), default_parent=REPO_ROOT) or getattr(record, "path", "")),
+        )
+        plots = _build_dataset_plots(summary)
+    elif normalized_type in {"learningmodel", "learning"}:
+        summary = _augment_model_analysis(record)
+        plots = _build_model_plots(summary)
+    elif normalized_type in {"studymodel", "study"}:
+        summary = _serialize_study_summary(record)
+        plots = _build_study_plots(summary)
+    elif normalized_type in {"inferencemodel", "inference"}:
+        summary = _serialize_inference_summary(record)
+        plots = _build_inference_plots(summary)
+    else:
+        summary = _json_safe(ModelRegistry._orm_to_dict(record))
+        plots = _build_code_plots(summary)
+
+    return {
+        "registry_type": binding["label"],
+        "item_id": item_id,
+        "summary": summary,
+        "plots": plots,
+    }
+
+
+async def _resolve_runtime_context(
+    db: AsyncSession,
+    *,
+    model_id: Optional[int] = None,
+    dataset_id: Optional[int] = None,
+    inference_id: Optional[int] = None,
+) -> tuple[Any | None, Any | None, Any | None]:
+    inference_record = await _find_inference_record(db, inference_id=inference_id, model_id=model_id, dataset_id=dataset_id)
+    if inference_record is not None:
+        model_id = model_id or int(getattr(inference_record, "learning_model_id", 0) or 0)
+        dataset_id = dataset_id or int(getattr(inference_record, "dataset_id", 0) or 0)
+
+    model_record = await LearningModel.read(db, model_id) if model_id not in (None, 0, "0", "") else None
+    dataset_record = await DatasetModel.read(db, dataset_id) if dataset_id not in (None, 0, "0", "") else None
+    return inference_record, model_record, dataset_record
+
+
+def _prepare_runtime_execution(model_record: Any, dataset_record: Any) -> tuple[PreparedDataset, TrainingResult]:
+    parameters = dict(getattr(model_record, "parameters", {}) or {})
+    prepared = _prepare_dataset_for_training(dataset_record, model_record, parameters)
+    path = _resolve_fs_path(getattr(model_record, "path", None), default_parent=REPO_ROOT)
+    if path is None or not path.exists():
+        raise FileNotFoundError("The selected model does not have a persisted artifact path.")
+
+    runtime_payload = load_runtime_artifact(path, parameters=parameters)
+    trained_model = runtime_payload["model"]
+    framework = str(runtime_payload.get("framework") or parameters.get("framework", "sklearn")).strip().lower()
+    if framework == "onnx":
+        framework = str(
+            parameters.get("training_backend") or parameters.get("base_framework") or "sklearn"
+        ).strip().lower()
+
+    runtime_result = TrainingResult(
+        model=trained_model,
+        framework=framework,
+        metrics=_normalize_numeric_metrics(getattr(model_record, "metrics", {}) or {}),
+        parameters=parameters,
+    )
+    runtime_result.parameters = {**parameters, "artifact_manifest": runtime_payload.get("manifest", {})}
+    return prepared, runtime_result
 
 
 def _build_training_tracking_context(
@@ -804,7 +1392,12 @@ def _normalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
             normalized[column] = series.astype("int64") / 1_000_000_000
             continue
         if series.dtype == object:
-            parsed = pd.to_datetime(series, errors="coerce", utc=True)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                try:
+                    parsed = pd.to_datetime(series, errors="coerce", utc=True, format="mixed")
+                except TypeError:
+                    parsed = pd.to_datetime(series, errors="coerce", utc=True)
             if parsed.notna().sum() and parsed.notna().mean() >= 0.8:
                 normalized[column] = parsed.astype("int64") / 1_000_000_000
 
@@ -836,7 +1429,8 @@ def _load_dataset_frame_from_record(dataset_record: Any) -> pd.DataFrame:
         raise FileNotFoundError("Dataset path is not defined.")
     if not resolved_path.exists():
         raise FileNotFoundError(f"Dataset file not found: {resolved_path}")
-    return load_csv(resolved_path)
+    dataframe, _parser_report = load_tabular_from_path(resolved_path)
+    return dataframe
 
 
 def _prepare_dataset_for_training(
@@ -1052,23 +1646,6 @@ def _train_with_pytorch(
     import torch
     import torch.nn as nn
 
-    class FeedForwardNet(nn.Module):
-        def __init__(self, input_dim: int, hidden_dim: int, hidden_layers: int, output_dim: int, dropout: float) -> None:
-            super().__init__()
-            layers: list[nn.Module] = []
-            current_dim = input_dim
-            for _ in range(max(hidden_layers, 1)):
-                layers.append(nn.Linear(current_dim, hidden_dim))
-                layers.append(nn.ReLU())
-                if dropout > 0:
-                    layers.append(nn.Dropout(dropout))
-                current_dim = hidden_dim
-            layers.append(nn.Linear(current_dim, output_dim))
-            self.network = nn.Sequential(*layers)
-
-        def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-            return self.network(inputs)
-
     x_train = prepared.x_train.to_numpy(dtype=np.float32)
     x_test = prepared.x_test.to_numpy(dtype=np.float32)
     y_train_array = prepared.y_train.to_numpy()
@@ -1185,14 +1762,52 @@ def _generate_training_artifacts(
     model_artifact_path = None
     serving_file = None
     model_uri = None
+    artifact_manifest: dict[str, Any] = {}
 
     summary_path = artifact_dir / "training_summary.json"
     save_training_summary(result, str(summary_path))
     artifact_paths.append(str(summary_path))
 
     try:
-        model_artifact_path = save_model_local(result.model, str(artifact_dir / f"model_{result.framework}.pkl"))
+        if result.framework == "sklearn":
+            try:
+                import joblib
+            except Exception as exc:
+                raise RuntimeError(f"joblib is required to persist sklearn models: {exc}") from exc
+            target_path = artifact_dir / "model_sklearn.joblib"
+            joblib.dump(result.model, target_path)
+            model_artifact_path = str(target_path)
+        elif result.framework == "pytorch":
+            if not TORCH_RUNTIME_AVAILABLE or torch is None:
+                raise RuntimeError("PyTorch is not available in the current environment.")
+            target_path = artifact_dir / "model_pytorch.pt"
+            result.model.eval()
+            example_input = torch.as_tensor(prepared.x_train.head(2).to_numpy(dtype=np.float32))
+            try:
+                exported_model = torch.jit.script(result.model)
+            except Exception:
+                exported_model = torch.jit.trace(result.model, example_input)
+            exported_model.save(str(target_path))
+            companion_spec = {
+                "framework": "pytorch",
+                "artifact_format": ".pt",
+                "input_features": list(prepared.input_features),
+                "output_feature": prepared.output_feature,
+                "task_type": prepared.task_type,
+                "label_mapping": dict(prepared.label_mapping),
+            }
+            companion_path = artifact_dir / "model_spec.json"
+            save_json(companion_spec, companion_path)
+            artifact_paths.append(str(companion_path))
+            model_artifact_path = str(target_path)
+        else:
+            model_artifact_path = save_model_local(result.model, str(artifact_dir / f"model_{result.framework}.pkl"))
         artifact_paths.append(model_artifact_path)
+        artifact_manifest = inspect_model_artifact(
+            model_artifact_path,
+            load_runtime=False,
+            parameters=result.parameters,
+        )
     except Exception:
         LOGGER.exception("Unable to persist the trained model locally for job %s.", job_id)
 
@@ -1251,6 +1866,7 @@ def _generate_training_artifacts(
         "summary_path": str(summary_path),
         "artifact_paths": artifact_paths,
         "model_artifact_path": model_artifact_path,
+        "artifact_manifest": artifact_manifest,
         "serving_file": serving_file,
         "model_uri": model_uri,
     }
@@ -1431,67 +2047,20 @@ def _suggest_trial_parameters(trial: Any, search_space: Mapping[str, Any]) -> di
 
 
 def _dataset_profile(df: pd.DataFrame) -> dict[str, Any]:
-    numeric_columns = [str(column) for column in df.select_dtypes(include=[np.number]).columns]
-    categorical_columns = [
-        str(column)
-        for column in df.columns
-        if str(column) not in numeric_columns and not pd.api.types.is_datetime64_any_dtype(df[column])
-    ]
-    datetime_columns = [str(column) for column in df.columns if pd.api.types.is_datetime64_any_dtype(df[column])]
-    target = _default_output_feature(df)
-    recommended_inputs = [str(column) for column in df.columns if str(column) != target]
-    return {
-        "numeric_columns": numeric_columns,
-        "categorical_columns": categorical_columns,
-        "datetime_columns": datetime_columns,
-        "recommended_target": target,
-        "recommended_inputs": recommended_inputs,
-    }
+    return dataset_profile(df)
 
 
 def _dataset_analysis_summary(df: pd.DataFrame, df_path: str) -> dict[str, Any]:
-    stats: dict[str, dict[str, Any]] = {}
-    for column_name in df.columns:
-        column = df[column_name]
-        if pd.api.types.is_numeric_dtype(column):
-            stats[str(column_name)] = {
-                "type": "numeric",
-                "mean": None if column.empty else float(column.mean()),
-                "std": None if column.empty else float(column.std()),
-                "min": None if column.empty else float(column.min()),
-                "max": None if column.empty else float(column.max()),
-                "null_count": int(column.isnull().sum()),
-            }
-            continue
-        mode = column.mode(dropna=True)
-        stats[str(column_name)] = {
-            "type": "categorical",
-            "unique_values": int(column.nunique(dropna=True)),
-            "null_count": int(column.isnull().sum()),
-            "mode": None if mode.empty else str(mode.iloc[0]),
-        }
-
-    return {
-        "rows": int(df.shape[0]),
-        "columns": int(df.shape[1]),
-        "column_names": [str(column) for column in df.columns],
-        "dtypes": {str(column): str(dtype) for column, dtype in df.dtypes.items()},
-        "missing_values": int(df.isnull().sum().sum()),
-        "stats": stats,
-        "path": df_path,
-        "profile": _dataset_profile(df),
-    }
+    parser_report = {}
+    try:
+        _, parser_report = load_tabular_from_path(df_path)
+    except Exception:
+        parser_report = {}
+    return build_dataset_analysis_summary(df, df_path, parser_report=parser_report)
 
 
 def _build_feature_extraction_summary(df: pd.DataFrame) -> dict[str, Any]:
-    profile = _dataset_profile(df)
-    return {
-        "feature_candidates": profile["recommended_inputs"],
-        "target_candidate": profile["recommended_target"],
-        "numeric_feature_count": len(profile["numeric_columns"]),
-        "categorical_feature_count": len(profile["categorical_columns"]),
-        "datetime_feature_count": len(profile["datetime_columns"]),
-    }
+    return build_feature_extraction_summary(df)
 
 
 def _augment_model_analysis(model_record: Any) -> dict[str, Any]:
@@ -1500,7 +2069,10 @@ def _augment_model_analysis(model_record: Any) -> dict[str, Any]:
     path = _resolve_fs_path(path_value, default_parent=REPO_ROOT)
     if path and path.exists():
         try:
-            summary["artifact_metadata"] = recover_model_params(path)
+            manifest = inspect_model_artifact(path, load_runtime=False, parameters=getattr(model_record, "parameters", {}) or {})
+            summary["artifact_metadata"] = manifest
+            summary["artifact_manifest"] = manifest
+            summary["runtime_capabilities"] = manifest.get("runtime_capabilities", {})
         except Exception:
             LOGGER.exception("Unable to recover model metadata for %s.", path)
     return summary
@@ -1629,17 +2201,14 @@ async def _build_live_monitoring_snapshot(
     if path is None or not path.exists():
         raise FileNotFoundError("The selected model does not have a persisted artifact path.")
 
-    import pickle
-
-    with Path(path).open("rb") as file_handle:
-        trained_model = pickle.load(file_handle)
-
-    framework = "pytorch" if "torch" in str(path).lower() else str(parameters.get("framework", "sklearn")).lower()
+    runtime_payload = load_runtime_artifact(path, parameters=parameters)
+    trained_model = runtime_payload["model"]
+    framework = str(runtime_payload.get("framework") or parameters.get("framework", "sklearn")).lower()
     training_result = TrainingResult(
         model=trained_model,
         framework=framework,
         metrics=_normalize_numeric_metrics(getattr(model_record, "metrics", {}) or {}),
-        parameters=parameters,
+        parameters={**parameters, "artifact_manifest": runtime_payload.get("manifest", {})},
     )
 
     predictions = _predict_with_result(training_result, prepared.x_test, prepared.task_type)
@@ -1672,6 +2241,7 @@ async def _build_live_monitoring_snapshot(
         "summary": summary,
         "retrain_recommended": retrain_recommended,
         "evaluated_at": datetime.now().isoformat(),
+        "artifact_manifest": runtime_payload.get("manifest", {}),
     }
     try:
         with managed_run(
@@ -1727,3 +2297,60 @@ async def _trigger_retraining_from_monitoring(
         run_name=f"retrain_{model_id}",
         push_metrics_enabled=False,
     )
+
+
+async def run_startup_tasks() -> None:
+    try:
+        await wait_for_database()
+        APP_LOGGER.info("Database connection is ready.")
+    except Exception:
+        LOGGER.exception("Database did not become ready during startup.")
+        raise
+
+    try:
+        await init_models()
+        APP_LOGGER.info("Database models initialized.")
+    except Exception:
+        LOGGER.exception("Database initialization failed during startup.")
+
+    try:
+        async with AsyncSessionLocal() as db:
+            normalized_identities = await normalize_legacy_polymorphic_identities(db)
+        if normalized_identities:
+            LOGGER.info("Normalized legacy polymorphic identities: %s", normalized_identities)
+    except Exception:
+        LOGGER.exception("Legacy polymorphic identity normalization failed during startup.")
+
+    try:
+        async with AsyncSessionLocal() as db:
+            normalized_jsonb = await normalize_legacy_jsonb_containers(db)
+        if normalized_jsonb:
+            LOGGER.info("Normalized legacy JSONB containers: %s", normalized_jsonb)
+    except Exception:
+        LOGGER.exception("Legacy JSONB normalization failed during startup.")
+
+    save_config_snapshot(RUNTIME_CONFIG, str(CONFIG_SNAPSHOT_DIR / "runtime_config.json"))
+    LOGGER.info("Runtime configuration snapshot saved.")
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    await run_startup_tasks()
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
+    return _json_response({"status": "error", "detail": exc.detail}, status_code=exc.status_code)
+
+
+@app.exception_handler(ResponseValidationError)
+async def response_validation_exception_handler(_: Request, exc: ResponseValidationError) -> JSONResponse:
+    LOGGER.exception("Response validation failed.", exc_info=exc)
+    return _json_response({"status": "error", "detail": str(exc)}, status_code=500)
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+    LOGGER.exception("Unhandled exception", exc_info=exc)
+    error_detail = str(exc) or exc.__class__.__name__
+    return _json_response({"detail": error_detail}, status_code=500)

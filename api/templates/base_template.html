@@ -9,7 +9,7 @@
 
     {% block extra_script %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}purple-theme{% endblock %}">
     <header class="main-header">
         <div class="container">
             <h1>Painel Amanajé</h1>
@@ -20,8 +20,7 @@
                     <a href="/">Home</a>
                     <a href="/upload">Upload</a>
                     <a href="/create">Create</a>
-                    <a href="/upload#featuresSection">Features</a>
-                    <a href="/upload#analysisSection">Analysis</a>
+                    <a href="/feature">Feature</a>
                 </div>
 
                 <!-- ML Operations (Green) -->
@@ -29,14 +28,13 @@
                     <h3>Models</h3>
                     <a href="/training">Training</a>
                     <a href="/optimization">Optimization</a>
-                    <a href="/production">Production</a>
                     <a href="/training#onnxSection">ONNX</a>
                 </div>
 
                 <!-- MLOps (Blue) -->
                 <div class="nav-section">
                     <h3>MLOps</h3>
-                    <a href="/production#productionSection">Production</a>
+                    <a href="/production">Production</a>
                     <a href="/production#monitoringSection">Monitoring</a>
                     <a href="/production#mlflowSection">MLflow</a>
                 </div>

@@ -37,6 +37,18 @@ function appendIfPresent(formData, key, value) {
     formData.append(key, String(value));
 }
 
+function decodeBase64Bytes(payload) {
+    const binary = atob(payload);
+    return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+function inferFilenameFromMetadata(metadata, fallbackName, fallbackExtension) {
+    const path = typeof metadata.path === 'string' ? metadata.path.trim() : '';
+    const pathFilename = path ? path.split(/[\\/]/).pop() : '';
+    if (pathFilename) return pathFilename;
+    return `${metadata.name || fallbackName}${fallbackExtension}`;
+}
+
 function buildDatasetFile(metadata) {
     if (typeof metadata.csv_text !== 'string' || metadata.csv_text.trim() === '') {
         throw new Error("Datasets require a materialized 'csv_text' value. Execute the editor code first or assign a literal CSV string.");
@@ -46,17 +58,149 @@ function buildDatasetFile(metadata) {
 }
 
 function buildModelFile(metadata) {
-    const payload = metadata.pytorch_bytes || metadata.torch_bytes || metadata.model_bytes;
-    if (typeof payload !== 'string' || payload.trim() === '') {
-        throw new Error("Models require a materialized base64 PyTorch payload such as 'pytorch_bytes'. Execute the editor code first or assign a literal payload.");
+    const supportedPayloads = [
+        { key: 'joblib_bytes', extension: '.joblib', mime: 'application/octet-stream' },
+        { key: 'torchscript_bytes', extension: '.pt', mime: 'application/octet-stream' },
+        { key: 'pytorch_bytes', extension: '.pt', mime: 'application/octet-stream' },
+        { key: 'torch_bytes', extension: '.pt', mime: 'application/octet-stream' },
+        { key: 'model_bytes', extension: '.bin', mime: 'application/octet-stream' },
+        { key: 'pickle_bytes', extension: '.pkl', mime: 'application/octet-stream' },
+        { key: 'onnx_bytes', extension: '.onnx', mime: 'application/octet-stream' }
+    ];
+
+    const artifact = supportedPayloads.find(({ key }) => typeof metadata[key] === 'string' && metadata[key].trim() !== '');
+    if (!artifact) {
+        throw new Error(
+            "Models require a materialized artifact payload. Supported editor fields are 'joblib_bytes', 'torchscript_bytes', 'pytorch_bytes', 'pickle_bytes', or 'onnx_bytes'."
+        );
     }
 
-    const binary = atob(payload);
-    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-    const path = typeof metadata.path === 'string' ? metadata.path.trim() : '';
-    const pathFilename = path ? path.split(/[\\/]/).pop() : '';
-    const fileName = pathFilename || `${metadata.name || 'model'}.pt`;
-    return new File([bytes], fileName, { type: 'application/octet-stream' });
+    const bytes = decodeBase64Bytes(metadata[artifact.key]);
+    const fileName = inferFilenameFromMetadata(metadata, 'model', artifact.extension);
+    return new File([bytes], fileName, { type: artifact.mime });
+}
+
+function renderSupportMatrixSection(title, entries) {
+    const cards = Object.entries(entries || {}).map(([extension, details]) => `
+        <div class="support-card">
+            <h4>${escapeHtml(`${details.label || 'Artifact'} ${extension}`)}</h4>
+            <div class="small-text">${escapeHtml((details.notes || []).join(' ') || 'Capability-based support.')}</div>
+            <div class="support-badges">
+                ${['register', 'inspect', 'train', 'predict', 'simulate', 'monitor'].map((capability) => `
+                    <span class="support-badge">${escapeHtml(`${capability}: ${details[capability]}`)}</span>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+
+    return `
+        <div class="support-card" style="grid-column: 1 / -1;">
+            <h4>${escapeHtml(title)}</h4>
+            <div class="support-grid">${cards}</div>
+        </div>
+    `;
+}
+
+async function loadSupportMatrix() {
+    const target = document.getElementById('supportMatrix');
+    if (!target) return;
+
+    try {
+        const response = await fetch('/upload/support');
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.detail || `HTTP ${response.status}`);
+
+        target.innerHTML = `
+            ${renderSupportMatrixSection('Datasets', result.datasets || {})}
+            ${renderSupportMatrixSection('Models', result.models || {})}
+        `;
+    } catch (error) {
+        target.innerHTML = `<div class="status-message error" style="display:block;">Failed to load support matrix: ${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function renderWarnings(warnings = []) {
+    if (!Array.isArray(warnings) || !warnings.length) return '';
+    return warnings.slice(0, 6).map((warning) => `
+        <div class="analysis-warning">${escapeHtml(warning)}</div>
+    `).join('');
+}
+
+function renderDatasetAnalysis(summary = {}) {
+    const explorer = Array.isArray(summary.column_explorer) ? summary.column_explorer.slice(0, 12) : [];
+    return `
+        <div class="analysis-card" style="grid-column: 1 / -1;">
+            <h4>Column Explorer</h4>
+            <div class="analysis-kpis">
+                <div class="analysis-kpi"><span>Rows</span><strong>${escapeHtml(summary.rows ?? 0)}</strong></div>
+                <div class="analysis-kpi"><span>Columns</span><strong>${escapeHtml(summary.columns ?? 0)}</strong></div>
+                <div class="analysis-kpi"><span>Missing Values</span><strong>${escapeHtml(summary.missing_values ?? 0)}</strong></div>
+                <div class="analysis-kpi"><span>Recommended Target</span><strong>${escapeHtml(summary.profile?.recommended_target || '-')}</strong></div>
+            </div>
+            ${renderWarnings(summary.top_warnings || summary.parser_report?.warnings || [])}
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Family</th>
+                        <th>Nulls</th>
+                        <th>Unique</th>
+                        <th>Flags</th>
+                        <th>Samples</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${explorer.map((column) => `
+                        <tr>
+                            <td><strong>${escapeHtml(column.name)}</strong><br><span class="small-text">${escapeHtml(column.dtype)}</span></td>
+                            <td>${escapeHtml(column.family)}</td>
+                            <td>${escapeHtml(column.null_count)}</td>
+                            <td>${escapeHtml(column.unique_count)}</td>
+                            <td>${escapeHtml([
+                                column.mixed_type ? 'mixed' : '',
+                                column.high_cardinality ? 'high-cardinality' : '',
+                                column.datetime_confidence >= 0.8 ? `date:${column.datetime_confidence}` : ''
+                            ].filter(Boolean).join(', ') || 'stable')}</td>
+                            <td>${escapeHtml((column.sample_values || []).join(', '))}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderModelAnalysis(summary = {}) {
+    const manifest = summary.artifact_manifest || summary.artifact_metadata || {};
+    const metrics = summary.metrics || {};
+    return `
+        <div class="analysis-card" style="grid-column: 1 / -1;">
+            <h4>Artifact Manifest</h4>
+            <div class="analysis-kpis">
+                <div class="analysis-kpi"><span>Format</span><strong>${escapeHtml(manifest.artifact_format || '-')}</strong></div>
+                <div class="analysis-kpi"><span>Framework</span><strong>${escapeHtml(manifest.framework || summary.parameters?.framework || '-')}</strong></div>
+                <div class="analysis-kpi"><span>Loader</span><strong>${escapeHtml(manifest.loader || '-')}</strong></div>
+                <div class="analysis-kpi"><span>Metrics</span><strong>${escapeHtml(Object.keys(metrics).length)}</strong></div>
+            </div>
+            ${renderWarnings(manifest.warnings || [])}
+            <table class="analysis-table">
+                <thead>
+                    <tr>
+                        <th>Capability</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${Object.entries(manifest.runtime_capabilities || {}).map(([key, value]) => `
+                        <tr>
+                            <td>${escapeHtml(key)}</td>
+                            <td>${escapeHtml(String(value))}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
 
 async function submitUpload(event) {
@@ -122,7 +266,10 @@ async function submitUpload(event) {
             throw new Error(result.detail || result.error || `HTTP ${response.status}`);
         }
 
-        setUploadStatus(`Created object with id <code>${result.id || 'n/a'}</code>.`, 'success');
+        const detailMessage = operationId === 'datasets'
+            ? `Created dataset <code>${result.id || 'n/a'}</code> with ${escapeHtml(result.shape?.[1] ?? 0)} columns.`
+            : `Created model <code>${result.id || 'n/a'}</code> with runtime support: <code>${escapeHtml(JSON.stringify(result.runtime_capabilities || {}))}</code>.`;
+        setUploadStatus(detailMessage, 'success');
         await refreshSelectors();
         await refreshFeatures();
         await refreshModels();
@@ -226,23 +373,7 @@ async function analyzeData() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const results = await response.json();
-        target.innerHTML = `
-            <div class="analysis-result" style="grid-column: 1 / -1;">
-                <h4>Analysis Results for Dataset #${datasetId}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
-                        <th style="text-align: left; padding: 0.5rem;">Metric</th>
-                        <th style="text-align: right; padding: 0.5rem;">Value</th>
-                    </tr>
-                    ${Object.entries(results.summary || {}).map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 0.5rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
-                            <td style="text-align: right; padding: 0.5rem;"><b>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</b></td>
-                        </tr>
-                    `).join('')}
-                </table>
-            </div>
-        `;
+        target.innerHTML = renderDatasetAnalysis(results.summary || {});
     } catch (error) {
         console.error('Dataset analysis error:', error);
         target.innerHTML = `<div class="status-message error" style="display:block;">Analysis failed: ${error.message}</div>`;
@@ -265,23 +396,7 @@ async function analyzeModel() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const results = await response.json();
-        target.innerHTML = `
-            <div class="analysis-result" style="grid-column: 1 / -1;">
-                <h4>Analysis Results for Model #${modelId}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
-                        <th style="text-align: left; padding: 0.75rem;">Metric</th>
-                        <th style="text-align: right; padding: 0.75rem;">Value</th>
-                    </tr>
-                    ${Object.entries(results.summary || results.metrics || {}).map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 0.75rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
-                            <td style="text-align: right; padding: 0.75rem;"><b>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</b></td>
-                        </tr>
-                    `).join('')}
-                </table>
-            </div>
-        `;
+        target.innerHTML = renderModelAnalysis(results.summary || {});
     } catch (error) {
         console.error('Model analysis error:', error);
         target.innerHTML = `<div class="status-message error" style="display:block;">Analysis failed: ${error.message}</div>`;
@@ -305,19 +420,18 @@ async function extractFeatures() {
         const result = await response.json();
         const summary = result.summary || {};
         target.innerHTML = `
-            <div class="analysis-result" style="grid-column: 1 / -1;">
-                <h4>Feature Suggestions for Dataset #${datasetId}</h4>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 2px solid #ddd; background: #f5f5f5;">
-                        <th style="text-align: left; padding: 0.5rem;">Suggestion</th>
-                        <th style="text-align: right; padding: 0.5rem;">Value</th>
-                    </tr>
-                    ${Object.entries(summary).map(([key, value]) => `
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 0.5rem;">${key.replace(/_/g, ' ').toUpperCase()}</td>
-                            <td style="text-align: right; padding: 0.5rem;"><b>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</b></td>
-                        </tr>
-                    `).join('')}
+            ${renderDatasetAnalysis(result.manifest?.analysis || {})}
+            <div class="analysis-card" style="grid-column: 1 / -1;">
+                <h4>Feature Suggestions</h4>
+                <table class="analysis-table">
+                    <tbody>
+                        ${Object.entries(summary).map(([key, value]) => `
+                            <tr>
+                                <th>${escapeHtml(key.replace(/_/g, ' '))}</th>
+                                <td>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
                 </table>
             </div>
         `;
@@ -459,6 +573,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await refreshSelectors();
     await refreshFeatures();
     await refreshModels();
+    await loadSupportMatrix();
     loadFileList();
     displayMetadataPanel(getUploadMetadata());
 });

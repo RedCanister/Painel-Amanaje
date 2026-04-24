@@ -2,67 +2,248 @@
 
 {% block title %}Production Operations - Painel Amanaje{% endblock %}
 
+{% block body_class %}blue-theme{% endblock %}
+
 {% block extra_css %}
 <style>
-    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
-    .mlops-section h3 { color: #0077b6; margin-top: 0; }
-    .monitoring-grid, .control-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .metric-card, .panel-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; border: 1px solid #e5e7eb; }
-    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
-    .log-display, .json-display { max-height: 320px; overflow-y: auto; background: #111827; color: #f9fafb; padding: 1rem; font-family: Consolas, "Courier New", monospace; border-radius: 4px; white-space: pre-wrap; }
-    .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-radius: 999px; font-weight: 600; }
-    .status-pill.active { background: #dcfce7; color: #166534; }
-    .status-pill.inactive { background: #fee2e2; color: #991b1b; }
-    .alert { padding: 1rem; border-radius: 4px; }
-    .alert-error { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
-    .btn { padding: 0.75rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: #0077b6; color: white; }
-    .btn-danger { background: #e63946; color: white; }
+    :root {
+        --amanaje-primary: #0077b6;
+        --amanaje-primary-strong: #0c4a6e;
+        --amanaje-primary-soft: #e0f2fe;
+        --amanaje-primary-softer: #f0f9ff;
+        --amanaje-primary-mid: #bae6fd;
+        --amanaje-primary-border: #7dd3fc;
+        --amanaje-primary-border-soft: #bae6fd;
+        --amanaje-primary-accent: #0ea5e9;
+        --amanaje-primary-gradient: #0077b6;
+        --amanaje-primary-bar-gradient: #0077b6;
+        --amanaje-primary-shadow: rgba(0, 119, 182, 0.08);
+        --amanaje-primary-shadow-strong: rgba(0, 119, 182, 0.2);
+        --amanaje-code-bg: #082f49;
+        --amanaje-code-fg: #e0f2fe;
+        --amanaje-code-border: #075985;
+        --amanaje-body-bg: #f6fbff;
+    }
+
+    .production-shell { display: grid; gap: 1.25rem; }
+    .global-watch-panel {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+    }
+    .global-watch-panel h3 { margin-top: 0; color: var(--amanaje-primary); }
+    .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .workspace-tab {
+        border: 1px solid var(--amanaje-primary-border);
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .workspace-tab.active { background: var(--amanaje-primary); color: white; border-color: var(--amanaje-primary); }
+    .panel {
+        display: none;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        padding: 1.5rem;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+    }
+    .panel.active { display: block; }
+    .panel-title { margin: 0 0 0.45rem; color: var(--amanaje-primary); }
+    .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
+    .layout-grid, .metric-grid, .history-grid, .plot-grid { display: grid; gap: 1rem; }
+    .layout-grid { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); }
+    .metric-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .history-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .surface, .metric-card, .plot-card, .history-card, .log-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    .surface h4, .metric-card h4, .plot-card h4, .history-card h4, .log-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .metric-value { font-size: 1.45rem; font-weight: 800; color: var(--amanaje-primary); }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+    }
+    .status-pill.active { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); }
+    .status-pill.inactive { background: #e5e7eb; color: #4b5563; }
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; }
-    .form-group select { width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; }
-    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
-    .empty-state { padding: 1rem; border: 1px dashed #cbd5e1; border-radius: 4px; background: #f8fafc; color: #475569; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: white;
+    }
+    .form-group textarea { min-height: 150px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .btn {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-ghost { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .helper-text { color: #6b7280; font-size: 0.9rem; }
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
+    .summary-table td:first-child { width: 38%; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .summary-table code { white-space: pre-wrap; word-break: break-word; }
+    .plot-bars { display: grid; gap: 0.55rem; }
+    .plot-row { display: grid; gap: 0.35rem; }
+    .plot-meta { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.84rem; color: var(--amanaje-primary-strong); }
+    .plot-track { height: 0.65rem; background: var(--amanaje-primary-mid); border-radius: 999px; overflow: hidden; }
+    .plot-fill { height: 100%; background: var(--amanaje-primary-bar-gradient); }
+    .json-block, .log-block {
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        padding: 1rem;
+        border-radius: 14px;
+        overflow: auto;
+        white-space: pre-wrap;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+        max-height: 320px;
+    }
+    .history-card .pill-row, .surface .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .watch-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1rem; }
+    .watch-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.95rem;
+    }
+    .watch-card h4 { margin: 0 0 0.35rem; color: var(--amanaje-primary-strong); }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        border: 1px solid var(--amanaje-primary-border);
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    @media (max-width: 980px) {
+        .layout-grid { grid-template-columns: 1fr; }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="mlops-operations">
+<div class="production-shell">
+    <section class="global-watch-panel">
+        <h3>Global Production Watch</h3>
+        <p class="panel-subtitle">An inference pair is the production contract between one learning model and one dataset. Use this bar to keep the active watch context stable while the tabs below show monitoring, simulation, history, MLflow, and activity details.</p>
+        <div class="inline-grid">
+            <div class="form-group">
+                <label for="globalInferencePairId">Inference Pair</label>
+                <select id="globalInferencePairId">
+                    <option value="">Select an inference pair</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalProductionModelId">Learning Model</label>
+                <select id="globalProductionModelId">
+                    <option value="">Select a model</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalProductionDatasetId">Dataset</label>
+                <select id="globalProductionDatasetId">
+                    <option value="">Select a dataset</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btnGlobalStartProduction">Start Watch</button>
+            <button type="button" class="btn btn-secondary" id="btnGlobalRefreshMonitoring">Refresh Monitoring</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalRunSimulation">Run Simulation</button>
+        </div>
+        <div id="watchlistResults" class="watch-grid"></div>
+    </section>
 
-    <!-- TODO - This production control interface should be replaced with a inference monitor where the trained model can be used to predict future values in a simulation. -->
-    <!-- When selected, the inference model should have their metrics and most likely plots clearly shown in a tab, with the simulation option being in another. -->
-    <section class="mlops-section" id="productionSection">
-        <h3>Production Control</h3>
-        <div id="productionStatus" style="margin-bottom: 1rem;"></div>
+    <div class="workspace-tabs">
+        <button class="workspace-tab active" type="button" data-tab="monitor">Inference Monitor</button>
+        <button class="workspace-tab" type="button" data-tab="simulation">Simulation</button>
+        <button class="workspace-tab" type="button" data-tab="history">Run History</button>
+        <button class="workspace-tab" type="button" data-tab="mlflow">MLflow</button>
+        <button class="workspace-tab" type="button" data-tab="activity">Activity Log</button>
+    </div>
 
-        <div class="control-grid">
-            <div class="panel-card">
+    <section class="panel active" id="panel-monitor">
+        <h3 class="panel-title" id="monitoringSection">Inference Monitor</h3>
+        <p class="panel-subtitle">Choose an inference pair, or fall back to an explicit model and dataset, then monitor the deployed runtime with structured summaries instead of raw JSON dumps.</p>
+
+        <div class="layout-grid">
+            <div class="surface">
+                <h4>Inference Pair Selection</h4>
                 <div class="form-group">
-                    <label for="productionModelId">Learning Model</label>
-                    <select id="productionModelId">
-                        <option value="">Select a model</option>
+                    <label for="inferencePairId">Inference Pair</label>
+                    <select id="inferencePairId">
+                        <option value="">Select an inference pair</option>
                     </select>
+                    <div class="helper-text">Pairs are created automatically after training and reused here for monitoring, retraining, and simulation.</div>
                 </div>
-                <div class="form-group">
-                    <label for="productionDatasetId">Dataset</label>
-                    <select id="productionDatasetId">
-                        <option value="">Select a dataset</option>
-                    </select>
+                <div class="inline-grid">
+                    <div class="form-group">
+                        <label for="productionModelId">Learning Model</label>
+                        <select id="productionModelId">
+                            <option value="">Select a model</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productionDatasetId">Dataset</label>
+                        <select id="productionDatasetId">
+                            <option value="">Select a dataset</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="actions-row">
                     <button type="button" class="btn btn-primary" id="btnStartProduction">Start</button>
                     <button type="button" class="btn btn-danger" id="btnStopProduction">Stop</button>
-                    <button type="button" class="btn" id="btnRestartProduction">Restart</button>
+                    <button type="button" class="btn btn-secondary" id="btnRestartProduction">Restart</button>
+                    <button type="button" class="btn btn-ghost" id="btnRefreshMonitoring">Refresh Monitoring</button>
+                    <button type="button" class="btn btn-ghost" id="btnTriggerRetrain">Trigger Retraining</button>
                 </div>
+                <div id="productionStatus" style="margin-top:1rem;"></div>
             </div>
 
-            <div class="panel-card">
+            <div class="surface">
                 <h4>Deployment Snapshot</h4>
-                <div id="deploymentSummary" class="json-display">No deployment summary loaded yet.</div>
+                <div id="deploymentSummary">No deployment summary loaded yet.</div>
+                <div class="pill-row" id="deploymentPills"></div>
             </div>
         </div>
 
-        <div class="monitoring-grid" style="margin-top:1rem;">
+        <div class="metric-grid" style="margin-top:1rem;">
             <div class="metric-card">
                 <h4>Runtime State</h4>
                 <div class="metric-value" id="runtimeState">INACTIVE</div>
@@ -80,34 +261,83 @@
                 <div class="metric-value" id="retrainFlag">No</div>
             </div>
         </div>
+
+        <div id="monitoringSummary" style="margin-top:1rem;"></div>
     </section>
 
-    <!-- TODO - Monitoring and retraining should be a list down of every model's run summarized run history, and it should also be formatted to fit the app's aesthetic
-     besides raw JSON text. -->
-    <section class="mlops-section" id="monitoringSection">
-        <h3>Monitoring and Retraining</h3>
-        <div class="actions-row">
-            <button type="button" class="btn" id="btnRefreshMonitoring">Refresh Monitoring</button>
-            <button type="button" class="btn" id="btnTriggerRetrain">Trigger Retraining</button>
+    <section class="panel" id="panel-simulation">
+        <h3 class="panel-title">Simulation</h3>
+        <p class="panel-subtitle">Run future-step predictions from the currently selected production pair and inspect the generated input drift alongside the prediction path.</p>
+
+        <div class="layout-grid">
+            <div class="surface">
+                <h4>Simulation Controls</h4>
+                <div class="inline-grid">
+                    <div class="form-group">
+                        <label for="simulationSteps">Steps</label>
+                        <input id="simulationSteps" type="number" min="1" max="120" value="12">
+                    </div>
+                    <div class="form-group">
+                        <label for="simulationAmplitude">Amplitude</label>
+                        <input id="simulationAmplitude" type="number" step="0.01" min="0" value="0.05">
+                    </div>
+                    <div class="form-group">
+                        <label for="simulationTrend">Trend</label>
+                        <select id="simulationTrend">
+                            <option value="up">Upward</option>
+                            <option value="down">Downward</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="simulationScenario">Scenario Overrides (JSON)</label>
+                    <textarea id="simulationScenario" spellcheck="false">{
+  "feature_1": 1.0
+}</textarea>
+                    <div class="helper-text">Optional overrides replace the baseline feature values before the drift curve is applied.</div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" id="btnRunSimulation">Run Simulation</button>
+                </div>
+            </div>
+
+            <div class="surface">
+                <h4>Simulation Results</h4>
+                <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
+            </div>
         </div>
-        <div id="monitoringResults" class="json-display" style="margin-top:1rem;">No monitoring run executed yet.</div>
     </section>
 
-    <section class="mlops-section" id="mlflowSection">
-        <h3>MLflow Experiments</h3>
-        <div class="actions-row">
-            <select id="experimentSelect" style="min-width:260px;">
-                <option value="">Select Experiment</option>
-            </select>
-            <button type="button" class="btn" id="btnViewExperiment">View Details</button>
+    <section class="panel" id="panel-history">
+        <h3 class="panel-title">Monitoring and Retraining History</h3>
+        <p class="panel-subtitle">Every inference pair is shown as a condensed run summary with metrics, monitoring pressure, and the latest recorded history entries.</p>
+        <div class="actions-row" style="margin-bottom:1rem;">
+            <button type="button" class="btn btn-ghost" id="btnRefreshHistory">Refresh Run History</button>
         </div>
-        <div id="experimentResults" class="json-display" style="margin-top:1rem;">No experiment selected.</div>
+        <div id="historyResults" class="history-grid"></div>
     </section>
 
-    <!-- TODO - The activity log should be updated with painel amanaje's lifetime activity log.-->
-    <section class="mlops-section" id="logsSection">
-        <h3>Activity Log</h3>
-        <div id="productionLogs" class="log-display">No production activity yet.</div>
+    <section class="panel" id="panel-mlflow">
+        <h3 class="panel-title" id="mlflowSection">MLflow Experiments</h3>
+        <p class="panel-subtitle">Browse tracked experiments without leaving the production workspace.</p>
+        <div class="surface">
+            <div class="actions-row">
+                <select id="experimentSelect" style="min-width:260px;">
+                    <option value="">Select Experiment</option>
+                </select>
+                <button type="button" class="btn btn-primary" id="btnViewExperiment">View Details</button>
+            </div>
+            <div id="experimentResults" style="margin-top:1rem;">No experiment selected.</div>
+        </div>
+    </section>
+
+    <section class="panel" id="panel-activity">
+        <h3 class="panel-title">Lifetime Activity Log</h3>
+        <p class="panel-subtitle">This log persists key uploads, training completions, production transitions, monitoring refreshes, retraining runs, and simulations.</p>
+        <div class="actions-row" style="margin-bottom:1rem;">
+            <button type="button" class="btn btn-ghost" id="btnRefreshActivity">Refresh Activity Log</button>
+        </div>
+        <div id="activityLogResults"></div>
     </section>
 </div>
 {% endblock %}
@@ -115,9 +345,83 @@
 {% block extra_js %}
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 <script>
+const globalInferencePairId = document.getElementById('globalInferencePairId');
+const globalProductionModelId = document.getElementById('globalProductionModelId');
+const globalProductionDatasetId = document.getElementById('globalProductionDatasetId');
+const inferencePairId = document.getElementById('inferencePairId');
 const productionModelId = document.getElementById('productionModelId');
 const productionDatasetId = document.getElementById('productionDatasetId');
 const experimentSelect = document.getElementById('experimentSelect');
+
+let modelCache = [];
+let datasetCache = [];
+let inferenceCache = [];
+let productionHistoryCache = [];
+let activeWatchContextId = '';
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function setPanel(tabName) {
+    document.querySelectorAll('.workspace-tab').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+    });
+}
+
+function renderPlotDeck(plots = []) {
+    const usablePlots = Array.isArray(plots) ? plots.filter((plot) => Array.isArray(plot.series) && plot.series.length) : [];
+    if (!usablePlots.length) return '';
+
+    return `
+        <div class="plot-grid">
+            ${usablePlots.map((plot) => {
+                const maxValue = Math.max(...plot.series.map((item) => Number(item.value) || 0), 1);
+                return `
+                    <div class="plot-card">
+                        <h4>${escapeHtml(plot.title || 'Generated Plot')}</h4>
+                        <div class="helper-text" style="margin-bottom:0.8rem;">${escapeHtml(plot.description || 'Automatic summary plot')}</div>
+                        <div class="plot-bars">
+                            ${plot.series.map((item) => {
+                                const value = Number(item.value) || 0;
+                                const width = Math.max((value / maxValue) * 100, value > 0 ? 6 : 0);
+                                return `
+                                    <div class="plot-row">
+                                        <div class="plot-meta">
+                                            <span>${escapeHtml(item.label)}</span>
+                                            <span>${escapeHtml(value.toFixed(3).replace(/\.000$/, ''))}</span>
+                                        </div>
+                                        <div class="plot-track">
+                                            <div class="plot-fill" style="width:${width}%;"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+function buildSummaryMarkup(summary = {}) {
+    const rows = Object.entries(summary).map(([key, value]) => `
+        <tr>
+            <td>${escapeHtml(key.replace(/_/g, ' '))}</td>
+            <td>${typeof value === 'object' ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>` : escapeHtml(value)}</td>
+        </tr>
+    `).join('');
+    return `<table class="summary-table">${rows}</table>`;
+}
 
 function renderStatusPill(running) {
     return running
@@ -125,102 +429,321 @@ function renderStatusPill(running) {
         : '<span class="status-pill inactive">INACTIVE</span>';
 }
 
-function renderJson(targetId, payload, emptyMessage = 'No data available.') {
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    if (!payload || (typeof payload === 'object' && Object.keys(payload).length === 0)) {
-        target.textContent = emptyMessage;
+function findInference(id) {
+    return inferenceCache.find((item) => String(item.id) === String(id)) || null;
+}
+
+function findInferenceByPair(modelId, datasetId) {
+    if (!modelId || !datasetId) return null;
+    return inferenceCache.find((item) =>
+        String(item.learning_model_id) === String(modelId)
+        && String(item.dataset_id) === String(datasetId)
+    ) || null;
+}
+
+function syncSelectorsFromInference() {
+    const selected = findInference(inferencePairId.value);
+    if (!selected) return;
+    if (selected.learning_model_id) productionModelId.value = String(selected.learning_model_id);
+    if (selected.dataset_id) productionDatasetId.value = String(selected.dataset_id);
+}
+
+function syncGlobalProductionContextFromLocal() {
+    const matchingInference = findInferenceByPair(productionModelId.value, productionDatasetId.value);
+    globalInferencePairId.value = matchingInference ? String(matchingInference.id) : '';
+    globalProductionModelId.value = productionModelId.value || '';
+    globalProductionDatasetId.value = productionDatasetId.value || '';
+}
+
+function syncLocalProductionContextFromGlobal() {
+    inferencePairId.value = globalInferencePairId.value || '';
+    productionModelId.value = globalProductionModelId.value || '';
+    productionDatasetId.value = globalProductionDatasetId.value || '';
+    syncSelectorsFromInference();
+}
+
+function renderWatchlist(watchlist = {}) {
+    const entries = Object.values(watchlist || {});
+    const target = document.getElementById('watchlistResults');
+    if (!entries.length) {
+        target.innerHTML = '<div class="helper-text">No watch contexts have been started yet. Start one from the global panel and it will stay visible here.</div>';
         return;
     }
-    target.textContent = JSON.stringify(payload, null, 2);
+
+    target.innerHTML = entries.map((watch) => `
+        <div class="watch-card">
+            <h4>${escapeHtml(watch.active_model?.name || `Model ${watch.model_id || '-'}`)}</h4>
+            <div class="helper-text">Inference #${escapeHtml(watch.inference_id || 'n/a')} paired with Dataset #${escapeHtml(watch.dataset_id || 'n/a')}</div>
+            <div class="pill-row">
+                <span class="pill">${escapeHtml(watch.status || 'idle')}</span>
+                <span class="pill">${escapeHtml(watch.watch_context_id || '')}</span>
+            </div>
+            <div class="actions-row" style="margin-top:0.85rem;">
+                <button type="button" class="btn btn-ghost" data-watch-id="${escapeHtml(watch.watch_context_id || '')}" data-watch-inference="${escapeHtml(watch.inference_id || '')}" data-watch-model="${escapeHtml(watch.model_id || '')}" data-watch-dataset="${escapeHtml(watch.dataset_id || '')}">Use This Context</button>
+            </div>
+        </div>
+    `).join('');
+
+    target.querySelectorAll('[data-watch-inference]').forEach((button) => {
+        button.addEventListener('click', () => {
+            activeWatchContextId = button.getAttribute('data-watch-id') || '';
+            globalInferencePairId.value = button.getAttribute('data-watch-inference') || '';
+            globalProductionModelId.value = button.getAttribute('data-watch-model') || '';
+            globalProductionDatasetId.value = button.getAttribute('data-watch-dataset') || '';
+            syncLocalProductionContextFromGlobal();
+            syncGlobalProductionContextFromLocal();
+            setPanel('monitor');
+        });
+    });
 }
 
 async function populateProductionOptions() {
     await Promise.all([
         PopulateListOptions({
+            selectElement: '#globalInferencePairId',
+            endpoint: '/inferencemodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select an inference pair',
+            onSuccess: (data) => { inferenceCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#inferencePairId',
+            endpoint: '/inferencemodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select an inference pair',
+            onSuccess: (data) => { inferenceCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#globalProductionModelId',
+            endpoint: '/learningmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a model',
+            onSuccess: (data) => { modelCache = data; }
+        }),
+        PopulateListOptions({
             selectElement: '#productionModelId',
             endpoint: '/learningmodel/list',
             labelField: 'name',
             valueField: 'id',
-            placeholderText: 'Select a model'
+            placeholderText: 'Select a model',
+            onSuccess: (data) => { modelCache = data; }
+        }),
+        PopulateListOptions({
+            selectElement: '#globalProductionDatasetId',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset',
+            onSuccess: (data) => { datasetCache = data; }
         }),
         PopulateListOptions({
             selectElement: '#productionDatasetId',
             endpoint: '/datasetmodel/list',
             labelField: 'name',
             valueField: 'id',
-            placeholderText: 'Select a dataset'
+            placeholderText: 'Select a dataset',
+            onSuccess: (data) => { datasetCache = data; }
         })
     ]);
+    syncGlobalProductionContextFromLocal();
 }
 
-function syncSelectorsWithStatus(status) {
-    if (status?.model_id) productionModelId.value = String(status.model_id);
-    if (status?.dataset_id) productionDatasetId.value = String(status.dataset_id);
-}
-
-function renderProductionStatus(status) {
-    const container = document.getElementById('productionStatus');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-            ${renderStatusPill(Boolean(status?.running))}
-            <span>Model: <strong>${status?.active_model?.name || status?.model_id || 'n/a'}</strong></span>
-            <span>Dataset: <strong>${status?.dataset_id || 'n/a'}</strong></span>
+function renderProductionStatus(status = {}) {
+    activeWatchContextId = status.active_watch_context_id || status.watch_context_id || activeWatchContextId;
+    document.getElementById('productionStatus').innerHTML = `
+        <div class="pill-row">
+            ${renderStatusPill(Boolean(status.running))}
+            ${activeWatchContextId ? `<span class="pill">Watch ${escapeHtml(activeWatchContextId)}</span>` : ''}
+            <span class="pill">Inference #${escapeHtml(status.inference_id || 'n/a')}</span>
+            <span class="pill">Model ${escapeHtml(status.active_model?.name || status.model_id || 'n/a')}</span>
+            <span class="pill">Dataset ${escapeHtml(status.dataset_id || 'n/a')}</span>
         </div>
     `;
 
-    document.getElementById('runtimeState').textContent = status?.running ? 'ACTIVE' : 'INACTIVE';
-    document.getElementById('trackedMetrics').textContent = Object.keys(status?.metrics || {}).length;
-    document.getElementById('driftedFeatures').textContent = status?.monitoring?.summary?.drifted_features ?? 0;
-    document.getElementById('retrainFlag').textContent = status?.monitoring?.retrain_recommended ? 'Yes' : 'No';
+    document.getElementById('runtimeState').textContent = status.running ? 'ACTIVE' : 'INACTIVE';
+    document.getElementById('trackedMetrics').textContent = Object.keys(status.metrics || {}).length;
+    document.getElementById('driftedFeatures').textContent = status.monitoring?.summary?.drifted_features ?? 0;
+    document.getElementById('retrainFlag').textContent = status.monitoring?.retrain_recommended ? 'Yes' : 'No';
 
-    renderJson('deploymentSummary', status?.deployment, 'No deployment summary loaded yet.');
-    renderJson('monitoringResults', status?.monitoring, 'No monitoring run executed yet.');
+    const deploymentSummary = status.deployment || {};
+    document.getElementById('deploymentSummary').innerHTML = Object.keys(deploymentSummary).length
+        ? buildSummaryMarkup(deploymentSummary)
+        : 'No deployment summary loaded yet.';
 
-    const logs = Array.isArray(status?.logs) ? status.logs : [];
-    document.getElementById('productionLogs').textContent = logs.length ? logs.join('\n') : 'No production activity yet.';
+    document.getElementById('deploymentPills').innerHTML = [
+        deploymentSummary.model_name ? `<span class="pill">${escapeHtml(deploymentSummary.model_name)}</span>` : '',
+        deploymentSummary.dataset_name ? `<span class="pill">${escapeHtml(deploymentSummary.dataset_name)}</span>` : '',
+        deploymentSummary.started_at ? `<span class="pill">${escapeHtml(deploymentSummary.started_at)}</span>` : ''
+    ].join('');
+
+    const monitoringSummary = status.monitoring || {};
+    document.getElementById('monitoringSummary').innerHTML = Object.keys(monitoringSummary).length
+        ? `
+            ${buildSummaryMarkup({
+                evaluated_at: monitoringSummary.evaluated_at,
+                retrain_recommended: monitoringSummary.retrain_recommended,
+                summary: monitoringSummary.summary,
+                prediction_drift: monitoringSummary.prediction_drift
+            })}
+            ${renderPlotDeck([
+                {
+                    title: 'Monitoring Snapshot',
+                    description: 'Drift, degradation, and metric counts from the latest refresh.',
+                    series: [
+                        { label: 'Tracked Metrics', value: Object.keys(monitoringSummary.metrics || {}).length },
+                        { label: 'Drifted Features', value: monitoringSummary.summary?.drifted_features || 0 },
+                        { label: 'Degraded Metrics', value: monitoringSummary.summary?.degraded_metrics || 0 }
+                    ]
+                }
+            ])}
+        `
+        : 'No monitoring run executed yet.';
+
+    if (status.inference_id) inferencePairId.value = String(status.inference_id);
+    if (status.model_id) productionModelId.value = String(status.model_id);
+    if (status.dataset_id) productionDatasetId.value = String(status.dataset_id);
+    syncGlobalProductionContextFromLocal();
+    renderWatchlist(status.watchlist || {});
+}
+
+function renderSimulationResults(simulation = {}) {
+    const series = Array.isArray(simulation.series) ? simulation.series : [];
+    if (!series.length) {
+        document.getElementById('simulationResults').innerHTML = 'Run a simulation to inspect predicted future values.';
+        return;
+    }
+
+    const previewRows = series.slice(0, 12).map((row) => `
+        <tr>
+            <td>${escapeHtml(row.step)}</td>
+            <td>${escapeHtml(typeof row.prediction === 'object' ? JSON.stringify(row.prediction) : row.prediction)}</td>
+            <td><code>${escapeHtml(JSON.stringify(row.inputs || {}, null, 2))}</code></td>
+        </tr>
+    `).join('');
+
+    document.getElementById('simulationResults').innerHTML = `
+        ${buildSummaryMarkup({
+            model_id: simulation.model_id,
+            dataset_id: simulation.dataset_id,
+            inference_id: simulation.inference_id,
+            task_type: simulation.task_type,
+            steps: simulation.steps,
+            trend: simulation.trend,
+            amplitude: simulation.amplitude
+        })}
+        ${renderPlotDeck(simulation.plots || [])}
+        <div class="log-card" style="margin-top:1rem;">
+            <h4>Predicted Steps</h4>
+            <div class="log-block">
+                <table class="summary-table">
+                    <tbody>${previewRows}</tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function renderHistory(runs = []) {
+    if (!runs.length) {
+        document.getElementById('historyResults').innerHTML = '<div class="helper-text">No inference runs are registered yet.</div>';
+        return;
+    }
+
+    document.getElementById('historyResults').innerHTML = runs.map((run) => {
+        const recentHistory = Array.isArray(run.history) ? run.history.slice(-3).reverse() : [];
+        return `
+            <div class="history-card">
+                <h4>${escapeHtml(run.name || `Inference #${run.id}`)}</h4>
+                <div class="helper-text">Model #${escapeHtml(run.learning_model_id || '-')} paired with Dataset #${escapeHtml(run.dataset_id || '-')}</div>
+                <div class="pill-row">
+                    <span class="pill">${escapeHtml(run.status || 'idle')}</span>
+                    <span class="pill">${escapeHtml(`${Object.keys(run.latest_metrics || {}).length} metrics`)}</span>
+                    <span class="pill">${escapeHtml(`${recentHistory.length} recent events`)}</span>
+                </div>
+                ${renderPlotDeck(run.plots || [])}
+                <div class="log-card" style="margin-top:1rem;">
+                    <h4 style="margin-bottom:0.6rem;">Recent Events</h4>
+                    <div class="log-block">${escapeHtml(JSON.stringify(recentHistory, null, 2))}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderActivityLog(entries = []) {
+    if (!entries.length) {
+        document.getElementById('activityLogResults').innerHTML = '<div class="helper-text">No activity recorded yet.</div>';
+        return;
+    }
+
+    document.getElementById('activityLogResults').innerHTML = entries.slice().reverse().map((entry) => `
+        <div class="log-card" style="margin-bottom:1rem;">
+            <h4>${escapeHtml(entry.event_type || 'event')}</h4>
+            <div class="helper-text">${escapeHtml(entry.timestamp || '')}</div>
+            <div style="margin:0.7rem 0;">${escapeHtml(entry.message || '')}</div>
+            <div class="json-block">${escapeHtml(JSON.stringify(entry.details || {}, null, 2))}</div>
+        </div>
+    `).join('');
+}
+
+async function fetchJson(url, options = {}) {
+    const response = await fetch(url, options);
+    const data = await response.json();
+    if (!response.ok || data.status === 'error') {
+        throw new Error(data.detail || `HTTP ${response.status}`);
+    }
+    return data;
+}
+
+function buildProductionPayload(extra = {}) {
+    const payload = {
+        watchContextId: activeWatchContextId || null,
+        inferenceId: inferencePairId.value ? Number(inferencePairId.value) : null,
+        modelId: productionModelId.value ? Number(productionModelId.value) : null,
+        datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null,
+        ...extra
+    };
+    if (!payload.watchContextId) delete payload.watchContextId;
+    return payload;
 }
 
 async function syncProductionStatus() {
     try {
-        const response = await fetch('/production/status');
-        const status = await response.json();
-        if (!response.ok) throw new Error(status.detail || `HTTP ${response.status}`);
-        syncSelectorsWithStatus(status);
+        const status = await fetchJson('/production/status');
         renderProductionStatus(status);
+        if (status.simulation) renderSimulationResults(status.simulation);
+        if (status.activity_log) renderActivityLog(status.activity_log);
     } catch (error) {
-        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
 async function startProduction() {
     try {
-        const response = await fetch('/production/start', {
+        const result = await fetchJson('/production/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                modelId: productionModelId.value ? Number(productionModelId.value) : null,
-                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
-            })
+            body: JSON.stringify(buildProductionPayload())
         });
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Unable to start production');
         renderProductionStatus(result);
+        renderActivityLog(result.activity_log || []);
+        await loadProductionHistory();
     } catch (error) {
-        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
 async function stopProduction() {
     try {
-        const response = await fetch('/production/stop', { method: 'POST' });
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Unable to stop production');
+        const result = await fetchJson('/production/stop', { method: 'POST' });
         renderProductionStatus(result);
+        renderActivityLog(result.activity_log || []);
+        await loadProductionHistory();
     } catch (error) {
-        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        document.getElementById('productionStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
@@ -231,85 +754,182 @@ async function restartProduction() {
 
 async function refreshMonitoring() {
     try {
-        const response = await fetch('/production/monitor', {
+        const result = await fetchJson('/production/monitor', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                modelId: productionModelId.value ? Number(productionModelId.value) : null,
-                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
-            })
+            body: JSON.stringify(buildProductionPayload())
         });
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Monitoring refresh failed');
-        renderJson('monitoringResults', result.monitoring, 'No monitoring run executed yet.');
         renderProductionStatus(result.production || {});
+        renderActivityLog(result.production?.activity_log || []);
+        await loadProductionHistory();
     } catch (error) {
-        renderJson('monitoringResults', { error: error.message });
+        document.getElementById('monitoringSummary').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
 async function triggerRetraining() {
     try {
-        const response = await fetch('/production/retrain', {
+        const result = await fetchJson('/production/retrain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                modelId: productionModelId.value ? Number(productionModelId.value) : null,
-                datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null
-            })
+            body: JSON.stringify(buildProductionPayload())
         });
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || 'Retraining failed');
-        renderJson('monitoringResults', result.retraining, 'No retraining result available.');
-        await syncProductionStatus();
+        document.getElementById('monitoringSummary').innerHTML = `
+            <div class="alert alert-success">Retraining flow completed.</div>
+            <div class="json-block">${escapeHtml(JSON.stringify(result.retraining || {}, null, 2))}</div>
+        `;
+        renderProductionStatus(result.production || {});
+        renderActivityLog(result.production?.activity_log || []);
+        await loadProductionHistory();
     } catch (error) {
-        renderJson('monitoringResults', { error: error.message });
+        document.getElementById('monitoringSummary').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function runSimulation() {
+    let scenario = {};
+    try {
+        scenario = JSON.parse(document.getElementById('simulationScenario').value || '{}');
+    } catch (error) {
+        document.getElementById('simulationResults').innerHTML = `<div class="alert alert-error">Scenario overrides must be valid JSON: ${escapeHtml(error.message)}</div>`;
+        return;
+    }
+
+    try {
+        const result = await fetchJson('/production/simulate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(buildProductionPayload({
+                steps: Number(document.getElementById('simulationSteps').value || 12),
+                amplitude: Number(document.getElementById('simulationAmplitude').value || 0.05),
+                trend: document.getElementById('simulationTrend').value,
+                scenario
+            }))
+        });
+        renderSimulationResults(result.simulation || {});
+        renderProductionStatus(result.production || {});
+        renderActivityLog(result.production?.activity_log || []);
+        await loadProductionHistory();
+    } catch (error) {
+        document.getElementById('simulationResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+async function loadProductionHistory() {
+    try {
+        const result = await fetchJson('/production/history');
+        productionHistoryCache = result.runs || [];
+        renderHistory(productionHistoryCache);
+        renderActivityLog(result.activity_log || []);
+    } catch (error) {
+        document.getElementById('historyResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
 async function loadExperiments() {
     try {
         const response = await fetch('/mlflow/experiments');
-        const experiments = await response.json();
-        if (!response.ok) throw new Error(experiments.detail || `HTTP ${response.status}`);
-
+        const payload = await response.json();
+        const experiments = payload.experiments || [];
+        const health = payload.health || {};
         experimentSelect.innerHTML = `
             <option value="">Select Experiment</option>
-            ${experiments.map(exp => `<option value="${exp.id}">${exp.name || exp.id}</option>`).join('')}
+            ${experiments.map((exp) => `<option value="${exp.id}">${escapeHtml(exp.name || exp.id)}</option>`).join('')}
         `;
+        document.getElementById('experimentResults').innerHTML = health.warnings?.length
+            ? `<div class="alert alert-info">${escapeHtml(health.warnings.join(' '))}</div>`
+            : 'No experiment selected.';
     } catch (error) {
         experimentSelect.innerHTML = '<option value="">Error loading experiments</option>';
-        renderJson('experimentResults', { error: error.message });
+        document.getElementById('experimentResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
 async function viewExperiment() {
     if (!experimentSelect.value) {
-        renderJson('experimentResults', { info: 'Select an experiment first.' });
+        document.getElementById('experimentResults').innerHTML = '<div class="alert alert-info">Select an experiment first.</div>';
         return;
     }
 
     try {
         const response = await fetch(`/mlflow/experiments/${experimentSelect.value}`);
-        const experiment = await response.json();
-        if (!response.ok) throw new Error(experiment.detail || `HTTP ${response.status}`);
-        renderJson('experimentResults', experiment, 'No experiment selected.');
+        const payload = await response.json();
+        const experiment = payload.experiment;
+        const health = payload.health || {};
+        if (!experiment) {
+            document.getElementById('experimentResults').innerHTML = `<div class="alert alert-info">${escapeHtml((health.warnings || ['Experiment details are currently unavailable.']).join(' '))}</div>`;
+            return;
+        }
+        document.getElementById('experimentResults').innerHTML = `
+            ${health.warnings?.length ? `<div class="alert alert-info">${escapeHtml(health.warnings.join(' '))}</div>` : ''}
+            ${buildSummaryMarkup(experiment)}
+        `;
     } catch (error) {
-        renderJson('experimentResults', { error: error.message });
+        document.getElementById('experimentResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
+document.querySelectorAll('.workspace-tab').forEach((button) => {
+    button.addEventListener('click', () => setPanel(button.dataset.tab));
+});
+
+globalInferencePairId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    syncLocalProductionContextFromGlobal();
+    syncGlobalProductionContextFromLocal();
+});
+globalProductionModelId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    if (globalInferencePairId.value) globalInferencePairId.value = '';
+    syncLocalProductionContextFromGlobal();
+    syncGlobalProductionContextFromLocal();
+});
+globalProductionDatasetId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    if (globalInferencePairId.value) globalInferencePairId.value = '';
+    syncLocalProductionContextFromGlobal();
+    syncGlobalProductionContextFromLocal();
+});
+inferencePairId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    syncSelectorsFromInference();
+    syncGlobalProductionContextFromLocal();
+});
+productionModelId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    if (inferencePairId.value) inferencePairId.value = '';
+    syncGlobalProductionContextFromLocal();
+});
+productionDatasetId.addEventListener('change', () => {
+    activeWatchContextId = '';
+    if (inferencePairId.value) inferencePairId.value = '';
+    syncGlobalProductionContextFromLocal();
+});
+document.getElementById('btnGlobalStartProduction').addEventListener('click', startProduction);
+document.getElementById('btnGlobalRefreshMonitoring').addEventListener('click', refreshMonitoring);
+document.getElementById('btnGlobalRunSimulation').addEventListener('click', async () => {
+    setPanel('simulation');
+    await runSimulation();
+});
 document.getElementById('btnStartProduction').addEventListener('click', startProduction);
 document.getElementById('btnStopProduction').addEventListener('click', stopProduction);
 document.getElementById('btnRestartProduction').addEventListener('click', restartProduction);
 document.getElementById('btnRefreshMonitoring').addEventListener('click', refreshMonitoring);
 document.getElementById('btnTriggerRetrain').addEventListener('click', triggerRetraining);
+document.getElementById('btnRunSimulation').addEventListener('click', runSimulation);
+document.getElementById('btnRefreshHistory').addEventListener('click', loadProductionHistory);
+document.getElementById('btnRefreshActivity').addEventListener('click', async () => {
+    const status = await fetchJson('/production/status');
+    renderActivityLog(status.activity_log || []);
+});
 document.getElementById('btnViewExperiment').addEventListener('click', viewExperiment);
 
 document.addEventListener('DOMContentLoaded', async () => {
     await populateProductionOptions();
     await syncProductionStatus();
+    await loadProductionHistory();
     await loadExperiments();
+    syncGlobalProductionContextFromLocal();
 });
 </script>
 {% endblock %}

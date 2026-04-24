@@ -82,7 +82,7 @@ def _install_app(monkeypatch):
                 is_deployed=False,
             )
         if orm_model.__name__ == "CodeORM":
-            return FakeORM(**base_payload, object_type="code_model", code={"script": "print(1)"}, variables={"x": 1})
+            return FakeORM(**{**base_payload, "object_type": "code_model"}, code={"script": "print(1)"}, variables={"x": 1})
         raise AssertionError(f"Unexpected ORM model {orm_model.__name__}")
 
     async def fake_get_all_entries(db, orm_model):

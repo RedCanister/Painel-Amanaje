@@ -111,17 +111,33 @@ class CodeModel(ObjectModel):
     @classmethod
     def _validate_code_dicts(cls, value: Any) -> Any:
         return _coerce_dict_field(value)
-    
-# TODO - Include the InferenceORM Model match here for the registry
-class InfereceModel(ObjectModel):
-    # fill in
-    id: int
 
-class StudyModel(ObjectModel):
+
+class InferenceModel(ObjectModel):
 
     learning_model_id: int
-    learning_model: Optional[LearningModel] = None
     dataset_id: int
+    input_features: Optional[List[str]] = None
+    output_features: Optional[List[str]] = None
+    inference_params: Optional[Dict[str, Any]] = None
+
+    @field_validator("input_features", "output_features", mode="before")
+    @classmethod
+    def _validate_inference_lists(cls, value: Any) -> Any:
+        return _coerce_list_field(value)
+
+    @field_validator("inference_params", mode="before")
+    @classmethod
+    def _validate_inference_dicts(cls, value: Any) -> Any:
+        return _coerce_dict_field(value)
+
+
+InfereceModel = InferenceModel
+
+
+class StudyModel(InferenceModel):
+
+    learning_model: Optional[LearningModel] = None
     dataset: Optional[DatasetModel] = None
     sampler: str
     objective: str
@@ -140,30 +156,56 @@ class StudyModel(ObjectModel):
     # Objective fuctions per library
     
     # Tensors - Dataloaders
-    def objective_torch(X, y, PyTorchModel, nn_criterion, nn_optimizer, 
-            param_list: Dict[str, int], trial: op.trial.Trial
-        ):
+    @staticmethod
+    def objective_torch(
+        X,
+        y,
+        PyTorchModel,
+        nn_criterion=None,
+        nn_optimizer=None,
+        param_list: Optional[Dict[str, Any]] = None,
+        trial: Optional[op.trial.Trial] = None,
+        epochs: int = 1,
+    ):
+        import torch
+        import torch.nn as nn
+
+        if trial is None:
+            raise ValueError("trial is required for StudyModel.objective_torch")
+
         # Hyperparameter search space
         # - Parameter definition
         # - Range and parameter suggestion function
 
         # The incoming param_list has 3 integers behind each parameter, to be provided in the front-end
         # e.g., {'param_name': {'type': 'int', 'low': 1, 'high': 10, 'step': 1}}
-        for param, values in param_list.items():
-            if values['type'] == 'int':
-                param_value = trial.suggest_int(param, values['low'], values['high'], step=values.get('step', 1))
-            elif values['type'] == 'float':
-                param_value = trial.suggest_float(param, values['low'], values['high'], step=values.get('step', 0.1))
-            elif values['type'] == 'categorical':
-                param_value = trial.suggest_categorical(param, values['choices'])
-            # Store or use param_value as needed
+        suggested_params: Dict[str, Any] = {}
+        for param, values in (param_list or {}).items():
+            if values["type"] == "int":
+                suggested_params[param] = trial.suggest_int(param, values["low"], values["high"], step=values.get("step", 1))
+            elif values["type"] == "float":
+                suggested_params[param] = trial.suggest_float(param, values["low"], values["high"], step=values.get("step"))
+            elif values["type"] == "categorical":
+                suggested_params[param] = trial.suggest_categorical(param, values["choices"])
         
         # Model definition
         # - Criterion and optimizer
         # - Training function
-        model = PyTorchModel(param_list, )
-        criterion = nn.MSELoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        try:
+            model = PyTorchModel(**suggested_params)
+        except TypeError:
+            model = PyTorchModel(suggested_params)
+
+        criterion = nn_criterion() if isinstance(nn_criterion, type) else nn_criterion
+        criterion = criterion or nn.MSELoss()
+
+        learning_rate = float(suggested_params.get("learning_rate", 0.001))
+        if nn_optimizer is None:
+            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        elif isinstance(nn_optimizer, type):
+            optimizer = nn_optimizer(model.parameters(), lr=learning_rate)
+        else:
+            optimizer = nn_optimizer
 
         # Loss Validation
         # - Gradient
@@ -171,6 +213,28 @@ class StudyModel(ObjectModel):
 
         # Training function
         # model, metric_a, metric_b = train_torch(model, X, y, kw1, kw1, criterion, optimizer, epochs, steps)
+        def _as_tensor(value):
+            if hasattr(value, "to_numpy"):
+                value = value.to_numpy()
+            tensor = torch.as_tensor(value, dtype=torch.float32)
+            if tensor.ndim == 1:
+                tensor = tensor.reshape(-1, 1)
+            return tensor
+
+        x_tensor = _as_tensor(X)
+        y_tensor = _as_tensor(y)
+        if hasattr(model, "train"):
+            model.train()
+        latest_loss = None
+        for _ in range(max(1, int(epochs))):
+            optimizer.zero_grad()
+            predictions = model(x_tensor)
+            if isinstance(predictions, tuple):
+                predictions = predictions[0]
+            loss = criterion(predictions, y_tensor)
+            loss.backward()
+            optimizer.step()
+            latest_loss = loss
 
         # Front-end request model.train() or model.eval()
         # model.eval()
@@ -188,16 +252,27 @@ class StudyModel(ObjectModel):
         # Exception catching
 
 
-        return None
+        return float(latest_loss.detach().cpu().item()) if latest_loss is not None else None
 
     # fit(X, y)
-    def objective_sklearn():
+    @staticmethod
+    def objective_sklearn(estimator=None, X=None, y=None, metric=None):
+        if estimator is None or X is None or y is None:
+            return None
+
+        fitted_estimator = estimator.fit(X, y)
+        if metric is not None:
+            return metric(fitted_estimator, X, y)
+        if hasattr(fitted_estimator, "score"):
+            return float(fitted_estimator.score(X, y))
         return None
 
 
+    @staticmethod
     def objective_tensorflow():
         return None
 
 
+    @staticmethod
     def objective_xgboost():
         return None

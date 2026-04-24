@@ -1,9 +1,11 @@
 {
     "model_id": 2,
-    "dataset_id": 1,
+    "dataset_id": 7,
+    "inference_id": null,
     "model_name": "sample_model",
+    "dataset_name": "sample_dataset",
     "artifact_path": "/models/sample_model.pt",
-    "started_at": "2026-04-17T22:26:47.918312",
+    "started_at": "2026-04-22T00:28:11.516392",
     "status": "active",
     "artifact_metadata": {
         "error": "Unsupported file type: .pt"

@@ -1,0 +1,277 @@
+{% extends "base_template.html" %}
+
+{% block title %}Data Operations - Painel Amanaje{% endblock %}
+
+{% block body_class %}red-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --amanaje-primary: #e63946;
+        --amanaje-primary-strong: #991b1b;
+        --amanaje-primary-soft: #ffe4e6;
+        --amanaje-primary-softer: #fff5f5;
+        --amanaje-primary-mid: #fecdd3;
+        --amanaje-primary-border: #fda4af;
+        --amanaje-primary-border-soft: #fecdd3;
+        --amanaje-primary-accent: #fb7185;
+        --amanaje-primary-gradient: #e63946;
+        --amanaje-primary-bar-gradient: #e63946;
+        --amanaje-primary-shadow: rgba(230, 57, 70, 0.08);
+        --amanaje-primary-shadow-strong: rgba(230, 57, 70, 0.2);
+        --amanaje-code-bg: #3f0d12;
+        --amanaje-code-fg: #ffe4e6;
+        --amanaje-code-border: #7f1d1d;
+        --amanaje-body-bg: #fffafa;
+    }
+
+    .data-operations { display: grid; gap: 1.25rem; }
+    .form-section {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        margin-bottom: 0;
+        padding: 1.5rem;
+    }
+    .form-section h3 { color: var(--amanaje-primary); margin-top: 0; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .form-group select,
+    .analysis-controls select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: white;
+    }
+    .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
+    .feature-item, .model-item {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.9rem;
+    }
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; }
+    .support-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.95rem;
+    }
+    .support-card h4 { margin: 0 0 0.35rem; color: var(--amanaje-primary-strong); }
+    .support-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+    .support-badge {
+        display: inline-flex;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        font-size: 0.82rem;
+        color: var(--amanaje-primary-strong);
+    }
+    .analysis-card {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.95rem;
+    }
+    .analysis-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .analysis-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .analysis-kpi {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        padding: 0.75rem;
+    }
+    .analysis-kpi strong { display: block; color: var(--amanaje-primary); font-size: 1.1rem; }
+    .analysis-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    .analysis-table th, .analysis-table td { padding: 0.55rem; border-bottom: 1px solid var(--amanaje-primary-soft); text-align: left; vertical-align: top; }
+    .analysis-table th { color: var(--amanaje-primary-strong); background: white; }
+    .analysis-warning {
+        margin-top: 0.75rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 12px;
+        background: #fff7ed;
+        color: #9a3412;
+        border: 1px solid #fdba74;
+    }
+    .editor-controls, .feature-controls, .model-controls, .analysis-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+    .analysis-controls select { max-width: 320px; }
+    #editorContainer {
+        width: 100%;
+        height: 520px;
+        min-height: 200px;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 14px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    #executionOutput { margin-top: 1rem; padding: 0.75rem; background: var(--amanaje-code-bg); color: var(--amanaje-code-fg); border: 1px solid var(--amanaje-code-border); border-radius: 14px; display: none; }
+    #executionOutput.visible { display: block; }
+    #outputContent { white-space: pre-wrap; }
+    #metadataPanel {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 1rem;
+        margin: 1rem 0;
+        display: none;
+    }
+    #metadataPanel h4 {
+        margin-top: 0;
+        color: var(--amanaje-primary-strong);
+        border-bottom: 2px solid var(--amanaje-primary-border-soft);
+        padding-bottom: 0.5rem;
+    }
+    .metadata-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .metadata-table th { background: var(--amanaje-primary); color: #fff; padding: 0.5rem; text-align: left; }
+    .metadata-table td { padding: 0.5rem; border-bottom: 1px solid var(--amanaje-primary-soft); }
+    .metadata-key { font-weight: 600; color: var(--amanaje-primary-strong); width: 30%; }
+    .metadata-value { color: #374151; font-family: 'Courier New', monospace; word-break: break-word; }
+    .status-message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 14px; }
+    .status-message.success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .status-message.error { background: #fef2f2; color: #991b1b; }
+    .status-message.info { background: #eff6ff; color: #1d4ed8; }
+    .upload-status { margin-top: 1rem; }
+    .small-text { color: #6b7280; font-size: 0.9rem; }
+    .btn,
+    .editor-controls button {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+    }
+    .editor-controls button.success,
+    #btnCreateObject {
+        background: var(--amanaje-primary-gradient);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/editor-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/create-page.js') }}?v=20260403-1"></script>
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="data-operations">
+    <section class="form-section" id="uploadSection">
+        <h3>Data Creation</h3>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="operationId">Operation Type:</label>
+                <select id="operationId" name="operationId">
+                    <option value="datasets">Datasets</option>
+                    <option value="models">Models</option>
+                </select>
+            </div>
+
+            <div class="editor-controls">
+                <button type="button" id="btnExecuteScript" class="success">Execute</button>
+                <button type="button" id="btnExtractVariables">Extract Variables</button>
+                <button type="button" id="btnSaveScript" class="success">Save</button>
+                <button type="button" id="btnLoadScript" class="success">Load</button>
+                <button type="button" id="btnLoadTemplate" class="success">Load Template</button>
+                <button type="button" id="btnGenerateScript" class="success">Generate</button>
+                <button type="button" id="btnExportJSON" class="success">Export JSON</button>
+                <button type="button" id="btnResetScript" class="success">Reset</button>
+            </div>
+
+            <div id="editor">
+                <h3>Write your creation script here.</h3>
+                <div id="editorContainer"></div>
+
+                <div id="statusMessage" class="status-message"></div>
+
+                <div id="metadataPanel">
+                    <h4>Object Metadata</h4>
+                    <p class="small-text" id="metadataHint">Click "Extract Variables" or "Execute" to populate this panel.</p>
+                    <div id="metadataContent"></div>
+                </div>
+
+                <div id="executionOutput">
+                    <div style="color: #569cd6; margin-bottom: 8px;">Script Output</div>
+                    <div id="outputContent"></div>
+                </div>
+                
+                <!-- TODO - Turn Script Variables into a better metadata visualizer -->
+                <div id="variablePanel" style="display:none;">
+                    <h3>Script Variables</h3>
+                    <div id="variableList"></div>
+                </div>
+
+                <div id="filePanel" style="display:none;">
+                    <h3>Saved Scripts</h3>
+                    <ul id="fileList" class="file-list"></ul>
+                </div>
+            </div>
+        </form>
+
+        <div class="editor-controls" id="uploadActions">
+            <button type="button" id="btnCreateObject" class="success">Create</button>
+        </div>
+        <div id="uploadStatus" class="upload-status"></div>
+    </section>
+
+    <section class="form-section" id="supportSection">
+        <h3>Supported File Types</h3>
+        <p class="small-text">Upload support is capability-based. A file type might be registrable and inspectable, but not necessarily runnable for prediction or simulation.</p>
+        <div id="supportMatrix" class="support-grid"></div>
+    </section>
+
+    <section class="form-section" id="featuresSection">
+        <h3>Dataset History</h3>
+        <div class="feature-controls">
+            <button type="button" id="btnRefreshFeatures" class="btn">Refresh Datasets</button>
+            <button type="button" id="btnExtractFeatures" class="btn">Extract Features</button>
+        </div>
+        <div class="feature-list" id="featureList"></div>
+    </section>
+
+    <section class="form-section" id="modelsSection">
+        <h3>Model History</h3>
+        <div class="model-controls">
+            <button type="button" id="btnRefreshModels" class="btn">Refresh Models</button>
+            <button type="button" id="btnOptimizeModels" class="btn">Optimize Models</button>
+        </div>
+        <div class="model-list" id="modelList"></div>
+    </section>
+
+    <section class="form-section" id="analysisSection">
+        <div id="datasetAnalysis">
+            <h3>Data Analysis</h3>
+            <div class="analysis-controls">
+                <select id="datasetSelect">
+                    <option value="">Select Dataset</option>
+                </select>
+                <button type="button" id="btnAnalyzeDataset" class="btn">Analyze</button>
+            </div>
+            <div id="datasetAnalysisResults" class="data-grid"></div>
+        </div>
+
+        <div id="modelAnalysis">
+            <h3>Model Analysis</h3>
+            <div class="analysis-controls">
+                <select id="modelSelect">
+                    <option value="">Select Model</option>
+                </select>
+                <button type="button" id="btnAnalyzeModel" class="btn">Analyze</button>
+            </div>
+            <div id="modelAnalysisResults" class="data-grid"></div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}

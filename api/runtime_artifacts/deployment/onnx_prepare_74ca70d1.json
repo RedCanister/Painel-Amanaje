@@ -1,0 +1,24 @@
+{
+    "model_id": 18,
+    "dataset_id": 13,
+    "study_id": null,
+    "framework": "pytorch",
+    "export_target": "onnx",
+    "parameters": {
+        "metric": "accuracy",
+        "n_trials": 25,
+        "direction": "maximize",
+        "framework": "pytorch",
+        "dropout": 0,
+        "batch_size": 64,
+        "hidden_dim": 112,
+        "hidden_layers": 2,
+        "learning_rate": 0.0005083858013825619,
+        "epochs": 50,
+        "input_size": 4,
+        "num_layers": 2,
+        "hidden_size": 32,
+        "output_size": 1
+    },
+    "prepared_at": "2026-04-24T03:44:23.388778"
+}
