@@ -1,135 +1,86 @@
 # Painel Amanaje
 
-Painel Amanaje is a local-first ML/MLOps platform built around a FastAPI control plane, HTML dashboards, model and dataset registries, training utilities, MLflow tracking, ONNX preparation, and production monitoring workflows.
+Painel Amanaje is a local-first MLOps workspace for building, training, tracking, and operating machine learning workflows from one place.
 
-The project started as a stock forecasting effort around NVIDIA market data and Temporal Fusion Transformer ideas, but the current repository has evolved into a broader experimentation and operations workspace for datasets, models, studies, and deployment flows.
+It combines a FastAPI control plane, a multi-page HTML interface, registry-backed dataset and model management, MLflow experiment tracking, Optuna studies, ONNX export helpers, and production monitoring flows.
 
-## Current status
+## Why this repo is useful
 
-- Active API entrypoint: `api/main_app.py`
-- Current FastAPI app version: `0.3.0`
-- Main local stack: PostgreSQL, Redis, Airflow, MLflow, FastAPI, pgAdmin
-- Optional sidecars in the repo: Dash dashboard, Feast example repo, MkDocs docs, Kubernetes/Kubeflow design notes
-- Major cleanup and alignment work from the project reports has already been applied:
-  - unified upload workflow
-  - metadata-driven create flow
-  - reusable frontend form utilities
-  - console/runtime bug fixes
-  - registry CRUD improvements
-  - test-covered `v2` registry refactor in progress
+- Upload datasets and model artifacts through a unified workflow
+- Create metadata-rich assets from code in the built-in editor
+- Train scikit-learn and PyTorch models from the UI or API
+- Track experiments and artifacts with MLflow
+- Run Optuna optimization studies
+- Prepare models for ONNX validation and deployment workflows
+- Monitor production state, simulations, drift signals, and retraining actions
 
-## What is implemented today
+## What is live today
 
-### UI routes
+### Main app
 
-| Route | Purpose |
+- Active entrypoint: `api/main_app.py`
+- FastAPI app version: `0.3.0`
+- Core stack: FastAPI, PostgreSQL, Redis, Airflow, MLflow, SQLAlchemy, Jinja templates
+- Optional sidecars in the repo: Dash dashboard, Feast example, MkDocs docs, Kubernetes notes
+
+### UI pages
+
+| Route | What it does |
 | --- | --- |
-| `/` | Main navigation page |
-| `/upload` | Upload datasets and models |
-| `/create` | Metadata-first editor and object creation flow |
-| `/training` | Training configuration and execution UI |
-| `/optimization` | Optimization page currently rendered from `base_green.html` |
-| `/editor` | Code editor page |
-| `/production` | Production monitoring and deployment controls |
-| `/registry` | Registry CRUD interface |
+| `/` | Home navigation |
+| `/upload` | Upload datasets and model files |
+| `/create` | Metadata-first creation flow |
+| `/feature` | Feature analysis and extraction workspace |
+| `/training` | Training configuration and execution |
+| `/optimization` | Optimization and study flow |
+| `/editor` | Code editor and code generation |
+| `/production` | Deployment, monitoring, simulation, retraining |
+| `/registry` | CRUD and asset browsing |
 
-### Active API capabilities
+### Key API flows
 
-- `POST /upload/{operation_id}` uploads datasets or models through a unified handler.
-- `POST /execute` runs editor code server-side and returns variables, metadata, stdout, and stderr.
-- `POST /generate` creates starter dataset or model scripts from prompts.
-- `POST /training/{model_id}` runs training, writes artifacts, updates the registry, and logs metrics.
-- `POST /studies/{study_id}/optimize` runs Optuna-backed study optimization.
-- `GET /features`, `GET /list/dataset`, and `GET /list/model` expose dataset and model summaries.
-- `GET /features/extract`, `GET /analysis/data`, and `GET /analysis/model` generate feature and analysis summaries.
-- `POST /onnx/prepare` and `GET /onnx/validate/{model_id}` support ONNX preparation and validation flows.
-- `GET /production/status`, `POST /production/start`, `POST /production/stop`, `POST /production/monitor`, and `POST /production/retrain` manage production state.
-- `GET /mlflow/experiments` and `GET /mlflow/experiments/{exp_id}` expose MLflow experiment information.
+- `POST /upload/{operation_id}` uploads datasets or models
+- `POST /execute` runs editor code and extracts variables plus metadata
+- `POST /generate` creates starter code for datasets or models
+- `POST /training/{model_id}` launches a training run and writes runtime artifacts
+- `POST /studies/{study_id}/optimize` runs Optuna-backed optimization
+- `POST /onnx/prepare` and `GET /onnx/validate/{model_id}` support ONNX preparation
+- `POST /production/start`, `POST /production/monitor`, `POST /production/retrain`, and `POST /production/simulate` drive production workflows
+- `GET /mlflow/experiments` and `GET /mlflow/experiments/{exp_id}` expose tracked experiments
 
-### Auto-generated CRUD routes
+### Registry resources
 
-`api/main_app.py` mounts registry-generated CRUD routes from `api/app/models/model_registry.py` for:
+The current app mounts generated CRUD routes for:
 
 - `datasetmodel`
 - `learningmodel`
-- `codemodel`
+- `inferencemodel`
 - `studymodel`
+- `codemodel`
 
 Each resource gets `create`, `get`, `list`, `update`, and `delete` endpoints.
 
-## Architecture snapshot
-
-- FastAPI + Jinja templates power the web UI and JSON endpoints.
-- Async SQLAlchemy + PostgreSQL store registry metadata.
-- Runtime artifacts are written under `api/runtime_artifacts/` for training, monitoring, deployment, plots, serving, and config snapshots.
-- MLflow is used for experiment tracking and model-related artifact logging.
-- Optuna utilities support study optimization.
-- scikit-learn and PyTorch training helpers live in `api/app/utils/training.py`.
-- Production monitoring, drift checks, and retraining helpers live in `api/app/utils/monitoring.py` and `api/app/utils/retrain_utils.py`.
-
-## Services in `docker-compose.yaml`
-
-| Service | Port | Notes |
-| --- | --- | --- |
-| `api` | `8000` | Main FastAPI app |
-| `mlflow` | `5000` | MLflow tracking server |
-| `airflow-webserver` | `8080` | Airflow UI/API |
-| `postgres` | `5432` | Metadata database |
-| `pgadmin` | `5050` | Optional DB admin UI |
-| `redis` | internal | Broker/cache for Airflow Celery setup |
-
-Notes:
-
-- The compose file currently enables `airflow-init` and `airflow-webserver`.
-- `airflow-scheduler`, `airflow-worker`, `airflow-triggerer`, and the Dash `dashboard` service are present but commented out.
-- Feast is included as a sample repository under `features/`, not as an active compose service.
-
-## Repository map
-
-```text
-api/
-  main_app.py              # active FastAPI application
-  main.py                  # older legacy API entrypoint
-  templates/               # HTML pages
-  static/js/               # frontend helpers
-  app/models/              # current mounted registry + ORM models
-  app/models/v2/           # stricter registry schemas and router refactor
-  app/utils/               # training, MLflow, Optuna, deployment, monitoring
-  runtime_artifacts/       # generated outputs
-
-dashboard/                 # optional Dash market viewer
-features/                  # Feast quickstart/example repo
-data/                      # datasets used by the app
-models/                    # model artifacts
-mlflow-server/             # MLflow server container
-airflow/                   # Airflow-related dependencies
-painel-amanaje/            # MkDocs docs folder
-docker-compose.yaml        # local multi-service stack
-```
-
 ## Quick start
 
-### Option 1: Full local stack with Docker Compose
+### Option 1: Run the full local stack
 
-1. Make sure Docker and Docker Compose are installed.
-2. Make sure a root `.env` file exists with the database and MLflow settings you want to use.
-3. Start the stack:
+This is the fastest way to see the project as intended.
 
 ```powershell
 docker compose up --build
 ```
 
-4. Open the main services:
+Open:
 
-- FastAPI app: `http://localhost:8000`
-- FastAPI docs: `http://localhost:8000/docs`
+- App: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`
 - MLflow: `http://localhost:5000`
 - Airflow: `http://localhost:8080`
 - pgAdmin: `http://localhost:5050`
 
-### Option 2: Run only the API locally
+### Option 2: Run only the API
 
-The API expects a reachable PostgreSQL instance. By default it looks for:
+The API expects a reachable PostgreSQL instance. Default settings in the repo point to:
 
 - `POSTGRES_HOST=postgres`
 - `POSTGRES_PORT=5432`
@@ -137,7 +88,7 @@ The API expects a reachable PostgreSQL instance. By default it looks for:
 - `POSTGRES_USER=airflow`
 - `POSTGRES_PASSWORD=airflow`
 
-To run only the API:
+Run locally:
 
 ```powershell
 cd api
@@ -147,11 +98,58 @@ pip install -r requirements.txt
 uvicorn main_app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Metadata-driven create workflow
+## Local stack
 
-The editor-based creation flow described in `METADATA_VARIABLES_GUIDE.md` is part of the current project direction.
+The main `docker-compose.yaml` currently brings up:
 
-Define metadata at the top of a script:
+| Service | Port | Notes |
+| --- | --- | --- |
+| `api` | `8000` | FastAPI app |
+| `mlflow` | `5000` | Tracking server |
+| `airflow-webserver` | `8080` | Airflow UI/API |
+| `postgres` | `5432` | Metadata database |
+| `pgadmin` | `5050` | Database admin UI |
+| `redis` | internal | Broker/cache |
+
+Notes:
+
+- `airflow-init` is part of the startup flow
+- `airflow-scheduler`, `airflow-worker`, `airflow-triggerer`, and `dashboard` are present but commented out
+- `features/` is an example integration area, not an active compose service
+
+## Architecture at a glance
+
+```text
+api/
+  main_app.py              active FastAPI app
+  templates/               Jinja UI pages
+  static/                  frontend assets
+  app/models/              registry and ORM models
+  app/models/v2/           stricter registry refactor
+  app/utils/               training, MLflow, Optuna, monitoring, deployment
+  runtime_artifacts/       generated outputs
+
+dashboard/                 optional Dash viewer
+features/                  Feast example workspace
+data/                      dataset storage
+models/                    model storage
+mlflow-server/             MLflow container assets
+airflow/                   Airflow dependencies
+painel-amanaje/            MkDocs site
+docker-compose.yaml        full local stack
+```
+
+## Main workflows
+
+### 1. Upload
+
+Use `/upload` to register datasets and model artifacts through the same backend flow. Dataset uploads also generate profiling metadata and feature summaries.
+
+### 2. Create from code
+
+Use `/create` and `/editor` together to turn Python snippets into structured assets. The app can extract variables, metadata, and starter object definitions from code.
+
+Example dataset metadata:
 
 ```python
 name = "sales_2024"
@@ -160,7 +158,7 @@ dataset_type = "csv"
 connection_string = ""
 ```
 
-For models, use fields such as:
+Example model metadata:
 
 ```python
 name = "customer_churn_model"
@@ -168,58 +166,74 @@ description = "Baseline classifier"
 model_type = "sklearn"
 ```
 
-The flow is:
+### 3. Train and optimize
 
-1. Write code in the editor.
-2. Extract variables and metadata.
-3. Review the generated metadata panel.
-4. Create the dataset or model entry through the unified upload path.
+Use `/training` to run model training and `/optimization` for study-driven tuning. Current dependencies include:
+
+- `fastapi==0.135.1`
+- `uvicorn==0.41.0`
+- `mlflow~=3.10.0`
+- `optuna==4.7.0`
+- `scikit-learn==1.7.2`
+- `torch==2.9.0`
+
+### 4. Operate in production
+
+Use `/production` to:
+
+- start a model-dataset runtime pair
+- inspect health and monitoring signals
+- run simulation scenarios
+- trigger retraining flows
+- review production history and activity logs
 
 ## Testing
 
-Focused tests currently exist for the newer registry layer:
+The repo includes focused API and runtime tests under `api/tests/`.
+
+Run the main test suite from the API folder:
 
 ```powershell
 cd api
-pytest tests/test_model_registry_v2.py
+pytest
 ```
 
-The `v2` registry code lives in `api/app/models/v2/` and is more strictly validated than the currently mounted registry routes.
+If you want the lighter test dependency set first:
 
-## Important implementation notes
+```powershell
+pip install -r requirements-test.txt
+```
 
-- `api/main_app.py` is the current source of truth for active routes and runtime behavior.
-- `api/main.py` is an older implementation that still exists in the repo for reference.
-- Some historical markdown notes mention earlier route layouts such as `/airflow/*` stubs; use `api/main_app.py` when in doubt.
-- `base_test.html` still exists in the repo, but the current `/optimization` route renders `base_green.html`.
-- The Dash app in `dashboard/app.py` is a lightweight stock price viewer and is not enabled by default in `docker-compose.yaml`.
-- The Feast folder is a quickstart/example integration, not a fully wired part of the main API flow yet.
-- The MkDocs site under `painel-amanaje/` is mostly scaffolded today, but the Kubernetes note is useful and up to date.
+## Manual signoff
 
-## Related project notes
+The repository also includes a human-run signoff package:
 
-- [ALIGNMENT_COMPLETION_REPORT.md](ALIGNMENT_COMPLETION_REPORT.md) - major template, endpoint, and validation alignment work
-- [PROJECT_UPDATE_SUMMARY.md](PROJECT_UPDATE_SUMMARY.md) - endpoint consolidation and API fixes
-- [CHANGES_SUMMARY.md](CHANGES_SUMMARY.md) - reusable form utility work
-- [CONSOLE_ERRORS_FIXED.md](CONSOLE_ERRORS_FIXED.md) - console and runtime fixes
-- [METADATA_VARIABLES_GUIDE.md](METADATA_VARIABLES_GUIDE.md) - editor metadata workflow
-- [features/README.md](features/README.md) - Feast example repo notes
-- [painel-amanaje/docs/kubernetes-training-stack.md](painel-amanaje/docs/kubernetes-training-stack.md) - Kubernetes and Kubeflow target architecture
+- Checklist: `docs/manual-signoff-checklist.md`
+- Report template: `docs/manual-signoff-report-template.md`
+- Fixture builder: `scripts/build_manual_test_fixtures.py`
+- Prep helper: `scripts/prepare_manual_signoff.ps1`
 
-## Where to start in the codebase
+## Where to start in the code
 
-- API app: `api/main_app.py`
-- Model registry: `api/app/models/model_registry.py`
+- App entrypoint: `api/main_app.py`
+- Shared app setup: `api/app/utils/main_utils.py`
+- Registry routes: `api/app/models/model_registry.py`
 - Registry refactor: `api/app/models/v2/model_registry.py`
-- Training helpers: `api/app/utils/training.py`
+- Database utilities: `api/app/database/db_utils.py`
+- Training pipeline: `api/app/utils/training.py`
 - MLflow helpers: `api/app/utils/mlflow_utils.py`
-- Monitoring/retraining: `api/app/utils/monitoring.py`, `api/app/utils/retrain_utils.py`
-- Frontend helpers: `api/static/js/form-utilities.js`, `api/static/js/editor-utilities.js`, `api/static/js/create-page.js`
+- Monitoring and retraining: `api/app/utils/monitoring.py`, `api/app/utils/retrain_utils.py`
 
-## Roadmap themes already visible in the repo
+## Project notes
 
-- tighten the registry around the `v2` schemas and routes
-- deepen Airflow orchestration beyond the current infrastructure layer
-- make the Dash, Feast, and MkDocs pieces first-class instead of sidecars
-- continue moving from placeholder or legacy templates toward a single consistent UI flow
-- expand cloud-native deployment around the Kubernetes and Kubeflow design documented in `painel-amanaje/docs/kubernetes-training-stack.md`
+- [ALIGNMENT_COMPLETION_REPORT.md](ALIGNMENT_COMPLETION_REPORT.md)
+- [PROJECT_UPDATE_SUMMARY.md](PROJECT_UPDATE_SUMMARY.md)
+- [CHANGES_SUMMARY.md](CHANGES_SUMMARY.md)
+- [CONSOLE_ERRORS_FIXED.md](CONSOLE_ERRORS_FIXED.md)
+- [METADATA_VARIABLES_GUIDE.md](METADATA_VARIABLES_GUIDE.md)
+- [features/README.md](features/README.md)
+- [painel-amanaje/docs/kubernetes-training-stack.md](painel-amanaje/docs/kubernetes-training-stack.md)
+
+## Current direction
+
+The repository has clearly moved beyond its original NVIDIA forecasting prototype into a broader ML operations workspace. The next visible themes in the codebase are stronger registry validation, deeper orchestration, cleaner frontend consistency, and more production-ready deployment paths.
