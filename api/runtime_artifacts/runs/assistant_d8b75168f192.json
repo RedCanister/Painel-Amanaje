@@ -1,0 +1,155 @@
+{
+  "run_id": "assistant_d8b75168f192",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-04-27T01:40:56.008979",
+  "updated_at": "2026-04-27T01:40:56.038752",
+  "started_at": null,
+  "completed_at": "2026-04-27T01:40:56.038752",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_df73f288bbd6",
+    "draft_type": "registry_object"
+  },
+  "parameters": {
+    "prompt": "make a dataset about keyboards",
+    "provider": "local",
+    "target_type": "registry_object"
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_df73f288bbd6",
+      "session_id": null,
+      "draft_type": "registry_object",
+      "title": "Registry Object Draft",
+      "summary": "Prepares registry metadata for review before persistence.",
+      "prompt": "make a dataset about keyboards",
+      "status": "draft",
+      "provider": "local",
+      "created_at": "2026-04-27T01:40:56.005969",
+      "code": null,
+      "operations": [],
+      "registry_payload": {
+        "name": "assistant_registry_object",
+        "description": "Registry object drafted by the Amanaje assistant.",
+        "object_type": "dataset",
+        "version": 1,
+        "history": [
+          {
+            "operation": "assistant_draft"
+          }
+        ]
+      },
+      "training_request": {},
+      "study_request": {},
+      "artifacts": {},
+      "assumptions": [
+        "The target registry route will perform final Pydantic and ORM validation."
+      ],
+      "risks": [
+        "References to datasets, models, or studies must exist before the object can be saved."
+      ],
+      "context": {
+        "registryType": "DatasetModel",
+        "name": "",
+        "description": "",
+        "path": "data/datasets/artifact.csv",
+        "size": 0,
+        "version": 1,
+        "dataset_type": "dataset",
+        "has_features": false,
+        "connection_string": "",
+        "model_type": "learning_model",
+        "reference_data": "",
+        "is_trained": false,
+        "is_tested": false,
+        "is_deployed": false,
+        "learning_model_id": 1,
+        "dataset_id": 1,
+        "sampler": "",
+        "objective": ""
+      },
+      "next_actions": [
+        "Review metadata",
+        "Approve persistence",
+        "Check dependency report before deletion"
+      ]
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "none",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "sklearn",
+          "statistics"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ]
+      },
+      "messages": [],
+      "required_actions": [],
+      "reviewed_at": "2026-04-27T01:40:56.008529"
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-04-27T01:40:56.038752",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-27T01:40:56.008979",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-04-27T01:40:56.038752",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-27T01:40:56.008979",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-04-27T01:40:56.038752",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

@@ -105,6 +105,15 @@
     }
     .column-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
     .preview-grid-wrap { display: grid; gap: 1rem; }
+    .assistant-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr); }
+    .assistant-output {
+        background: #fff5f5;
+        border: 1px solid #fecdd3;
+        border-radius: 14px;
+        padding: 1rem;
+        min-height: 160px;
+    }
+    .assistant-output h4 { margin-bottom: 0.4rem; }
     .status .ok, .status .error {
         padding: 0.85rem;
         border-radius: 12px;
@@ -116,6 +125,7 @@
     @media (max-width: 980px) {
         .feature-layout { grid-template-columns: 1fr; }
         .column-toolbar { grid-template-columns: 1fr; }
+        .assistant-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -198,6 +208,30 @@
     </section>
 
     <section class="feature-panel">
+        <div class="toolbar-row" style="margin-bottom:1rem;">
+            <div>
+                <h3 style="margin-bottom:0.2rem;">Assistant Studio</h3>
+                <div class="helper-text">Draft reviewed feature operations from the selected dataset context.</div>
+            </div>
+            <div class="actions-row">
+                <button type="button" class="btn btn-primary" id="btnAssistantDraft">Draft</button>
+                <button type="button" class="btn btn-secondary" id="btnAssistantApprove">Approve</button>
+                <button type="button" class="btn btn-ghost" id="btnAssistantPreview">Preview</button>
+            </div>
+        </div>
+        <div class="assistant-grid">
+            <div class="form-group">
+                <label for="assistantPrompt">Request</label>
+                <textarea id="assistantPrompt" spellcheck="true" placeholder="Clean missing target values, keep the preview small, and prepare this as a training-ready feature view."></textarea>
+            </div>
+            <div id="assistantWorkspaceOutput" class="assistant-output">
+                <h4>Review</h4>
+                <div class="helper-text">No assistant draft yet.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="feature-panel">
         <div class="toolbar-row">
             <div>
                 <h3 style="margin-bottom:0.2rem;">Column Explorer</h3>
@@ -234,6 +268,9 @@ const visualTransformList = document.getElementById('visualTransformList');
 
 let currentFeatureProfile = null;
 let currentColumns = [];
+let currentAssistantDraft = null;
+let currentAssistantRunId = null;
+let currentAssistantApproval = null;
 
 function setFeatureWorkspaceStatus(message, isError = false) {
     document.getElementById('featureWorkspaceStatus').innerHTML = `<span class="${isError ? 'error' : 'ok'}">${AmanajeUI.escapeHtml(message)}</span>`;
@@ -336,6 +373,34 @@ function parseOperationsPayload() {
     return { transforms, operations };
 }
 
+function replaceVisualTransforms(transforms = []) {
+    visualTransformList.innerHTML = '';
+    const normalized = Array.isArray(transforms) && transforms.length ? transforms : [{ type: 'rename' }];
+    normalized.forEach((transform) => addTransform(transform));
+    syncOperationsJson();
+}
+
+function renderAssistantOutput(payload = {}) {
+    const target = document.getElementById('assistantWorkspaceOutput');
+    const review = payload.review || {};
+    const draft = payload.draft || currentAssistantDraft || {};
+    const safety = review.safety || {};
+    const actions = review.required_actions || [];
+    const messages = review.messages || [];
+    target.innerHTML = `
+        <h4>${AmanajeUI.escapeHtml(draft.title || 'Review')}</h4>
+        <div class="chip-row">
+            <span class="chip">${AmanajeUI.escapeHtml(payload.status || review.status || 'draft')}</span>
+            <span class="chip">Risk: ${AmanajeUI.escapeHtml(safety.risk_level || 'none')}</span>
+        </div>
+        <p class="helper-text">${AmanajeUI.escapeHtml(draft.summary || 'Assistant output will appear here.')}</p>
+        ${messages.length ? `<div class="helper-text">${messages.map((item) => AmanajeUI.escapeHtml(item)).join('<br>')}</div>` : ''}
+        ${actions.length ? `<div class="status"><span class="error">${actions.map((item) => AmanajeUI.escapeHtml(item)).join('<br>')}</span></div>` : ''}
+        ${draft.operations?.length ? AmanajeUI.renderCollapsibleJson({ operations: draft.operations }, { title: 'Draft Operations', collapsed: false }) : ''}
+    `;
+    AmanajeUI.enhanceCollapsibles(target);
+}
+
 function createColumnOptions(selected = '') {
     const base = ['<option value="">Select a column</option>'];
     currentColumns.forEach((column) => {
@@ -362,6 +427,7 @@ function buildTransformRow(initial = {}) {
                     <option value="drop" ${initial.type === 'drop' ? 'selected' : ''}>Drop Column</option>
                     <option value="filter" ${initial.type === 'filter' ? 'selected' : ''}>Filter Rows</option>
                     <option value="sort" ${initial.type === 'sort' ? 'selected' : ''}>Sort Rows</option>
+                    <option value="limit" ${initial.type === 'limit' ? 'selected' : ''}>Limit Rows</option>
                 </select>
             </div>
             <div class="form-group">
@@ -627,6 +693,101 @@ async function materializeFeatureView() {
     }
 }
 
+async function draftAssistantFeaturePlan() {
+    const prompt = document.getElementById('assistantPrompt').value.trim();
+    if (!prompt) {
+        setFeatureWorkspaceStatus('Write an assistant request first.', true);
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Drafting reviewed feature operations...');
+        const response = await fetch('/assistant/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt,
+                target_type: 'feature_operations',
+                context: {
+                    datasetId: featureDatasetId.value ? Number(featureDatasetId.value) : null,
+                    transforms: serializeVisualTransforms(),
+                    columns: currentColumns,
+                    limitRows: Number(featureLimitRows.value || 200)
+                }
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        currentAssistantDraft = result.draft;
+        currentAssistantRunId = result.run_id;
+        currentAssistantApproval = null;
+        renderAssistantOutput(result);
+        setFeatureWorkspaceStatus(result.review?.approved ? 'Assistant draft reviewed.' : 'Assistant draft needs revision.', !result.review?.approved);
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
+}
+
+async function approveAssistantFeaturePlan() {
+    if (!currentAssistantDraft || !currentAssistantRunId) {
+        setFeatureWorkspaceStatus('Draft an assistant plan first.', true);
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Approving assistant draft...');
+        const response = await fetch('/assistant/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                run_id: currentAssistantRunId,
+                draft: currentAssistantDraft,
+                reviewer: 'feature-workspace'
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        currentAssistantApproval = result.approval;
+        renderAssistantOutput({ ...result, draft: currentAssistantDraft, status: result.status });
+        if (currentAssistantDraft.operations?.length) {
+            replaceVisualTransforms(currentAssistantDraft.operations);
+        }
+        setFeatureWorkspaceStatus('Assistant draft approved.');
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
+}
+
+async function previewAssistantFeaturePlan() {
+    if (!currentAssistantDraft || !currentAssistantRunId || !currentAssistantApproval) {
+        setFeatureWorkspaceStatus('Approve an assistant draft before preview.', true);
+        return;
+    }
+    if (!featureDatasetId.value) {
+        setFeatureWorkspaceStatus('Select a dataset first.', true);
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Previewing approved assistant draft...');
+        const response = await fetch('/assistant/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                run_id: currentAssistantRunId,
+                action: 'feature_preview',
+                payload: { datasetId: Number(featureDatasetId.value) }
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        renderFeatureResults(result.submission?.preview || {});
+        setFeatureWorkspaceStatus('Assistant preview generated.');
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await PopulateListOptions({
         selectElement: '#featureDatasetId',
@@ -643,6 +804,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnReloadFeatureProfile').addEventListener('click', loadFeatureProfile);
     document.getElementById('btnPreviewFeatureView').addEventListener('click', previewFeatureView);
     document.getElementById('btnMaterializeFeatureView').addEventListener('click', materializeFeatureView);
+    document.getElementById('btnAssistantDraft').addEventListener('click', draftAssistantFeaturePlan);
+    document.getElementById('btnAssistantApprove').addEventListener('click', approveAssistantFeaturePlan);
+    document.getElementById('btnAssistantPreview').addEventListener('click', previewAssistantFeaturePlan);
     document.getElementById('columnSearch').addEventListener('input', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
     document.getElementById('columnSort').addEventListener('change', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
     featureDatasetId.addEventListener('change', loadFeatureProfile);

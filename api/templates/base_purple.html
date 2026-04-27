@@ -83,6 +83,25 @@
         margin-bottom: 1rem;
     }
     .upload-panel.active { display: block; }
+    .assistant-registry-panel {
+        padding: 1rem;
+        border: 1px solid #e9d5ff;
+        border-radius: 16px;
+        background: #faf5ff;
+        margin-bottom: 1rem;
+    }
+    .assistant-registry-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
+    }
+    .assistant-registry-output {
+        background: white;
+        border: 1px solid #e9d5ff;
+        border-radius: 14px;
+        padding: 1rem;
+        min-height: 150px;
+    }
     .upload-badge {
         display: inline-flex;
         align-items: center;
@@ -169,6 +188,9 @@
         font-size: 1.2rem;
         font-weight: 800;
     }
+    @media (max-width: 900px) {
+        .assistant-registry-grid { grid-template-columns: 1fr; }
+    }
 </style>
 {% endblock %}
 
@@ -196,6 +218,23 @@
             <div class="mode-tabs">
                 <button class="mode-button active" type="button" data-mode="manual">Manual Entry</button>
                 <button class="mode-button" type="button" data-mode="upload">Upload and Register</button>
+            </div>
+
+            <div class="assistant-registry-panel">
+                <div class="assistant-registry-grid">
+                    <div class="form-group">
+                        <label for="registryAssistantPrompt">Assistant Draft</label>
+                        <textarea id="registryAssistantPrompt" placeholder="Draft a complete registry entry for the selected type, using project-compatible defaults and the current form context."></textarea>
+                        <div class="button-group" style="margin-top:0.75rem;">
+                            <button type="button" class="btn btn-primary" id="btnRegistryAssistantDraft">Draft Fields</button>
+                            <button type="button" class="btn btn-secondary" id="btnRegistryAssistantApply">Apply Draft</button>
+                        </div>
+                    </div>
+                    <div id="registryAssistantOutput" class="assistant-registry-output">
+                        <strong>Assistant Review</strong>
+                        <div class="helper-text">Select a registry type and draft fields before manual creation.</div>
+                    </div>
+                </div>
             </div>
 
             <div id="uploadPanel" class="upload-panel">
@@ -545,6 +584,8 @@
     let createMode = 'manual';
     let learningModelOptions = [];
     let datasetOptions = [];
+    let currentRegistryAssistantDraft = null;
+    let currentRegistryAssistantReview = null;
 
     const ARRAY_FIELDS = new Set(['shape', 'features_list', 'input_features', 'output_features', 'history']);
     const OBJECT_FIELDS = new Set(['parameters', 'metrics', 'best_trial', 'best_params', 'study_params', 'variables', 'code', 'inference_params']);
@@ -660,6 +701,165 @@
         alert.textContent = message;
         container.appendChild(alert);
         setTimeout(() => alert.remove(), 12000);
+    }
+
+    function safeParseJson(rawValue, fallback) {
+        const trimmed = String(rawValue || '').trim();
+        if (!trimmed) return fallback;
+        try {
+            return JSON.parse(trimmed);
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+    function collectRegistryAssistantContext() {
+        return {
+            registryType: document.getElementById('modelType').value || 'DatasetModel',
+            name: document.getElementById('objectName').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            path: document.getElementById('objectPath').value.trim(),
+            size: Number(document.getElementById('objectSize').value || 0),
+            version: Number(document.getElementById('objectVersion').value || 1),
+            dataset_type: document.getElementById('datasetType').value,
+            shape: safeParseJson(document.getElementById('datasetShape').value, undefined),
+            has_features: document.getElementById('hasFeatures').checked,
+            features_list: safeParseJson(document.getElementById('featuresList').value, undefined),
+            connection_string: document.getElementById('connectionString').value.trim(),
+            model_type: document.getElementById('learningModelType').value,
+            parameters: safeParseJson(document.getElementById('parameters').value, undefined),
+            metrics: safeParseJson(document.getElementById('metrics').value, undefined),
+            reference_data: document.getElementById('referenceData').value.trim(),
+            input_features: safeParseJson(document.getElementById('inputFeatures').value, undefined),
+            output_features: safeParseJson(document.getElementById('outputFeatures').value, undefined),
+            is_trained: document.getElementById('isTrained').checked,
+            is_tested: document.getElementById('isTested').checked,
+            is_deployed: document.getElementById('isDeployed').checked,
+            learning_model_id: Number(
+                document.getElementById('inferenceLearningModelId').value ||
+                document.getElementById('studyLearningModelId').value ||
+                1
+            ),
+            dataset_id: Number(
+                document.getElementById('inferenceDatasetId').value ||
+                document.getElementById('studyDatasetId').value ||
+                1
+            ),
+            inference_params: safeParseJson(document.getElementById('inferenceParams').value, undefined),
+            sampler: document.getElementById('studySampler').value.trim(),
+            objective: document.getElementById('studyObjective').value.trim(),
+            best_trial: safeParseJson(document.getElementById('studyBestTrial').value, undefined),
+            best_params: safeParseJson(document.getElementById('studyBestParams').value, undefined),
+            study_params: safeParseJson(document.getElementById('studyParams').value, undefined),
+            variables: safeParseJson(document.getElementById('codeVariables').value, undefined),
+            code: safeParseJson(document.getElementById('codeDocument').value, undefined)
+        };
+    }
+
+    function renderRegistryAssistantOutput(payload = {}) {
+        const target = document.getElementById('registryAssistantOutput');
+        if (!target) return;
+        const draft = payload.draft || currentRegistryAssistantDraft || {};
+        const review = payload.review || currentRegistryAssistantReview || {};
+        const actions = review.required_actions || [];
+        const payloadKeys = Object.keys(draft.form_payload || draft.registry_payload || {});
+        target.innerHTML = `
+            <strong>${escapeHtml(draft.title || 'Assistant Review')}</strong>
+            <div class="pill-row">
+                <span class="pill">${escapeHtml(payload.status || review.status || 'draft')}</span>
+                <span class="pill">${escapeHtml(draft.registry_type || document.getElementById('modelType').value || 'Registry')}</span>
+            </div>
+            <div class="helper-text">${escapeHtml(draft.summary || 'Assistant registry draft will appear here.')}</div>
+            ${actions.length ? `<div class="alert alert-error" style="margin-top:0.75rem;">${actions.map((item) => escapeHtml(item)).join('<br>')}</div>` : ''}
+            ${payloadKeys.length ? `<div class="helper-text" style="margin-top:0.75rem;">Fields: ${escapeHtml(payloadKeys.join(', '))}</div>` : ''}
+        `;
+    }
+
+    function setFieldValue(id, value) {
+        const field = document.getElementById(id);
+        if (!field || value === undefined || value === null) return;
+        if (field.type === 'checkbox') {
+            field.checked = Boolean(value);
+        } else if (Array.isArray(value) || typeof value === 'object') {
+            field.value = JSON.stringify(value, null, 2);
+        } else {
+            field.value = String(value);
+        }
+    }
+
+    function applyRegistryAssistantPayload(payload) {
+        if (!payload || typeof payload !== 'object') {
+            showAlert('No assistant registry payload is available to apply.', 'error');
+            return;
+        }
+        setFieldValue('objectName', payload.name);
+        setFieldValue('description', payload.description);
+        setFieldValue('objectPath', payload.path);
+        setFieldValue('objectSize', payload.size);
+        setFieldValue('objectVersion', payload.version);
+        setFieldValue('history', payload.history);
+        setFieldValue('datasetType', payload.dataset_type);
+        setFieldValue('datasetShape', payload.shape);
+        setFieldValue('hasFeatures', payload.has_features);
+        setFieldValue('featuresList', payload.features_list);
+        setFieldValue('connectionString', payload.connection_string);
+        setFieldValue('learningModelType', payload.model_type);
+        setFieldValue('parameters', payload.parameters);
+        setFieldValue('metrics', payload.metrics);
+        setFieldValue('referenceData', payload.reference_data);
+        setFieldValue('inputFeatures', payload.input_features);
+        setFieldValue('outputFeatures', payload.output_features);
+        setFieldValue('isTrained', payload.is_trained);
+        setFieldValue('isTested', payload.is_tested);
+        setFieldValue('isDeployed', payload.is_deployed);
+        setFieldValue('inferenceLearningModelId', payload.learning_model_id);
+        setFieldValue('studyLearningModelId', payload.learning_model_id);
+        setFieldValue('inferenceDatasetId', payload.dataset_id);
+        setFieldValue('studyDatasetId', payload.dataset_id);
+        setFieldValue('inferenceInputFeatures', payload.input_features);
+        setFieldValue('inferenceOutputFeatures', payload.output_features);
+        setFieldValue('inferenceParams', payload.inference_params);
+        setFieldValue('studySampler', payload.sampler);
+        setFieldValue('studyObjective', payload.objective);
+        setFieldValue('studyBestTrial', payload.best_trial);
+        setFieldValue('studyBestParams', payload.best_params);
+        setFieldValue('studyParams', payload.study_params);
+        setFieldValue('codeVariables', payload.variables);
+        setFieldValue('codeDocument', payload.code);
+        updateGeneratedFields();
+    }
+
+    async function draftRegistryAssistantFields() {
+        const modelType = document.getElementById('modelType').value;
+        if (!modelType) {
+            showAlert('Select a registry type before drafting fields.', 'error');
+            return;
+        }
+        const prompt = document.getElementById('registryAssistantPrompt').value.trim()
+            || `Draft a complete ${modelType} registry payload using project-compatible defaults.`;
+        try {
+            const result = await fetchJson('/assistant/draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt,
+                    target_type: 'registry_object',
+                    context: collectRegistryAssistantContext()
+                })
+            });
+            currentRegistryAssistantDraft = result.draft;
+            currentRegistryAssistantReview = result.review;
+            renderRegistryAssistantOutput(result);
+            showAlert('Assistant registry draft is ready to review and apply.', result.review?.approved ? 'success' : 'info');
+        } catch (error) {
+            showAlert(`Assistant draft failed: ${error.message}`, 'error');
+        }
+    }
+
+    function applyRegistryAssistantDraft() {
+        const payload = currentRegistryAssistantDraft?.form_payload || currentRegistryAssistantDraft?.registry_payload;
+        applyRegistryAssistantPayload(payload);
+        showAlert('Assistant fields applied to the manual form. Review them before creating the entry.', 'success');
     }
 
     function slugify(value) {
@@ -883,6 +1083,41 @@
         }
 
         return { operationId, formData };
+    }
+
+    async function enrichPayloadWithAssistantReview(modelType, payload) {
+        const result = await fetchJson('/assistant/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: `Validate and enrich this ${modelType} registry payload before manual create.`,
+                target_type: 'registry_object',
+                context: {
+                    registryType: modelType,
+                    registry_payload: payload
+                }
+            })
+        });
+        currentRegistryAssistantDraft = result.draft;
+        currentRegistryAssistantReview = result.review;
+        renderRegistryAssistantOutput(result);
+        if (!result.review?.approved) {
+            const actions = result.review?.required_actions || ['Assistant registry review did not approve this payload.'];
+            throw new Error(actions.join(' '));
+        }
+
+        const history = Array.isArray(payload.history) ? payload.history : [];
+        payload.history = [
+            ...history,
+            {
+                operation: 'assistant_review',
+                when: new Date().toISOString(),
+                draft_id: result.draft?.draft_id,
+                status: result.review?.status,
+                approved: Boolean(result.review?.approved)
+            }
+        ];
+        return payload;
     }
 
     function switchTab(tabName) {
@@ -1176,7 +1411,8 @@
                 }
                 showAlert(`Upload completed and registry entry created (ID: ${result.id ?? 'unknown'}).`, 'success');
             } else {
-                const { payload } = buildCreatePayload();
+                const built = buildCreatePayload();
+                const payload = await enrichPayloadWithAssistantReview(modelType, built.payload);
                 const result = await fetchJson(`${config.endpoint}/create`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1241,6 +1477,8 @@
         button.addEventListener('click', () => setCreateMode(button.dataset.mode));
     });
 
+    document.getElementById('btnRegistryAssistantDraft').addEventListener('click', draftRegistryAssistantFields);
+    document.getElementById('btnRegistryAssistantApply').addEventListener('click', applyRegistryAssistantDraft);
     document.getElementById('modelType').addEventListener('change', updateFieldsForType);
     document.getElementById('objectName').addEventListener('input', updateGeneratedFields);
     document.getElementById('registryFile').addEventListener('change', async (event) => {

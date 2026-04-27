@@ -19,9 +19,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_session import get_db
 from app.database.db_utils import create_entry, get_all_entries, get_entry_dependencies, update_entry
+from app.models.assistant_objects import (
+    AssistantApprovalRequest,
+    AssistantDraftRequest,
+    AssistantReviewRequest,
+    AssistantSessionRequest,
+    AssistantSubmitRequest,
+    ExecutionRunRequest,
+    WorkflowDraft,
+)
 from app.models.model_objects import DatasetModel, LearningModel, StudyModel
 from app.models.model_orm import DatasetORM, InferenceORM, LearningORM, StudyORM
 from app.utils.deployment_utils import save_deployment_summary
+from app.utils.assistant_provider import get_assistant_provider
+from app.utils.assistant_safety import SAFETY_PROFILES, review_code_safety, review_workflow_draft
 from app.utils.io import save_json
 from app.utils.logging import log_to_mlflow
 from app.utils.mlflow_utils import get_experiment_summary, list_experiments
@@ -65,6 +76,58 @@ _resolve_runtime_context = _utils._resolve_runtime_context
 _prepare_runtime_execution = _utils._prepare_runtime_execution
 
 BACKGROUND_RUN_TASKS: dict[str, asyncio.Task[Any]] = {}
+
+APPROVED_EXECUTION_OUTPUT_FIELDS = {
+    "connection_string",
+    "csv_text",
+    "dataset_type",
+    "description",
+    "history",
+    "input_features",
+    "is_deployed",
+    "is_tested",
+    "is_trained",
+    "joblib_bytes",
+    "metrics",
+    "model_bytes",
+    "model_type",
+    "name",
+    "object_type",
+    "onnx_bytes",
+    "output_features",
+    "parameters",
+    "path",
+    "pickle_bytes",
+    "pytorch_bytes",
+    "reference_data",
+    "torch_bytes",
+    "torchscript_bytes",
+    "version",
+}
+
+SAFE_EXECUTION_BUILTINS = {
+    "abs": abs,
+    "all": all,
+    "any": any,
+    "bool": bool,
+    "dict": dict,
+    "enumerate": enumerate,
+    "float": float,
+    "int": int,
+    "len": len,
+    "list": list,
+    "max": max,
+    "min": min,
+    "print": print,
+    "range": range,
+    "round": round,
+    "set": set,
+    "sorted": sorted,
+    "str": str,
+    "sum": sum,
+    "tuple": tuple,
+    "zip": zip,
+}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -405,6 +468,450 @@ async def post_generate(request: Request) -> JSONResponse:
     }
 
     return _utils._json_response({"script": script, "assistant_plan": assistant_plan})
+
+
+@app.post("/assistant/sessions", response_class=JSONResponse)
+async def assistant_sessions(payload: AssistantSessionRequest = Body(default=AssistantSessionRequest())) -> JSONResponse:
+    session_id = f"session_{uuid.uuid4().hex[:12]}"
+    run_entry = _utils.create_run_entry(
+        RUN_LEDGER_DIR,
+        run_type="assistant",
+        context={
+            "session_id": session_id,
+            "title": payload.title,
+            "user_id": payload.user_id,
+            **dict(payload.context or {}),
+        },
+        parameters={"scope": "session"},
+        status="running",
+    )
+    run_entry = _utils.update_run_entry(
+        RUN_LEDGER_DIR,
+        run_entry["run_id"],
+        status="running",
+        stage="session",
+        event_message="Assistant session created.",
+    )
+    return _utils._json_response(
+        {
+            "status": "active",
+            "session_id": session_id,
+            "run_id": run_entry["run_id"],
+            "ledger": run_entry,
+        }
+    )
+
+
+@app.post("/assistant/draft", response_class=JSONResponse)
+async def assistant_draft(payload: AssistantDraftRequest) -> JSONResponse:
+    try:
+        provider = get_assistant_provider(payload.provider)
+        draft = provider.create_draft(payload)
+        review = review_workflow_draft(draft)
+        run_entry = _utils.create_run_entry(
+            RUN_LEDGER_DIR,
+            run_type="assistant",
+            context={
+                "session_id": draft.session_id,
+                "draft_id": draft.draft_id,
+                "draft_type": draft.draft_type,
+            },
+            parameters={
+                "prompt": payload.prompt,
+                "provider": provider.name,
+                "target_type": payload.target_type,
+            },
+            status="queued",
+        )
+        run_entry = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            run_entry["run_id"],
+            status="completed",
+            stage="reviewed" if review.approved else "needs_revision",
+            merge={"result": {"draft": _utils._json_payload(draft), "review": _utils._json_payload(review)}},
+            event_message="Assistant draft created and reviewed.",
+        )
+        return _utils._json_response(
+            {
+                "status": "reviewed" if review.approved else "needs_revision",
+                "run_id": run_entry["run_id"],
+                "draft": draft,
+                "review": review,
+                "ledger": run_entry,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400)
+    except Exception as exc:
+        LOGGER.exception("Assistant draft failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/review", response_class=JSONResponse)
+async def assistant_review(payload: AssistantReviewRequest) -> JSONResponse:
+    try:
+        review = review_workflow_draft(payload.draft)
+        return _utils._json_response(
+            {
+                "status": review.status,
+                "approved": review.approved,
+                "review": review,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant review failed.")
+        return _utils._json_error(str(exc), status_code=400)
+
+
+@app.post("/assistant/approve", response_class=JSONResponse)
+async def assistant_approve(payload: AssistantApprovalRequest) -> JSONResponse:
+    try:
+        review = review_workflow_draft(payload.draft)
+        if not review.approved:
+            return _utils._json_error(
+                "Draft cannot be approved until required review actions are resolved.",
+                status_code=400,
+                review=review,
+            )
+
+        run_id = payload.run_id
+        if run_id:
+            existing_entry = _utils.read_run_entry(RUN_LEDGER_DIR, run_id)
+            if existing_entry is None:
+                return _utils._json_error("Assistant run not found", status_code=404)
+        else:
+            run_entry = _utils.create_run_entry(
+                RUN_LEDGER_DIR,
+                run_type="assistant",
+                context={
+                    "session_id": payload.draft.session_id,
+                    "draft_id": payload.draft.draft_id,
+                    "draft_type": payload.draft.draft_type,
+                },
+                parameters={"scope": "approval"},
+                status="queued",
+            )
+            run_id = str(run_entry["run_id"])
+
+        approval = {
+            "approval_id": f"approval_{uuid.uuid4().hex[:12]}",
+            "reviewer": payload.reviewer,
+            "notes": payload.notes,
+            "approved_at": datetime.now().isoformat(),
+        }
+        updated_entry = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            run_id,
+            status="completed",
+            stage="approved",
+            merge={
+                "result": {
+                    "draft": _utils._json_payload(payload.draft),
+                    "review": _utils._json_payload(review),
+                    "approval": approval,
+                }
+            },
+            event_message="Assistant draft approved.",
+        )
+        return _utils._json_response(
+            {
+                "status": "approved",
+                "run_id": run_id,
+                "approval": approval,
+                "review": review,
+                "ledger": updated_entry,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant approval failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/submit", response_class=JSONResponse)
+async def assistant_submit(
+    payload: AssistantSubmitRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    run_entry = _utils.read_run_entry(RUN_LEDGER_DIR, payload.run_id)
+    if run_entry is None:
+        return _utils._json_error("Assistant run not found", status_code=404)
+
+    result = dict(run_entry.get("result", {}) or {})
+    if not result.get("approval"):
+        return _utils._json_error("Assistant run must be approved before submission.", status_code=400)
+
+    try:
+        draft = WorkflowDraft.model_validate(result.get("draft"))
+    except Exception as exc:
+        return _utils._json_error(f"Assistant run does not contain a valid draft: {exc}", status_code=400)
+
+    try:
+        submission = await _submit_assistant_draft(draft, payload, db)
+        updated_entry = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            payload.run_id,
+            status="completed",
+            stage="submitted",
+            merge={"result": {"submission": submission}},
+            event_message=f"Assistant draft submitted with action={payload.action}.",
+        )
+        return _utils._json_response(
+            {
+                "status": "submitted",
+                "run_id": payload.run_id,
+                "draft_type": draft.draft_type,
+                "action": payload.action,
+                "submission": submission,
+                "ledger": updated_entry,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400)
+    except Exception as exc:
+        LOGGER.exception("Assistant submission failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/execution/review", response_class=JSONResponse)
+async def execution_review(request: Request) -> JSONResponse:
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    code = str(payload.get("code") or "")
+    profile = str(payload.get("profile") or "dataset_generation")
+    safety = review_code_safety(code, profile=profile)
+    return _utils._json_response(
+        {
+            "status": "approved" if safety.ok else "needs_revision",
+            "approved": safety.ok,
+            "safety": safety,
+        },
+        status_code=200 if safety.ok else 400,
+    )
+
+
+@app.post("/execution/run", response_class=JSONResponse)
+async def execution_run(payload: ExecutionRunRequest) -> JSONResponse:
+    if not payload.approved:
+        return _utils._json_error("approved=true is required before guarded execution.", status_code=400)
+
+    safety = review_code_safety(payload.code, profile=payload.profile)
+    if not safety.ok:
+        return _utils._json_error(
+            "Code did not pass assistant safety review.",
+            status_code=400,
+            safety=safety,
+        )
+
+    run_entry = _utils.create_run_entry(
+        RUN_LEDGER_DIR,
+        run_type="assistant",
+        context={
+            "draft_id": payload.draft_id,
+            "profile": payload.profile,
+            **dict(payload.context or {}),
+        },
+        parameters={"scope": "execution_run"},
+        status="running",
+    )
+
+    old_stdout = sys.stdout
+    old_stderr = sys.stderr
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    namespace = _build_guarded_execution_namespace(payload.profile)
+    error_message = None
+    try:
+        exec(compile(payload.code, "<assistant-execution>", "exec"), namespace, namespace)
+    except Exception:
+        error_message = traceback.format_exc()
+    finally:
+        stdout_output = sys.stdout.getvalue()
+        stderr_output = sys.stderr.getvalue()
+        sys.stdout = old_stdout
+        sys.stderr = old_stderr
+
+    extracted_variables = _utils._extract_variables(namespace)
+    output_variables = {
+        name: value
+        for name, value in extracted_variables.items()
+        if name in APPROVED_EXECUTION_OUTPUT_FIELDS
+    }
+    materialized_outputs = {
+        name: payload.get("raw_value", payload.get("value"))
+        for name, payload in output_variables.items()
+        if "raw_value" in payload or "value" in payload
+    }
+    metadata = dict(materialized_outputs)
+    defined_names = [name for name in _utils._extract_defined_names(payload.code) if name in APPROVED_EXECUTION_OUTPUT_FIELDS]
+    status = "success" if error_message is None else "error"
+
+    updated_entry = _utils.update_run_entry(
+        RUN_LEDGER_DIR,
+        run_entry["run_id"],
+        status="completed" if error_message is None else "failed",
+        stage="executed" if error_message is None else "failed",
+        merge={
+            "result": {
+                "status": status,
+                "metadata_keys": sorted(metadata),
+                "defined_names": defined_names,
+            },
+            "error": error_message,
+        },
+        event_message="Assistant guarded execution completed." if error_message is None else "Assistant guarded execution failed.",
+    )
+
+    return _utils._json_response(
+        {
+            "status": status,
+            "run_id": run_entry["run_id"],
+            "profile": payload.profile,
+            "variables": output_variables,
+            "metadata": metadata,
+            "materialized_outputs": materialized_outputs,
+            "summary": {
+                "variable_count": len(output_variables),
+                "defined_name_count": len(defined_names),
+                "defined_names": defined_names,
+                "has_error": error_message is not None,
+            },
+            "stdout": stdout_output,
+            "stderr": stderr_output,
+            "error": error_message,
+            "safety": safety,
+            "ledger": updated_entry,
+        },
+        status_code=200 if error_message is None else 400,
+    )
+
+
+def _build_guarded_execution_namespace(profile: str) -> dict[str, Any]:
+    allowed_imports = set(SAFETY_PROFILES.get(profile, SAFETY_PROFILES["dataset_generation"])["allowed_imports"])
+
+    def _safe_import(
+        name: str,
+        globals_: Optional[dict[str, Any]] = None,
+        locals_: Optional[dict[str, Any]] = None,
+        fromlist: tuple[str, ...] | list[str] = (),
+        level: int = 0,
+    ) -> Any:
+        root = str(name or "").split(".", 1)[0]
+        if level != 0 or root not in allowed_imports:
+            raise ImportError(f"Import '{name}' is not allowed for assistant profile '{profile}'.")
+        return __import__(name, globals_, locals_, fromlist, level)
+
+    safe_builtins = {**SAFE_EXECUTION_BUILTINS, "__import__": _safe_import}
+    return {"__builtins__": safe_builtins}
+
+
+async def _submit_assistant_draft(
+    draft: WorkflowDraft,
+    payload: AssistantSubmitRequest,
+    db: AsyncSession,
+) -> dict[str, Any]:
+    action = (payload.action or "prepare").strip().lower()
+    if action == "prepare":
+        return _assistant_prepare_payload(draft)
+    if action == "feature_preview":
+        return await _assistant_feature_preview(draft, payload, db)
+    if action == "training":
+        return await _assistant_training_submit(draft, payload, db)
+    raise ValueError("action must be one of: prepare, feature_preview, training")
+
+
+def _assistant_prepare_payload(draft: WorkflowDraft) -> dict[str, Any]:
+    next_endpoint_by_type = {
+        "dataset_generation": "/execution/review",
+        "feature_operations": "/features/preview",
+        "model_generation": "/execution/review",
+        "registry_object": "/registry",
+        "study": "/studies/{study_id}/optimize",
+        "training_run": "/training/{model_id}",
+    }
+    return {
+        "action": "prepare",
+        "next_endpoint": next_endpoint_by_type.get(draft.draft_type),
+        "draft": _utils._json_payload(draft),
+        "message": "Draft is approved and ready for an explicit workflow action.",
+    }
+
+
+async def _assistant_feature_preview(
+    draft: WorkflowDraft,
+    payload: AssistantSubmitRequest,
+    db: AsyncSession,
+) -> dict[str, Any]:
+    if draft.draft_type != "feature_operations":
+        raise ValueError("feature_preview action requires a feature_operations draft.")
+
+    request_payload = {
+        **dict(draft.context or {}),
+        **dict(payload.payload or {}),
+        "transforms": list(payload.payload.get("transforms") or draft.operations),
+    }
+    dataset_id = request_payload.get("datasetId") or request_payload.get("dataset_id")
+    if dataset_id in (None, "", 0, "0"):
+        raise ValueError("datasetId is required for feature_preview submission.")
+
+    dataset = await DatasetModel.read(db, int(dataset_id))
+    if dataset is None:
+        raise ValueError("Dataset not found")
+
+    dataframe = _utils._load_dataset_frame_from_record(dataset)
+    operations = _utils._coerce_feature_operations_from_payload(request_payload)
+    transformed, transform_summary = _utils.apply_feature_operations(dataframe, operations)
+    preview = _utils._build_feature_workspace_payload(
+        dataset,
+        transformed,
+        preview=transform_summary,
+        operations=operations,
+    )
+    return {
+        "action": "feature_preview",
+        "dataset_id": int(dataset_id),
+        "operations": operations,
+        "preview": preview,
+    }
+
+
+async def _assistant_training_submit(
+    draft: WorkflowDraft,
+    payload: AssistantSubmitRequest,
+    db: AsyncSession,
+) -> dict[str, Any]:
+    if draft.draft_type != "training_run":
+        raise ValueError("training action requires a training_run draft.")
+
+    training_request = {
+        **dict(draft.training_request or {}),
+        **dict(payload.payload or {}),
+    }
+    model_id = training_request.get("modelId") or training_request.get("model_id")
+    dataset_id = training_request.get("datasetId") or training_request.get("dataset_id")
+    if model_id in (None, "", 0, "0") or dataset_id in (None, "", 0, "0"):
+        raise ValueError("modelId and datasetId are required for training submission.")
+
+    request_payload = TrainingRequest.model_validate(
+        {
+            "datasetId": int(dataset_id),
+            "inputType": training_request.get("inputType") or "Assistant",
+            "studyId": training_request.get("studyId"),
+            "parameters": dict(training_request.get("parameters") or {}),
+            "inferenceId": training_request.get("inferenceId"),
+        }
+    )
+    response = await post_training(int(model_id), payload=request_payload, db=db)
+    response_payload = json.loads(response.body.decode("utf-8"))
+    if response.status_code >= 400:
+        raise ValueError(response_payload.get("detail") or "Training submission failed.")
+    return {
+        "action": "training",
+        "model_id": int(model_id),
+        "dataset_id": int(dataset_id),
+        "training": response_payload,
+    }
 
 
 def _coerce_optional_int(value: Any) -> Optional[int]:

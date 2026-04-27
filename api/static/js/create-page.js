@@ -452,35 +452,182 @@ async function generateScript() {
         return;
     }
 
+    document.getElementById('assistantCreatePrompt').value = userPrompt.trim();
+    await draftCreateAssistantScript();
+}
+
+function getCreateAssistantProfile() {
+    return document.getElementById('operationId').value === 'models'
+        ? 'model_generation'
+        : 'dataset_generation';
+}
+
+function getCreateAssistantTargetType() {
+    return document.getElementById('operationId').value === 'models'
+        ? 'model_generation'
+        : 'dataset_generation';
+}
+
+function renderCreateAssistantOutput(payload = {}) {
+    const target = document.getElementById('assistantCreateOutput');
+    if (!target) return;
+
+    const draft = payload.draft || window.currentCreateAssistantDraft || {};
+    const review = payload.review || window.currentCreateAssistantReview || {};
+    const safety = payload.safety || review.safety || {};
+    const execution = payload.execution || window.currentCreateAssistantExecution || null;
+    const actions = review.required_actions || [];
+    const messages = review.messages || [];
+    const outputKeys = Object.keys(execution?.metadata || {});
+
+    target.innerHTML = `
+        <h4>${escapeHtml(draft.title || 'Assistant Review')}</h4>
+        <div class="assistant-pill-row">
+            <span class="assistant-pill">${escapeHtml(payload.status || review.status || execution?.status || 'draft')}</span>
+            <span class="assistant-pill">Profile: ${escapeHtml(safety.profile || getCreateAssistantProfile())}</span>
+            <span class="assistant-pill">Risk: ${escapeHtml(safety.risk_level || 'none')}</span>
+        </div>
+        <p class="small-text">${escapeHtml(draft.summary || 'Assistant output will appear here.')}</p>
+        ${messages.length ? `<div class="small-text">${messages.map((item) => escapeHtml(item)).join('<br>')}</div>` : ''}
+        ${actions.length ? `<div class="status-message error" style="display:block;">${actions.map((item) => escapeHtml(item)).join('<br>')}</div>` : ''}
+        ${outputKeys.length ? `<div class="small-text"><strong>Materialized:</strong> ${escapeHtml(outputKeys.join(', '))}</div>` : ''}
+    `;
+}
+
+async function draftCreateAssistantScript() {
+    const prompt = (document.getElementById('assistantCreatePrompt')?.value || '').trim();
+    if (!prompt) {
+        showStatus('Write an assistant request first.', 'error');
+        return;
+    }
+
     try {
-        showStatus('Generating script...', 'info');
-        const response = await fetch('/generate', {
+        showStatus('Drafting assistant script...', 'info');
+        const response = await fetch('/assistant/draft', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                prompt: userPrompt,
-                operationId: document.getElementById('operationId').value
+                prompt,
+                target_type: getCreateAssistantTargetType(),
+                context: {
+                    operationId: document.getElementById('operationId').value,
+                    existing_metadata: getUploadMetadata()
+                }
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
         const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         await window.editorReady;
 
-        if (window.editor && result.script) {
-            window.editor.setValue(result.script);
+        window.currentCreateAssistantDraft = result.draft || null;
+        window.currentCreateAssistantRunId = result.run_id || null;
+        window.currentCreateAssistantReview = result.review || null;
+        window.currentCreateAssistantExecution = null;
+
+        if (window.editor && result.draft?.code) {
+            window.editor.setValue(result.draft.code);
+            window.executedVariables = {};
             displayMetadataPanel(getUploadMetadata());
-            showStatus('Script generated successfully.', 'success');
+            renderCreateAssistantOutput(result);
+            showStatus('Assistant draft loaded into the editor.', result.review?.approved ? 'success' : 'info');
         } else {
+            renderCreateAssistantOutput(result);
             showStatus('No script was generated.', 'error');
         }
     } catch (error) {
-        console.error('Generate error:', error);
-        showStatus(`Generation failed: ${error.message}`, 'error');
+        console.error('Assistant draft error:', error);
+        showStatus(`Assistant draft failed: ${error.message}`, 'error');
     }
+}
+
+async function reviewCreateAssistantScript() {
+    if (!window.editor || !window.editor.getValue().trim()) {
+        showStatus('No code to review.', 'error');
+        return null;
+    }
+
+    try {
+        showStatus('Reviewing assistant script...', 'info');
+        const response = await fetch('/execution/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                code: window.editor.getValue(),
+                profile: getCreateAssistantProfile()
+            })
+        });
+        const result = await response.json();
+        window.currentCreateAssistantReview = {
+            status: result.status,
+            approved: result.approved,
+            safety: result.safety,
+            messages: result.approved ? ['Script passed assistant execution review.'] : [],
+            required_actions: result.safety?.violations?.map((violation) => violation.message) || []
+        };
+        renderCreateAssistantOutput({
+            status: result.status,
+            draft: window.currentCreateAssistantDraft,
+            review: window.currentCreateAssistantReview,
+            safety: result.safety
+        });
+        showStatus(
+            result.approved ? 'Assistant script review passed.' : 'Assistant script needs revision.',
+            result.approved ? 'success' : 'error'
+        );
+        return result;
+    } catch (error) {
+        console.error('Assistant review error:', error);
+        showStatus(`Assistant review failed: ${error.message}`, 'error');
+        return null;
+    }
+}
+
+async function runCreateAssistantScript() {
+    const review = await reviewCreateAssistantScript();
+    if (!review?.approved) return;
+
+    try {
+        showStatus('Running assistant script with guarded execution...', 'info');
+        const response = await fetch('/execution/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                code: window.editor.getValue(),
+                profile: getCreateAssistantProfile(),
+                draft_id: window.currentCreateAssistantDraft?.draft_id,
+                approved: true,
+                context: { operationId: document.getElementById('operationId').value }
+            })
+        });
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || result.error || `HTTP ${response.status}`);
+
+        window.currentCreateAssistantExecution = result;
+        window.executedVariables = result.variables || {};
+        displayMetadataPanel(result.metadata || getUploadMetadata());
+        displayExecutionOutput(result.stdout || '', result.stderr || '');
+        renderCreateAssistantOutput({
+            status: result.status,
+            draft: window.currentCreateAssistantDraft,
+            review: window.currentCreateAssistantReview,
+            execution: result
+        });
+        showStatus('Assistant script ran successfully. Review the metadata, then create the object.', 'success');
+    } catch (error) {
+        console.error('Assistant execution error:', error);
+        showStatus(`Assistant execution failed: ${error.message}`, 'error');
+    }
+}
+
+function useCreateAssistantResult() {
+    if (!window.currentCreateAssistantExecution) {
+        showStatus('Run an assistant draft before using the result.', 'error');
+        return;
+    }
+    window.executedVariables = window.currentCreateAssistantExecution.variables || {};
+    displayMetadataPanel(window.currentCreateAssistantExecution.metadata || getUploadMetadata());
+    showStatus('Assistant result is now the active create metadata.', 'success');
 }
 
 function waitForDependencies(timeout = 5000) {
@@ -556,6 +703,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadMetadataTemplate(document.getElementById('operationId').value);
     });
     document.getElementById('btnGenerateScript')?.addEventListener('click', generateScript);
+    document.getElementById('btnAssistantDraftScript')?.addEventListener('click', draftCreateAssistantScript);
+    document.getElementById('btnAssistantReviewScript')?.addEventListener('click', reviewCreateAssistantScript);
+    document.getElementById('btnAssistantRunScript')?.addEventListener('click', runCreateAssistantScript);
+    document.getElementById('btnAssistantUseResult')?.addEventListener('click', useCreateAssistantResult);
     document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
     document.getElementById('btnResetScript')?.addEventListener('click', clearEditor);
     document.getElementById('btnRefreshFeatures')?.addEventListener('click', refreshFeatures);

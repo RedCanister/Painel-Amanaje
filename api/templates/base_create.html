@@ -137,6 +137,31 @@
     .status-message.info { background: #eff6ff; color: #1d4ed8; }
     .upload-status { margin-top: 1rem; }
     .small-text { color: #6b7280; font-size: 0.9rem; }
+    .assistant-create-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.65fr);
+        margin: 1rem 0;
+    }
+    .assistant-output {
+        background: var(--amanaje-primary-softer);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 1rem;
+        min-height: 160px;
+    }
+    .assistant-output h4 { margin: 0 0 0.5rem; color: var(--amanaje-primary-strong); }
+    .assistant-pill-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.6rem 0; }
+    .assistant-pill {
+        display: inline-flex;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        font-size: 0.82rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 700;
+    }
     .btn,
     .editor-controls button {
         padding: 0.8rem 1rem;
@@ -151,6 +176,9 @@
     #btnCreateObject {
         background: var(--amanaje-primary-gradient);
         color: white;
+    }
+    @media (max-width: 900px) {
+        .assistant-create-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -186,6 +214,23 @@
                 <button type="button" id="btnGenerateScript" class="success">Generate</button>
                 <button type="button" id="btnExportJSON" class="success">Export JSON</button>
                 <button type="button" id="btnResetScript" class="success">Reset</button>
+            </div>
+
+            <div class="assistant-create-grid">
+                <div class="form-group">
+                    <label for="assistantCreatePrompt">Assistant Request</label>
+                    <textarea id="assistantCreatePrompt" spellcheck="true" placeholder="Create a realistic dataset with feature_a, feature_b, segment, and target, or draft a scikit-learn joblib model for this project."></textarea>
+                    <div class="editor-controls" style="margin-bottom:0;">
+                        <button type="button" id="btnAssistantDraftScript" class="success">Draft</button>
+                        <button type="button" id="btnAssistantReviewScript">Review</button>
+                        <button type="button" id="btnAssistantRunScript">Run Draft</button>
+                        <button type="button" id="btnAssistantUseResult" class="success">Use Result</button>
+                    </div>
+                </div>
+                <div id="assistantCreateOutput" class="assistant-output">
+                    <h4>Assistant Review</h4>
+                    <p class="small-text">No assistant draft yet.</p>
+                </div>
             </div>
 
             <div id="editor">
