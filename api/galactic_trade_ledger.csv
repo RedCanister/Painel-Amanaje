@@ -1,0 +1,51 @@
+transaction_id,timestamp,trader_species,cargo_type,origin_system,quantity_units,credits_total,is_smuggled
+TXN-1012,2264-01-01 04:00:00,Void-Dweller,Oxygen Tanks,Kepler-186f,15,1033.69,False
+TXN-1033,2264-01-05 03:00:00,Cyber-Corgi,Ancient Earth Memes,Neo-Tokyo Orbit,10,477.32,False
+TXN-1001,2264-01-07 04:00:00,Mars-Colonist,Unstable Isotopes,Kepler-186f,15,1123.32,False
+TXN-1028,2264-01-12 11:00:00,Cyber-Corgi,Oxygen Tanks,Kepler-186f,6,394.95,False
+TXN-1017,2264-01-12 21:00:00,Sentient Nebula,Oxygen Tanks,Alpha Centauri,2,110.06,False
+TXN-1037,2264-02-03 04:00:00,Cyber-Corgi,Ancient Earth Memes,Kepler-186f,12,508.24,False
+TXN-1015,2264-02-11 08:00:00,Mars-Colonist,Dark Matter Spice,Neo-Tokyo Orbit,6,7637.97,False
+TXN-1013,2264-02-12 10:00:00,Void-Dweller,Unstable Isotopes,The Void,15,649.43,False
+TXN-1039,2264-02-19 12:00:00,Void-Dweller,Unstable Isotopes,Kepler-186f,8,348.79,False
+TXN-1034,2264-02-25 03:00:00,Void-Dweller,Dark Matter Spice,Kepler-186f,10,12310.78,False
+TXN-1018,2264-02-27 11:00:00,Hulking Glorg,Oxygen Tanks,The Void,17,1036.95,False
+TXN-1045,2264-03-05 09:00:00,Sentient Nebula,Dark Matter Spice,Rigel Prime,2,2348.57,False
+TXN-1004,2264-03-09 13:00:00,Void-Dweller,Oxygen Tanks,Neo-Tokyo Orbit,18,816.51,False
+TXN-1040,2264-04-02 16:00:00,Cyber-Corgi,Holodeck Parts,Alpha Centauri,3,152.21,False
+TXN-1021,2264-04-11 21:00:00,Sentient Nebula,Oxygen Tanks,Kepler-186f,7,328.31,False
+TXN-1047,2264-04-24 07:00:00,Void-Dweller,Holodeck Parts,Alpha Centauri,13,611.32,False
+TXN-1010,2264-05-02 00:00:00,Void-Dweller,Oxygen Tanks,The Void,10,489.32,False
+TXN-1038,2264-05-13 13:00:00,Hulking Glorg,Unstable Isotopes,Kepler-186f,15,716.49,False
+TXN-1023,2264-05-19 14:00:00,Hulking Glorg,Dark Matter Spice,Rigel Prime,20,27370.73,False
+TXN-1048,2264-05-21 18:00:00,Void-Dweller,Unstable Isotopes,Alpha Centauri,8,362.44,False
+TXN-1042,2264-06-06 01:00:00,Sentient Nebula,Oxygen Tanks,Kepler-186f,4,288.5,True
+TXN-1019,2264-06-14 07:00:00,Void-Dweller,Oxygen Tanks,Neo-Tokyo Orbit,20,1348.29,False
+TXN-1035,2264-06-14 23:00:00,Hulking Glorg,Unstable Isotopes,Kepler-186f,15,1064.15,False
+TXN-1006,2264-06-15 07:00:00,Hulking Glorg,Holodeck Parts,The Void,11,594.34,False
+TXN-1011,2264-07-07 19:00:00,Sentient Nebula,Unstable Isotopes,Alpha Centauri,18,1180.75,False
+TXN-1020,2264-07-08 02:00:00,Void-Dweller,Oxygen Tanks,Kepler-186f,8,478.79,False
+TXN-1030,2264-07-09 20:00:00,Mars-Colonist,Dark Matter Spice,The Void,11,13076.86,False
+TXN-1005,2264-07-27 18:00:00,Hulking Glorg,Dark Matter Spice,The Void,13,19458.21,False
+TXN-1000,2264-08-16 22:00:00,Sentient Nebula,Unstable Isotopes,Rigel Prime,16,1070.86,False
+TXN-1043,2264-09-07 15:00:00,Cyber-Corgi,Oxygen Tanks,Rigel Prime,10,660.93,True
+TXN-1049,2264-09-09 20:00:00,Sentient Nebula,Dark Matter Spice,The Void,16,19805.68,True
+TXN-1003,2264-09-10 21:00:00,Void-Dweller,Oxygen Tanks,The Void,16,940.85,False
+TXN-1027,2264-09-11 16:00:00,Sentient Nebula,Dark Matter Spice,Alpha Centauri,16,22023.25,False
+TXN-1029,2264-09-13 22:00:00,Mars-Colonist,Oxygen Tanks,The Void,9,608.45,False
+TXN-1014,2264-09-15 19:00:00,Sentient Nebula,Dark Matter Spice,Kepler-186f,8,9527.35,False
+TXN-1031,2264-09-18 09:00:00,Mars-Colonist,Unstable Isotopes,The Void,3,128.3,False
+TXN-1036,2264-09-20 06:00:00,Hulking Glorg,Oxygen Tanks,The Void,16,1026.65,False
+TXN-1002,2264-09-25 06:00:00,Hulking Glorg,Ancient Earth Memes,Rigel Prime,19,1088.5,False
+TXN-1032,2264-09-25 12:00:00,Cyber-Corgi,Holodeck Parts,Alpha Centauri,13,667.96,False
+TXN-1024,2264-10-11 18:00:00,Void-Dweller,Oxygen Tanks,Alpha Centauri,1,42.2,True
+TXN-1009,2264-10-16 19:00:00,Sentient Nebula,Unstable Isotopes,The Void,8,349.2,False
+TXN-1016,2264-11-01 08:00:00,Cyber-Corgi,Unstable Isotopes,Neo-Tokyo Orbit,3,164.77,True
+TXN-1007,2264-11-05 15:00:00,Mars-Colonist,Dark Matter Spice,The Void,7,7855.13,False
+TXN-1008,2264-11-08 12:00:00,Hulking Glorg,Ancient Earth Memes,Rigel Prime,3,223.85,False
+TXN-1044,2264-11-09 01:00:00,Void-Dweller,Ancient Earth Memes,Kepler-186f,11,663.58,False
+TXN-1022,2264-11-26 23:00:00,Sentient Nebula,Oxygen Tanks,Neo-Tokyo Orbit,4,296.34,False
+TXN-1046,2264-11-30 13:00:00,Mars-Colonist,Oxygen Tanks,Alpha Centauri,14,563.61,False
+TXN-1026,2264-12-14 03:00:00,Mars-Colonist,Holodeck Parts,Kepler-186f,17,892.86,False
+TXN-1025,2264-12-23 00:00:00,Mars-Colonist,Ancient Earth Memes,Neo-Tokyo Orbit,19,1286.37,False
+TXN-1041,2264-12-26 01:00:00,Mars-Colonist,Unstable Isotopes,Kepler-186f,1,64.81,False

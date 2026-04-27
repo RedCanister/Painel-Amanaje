@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from io import StringIO
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, Callable, Mapping, Optional
 
 import numpy as np
 import pandas as pd
@@ -45,6 +45,7 @@ from app.utils.deployment_utils import (
     save_model_local,
 )
 from app.utils.artifact_utils import (
+    RuntimeArtifactDependencyError,
     get_model_capability_matrix,
     inspect_model_artifact,
     load_runtime_artifact,
@@ -854,6 +855,242 @@ def _build_extraction_manifest(dataset: Any, dataframe: pd.DataFrame) -> dict[st
     }
 
 
+def _metric_reference_for_key(key: str) -> dict[str, Any]:
+    normalized = str(key or "").strip().lower()
+    if "missing" in normalized or "null" in normalized:
+        return {
+            "unit": "%",
+            "reference": "0% is ideal",
+            "expected_range": "0-100%",
+            "direction": "lower_is_better",
+            "explanation": "Raw missingness ratio. Use it to compare how much of the table still needs imputation or cleanup.",
+        }
+    if "row" in normalized or "column" in normalized or "feature" in normalized:
+        return {
+            "unit": "count",
+            "reference": "dataset shape",
+            "expected_range": ">= 0",
+            "direction": "context_only",
+            "explanation": "Raw count shown for reference. Compare against previous versions of the same dataset rather than an absolute target.",
+        }
+    if "cardinality" in normalized or "unique" in normalized:
+        return {
+            "unit": "count",
+            "reference": "column uniqueness",
+            "expected_range": ">= 0",
+            "direction": "context_only",
+            "explanation": "Higher values usually mean the column behaves more like an identifier and may need encoding or exclusion.",
+        }
+    return {
+        "unit": "raw",
+        "reference": "raw value",
+        "expected_range": "context dependent",
+        "direction": "context_only",
+        "explanation": "This value is kept raw so the user can interpret it against the selected dataset, model, or production watch context.",
+    }
+
+
+def _build_metric_cards(metrics: Mapping[str, Any]) -> list[dict[str, Any]]:
+    cards: list[dict[str, Any]] = []
+    for key, value in dict(metrics or {}).items():
+        reference = _metric_reference_for_key(str(key))
+        cards.append(
+            {
+                "key": str(key),
+                "label": str(key).replace("_", " ").title(),
+                "value": _json_safe(value),
+                **reference,
+            }
+        )
+    return cards
+
+
+def _coerce_feature_operations_from_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    operations = dict(payload.get("operations") or {})
+    if operations:
+        return operations
+
+    transformed: dict[str, Any] = {
+        "rename_columns": {},
+        "cast_types": {},
+        "fill_missing_values": {},
+        "drop_columns": [],
+        "filters": [],
+        "sort_by": {},
+    }
+    transforms = payload.get("transforms")
+    if not isinstance(transforms, list):
+        limit_rows = payload.get("limitRows")
+        if limit_rows not in (None, ""):
+            transformed["limit_rows"] = int(limit_rows)
+        return transformed
+
+    for transform in transforms:
+        if not isinstance(transform, Mapping):
+            continue
+        transform_type = str(transform.get("type") or "").strip().lower()
+        if transform_type == "rename":
+            source = str(transform.get("column") or "").strip()
+            target = str(transform.get("value") or "").strip()
+            if source and target:
+                transformed.setdefault("rename_columns", {})[source] = target
+        elif transform_type == "cast":
+            source = str(transform.get("column") or "").strip()
+            target = str(transform.get("value") or "").strip()
+            if source and target:
+                transformed.setdefault("cast_types", {})[source] = target
+        elif transform_type == "fill":
+            source = str(transform.get("column") or "").strip()
+            if source:
+                transformed.setdefault("fill_missing_values", {})[source] = transform.get("value")
+        elif transform_type == "drop":
+            source = str(transform.get("column") or "").strip()
+            if source:
+                transformed.setdefault("drop_columns", []).append(source)
+        elif transform_type == "filter":
+            source = str(transform.get("column") or "").strip()
+            operator = str(transform.get("operator") or "==").strip()
+            if source:
+                transformed.setdefault("filters", []).append(
+                    {"column": source, "operator": operator, "value": transform.get("value")}
+                )
+        elif transform_type == "sort":
+            source = str(transform.get("column") or "").strip()
+            if source:
+                transformed["sort_by"] = {
+                    "column": source,
+                    "ascending": bool(transform.get("ascending", True)),
+                }
+        elif transform_type == "limit":
+            transformed["limit_rows"] = int(transform.get("value") or 0)
+
+    return transformed
+
+
+def _build_transform_suggestions(column_explorer: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    for column in column_explorer[:24]:
+        column_name = str(column.get("name") or "")
+        missing_ratio = float(column.get("null_ratio") or 0.0)
+        unique_ratio = float(column.get("unique_ratio") or 0.0)
+        family = str(column.get("family") or "")
+        if missing_ratio >= 0.2:
+            suggestions.append(
+                {
+                    "type": "fill",
+                    "column": column_name,
+                    "reason": f"{column_name} has {round(missing_ratio * 100, 2)}% missing values.",
+                }
+            )
+        if column.get("is_datetime_candidate"):
+            suggestions.append(
+                {
+                    "type": "cast",
+                    "column": column_name,
+                    "value": "datetime64[ns]",
+                    "reason": f"{column_name} looks like a datetime candidate.",
+                }
+            )
+        if family == "categorical" and unique_ratio >= 0.9:
+            suggestions.append(
+                {
+                    "type": "drop",
+                    "column": column_name,
+                    "reason": f"{column_name} is highly unique and may behave like an identifier.",
+                }
+            )
+    return suggestions[:16]
+
+
+def _build_feature_workspace_payload(
+    dataset: Any,
+    dataframe: pd.DataFrame,
+    *,
+    preview: Optional[Mapping[str, Any]] = None,
+    operations: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    manifest = _build_extraction_manifest(dataset, dataframe)
+    analysis = dict(manifest.get("analysis", {}) or {})
+    column_explorer = list(manifest.get("columns", []) or [])
+    profile = dict(analysis.get("profile", {}) or {})
+    metric_cards = _build_metric_cards(
+        {
+            "row_count": manifest.get("shape", [0, 0])[0],
+            "column_count": manifest.get("shape", [0, 0])[1],
+            "missing_ratio": profile.get("missing_ratio", 0.0),
+            "numeric_columns": len(profile.get("numeric_columns", []) or []),
+            "categorical_columns": len(profile.get("categorical_columns", []) or []),
+            "datetime_candidates": len(profile.get("datetime_candidates", []) or []),
+        }
+    )
+    return {
+        "dataset_id": getattr(dataset, "id", None),
+        "dataset_name": getattr(dataset, "name", None),
+        "manifest": manifest,
+        "preview": _json_safe(preview or {}),
+        "preview_rows": list(manifest.get("preview_rows", []) or []),
+        "column_explorer": column_explorer,
+        "metric_cards": metric_cards,
+        "plots": _build_dataset_plots(analysis),
+        "summary_cards": metric_cards,
+        "transform_suggestions": _build_transform_suggestions(column_explorer),
+        "operations": _json_safe(operations or {}),
+    }
+
+
+def _resolve_training_feature_selection(
+    dataframe: pd.DataFrame,
+    model_record: Any,
+    parameters: Mapping[str, Any],
+) -> tuple[list[str], str]:
+    requested_input_features = _coerce_feature_list(parameters.get("input_features"))
+    requested_output_features = _coerce_feature_list(parameters.get("output_features"))
+    stored_input_features = _coerce_feature_list(getattr(model_record, "input_features", None))
+    stored_output_features = _coerce_feature_list(getattr(model_record, "output_features", None))
+
+    output_features = requested_output_features or stored_output_features
+    output_feature = output_features[0] if output_features else _default_output_feature(dataframe)
+    input_features = requested_input_features or stored_input_features
+    if not input_features:
+        input_features = [column for column in dataframe.columns if str(column) != output_feature]
+    return input_features, output_feature
+
+
+def _build_training_preflight(
+    dataset_record: Any,
+    model_record: Any,
+    parameters: Mapping[str, Any],
+) -> dict[str, Any]:
+    dataframe = _load_dataset_frame_from_record(dataset_record)
+    available_columns = [str(column) for column in dataframe.columns]
+    input_features, output_feature = _resolve_training_feature_selection(dataframe, model_record, parameters)
+    required_columns = [*input_features, output_feature]
+    missing_columns = [column for column in required_columns if column not in available_columns]
+
+    recommended_output = _default_output_feature(dataframe) if available_columns else None
+    recommended_inputs = [column for column in available_columns if column != recommended_output]
+    return {
+        "ok": not missing_columns,
+        "dataset_id": getattr(dataset_record, "id", None),
+        "dataset_name": getattr(dataset_record, "name", None),
+        "model_id": getattr(model_record, "id", None),
+        "model_name": getattr(model_record, "name", None),
+        "input_features": input_features,
+        "output_feature": output_feature,
+        "required_columns": required_columns,
+        "available_columns": available_columns,
+        "missing_columns": missing_columns,
+        "recommended_pairing": {
+            "dataset_id": getattr(dataset_record, "id", None),
+            "dataset_name": getattr(dataset_record, "name", None),
+            "model_id": getattr(model_record, "id", None),
+            "model_name": getattr(model_record, "name", None),
+            "input_features": recommended_inputs,
+            "output_feature": recommended_output,
+        },
+    }
+
+
 async def _build_registry_analysis(db: AsyncSession, registry_type: str, item_id: int) -> dict[str, Any]:
     binding = _get_registry_binding(registry_type)
     record = await binding["model"].read(db, item_id)
@@ -1439,16 +1676,7 @@ def _prepare_dataset_for_training(
     parameters: Mapping[str, Any],
 ) -> PreparedDataset:
     dataframe = _load_dataset_frame_from_record(dataset_record)
-    requested_input_features = _coerce_feature_list(parameters.get("input_features"))
-    requested_output_features = _coerce_feature_list(parameters.get("output_features"))
-    stored_input_features = _coerce_feature_list(getattr(model_record, "input_features", None))
-    stored_output_features = _coerce_feature_list(getattr(model_record, "output_features", None))
-
-    output_features = requested_output_features or stored_output_features
-    output_feature = output_features[0] if output_features else _default_output_feature(dataframe)
-    input_features = requested_input_features or stored_input_features
-    if not input_features:
-        input_features = [column for column in dataframe.columns if str(column) != output_feature]
+    input_features, output_feature = _resolve_training_feature_selection(dataframe, model_record, parameters)
 
     validate_dataframe_columns(dataframe, [*input_features, output_feature])
 
@@ -1584,6 +1812,8 @@ def _train_with_sklearn(
     prepared: PreparedDataset,
     model_record: Any,
     parameters: Mapping[str, Any],
+    *,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> tuple[TrainingResult, np.ndarray]:
     estimator_class = parameters.get("estimator_class")
     estimator_factory = _select_sklearn_estimator(
@@ -1604,6 +1834,8 @@ def _train_with_sklearn(
         "task_type": prepared.task_type,
     }
 
+    if progress_callback is not None:
+        progress_callback({"stage": "training", "message": "Fitting the scikit-learn estimator."})
     result = run_training_pipeline(
         lambda: train_sklearn(
             estimator_instance,
@@ -1625,6 +1857,14 @@ def _train_with_sklearn(
         log_to_mlflow=True,
     )
 
+    if progress_callback is not None:
+        progress_callback(
+            {
+                "stage": "evaluating",
+                "message": "Evaluating model predictions on the validation split.",
+                "counters": {"fit_duration_sec": result.metrics.get("fit_duration_sec")},
+            }
+        )
     predictions = np.asarray(result.model.predict(prepared.x_test))
     _log_training_tracking_context(
         result,
@@ -1642,6 +1882,8 @@ def _train_with_pytorch(
     prepared: PreparedDataset,
     model_record: Any,
     parameters: Mapping[str, Any],
+    *,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> tuple[TrainingResult, np.ndarray]:
     import torch
     import torch.nn as nn
@@ -1694,6 +1936,14 @@ def _train_with_pytorch(
         "task_type": prepared.task_type,
     }
 
+    if progress_callback is not None:
+        progress_callback(
+            {
+                "stage": "training",
+                "message": "Running PyTorch training epochs.",
+                "counters": {"epochs_total": epochs, "epochs_completed": 0},
+            }
+        )
     result = run_training_pipeline(
         lambda: train_pytorch(
             model,
@@ -1716,6 +1966,22 @@ def _train_with_pytorch(
             run_name=None,
             tags=None,
             log_to_mlflow=True,
+            progress_callback=(
+                None
+                if progress_callback is None
+                else lambda event: progress_callback(
+                    {
+                        "stage": "training",
+                        "message": f"Completed epoch {event.get('epoch')} of {event.get('epochs_total')}.",
+                        "counters": {
+                            "epochs_total": event.get("epochs_total"),
+                            "epochs_completed": event.get("epoch"),
+                            "train_loss": event.get("train_loss"),
+                            "val_loss": event.get("val_loss"),
+                        },
+                    }
+                )
+            ),
         ),
         experiment_name=experiment_name,
         run_name=run_name,
@@ -1724,6 +1990,8 @@ def _train_with_pytorch(
         log_to_mlflow=True,
     )
 
+    if progress_callback is not None:
+        progress_callback({"stage": "evaluating", "message": "Scoring PyTorch predictions on the validation split."})
     predictions = _predict_with_result(result, prepared.x_test, prepared.task_type)
     eval_metrics = evaluate_and_log_metrics(
         y_true=prepared.y_test.to_numpy(),
@@ -1955,17 +2223,30 @@ def _run_training_workflow(
     parameters: Mapping[str, Any],
     *,
     job_id: str,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> dict[str, Any]:
+    if progress_callback is not None:
+        progress_callback({"stage": "preparing_dataset", "message": "Preparing dataset splits and feature encodings."})
     prepared = _prepare_dataset_for_training(dataset_record, model_record, parameters)
     framework = str(parameters.get("framework", "sklearn")).strip().lower()
     if framework == "onnx":
         framework = str(parameters.get("training_backend") or parameters.get("base_framework") or "sklearn").strip().lower()
 
     if framework in {"sklearn", "scikit-learn", "scikitlearn"}:
-        result, predictions = _train_with_sklearn(prepared, model_record, parameters)
+        result, predictions = _train_with_sklearn(
+            prepared,
+            model_record,
+            parameters,
+            progress_callback=progress_callback,
+        )
         framework = "sklearn"
     elif framework in {"pytorch", "torch"}:
-        result, predictions = _train_with_pytorch(prepared, model_record, parameters)
+        result, predictions = _train_with_pytorch(
+            prepared,
+            model_record,
+            parameters,
+            progress_callback=progress_callback,
+        )
         framework = "pytorch"
     else:
         raise ValueError(f"Unsupported training framework: {framework}")
@@ -1973,6 +2254,8 @@ def _run_training_workflow(
     result.framework = framework
     pretty_print_metrics(result.metrics)
     with resume_run(result.run_id) as tracking_active:
+        if progress_callback is not None:
+            progress_callback({"stage": "persisting_artifacts", "message": "Persisting artifacts, summaries, and runtime bundles."})
         artifacts = _generate_training_artifacts(
             job_id,
             result,
@@ -1980,6 +2263,8 @@ def _run_training_workflow(
             predictions,
             log_to_mlflow=tracking_active,
         )
+        if progress_callback is not None:
+            progress_callback({"stage": "logging_mlflow", "message": "Logging monitoring summaries and artifact context."})
         monitoring = _compute_monitoring_snapshot(
             job_id,
             model_record,
@@ -2082,6 +2367,8 @@ async def _optimize_study(
     study_record: Any,
     db: AsyncSession,
     request_payload: StudyOptimizationRequest,
+    *,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> dict[str, Any]:
     learning_model = await LearningModel.read(db, int(study_record.learning_model_id))
     dataset_model = await DatasetModel.read(db, int(study_record.dataset_id))
@@ -2091,6 +2378,8 @@ async def _optimize_study(
     base_parameters = dict(getattr(learning_model, "parameters", {}) or {})
     study_parameters = dict(getattr(study_record, "study_params", {}) or {})
     merged_parameters = {**base_parameters, **study_parameters}
+    if progress_callback is not None:
+        progress_callback({"stage": "validating_schema", "message": "Validating the linked model and dataset schema for the study."})
     prepared = _prepare_dataset_for_training(dataset_model, learning_model, merged_parameters)
     framework = str(merged_parameters.get("framework", "sklearn")).strip().lower()
     metric_name = str(
@@ -2117,6 +2406,14 @@ async def _optimize_study(
         "model": _serialize_model_summary(learning_model),
         "dataset": _serialize_dataset_summary(dataset_model),
     }
+    if progress_callback is not None:
+        progress_callback(
+            {
+                "stage": "optimizing",
+                "message": "Running Optuna trials for the selected study.",
+                "counters": {"total_trials": n_trials},
+            }
+        )
 
     def objective(trial: Any) -> float:
         trial_parameters = {**merged_parameters, **_suggest_trial_parameters(trial, search_space)}
@@ -2145,6 +2442,7 @@ async def _optimize_study(
         objective_metric=metric_name,
         search_space=search_space,
         study_context=study_context,
+        progress_callback=progress_callback,
         tags={
             "framework": framework,
             "learning_model_id": str(learning_model.id),

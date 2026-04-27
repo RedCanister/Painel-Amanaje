@@ -14,8 +14,9 @@
         padding: 1.5rem;
         box-shadow: 0 12px 28px rgba(230, 57, 70, 0.08);
     }
-    .feature-panel h3 { margin-top: 0; color: #b91c1c; }
-    .inline-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .feature-panel h3, .feature-panel h4 { margin-top: 0; color: #b91c1c; }
+    .inline-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .feature-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); }
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: #7f1d1d; }
     .form-group select, .form-group textarea, .form-group input {
@@ -27,7 +28,8 @@
         background: white;
     }
     .form-group textarea { min-height: 220px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
-    .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .toolbar-row { justify-content: space-between; align-items: center; }
     .btn {
         padding: 0.8rem 1rem;
         border: none;
@@ -37,15 +39,72 @@
     }
     .btn-primary { background: #e63946; color: white; }
     .btn-secondary { background: #fecdd3; color: #7f1d1d; }
-    .summary-card {
+    .btn-ghost { background: #fff1f2; color: #991b1b; border: 1px solid #fda4af; }
+    .mode-strip { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+    .mode-btn {
+        border: 1px solid #fda4af;
+        background: #fff5f5;
+        color: #991b1b;
+        padding: 0.75rem 0.95rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .mode-btn.active { background: #e63946; color: white; border-color: #e63946; }
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+    .builder-list { display: grid; gap: 0.85rem; }
+    .builder-row {
+        border: 1px solid #fecdd3;
+        border-radius: 14px;
+        padding: 0.85rem;
+        background: #fff5f5;
+    }
+    .builder-row-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .builder-row-title { font-weight: 700; color: #7f1d1d; }
+    .builder-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+    .summary-surface {
         background: #fff5f5;
         border: 1px solid #fecdd3;
         border-radius: 14px;
         padding: 1rem;
     }
-    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-    .summary-table td, .summary-table th { padding: 0.55rem; border-bottom: 1px solid #ffe4e6; text-align: left; vertical-align: top; }
-    .status { margin-top: 1rem; }
+    .column-toolbar { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr) 220px; margin-bottom: 1rem; }
+    .column-explorer { display: grid; gap: 0.85rem; }
+    .column-card {
+        border: 1px solid #fecdd3;
+        border-radius: 14px;
+        background: #fffafa;
+        padding: 0.9rem;
+    }
+    .column-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.65rem;
+    }
+    .column-card h5 { margin: 0; color: #7f1d1d; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.65rem; }
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.28rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: #ffe4e6;
+        color: #991b1b;
+        border: 1px solid #fecdd3;
+    }
+    .column-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .preview-grid-wrap { display: grid; gap: 1rem; }
     .status .ok, .status .error {
         padding: 0.85rem;
         border-radius: 12px;
@@ -53,6 +112,11 @@
     }
     .status .ok { background: #ecfdf5; color: #065f46; }
     .status .error { background: #fef2f2; color: #991b1b; }
+
+    @media (max-width: 980px) {
+        .feature-layout { grid-template-columns: 1fr; }
+        .column-toolbar { grid-template-columns: 1fr; }
+    }
 </style>
 {% endblock %}
 
@@ -60,7 +124,7 @@
 <div class="feature-shell">
     <section class="feature-panel">
         <h3>Feature Workspace</h3>
-        <p>Preview tabular transformations before materializing a new dataset view. This workspace keeps the operations explicit so the resulting Postgres table and registry entry are easy to audit.</p>
+        <p class="helper-text">Use the visual transform builder for the common path, keep raw JSON as an advanced option, and inspect plots and column behavior on the same page before materializing the next dataset view.</p>
 
         <div class="inline-grid">
             <div class="form-group">
@@ -73,31 +137,88 @@
                 <label for="featureViewName">Materialized Name</label>
                 <input id="featureViewName" type="text" placeholder="customer_churn_feature_view">
             </div>
+            <div class="form-group">
+                <label for="featureLimitRows">Preview Row Limit</label>
+                <input id="featureLimitRows" type="number" min="1" max="5000" value="200">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="featureOperations">Operations JSON</label>
-            <textarea id="featureOperations" spellcheck="false">{
+        <div class="toolbar-row" style="margin-bottom:1rem;">
+            <div class="mode-strip">
+                <button type="button" class="mode-btn active" data-mode="visual">Visual Builder</button>
+                <button type="button" class="mode-btn" data-mode="json">Advanced JSON</button>
+            </div>
+            <div class="actions-row">
+                <button type="button" class="btn btn-ghost" id="btnReloadFeatureProfile">Reload Profile</button>
+                <button type="button" class="btn btn-primary" id="btnPreviewFeatureView">Preview Transform</button>
+                <button type="button" class="btn btn-secondary" id="btnMaterializeFeatureView">Materialize View</button>
+            </div>
+        </div>
+
+        <div id="featureWorkspaceStatus" class="status"></div>
+
+        <div class="mode-panel active" data-mode-panel="visual">
+            <div class="feature-layout">
+                <div class="summary-surface">
+                    <div class="toolbar-row" style="margin-bottom:0.9rem;">
+                        <div>
+                            <h4 style="margin-bottom:0.2rem;">Visual Transform Builder</h4>
+                            <div class="helper-text">This is the spreadsheet-like path: add rename, cast, fill, drop, filter, sort, and limit operations without writing JSON.</div>
+                        </div>
+                        <button type="button" class="btn btn-ghost" id="btnAddTransform">Add Transform</button>
+                    </div>
+                    <div id="visualTransformList" class="builder-list"></div>
+                </div>
+
+                <div class="summary-surface">
+                    <h4>Dataset Summary With Scale Guidance</h4>
+                    <div id="featureMetricCards" class="helper-text">Choose a dataset to inspect its scale, missingness, and column families.</div>
+                    <div style="margin-top:1rem;">
+                        <h4>Suggested Next Steps</h4>
+                        <div id="featureSuggestions" class="helper-text">Transform suggestions will appear here after the dataset is profiled.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mode-panel" data-mode-panel="json">
+            <div class="form-group">
+                <label for="featureOperations">Operations JSON</label>
+                <textarea id="featureOperations" spellcheck="false">{
   "rename_columns": {},
   "cast_types": {},
   "fill_missing_values": {},
   "drop_columns": [],
   "filters": [],
-  "sort_by": { "column": "", "ascending": true },
+  "sort_by": {},
   "limit_rows": 200
 }</textarea>
+            </div>
         </div>
+    </section>
 
-        <div class="actions-row">
-            <button type="button" class="btn btn-primary" id="btnPreviewFeatureView">Preview Transform</button>
-            <button type="button" class="btn btn-secondary" id="btnMaterializeFeatureView">Materialize View</button>
+    <section class="feature-panel">
+        <div class="toolbar-row">
+            <div>
+                <h3 style="margin-bottom:0.2rem;">Column Explorer</h3>
+                <div class="helper-text">Search wide tables, compare null ratios and uniqueness, and add transforms straight from the explorer.</div>
+            </div>
         </div>
-        <div id="featureWorkspaceStatus" class="status"></div>
+        <div class="column-toolbar">
+            <input id="columnSearch" type="search" placeholder="Search columns, families, or sample values">
+            <select id="columnSort">
+                <option value="name">Sort by name</option>
+                <option value="null_ratio">Sort by null ratio</option>
+                <option value="unique_ratio">Sort by unique ratio</option>
+                <option value="family">Sort by family</option>
+            </select>
+        </div>
+        <div id="columnExplorerResults" class="column-explorer">Choose a dataset to inspect its columns.</div>
     </section>
 
     <section class="feature-panel">
         <h3>Preview and Materialization</h3>
-        <div id="featureWorkspaceResults" class="summary-card">Choose a dataset and preview the transformation plan.</div>
+        <div id="featureWorkspaceResults" class="summary-surface">Choose a dataset and preview the transformation plan.</div>
     </section>
 </div>
 {% endblock %}
@@ -108,54 +229,335 @@
 const featureDatasetId = document.getElementById('featureDatasetId');
 const featureOperations = document.getElementById('featureOperations');
 const featureViewName = document.getElementById('featureViewName');
+const featureLimitRows = document.getElementById('featureLimitRows');
+const visualTransformList = document.getElementById('visualTransformList');
 
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+let currentFeatureProfile = null;
+let currentColumns = [];
 
 function setFeatureWorkspaceStatus(message, isError = false) {
-    document.getElementById('featureWorkspaceStatus').innerHTML = `<span class="${isError ? 'error' : 'ok'}">${escapeHtml(message)}</span>`;
+    document.getElementById('featureWorkspaceStatus').innerHTML = `<span class="${isError ? 'error' : 'ok'}">${AmanajeUI.escapeHtml(message)}</span>`;
 }
 
-function renderSummaryTable(payload = {}) {
+function setMode(mode) {
+    document.querySelectorAll('.mode-btn').forEach((button) => {
+        button.classList.toggle('active', button.dataset.mode === mode);
+    });
+    document.querySelectorAll('[data-mode-panel]').forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.modePanel === mode);
+    });
+}
+
+function currentMode() {
+    return document.querySelector('.mode-btn.active')?.dataset.mode || 'visual';
+}
+
+function normalizeOperationValue(type, rawValue) {
+    if (type === 'limit') {
+        return Number(rawValue || featureLimitRows.value || 200);
+    }
+    if (rawValue === 'true') return true;
+    if (rawValue === 'false') return false;
+    if (rawValue !== '' && !Number.isNaN(Number(rawValue))) return Number(rawValue);
+    return rawValue;
+}
+
+function serializeVisualTransforms() {
+    const transforms = [];
+    document.querySelectorAll('.builder-row').forEach((row) => {
+        const type = row.querySelector('[data-field="type"]')?.value || '';
+        const column = row.querySelector('[data-field="column"]')?.value || '';
+        const value = row.querySelector('[data-field="value"]')?.value || '';
+        const operator = row.querySelector('[data-field="operator"]')?.value || '==';
+        const ascending = row.querySelector('[data-field="ascending"]')?.checked !== false;
+        if (!type) return;
+        transforms.push({
+            type,
+            column,
+            operator,
+            value: normalizeOperationValue(type, value),
+            ascending
+        });
+    });
+    if (featureLimitRows.value) {
+        transforms.push({ type: 'limit', value: Number(featureLimitRows.value) });
+    }
+    return transforms;
+}
+
+function buildOperationsFromVisual() {
+    const operations = {
+        rename_columns: {},
+        cast_types: {},
+        fill_missing_values: {},
+        drop_columns: [],
+        filters: [],
+        sort_by: {},
+        limit_rows: Number(featureLimitRows.value || 200)
+    };
+    serializeVisualTransforms().forEach((transform) => {
+        if (transform.type === 'rename' && transform.column && transform.value) {
+            operations.rename_columns[transform.column] = String(transform.value);
+        }
+        if (transform.type === 'cast' && transform.column && transform.value) {
+            operations.cast_types[transform.column] = String(transform.value);
+        }
+        if (transform.type === 'fill' && transform.column) {
+            operations.fill_missing_values[transform.column] = transform.value;
+        }
+        if (transform.type === 'drop' && transform.column) {
+            operations.drop_columns.push(transform.column);
+        }
+        if (transform.type === 'filter' && transform.column) {
+            operations.filters.push({ column: transform.column, operator: transform.operator, value: transform.value });
+        }
+        if (transform.type === 'sort' && transform.column) {
+            operations.sort_by = { column: transform.column, ascending: Boolean(transform.ascending) };
+        }
+        if (transform.type === 'limit') {
+            operations.limit_rows = Number(transform.value || featureLimitRows.value || 200);
+        }
+    });
+    return operations;
+}
+
+function syncOperationsJson() {
+    if (currentMode() !== 'visual') return;
+    featureOperations.value = JSON.stringify(buildOperationsFromVisual(), null, 2);
+}
+
+function parseOperationsPayload() {
+    if (currentMode() === 'json') {
+        return { operations: JSON.parse(featureOperations.value || '{}') };
+    }
+    const transforms = serializeVisualTransforms();
+    const operations = buildOperationsFromVisual();
+    featureOperations.value = JSON.stringify(operations, null, 2);
+    return { transforms, operations };
+}
+
+function createColumnOptions(selected = '') {
+    const base = ['<option value="">Select a column</option>'];
+    currentColumns.forEach((column) => {
+        base.push(`<option value="${AmanajeUI.escapeHtml(column)}" ${column === selected ? 'selected' : ''}>${AmanajeUI.escapeHtml(column)}</option>`);
+    });
+    return base.join('');
+}
+
+function buildTransformRow(initial = {}) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'builder-row';
+    wrapper.innerHTML = `
+        <div class="builder-row-header">
+            <div class="builder-row-title">Transform Step</div>
+            <button type="button" class="btn btn-ghost" data-remove-transform="true">Remove</button>
+        </div>
+        <div class="builder-grid">
+            <div class="form-group">
+                <label>Type</label>
+                <select data-field="type">
+                    <option value="rename" ${initial.type === 'rename' ? 'selected' : ''}>Rename Column</option>
+                    <option value="cast" ${initial.type === 'cast' ? 'selected' : ''}>Cast Type</option>
+                    <option value="fill" ${initial.type === 'fill' ? 'selected' : ''}>Fill Missing</option>
+                    <option value="drop" ${initial.type === 'drop' ? 'selected' : ''}>Drop Column</option>
+                    <option value="filter" ${initial.type === 'filter' ? 'selected' : ''}>Filter Rows</option>
+                    <option value="sort" ${initial.type === 'sort' ? 'selected' : ''}>Sort Rows</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Column</label>
+                <select data-field="column">${createColumnOptions(initial.column || '')}</select>
+            </div>
+            <div class="form-group">
+                <label>Value</label>
+                <input data-field="value" type="text" value="${AmanajeUI.escapeHtml(initial.value ?? '')}" placeholder="new_name, float64, 0, vip">
+            </div>
+            <div class="form-group">
+                <label>Operator</label>
+                <select data-field="operator">
+                    <option value="==" ${initial.operator === '==' ? 'selected' : ''}>equals</option>
+                    <option value="!=" ${initial.operator === '!=' ? 'selected' : ''}>not equal</option>
+                    <option value=">" ${initial.operator === '>' ? 'selected' : ''}>greater than</option>
+                    <option value="<" ${initial.operator === '<' ? 'selected' : ''}>less than</option>
+                    <option value="contains" ${initial.operator === 'contains' ? 'selected' : ''}>contains</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ascending</label>
+                <input data-field="ascending" type="checkbox" ${initial.ascending === false ? '' : 'checked'}>
+            </div>
+        </div>
+    `;
+    wrapper.querySelectorAll('input, select').forEach((element) => {
+        element.addEventListener('change', syncOperationsJson);
+        element.addEventListener('input', syncOperationsJson);
+    });
+    wrapper.querySelector('[data-remove-transform="true"]').addEventListener('click', () => {
+        wrapper.remove();
+        syncOperationsJson();
+    });
+    return wrapper;
+}
+
+function addTransform(initial = {}) {
+    visualTransformList.appendChild(buildTransformRow(initial));
+    syncOperationsJson();
+}
+
+function renderSuggestions(suggestions = []) {
+    const target = document.getElementById('featureSuggestions');
+    if (!Array.isArray(suggestions) || !suggestions.length) {
+        target.innerHTML = '<div class="helper-text">No transform suggestions were generated for this dataset yet.</div>';
+        return;
+    }
+    target.innerHTML = suggestions.map((suggestion) => `
+        <div class="chip-row" style="margin-bottom:0.65rem;">
+            <span class="chip">${AmanajeUI.escapeHtml(suggestion.type || 'suggestion')}</span>
+            <span class="helper-text">${AmanajeUI.escapeHtml(suggestion.reason || '')}</span>
+        </div>
+    `).join('');
+}
+
+function renderColumnExplorer(columns = []) {
+    const query = (document.getElementById('columnSearch').value || '').trim().toLowerCase();
+    const sortKey = document.getElementById('columnSort').value || 'name';
+    const filtered = (Array.isArray(columns) ? columns : []).filter((column) => {
+        const haystack = JSON.stringify(column || {}).toLowerCase();
+        return !query || haystack.includes(query);
+    });
+    filtered.sort((left, right) => {
+        if (sortKey === 'name' || sortKey === 'family') {
+            return String(left?.[sortKey] || '').localeCompare(String(right?.[sortKey] || ''));
+        }
+        return Number(right?.[sortKey] || 0) - Number(left?.[sortKey] || 0);
+    });
+
+    const target = document.getElementById('columnExplorerResults');
+    if (!filtered.length) {
+        target.innerHTML = '<div class="helper-text">No columns match the current search.</div>';
+        return;
+    }
+    target.innerHTML = filtered.map((column) => `
+        <article class="column-card">
+            <div class="column-card-header">
+                <div>
+                    <h5>${AmanajeUI.escapeHtml(column.name || 'column')}</h5>
+                    <div class="helper-text">Sample: ${AmanajeUI.escapeHtml((column.sample_values || []).join(', ') || 'n/a')}</div>
+                </div>
+                <div class="chip">${AmanajeUI.escapeHtml(column.family || 'unknown')}</div>
+            </div>
+            <div class="chip-row">
+                <span class="chip">Null ratio: ${AmanajeUI.escapeHtml(column.null_ratio)}</span>
+                <span class="chip">Unique ratio: ${AmanajeUI.escapeHtml(column.unique_ratio)}</span>
+                <span class="chip">Date confidence: ${AmanajeUI.escapeHtml(column.datetime_confidence || 0)}</span>
+                ${column.high_cardinality ? '<span class="chip">High cardinality</span>' : ''}
+            </div>
+            <div class="column-actions">
+                <button type="button" class="btn btn-ghost" data-quick-transform="rename" data-column="${AmanajeUI.escapeHtml(column.name)}">Rename</button>
+                <button type="button" class="btn btn-ghost" data-quick-transform="cast" data-column="${AmanajeUI.escapeHtml(column.name)}">Cast</button>
+                <button type="button" class="btn btn-ghost" data-quick-transform="fill" data-column="${AmanajeUI.escapeHtml(column.name)}">Fill Missing</button>
+                <button type="button" class="btn btn-ghost" data-quick-transform="filter" data-column="${AmanajeUI.escapeHtml(column.name)}">Filter</button>
+            </div>
+        </article>
+    `).join('');
+
+    target.querySelectorAll('[data-quick-transform]').forEach((button) => {
+        button.addEventListener('click', () => {
+            addTransform({ type: button.dataset.quickTransform, column: button.dataset.column || '' });
+            setMode('visual');
+        });
+    });
+}
+
+function renderPreviewTable(rows = []) {
+    if (!Array.isArray(rows) || !rows.length) {
+        return '<div class="helper-text">No preview rows are available yet.</div>';
+    }
+    const columns = Object.keys(rows[0] || {});
     return `
-        <table class="summary-table">
-            <tbody>
-                ${Object.entries(payload).map(([key, value]) => `
-                    <tr>
-                        <th>${escapeHtml(key.replace(/_/g, ' '))}</th>
-                        <td>${typeof value === 'object' ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>` : escapeHtml(value)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
+        <div class="table-scroll">
+            <table class="full-width-table">
+                <thead>
+                    <tr>${columns.map((column) => `<th>${AmanajeUI.escapeHtml(column)}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+                    ${rows.map((row) => `
+                        <tr>
+                            ${columns.map((column) => `<td>${AmanajeUI.escapeHtml(typeof row[column] === 'object' ? JSON.stringify(row[column]) : row[column])}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
     `;
 }
 
 function renderFeatureResults(result = {}) {
-    const preview = result.preview || {};
-    const manifest = result.manifest || {};
-    document.getElementById('featureWorkspaceResults').innerHTML = `
-        <h4 style="margin-top:0; color:#7f1d1d;">Preview Summary</h4>
-        ${renderSummaryTable({
-            shape_before: preview.shape_before,
-            shape_after: preview.shape_after,
-            steps: preview.steps,
-            table_name: manifest.table_name,
-            available_edits: manifest.available_edits
-        })}
-        <h4 style="color:#7f1d1d;">Column Explorer</h4>
-        ${renderSummaryTable({ columns: (manifest.columns || []).slice(0, 12) })}
+    currentFeatureProfile = result;
+    const metricCards = AmanajeUI.renderMetricCards(result.metric_cards || result.summary_cards || []);
+    document.getElementById('featureMetricCards').innerHTML = metricCards || '<div class="helper-text">No dataset summary available.</div>';
+    renderSuggestions(result.transform_suggestions || []);
+    renderColumnExplorer(result.column_explorer || []);
+
+    const previewSummary = `
+        <div class="preview-grid-wrap">
+            ${metricCards}
+            <div class="summary-surface">
+                <h4>Preview Rows</h4>
+                ${renderPreviewTable(result.preview_rows || result.manifest?.preview_rows || [])}
+            </div>
+        </div>
     `;
+    const details = AmanajeUI.renderCollapsibleJson(
+        {
+            dataset_id: result.dataset_id,
+            dataset_name: result.dataset_name,
+            operations: result.operations || {},
+            preview: result.preview || {},
+            manifest: result.manifest || {},
+        },
+        { title: 'Feature Workspace Payload', collapsed: true }
+    );
+    document.getElementById('featureWorkspaceResults').innerHTML = AmanajeUI.renderResultTabs(
+        [
+            { key: 'summary', label: 'Summary', content: previewSummary },
+            { key: 'plots', label: 'Plots', content: AmanajeUI.renderPlotDeck(result.plots || []) },
+            { key: 'details', label: 'Details', content: details }
+        ],
+        { idPrefix: 'feature_result_tabs' }
+    );
+    AmanajeUI.activateTabs(document.getElementById('featureWorkspaceResults'));
+    AmanajeUI.enhanceCollapsibles(document.getElementById('featureWorkspaceResults'));
 }
 
-function parseOperations() {
-    return JSON.parse(featureOperations.value || '{}');
+async function loadFeatureProfile() {
+    if (!featureDatasetId.value) {
+        currentFeatureProfile = null;
+        currentColumns = [];
+        renderColumnExplorer([]);
+        document.getElementById('featureMetricCards').innerHTML = '<div class="helper-text">Choose a dataset to inspect its scale, missingness, and column families.</div>';
+        document.getElementById('featureWorkspaceResults').innerHTML = 'Choose a dataset and preview the transformation plan.';
+        return;
+    }
+
+    try {
+        setFeatureWorkspaceStatus('Loading dataset feature profile...');
+        const response = await fetch(`/features/extract?dataset_id=${Number(featureDatasetId.value)}`);
+        const result = await response.json();
+        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
+        currentFeatureProfile = result;
+        currentColumns = (result.column_explorer || result.manifest?.columns || []).map((column) => column.name).filter(Boolean);
+        if (!visualTransformList.children.length) addTransform({ type: 'rename' });
+        document.querySelectorAll('[data-field="column"]').forEach((select) => {
+            const currentValue = select.value;
+            select.innerHTML = createColumnOptions(currentValue);
+        });
+        renderFeatureResults(result);
+        syncOperationsJson();
+        setFeatureWorkspaceStatus('Dataset profile loaded.');
+    } catch (error) {
+        setFeatureWorkspaceStatus(error.message, true);
+    }
 }
 
 async function previewFeatureView() {
@@ -171,7 +573,7 @@ async function previewFeatureView() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 datasetId: Number(featureDatasetId.value),
-                operations: parseOperations()
+                ...parseOperationsPayload()
             })
         });
         const result = await response.json();
@@ -197,12 +599,17 @@ async function materializeFeatureView() {
             body: JSON.stringify({
                 datasetId: Number(featureDatasetId.value),
                 name: featureViewName.value || undefined,
-                operations: parseOperations()
+                limitRows: Number(featureLimitRows.value || 200),
+                ...parseOperationsPayload()
             })
         });
         const result = await response.json();
         if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
-        renderFeatureResults({ preview: result.preview, manifest: { columns: result.analysis?.column_explorer || [], table_name: result.postgres?.table_name, available_edits: [] } });
+        renderFeatureResults({
+            ...result,
+            dataset_id: result.dataset?.id || Number(featureDatasetId.value),
+            dataset_name: result.dataset?.name || featureViewName.value
+        });
         setFeatureWorkspaceStatus(
             result.postgres?.materialized
                 ? `Materialized ${result.dataset?.name || 'dataset view'} and synced table ${result.postgres.table_name}.`
@@ -228,8 +635,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         valueField: 'id',
         placeholderText: 'Select a dataset'
     });
-    document.getElementById('btnPreviewFeatureView')?.addEventListener('click', previewFeatureView);
-    document.getElementById('btnMaterializeFeatureView')?.addEventListener('click', materializeFeatureView);
+
+    document.querySelectorAll('.mode-btn').forEach((button) => {
+        button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+    document.getElementById('btnAddTransform').addEventListener('click', () => addTransform({ type: 'rename' }));
+    document.getElementById('btnReloadFeatureProfile').addEventListener('click', loadFeatureProfile);
+    document.getElementById('btnPreviewFeatureView').addEventListener('click', previewFeatureView);
+    document.getElementById('btnMaterializeFeatureView').addEventListener('click', materializeFeatureView);
+    document.getElementById('columnSearch').addEventListener('input', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
+    document.getElementById('columnSort').addEventListener('change', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
+    featureDatasetId.addEventListener('change', loadFeatureProfile);
+    featureLimitRows.addEventListener('input', syncOperationsJson);
+    addTransform({ type: 'rename' });
 });
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from app.utils.artifact_utils import inspect_model_artifact, load_runtime_artifact
 from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
+from app.utils.serialization import canonicalize_scalar_for_logging
 from app.utils.tabular_utils import build_dataset_analysis_summary, load_tabular_from_bytes
 
 
@@ -80,5 +81,13 @@ def test_run_ledger_create_update_and_filter():
     assert updated["status"] == "running"
     assert updated["metrics"]["eval_accuracy"] == 0.91
     assert read_run_entry(tmp_path, entry["run_id"])["stage"] == "training"
+    assert read_run_entry(tmp_path, entry["run_id"])["progress"]["current_stage"] == "training"
+    assert read_run_entry(tmp_path, entry["run_id"])["progress"]["latest_event"] == "Training started."
     assert list_run_entries(tmp_path, model_id=7, dataset_id=11)[0]["run_id"] == entry["run_id"]
     assert list_run_entries(tmp_path, inference_id=13)[0]["run_id"] == entry["run_id"]
+
+
+def test_canonicalize_scalar_for_logging_normalizes_equivalent_numeric_strings():
+    assert canonicalize_scalar_for_logging(0) == "0"
+    assert canonicalize_scalar_for_logging(0.0) == "0"
+    assert canonicalize_scalar_for_logging("0.0") == "0"

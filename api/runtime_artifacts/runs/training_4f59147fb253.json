@@ -1,0 +1,3018 @@
+{
+  "run_id": "training_4f59147fb253",
+  "run_type": "training",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-04-24T21:30:59.934647",
+  "updated_at": "2026-04-24T21:32:02.271257",
+  "started_at": "2026-04-24T21:30:59.966419",
+  "completed_at": "2026-04-24T21:32:02.271257",
+  "context": {
+    "model_id": 5,
+    "dataset_id": 4,
+    "study_id": null,
+    "inference_id": 8
+  },
+  "parameters": {
+    "epochs": 20,
+    "metric": "accuracy",
+    "dropout": 0.3,
+    "n_trials": 25,
+    "direction": "maximize",
+    "framework": "pytorch",
+    "batch_size": 64,
+    "hidden_dim": 32,
+    "input_size": 4,
+    "num_layers": 2,
+    "hidden_size": 32,
+    "output_size": 1,
+    "hidden_layers": 4,
+    "learning_rate": 0.002,
+    "input_features": [
+      "Date",
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume",
+      "Close_Return",
+      "Volatility",
+      "MA20",
+      "MA50",
+      "Momentum",
+      "RelVolume",
+      "RSI_Close",
+      "Williams_%R",
+      "CCI",
+      "Bollinger_%B",
+      "KeltnerC_%",
+      "MACD_lib",
+      "MACD_signal",
+      "MACD_Hist",
+      "Force_Index",
+      "Volume_Price_Trend",
+      "DLR",
+      "RSI_Over",
+      "RSI_Under",
+      "Williams_Over",
+      "Williams_Under",
+      "MACD_Over",
+      "MACD_Under",
+      "Data",
+      "time_idx",
+      "series_id",
+      "hl_center",
+      "hl_range",
+      "dayofweek"
+    ],
+    "output_features": [
+      "month"
+    ],
+    "artifact_manifest": {
+      "loader": "torchscript",
+      "source": "/app/runtime_artifacts/training/training_9b751e60e831/model_pytorch.pt",
+      "metadata": {},
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "framework": "pytorch",
+      "entrypoint": null,
+      "artifact_format": ".pt",
+      "capability_matrix": {
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        }
+      },
+      "needs_companion_spec": true,
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ]
+    }
+  },
+  "metrics": {
+    "train_loss": 144.00264090015776,
+    "val_loss": 2.4842567294836044,
+    "eval_accuracy": 0.08846918489065607,
+    "eval_precision": 0.007372432074221339,
+    "eval_recall": 0.08333333333333333,
+    "eval_f1": 0.013546423135464232
+  },
+  "artifacts": {
+    "summary_path": "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+    "artifact_paths": [
+      "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+      "/app/runtime_artifacts/training/training_4f59147fb253/model_spec.json",
+      "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "/app/runtime_artifacts/plots/training_4f59147fb253/metric_comparison.png",
+      "/app/runtime_artifacts/plots/training_4f59147fb253/loss_curve.png",
+      "/app/runtime_artifacts/serving/training_4f59147fb253_service.py"
+    ],
+    "model_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+    "artifact_manifest": {
+      "artifact_format": ".pt",
+      "loader": "torchscript",
+      "runtime_capabilities": {
+        "register": true,
+        "inspect": true,
+        "train": false,
+        "predict": false,
+        "simulate": false,
+        "monitor": false
+      },
+      "framework": "pytorch",
+      "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "entrypoint": null,
+      "needs_companion_spec": true,
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "metadata": {},
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ],
+      "capability_matrix": {
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": true,
+          "simulate": true,
+          "monitor": true
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        }
+      }
+    },
+    "serving_file": "/app/runtime_artifacts/serving/training_4f59147fb253_service.py",
+    "model_uri": "runs:/08f46ba8a5c64a5ea6016d4d5d9500a6/model"
+  },
+  "result": {
+    "model_id": 5,
+    "dataset_id": 4,
+    "input_type": "Manual",
+    "study_id": null,
+    "framework": "pytorch",
+    "metrics": {
+      "train_loss": 144.00264090015776,
+      "val_loss": 2.4842567294836044,
+      "eval_accuracy": 0.08846918489065607,
+      "eval_precision": 0.007372432074221339,
+      "eval_recall": 0.08333333333333333,
+      "eval_f1": 0.013546423135464232
+    },
+    "parameters": {
+      "epochs": 20,
+      "metric": "accuracy",
+      "dropout": 0.3,
+      "n_trials": 25,
+      "direction": "maximize",
+      "framework": "pytorch",
+      "batch_size": 64,
+      "hidden_dim": 32,
+      "input_size": 4,
+      "num_layers": 2,
+      "hidden_size": 32,
+      "output_size": 1,
+      "hidden_layers": 4,
+      "learning_rate": 0.002,
+      "input_features": [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume",
+        "Close_Return",
+        "Volatility",
+        "MA20",
+        "MA50",
+        "Momentum",
+        "RelVolume",
+        "RSI_Close",
+        "Williams_%R",
+        "CCI",
+        "Bollinger_%B",
+        "KeltnerC_%",
+        "MACD_lib",
+        "MACD_signal",
+        "MACD_Hist",
+        "Force_Index",
+        "Volume_Price_Trend",
+        "DLR",
+        "RSI_Over",
+        "RSI_Under",
+        "Williams_Over",
+        "Williams_Under",
+        "MACD_Over",
+        "MACD_Under",
+        "Data",
+        "time_idx",
+        "series_id",
+        "hl_center",
+        "hl_range",
+        "dayofweek"
+      ],
+      "output_features": [
+        "month"
+      ],
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_9b751e60e831/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      }
+    },
+    "monitoring": {
+      "job_id": "training_4f59147fb253",
+      "drift_results": {
+        "Date": false,
+        "Open": false,
+        "High": false,
+        "Low": false,
+        "Close": false,
+        "Volume": false,
+        "Close_Return": false,
+        "Volatility": false,
+        "MA20": false,
+        "MA50": false,
+        "Momentum": false,
+        "RelVolume": false,
+        "RSI_Close": false,
+        "Williams_%R": false,
+        "CCI": false,
+        "Bollinger_%B": false,
+        "KeltnerC_%": false,
+        "MACD_lib": false,
+        "MACD_signal": false,
+        "MACD_Hist": false,
+        "Force_Index": false,
+        "Volume_Price_Trend": false,
+        "DLR": false,
+        "RSI_Over": false,
+        "RSI_Under": false,
+        "Williams_Over": false,
+        "Williams_Under": false,
+        "MACD_Over": false,
+        "MACD_Under": false,
+        "Data": false,
+        "time_idx": false,
+        "hl_center": false,
+        "hl_range": false,
+        "dayofweek": false,
+        "series_id_AAPL": false,
+        "series_id_AMD": false,
+        "series_id_NVDA": false,
+        "series_id_QCOM": false,
+        "series_id_nan": false
+      },
+      "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+      },
+      "degradation_results": {
+        "train_loss": false,
+        "val_loss": false
+      },
+      "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 0
+      },
+      "retrain_recommended": false,
+      "evaluated_at": "2026-04-24T21:32:00.952643"
+    },
+    "artifacts": {
+      "summary_path": "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+      "artifact_paths": [
+        "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+        "/app/runtime_artifacts/training/training_4f59147fb253/model_spec.json",
+        "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "/app/runtime_artifacts/plots/training_4f59147fb253/metric_comparison.png",
+        "/app/runtime_artifacts/plots/training_4f59147fb253/loss_curve.png",
+        "/app/runtime_artifacts/serving/training_4f59147fb253_service.py"
+      ],
+      "model_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "artifact_manifest": {
+        "artifact_format": ".pt",
+        "loader": "torchscript",
+        "runtime_capabilities": {
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        "framework": "pytorch",
+        "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "entrypoint": null,
+        "needs_companion_spec": true,
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "metadata": {},
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ],
+        "capability_matrix": {
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": true,
+            "simulate": true,
+            "monitor": true
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          }
+        }
+      },
+      "serving_file": "/app/runtime_artifacts/serving/training_4f59147fb253_service.py",
+      "model_uri": "runs:/08f46ba8a5c64a5ea6016d4d5d9500a6/model"
+    },
+    "mlflow_run_id": "08f46ba8a5c64a5ea6016d4d5d9500a6",
+    "model": {
+      "id": 5,
+      "name": "lstm_finance",
+      "description": "Modelo LSTM treinado feito para acompanhar dados financeiros da NVIDIA.",
+      "model_type": "deep_learning_model",
+      "is_trained": true,
+      "is_tested": true,
+      "is_deployed": true,
+      "metrics": {
+        "eval_f1": 0.013546423135464232,
+        "val_loss": 2.4842567294836044,
+        "train_loss": 144.00264090015776,
+        "eval_recall": 0.08333333333333333,
+        "eval_accuracy": 0.08846918489065607,
+        "eval_precision": 0.007372432074221339
+      },
+      "parameters": {
+        "epochs": 20,
+        "metric": "accuracy",
+        "dropout": 0.3,
+        "n_trials": 25,
+        "direction": "maximize",
+        "framework": "pytorch",
+        "batch_size": 64,
+        "hidden_dim": 32,
+        "input_size": 4,
+        "num_layers": 2,
+        "hidden_size": 32,
+        "output_size": 1,
+        "hidden_layers": 4,
+        "learning_rate": 0.002,
+        "input_features": [
+          "Date",
+          "Open",
+          "High",
+          "Low",
+          "Close",
+          "Volume",
+          "Close_Return",
+          "Volatility",
+          "MA20",
+          "MA50",
+          "Momentum",
+          "RelVolume",
+          "RSI_Close",
+          "Williams_%R",
+          "CCI",
+          "Bollinger_%B",
+          "KeltnerC_%",
+          "MACD_lib",
+          "MACD_signal",
+          "MACD_Hist",
+          "Force_Index",
+          "Volume_Price_Trend",
+          "DLR",
+          "RSI_Over",
+          "RSI_Under",
+          "Williams_Over",
+          "Williams_Under",
+          "MACD_Over",
+          "MACD_Under",
+          "Data",
+          "time_idx",
+          "series_id",
+          "hl_center",
+          "hl_range",
+          "dayofweek"
+        ],
+        "output_features": [
+          "month"
+        ],
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        }
+      },
+      "input_features": [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume",
+        "Close_Return",
+        "Volatility",
+        "MA20",
+        "MA50",
+        "Momentum",
+        "RelVolume",
+        "RSI_Close",
+        "Williams_%R",
+        "CCI",
+        "Bollinger_%B",
+        "KeltnerC_%",
+        "MACD_lib",
+        "MACD_signal",
+        "MACD_Hist",
+        "Force_Index",
+        "Volume_Price_Trend",
+        "DLR",
+        "RSI_Over",
+        "RSI_Under",
+        "Williams_Over",
+        "Williams_Under",
+        "MACD_Over",
+        "MACD_Under",
+        "Data",
+        "time_idx",
+        "series_id",
+        "hl_center",
+        "hl_range",
+        "dayofweek"
+      ],
+      "output_features": [
+        "month"
+      ],
+      "size": 2.0994,
+      "path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      }
+    },
+    "inference": {
+      "id": 8,
+      "name": "lstm_finance :: stock_data",
+      "description": "Inference pair for lstm_finance :: stock_data",
+      "learning_model_id": 5,
+      "dataset_id": 4,
+      "input_features": [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume",
+        "Close_Return",
+        "Volatility",
+        "MA20",
+        "MA50",
+        "Momentum",
+        "RelVolume",
+        "RSI_Close",
+        "Williams_%R",
+        "CCI",
+        "Bollinger_%B",
+        "KeltnerC_%",
+        "MACD_lib",
+        "MACD_signal",
+        "MACD_Hist",
+        "Force_Index",
+        "Volume_Price_Trend",
+        "DLR",
+        "RSI_Over",
+        "RSI_Under",
+        "Williams_Over",
+        "Williams_Under",
+        "MACD_Over",
+        "MACD_Under",
+        "Data",
+        "time_idx",
+        "series_id",
+        "hl_center",
+        "hl_range",
+        "dayofweek"
+      ],
+      "output_features": [
+        "month"
+      ],
+      "path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "status": "trained",
+      "latest_metrics": {
+        "eval_f1": 0.013546423135464232,
+        "val_loss": 2.4842567294836044,
+        "train_loss": 144.00264090015776,
+        "eval_recall": 0.08333333333333333,
+        "eval_accuracy": 0.08846918489065607,
+        "eval_precision": 0.007372432074221339
+      },
+      "latest_monitoring": {
+        "job_id": "training_4f59147fb253",
+        "summary": {
+          "degraded_metrics": 0,
+          "drifted_features": 0
+        },
+        "evaluated_at": "2026-04-24T21:32:00.952643",
+        "drift_results": {
+          "CCI": false,
+          "DLR": false,
+          "Low": false,
+          "Data": false,
+          "Date": false,
+          "High": false,
+          "MA20": false,
+          "MA50": false,
+          "Open": false,
+          "Close": false,
+          "Volume": false,
+          "MACD_lib": false,
+          "Momentum": false,
+          "RSI_Over": false,
+          "hl_range": false,
+          "time_idx": false,
+          "MACD_Hist": false,
+          "MACD_Over": false,
+          "RSI_Close": false,
+          "RSI_Under": false,
+          "RelVolume": false,
+          "dayofweek": false,
+          "hl_center": false,
+          "KeltnerC_%": false,
+          "MACD_Under": false,
+          "Volatility": false,
+          "Force_Index": false,
+          "MACD_signal": false,
+          "Williams_%R": false,
+          "Bollinger_%B": false,
+          "Close_Return": false,
+          "Williams_Over": false,
+          "series_id_AMD": false,
+          "series_id_nan": false,
+          "Williams_Under": false,
+          "series_id_AAPL": false,
+          "series_id_NVDA": false,
+          "series_id_QCOM": false,
+          "Volume_Price_Trend": false
+        },
+        "prediction_drift": {
+          "p_value": 1.0,
+          "detected": false
+        },
+        "degradation_results": {
+          "val_loss": false,
+          "train_loss": false
+        },
+        "retrain_recommended": false
+      },
+      "simulation_defaults": {
+        "steps": 12,
+        "strategy": "carry-forward",
+        "amplitude": 0.05
+      },
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "history": [
+        {
+          "when": "2026-04-20T21:51:28.057233",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-21T18:40:14.403818",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-21T18:50:43.950159",
+          "job_id": "train_5_4_e2781b9a",
+          "model_id": 5,
+          "operation": "training_sync",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-22T00:24:04.429842",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-22T18:49:08.208840",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-22T20:04:58.671296",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T02:39:31.901516",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T03:28:33.901208",
+          "job_id": "training_5c0e65e02802",
+          "model_id": 5,
+          "operation": "training_sync",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T04:46:24.380166",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T04:46:28.873332",
+          "steps": 12,
+          "trend": "up",
+          "amplitude": 0.05,
+          "operation": "simulation"
+        },
+        {
+          "when": "2026-04-24T04:58:56.273771",
+          "operation": "retraining",
+          "tolerance": 0.05
+        },
+        {
+          "when": "2026-04-24T04:59:24.329354",
+          "operation": "monitoring_refresh",
+          "tolerance": 0.05
+        },
+        {
+          "when": "2026-04-24T05:04:10.440417",
+          "operation": "retraining",
+          "tolerance": 0.05
+        },
+        {
+          "when": "2026-04-24T05:05:02.367622",
+          "steps": 20,
+          "trend": "up",
+          "amplitude": 0.05,
+          "operation": "simulation"
+        },
+        {
+          "when": "2026-04-24T20:56:45.352601",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T20:56:57.706775",
+          "steps": 12,
+          "trend": "up",
+          "amplitude": 0.05,
+          "operation": "simulation"
+        },
+        {
+          "when": "2026-04-24T21:24:35.663851",
+          "job_id": "training_9b751e60e831",
+          "model_id": 5,
+          "operation": "training_sync",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T21:25:25.457950",
+          "model_id": 5,
+          "operation": "production_start",
+          "dataset_id": 4
+        },
+        {
+          "when": "2026-04-24T21:25:30.214069",
+          "operation": "retraining",
+          "tolerance": 0.05
+        },
+        {
+          "when": "2026-04-24T21:32:01.520218",
+          "job_id": "training_4f59147fb253",
+          "model_id": 5,
+          "operation": "training_sync",
+          "dataset_id": 4
+        }
+      ],
+      "inference_params": {
+        "status": "trained",
+        "artifacts": {
+          "model_uri": "runs:/08f46ba8a5c64a5ea6016d4d5d9500a6/model",
+          "serving_file": "/app/runtime_artifacts/serving/training_4f59147fb253_service.py",
+          "summary_path": "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+          "artifact_paths": [
+            "/app/runtime_artifacts/training/training_4f59147fb253/training_summary.json",
+            "/app/runtime_artifacts/training/training_4f59147fb253/model_spec.json",
+            "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+            "/app/runtime_artifacts/plots/training_4f59147fb253/metric_comparison.png",
+            "/app/runtime_artifacts/plots/training_4f59147fb253/loss_curve.png",
+            "/app/runtime_artifacts/serving/training_4f59147fb253_service.py"
+          ],
+          "artifact_manifest": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+            "metadata": {},
+            "warnings": [
+              "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+            ],
+            "framework": "pytorch",
+            "entrypoint": null,
+            "artifact_format": ".pt",
+            "capability_matrix": {
+              ".pt": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pkl": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pth": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".yml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".json": {
+                "label": "JSON Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".onnx": {
+                "label": "ONNX",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".yaml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".joblib": {
+                "label": "scikit-learn Joblib",
+                "train": false,
+                "inspect": true,
+                "monitor": true,
+                "predict": true,
+                "register": true,
+                "simulate": true
+              },
+              ".pickle": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              }
+            },
+            "needs_companion_spec": true,
+            "runtime_capabilities": {
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            "supported_file_types": [
+              ".joblib",
+              ".json",
+              ".onnx",
+              ".pickle",
+              ".pkl",
+              ".pt",
+              ".pth",
+              ".yaml",
+              ".yml"
+            ]
+          },
+          "model_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt"
+        },
+        "framework": "pytorch",
+        "deployment": {
+          "status": "active",
+          "model_id": 5,
+          "dataset_id": 4,
+          "model_name": "lstm_finance",
+          "started_at": "2026-04-24T21:25:25.457950",
+          "dataset_name": "stock_data",
+          "inference_id": 8,
+          "artifact_path": "/app/runtime_artifacts/training/training_9b751e60e831/model_pytorch.pt",
+          "artifact_manifest": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_9b751e60e831/model_pytorch.pt",
+            "metadata": {
+              "python_type": "torch.jit._script.RecursiveScriptModule",
+              "public_methods": [
+                "add_module",
+                "apply",
+                "bfloat16",
+                "buffers",
+                "children",
+                "compile",
+                "cpu",
+                "cuda",
+                "define",
+                "double",
+                "eval",
+                "extra_repr",
+                "float",
+                "forward",
+                "forward",
+                "forward_magic_method",
+                "get_buffer",
+                "get_debug_state",
+                "get_extra_state",
+                "get_parameter"
+              ]
+            },
+            "warnings": [],
+            "framework": "pytorch",
+            "entrypoint": "forward",
+            "artifact_format": ".pt",
+            "capability_matrix": {
+              ".pt": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pkl": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pth": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".yml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".json": {
+                "label": "JSON Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".onnx": {
+                "label": "ONNX",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".yaml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".joblib": {
+                "label": "scikit-learn Joblib",
+                "train": false,
+                "inspect": true,
+                "monitor": true,
+                "predict": true,
+                "register": true,
+                "simulate": true
+              },
+              ".pickle": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              }
+            },
+            "needs_companion_spec": false,
+            "runtime_capabilities": {
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            "supported_file_types": [
+              ".joblib",
+              ".json",
+              ".onnx",
+              ".pickle",
+              ".pkl",
+              ".pt",
+              ".pth",
+              ".yaml",
+              ".yml"
+            ]
+          },
+          "artifact_metadata": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_9b751e60e831/model_pytorch.pt",
+            "metadata": {},
+            "warnings": [
+              "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+            ],
+            "framework": "pytorch",
+            "entrypoint": null,
+            "artifact_format": ".pt",
+            "capability_matrix": {
+              ".pt": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pkl": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pth": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".yml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".json": {
+                "label": "JSON Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".onnx": {
+                "label": "ONNX",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".yaml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".joblib": {
+                "label": "scikit-learn Joblib",
+                "train": false,
+                "inspect": true,
+                "monitor": true,
+                "predict": true,
+                "register": true,
+                "simulate": true
+              },
+              ".pickle": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              }
+            },
+            "needs_companion_spec": true,
+            "runtime_capabilities": {
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            "supported_file_types": [
+              ".joblib",
+              ".json",
+              ".onnx",
+              ".pickle",
+              ".pkl",
+              ".pt",
+              ".pth",
+              ".yaml",
+              ".yml"
+            ]
+          }
+        },
+        "monitoring": {
+          "job_id": "training_4f59147fb253",
+          "summary": {
+            "degraded_metrics": 0,
+            "drifted_features": 0
+          },
+          "evaluated_at": "2026-04-24T21:32:00.952643",
+          "drift_results": {
+            "CCI": false,
+            "DLR": false,
+            "Low": false,
+            "Data": false,
+            "Date": false,
+            "High": false,
+            "MA20": false,
+            "MA50": false,
+            "Open": false,
+            "Close": false,
+            "Volume": false,
+            "MACD_lib": false,
+            "Momentum": false,
+            "RSI_Over": false,
+            "hl_range": false,
+            "time_idx": false,
+            "MACD_Hist": false,
+            "MACD_Over": false,
+            "RSI_Close": false,
+            "RSI_Under": false,
+            "RelVolume": false,
+            "dayofweek": false,
+            "hl_center": false,
+            "KeltnerC_%": false,
+            "MACD_Under": false,
+            "Volatility": false,
+            "Force_Index": false,
+            "MACD_signal": false,
+            "Williams_%R": false,
+            "Bollinger_%B": false,
+            "Close_Return": false,
+            "Williams_Over": false,
+            "series_id_AMD": false,
+            "series_id_nan": false,
+            "Williams_Under": false,
+            "series_id_AAPL": false,
+            "series_id_NVDA": false,
+            "series_id_QCOM": false,
+            "Volume_Price_Trend": false
+          },
+          "prediction_drift": {
+            "p_value": 1.0,
+            "detected": false
+          },
+          "degradation_results": {
+            "val_loss": false,
+            "train_loss": false
+          },
+          "retrain_recommended": false
+        },
+        "last_job_id": "training_4f59147fb253",
+        "latest_metrics": {
+          "eval_f1": 0.013546423135464232,
+          "val_loss": 2.4842567294836044,
+          "train_loss": 144.00264090015776,
+          "eval_recall": 0.08333333333333333,
+          "eval_accuracy": 0.08846918489065607,
+          "eval_precision": 0.007372432074221339
+        },
+        "last_trained_at": "2026-04-24T21:32:01.520145",
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "latest_retraining": {
+          "status": "stable"
+        },
+        "latest_simulation": {
+          "plots": [
+            {
+              "kind": "bar",
+              "title": "Feature Drift Applied",
+              "series": [
+                {
+                  "label": "Date",
+                  "value": 87942960.0
+                },
+                {
+                  "label": "Open",
+                  "value": 8.483999633789068
+                },
+                {
+                  "label": "High",
+                  "value": 8.546499633789068
+                },
+                {
+                  "label": "Low",
+                  "value": 8.40650024414063
+                },
+                {
+                  "label": "Close",
+                  "value": 8.45999984741212
+                },
+                {
+                  "label": "Volume",
+                  "value": 242215.0
+                },
+                {
+                  "label": "Close_Return",
+                  "value": 0.00014144146282945008
+                },
+                {
+                  "label": "Volatility",
+                  "value": 0.000628485070565326
+                }
+              ],
+              "description": "Absolute change applied between the baseline row and the final simulated step."
+            }
+          ],
+          "steps": 12,
+          "trend": "up",
+          "series": [
+            {
+              "step": 1,
+              "inputs": {
+                "CCI": 93.443116,
+                "DLR": -0.002845,
+                "Low": 168.830547,
+                "Data": 1766187780.0,
+                "Date": 1766187780.0,
+                "High": 171.642201,
+                "MA20": 164.28729,
+                "MA50": 158.627085,
+                "Open": 170.386993,
+                "Close": 169.904997,
+                "Volume": 4864484.583333,
+                "MACD_lib": 3.780195,
+                "Momentum": 0.045731,
+                "RSI_Over": 0.0,
+                "hl_range": 2.811654,
+                "time_idx": 2524.475,
+                "MACD_Hist": 0.596414,
+                "MACD_Over": 1.004167,
+                "RSI_Close": 63.344407,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.472122,
+                "dayofweek": 4.016667,
+                "hl_center": 170.236374,
+                "KeltnerC_%": 1.352543,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012622,
+                "Force_Index": 3067785.419578,
+                "MACD_signal": 3.183781,
+                "Williams_%R": -29.511151,
+                "Bollinger_%B": 0.790936,
+                "Close_Return": -0.002841,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.004167,
+                "Volume_Price_Trend": 37942328.276862
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 2,
+              "inputs": {
+                "CCI": 93.830847,
+                "DLR": -0.002856,
+                "Low": 169.531088,
+                "Data": 1773516360.0,
+                "Date": 1773516360.0,
+                "High": 172.354409,
+                "MA20": 164.96898,
+                "MA50": 159.285289,
+                "Open": 171.093993,
+                "Close": 170.609997,
+                "Volume": 4884669.166667,
+                "MACD_lib": 3.79588,
+                "Momentum": 0.045921,
+                "RSI_Over": 0.0,
+                "hl_range": 2.823321,
+                "time_idx": 2534.95,
+                "MACD_Hist": 0.598889,
+                "MACD_Over": 1.008333,
+                "RSI_Close": 63.607247,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.474081,
+                "dayofweek": 4.033333,
+                "hl_center": 170.942749,
+                "KeltnerC_%": 1.358155,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012674,
+                "Force_Index": 3080514.819659,
+                "MACD_signal": 3.196992,
+                "Williams_%R": -29.633604,
+                "Bollinger_%B": 0.794218,
+                "Close_Return": -0.002852,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.008333,
+                "Volume_Price_Trend": 38099765.323654
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 3,
+              "inputs": {
+                "CCI": 94.218578,
+                "DLR": -0.002868,
+                "Low": 170.23163,
+                "Data": 1780844940.0,
+                "Date": 1780844940.0,
+                "High": 173.066618,
+                "MA20": 165.65067,
+                "MA50": 159.943492,
+                "Open": 171.800993,
+                "Close": 171.314997,
+                "Volume": 4904853.75,
+                "MACD_lib": 3.811566,
+                "Momentum": 0.046111,
+                "RSI_Over": 0.0,
+                "hl_range": 2.834988,
+                "time_idx": 2545.425,
+                "MACD_Hist": 0.601364,
+                "MACD_Over": 1.0125,
+                "RSI_Close": 63.870087,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.47604,
+                "dayofweek": 4.05,
+                "hl_center": 171.649124,
+                "KeltnerC_%": 1.363767,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012727,
+                "Force_Index": 3093244.21974,
+                "MACD_signal": 3.210202,
+                "Williams_%R": -29.756057,
+                "Bollinger_%B": 0.797499,
+                "Close_Return": -0.002864,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.0125,
+                "Volume_Price_Trend": 38257202.370446
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 4,
+              "inputs": {
+                "CCI": 94.606308,
+                "DLR": -0.00288,
+                "Low": 170.932172,
+                "Data": 1788173520.0,
+                "Date": 1788173520.0,
+                "High": 173.778826,
+                "MA20": 166.33236,
+                "MA50": 160.601696,
+                "Open": 172.507993,
+                "Close": 172.019997,
+                "Volume": 4925038.333333,
+                "MACD_lib": 3.827251,
+                "Momentum": 0.046301,
+                "RSI_Over": 0.0,
+                "hl_range": 2.846654,
+                "time_idx": 2555.9,
+                "MACD_Hist": 0.603838,
+                "MACD_Over": 1.016667,
+                "RSI_Close": 64.132927,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.477999,
+                "dayofweek": 4.066667,
+                "hl_center": 172.355499,
+                "KeltnerC_%": 1.36938,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012779,
+                "Force_Index": 3105973.619821,
+                "MACD_signal": 3.223413,
+                "Williams_%R": -29.87851,
+                "Bollinger_%B": 0.800781,
+                "Close_Return": -0.002876,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.016667,
+                "Volume_Price_Trend": 38414639.417238
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 5,
+              "inputs": {
+                "CCI": 94.994039,
+                "DLR": -0.002892,
+                "Low": 171.632713,
+                "Data": 1795502100.0,
+                "Date": 1795502100.0,
+                "High": 174.491034,
+                "MA20": 167.01405,
+                "MA50": 161.2599,
+                "Open": 173.214993,
+                "Close": 172.724997,
+                "Volume": 4945222.916667,
+                "MACD_lib": 3.842937,
+                "Momentum": 0.04649,
+                "RSI_Over": 0.0,
+                "hl_range": 2.858321,
+                "time_idx": 2566.375,
+                "MACD_Hist": 0.606313,
+                "MACD_Over": 1.020833,
+                "RSI_Close": 64.395767,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.479958,
+                "dayofweek": 4.083333,
+                "hl_center": 173.061874,
+                "KeltnerC_%": 1.374992,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012832,
+                "Force_Index": 3118703.019903,
+                "MACD_signal": 3.236624,
+                "Williams_%R": -30.000963,
+                "Bollinger_%B": 0.804063,
+                "Close_Return": -0.002888,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.020833,
+                "Volume_Price_Trend": 38572076.46403
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 6,
+              "inputs": {
+                "CCI": 95.38177,
+                "DLR": -0.002904,
+                "Low": 172.333255,
+                "Data": 1802830680.0,
+                "Date": 1802830680.0,
+                "High": 175.203242,
+                "MA20": 167.69574,
+                "MA50": 161.918103,
+                "Open": 173.921992,
+                "Close": 173.429997,
+                "Volume": 4965407.5,
+                "MACD_lib": 3.858622,
+                "Momentum": 0.04668,
+                "RSI_Over": 0.0,
+                "hl_range": 2.869987,
+                "time_idx": 2576.85,
+                "MACD_Hist": 0.608788,
+                "MACD_Over": 1.025,
+                "RSI_Close": 64.658607,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.481917,
+                "dayofweek": 4.1,
+                "hl_center": 173.768249,
+                "KeltnerC_%": 1.380604,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012884,
+                "Force_Index": 3131432.419984,
+                "MACD_signal": 3.249834,
+                "Williams_%R": -30.123416,
+                "Bollinger_%B": 0.807345,
+                "Close_Return": -0.0029,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.025,
+                "Volume_Price_Trend": 38729513.510822
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 7,
+              "inputs": {
+                "CCI": 95.769501,
+                "DLR": -0.002915,
+                "Low": 173.033797,
+                "Data": 1810159260.0,
+                "Date": 1810159260.0,
+                "High": 175.915451,
+                "MA20": 168.37743,
+                "MA50": 162.576307,
+                "Open": 174.628992,
+                "Close": 174.134997,
+                "Volume": 4985592.083333,
+                "MACD_lib": 3.874308,
+                "Momentum": 0.04687,
+                "RSI_Over": 0.0,
+                "hl_range": 2.881654,
+                "time_idx": 2587.325,
+                "MACD_Hist": 0.611263,
+                "MACD_Over": 1.029167,
+                "RSI_Close": 64.921446,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.483876,
+                "dayofweek": 4.116667,
+                "hl_center": 174.474624,
+                "KeltnerC_%": 1.386216,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012936,
+                "Force_Index": 3144161.820065,
+                "MACD_signal": 3.263045,
+                "Williams_%R": -30.245869,
+                "Bollinger_%B": 0.810627,
+                "Close_Return": -0.002911,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.029167,
+                "Volume_Price_Trend": 38886950.557614
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 8,
+              "inputs": {
+                "CCI": 96.157232,
+                "DLR": -0.002927,
+                "Low": 173.734338,
+                "Data": 1817487840.0,
+                "Date": 1817487840.0,
+                "High": 176.627659,
+                "MA20": 169.05912,
+                "MA50": 163.234511,
+                "Open": 175.335992,
+                "Close": 174.839997,
+                "Volume": 5005776.666667,
+                "MACD_lib": 3.889993,
+                "Momentum": 0.04706,
+                "RSI_Over": 0.0,
+                "hl_range": 2.893321,
+                "time_idx": 2597.8,
+                "MACD_Hist": 0.613737,
+                "MACD_Over": 1.033333,
+                "RSI_Close": 65.184286,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.485835,
+                "dayofweek": 4.133333,
+                "hl_center": 175.180999,
+                "KeltnerC_%": 1.391828,
+                "MACD_Under": 0.0,
+                "Volatility": 0.012989,
+                "Force_Index": 3156891.220146,
+                "MACD_signal": 3.276256,
+                "Williams_%R": -30.368322,
+                "Bollinger_%B": 0.813909,
+                "Close_Return": -0.002923,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.033333,
+                "Volume_Price_Trend": 39044387.604406
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 9,
+              "inputs": {
+                "CCI": 96.544962,
+                "DLR": -0.002939,
+                "Low": 174.43488,
+                "Data": 1824816420.0,
+                "Date": 1824816420.0,
+                "High": 177.339867,
+                "MA20": 169.74081,
+                "MA50": 163.892714,
+                "Open": 176.042992,
+                "Close": 175.544997,
+                "Volume": 5025961.25,
+                "MACD_lib": 3.905679,
+                "Momentum": 0.047249,
+                "RSI_Over": 0.0,
+                "hl_range": 2.904987,
+                "time_idx": 2608.275,
+                "MACD_Hist": 0.616212,
+                "MACD_Over": 1.0375,
+                "RSI_Close": 65.447126,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.487794,
+                "dayofweek": 4.15,
+                "hl_center": 175.887374,
+                "KeltnerC_%": 1.397441,
+                "MACD_Under": 0.0,
+                "Volatility": 0.013041,
+                "Force_Index": 3169620.620228,
+                "MACD_signal": 3.289467,
+                "Williams_%R": -30.490775,
+                "Bollinger_%B": 0.817191,
+                "Close_Return": -0.002935,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.0375,
+                "Volume_Price_Trend": 39201824.651198
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 10,
+              "inputs": {
+                "CCI": 96.932693,
+                "DLR": -0.002951,
+                "Low": 175.135422,
+                "Data": 1832145000.0,
+                "Date": 1832145000.0,
+                "High": 178.052076,
+                "MA20": 170.4225,
+                "MA50": 164.550918,
+                "Open": 176.749992,
+                "Close": 176.249997,
+                "Volume": 5046145.833333,
+                "MACD_lib": 3.921364,
+                "Momentum": 0.047439,
+                "RSI_Over": 0.0,
+                "hl_range": 2.916654,
+                "time_idx": 2618.75,
+                "MACD_Hist": 0.618687,
+                "MACD_Over": 1.041667,
+                "RSI_Close": 65.709966,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.489753,
+                "dayofweek": 4.166667,
+                "hl_center": 176.593749,
+                "KeltnerC_%": 1.403053,
+                "MACD_Under": 0.0,
+                "Volatility": 0.013093,
+                "Force_Index": 3182350.020309,
+                "MACD_signal": 3.302677,
+                "Williams_%R": -30.613228,
+                "Bollinger_%B": 0.820473,
+                "Close_Return": -0.002947,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.041667,
+                "Volume_Price_Trend": 39359261.69799
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 11,
+              "inputs": {
+                "CCI": 97.320424,
+                "DLR": -0.002963,
+                "Low": 175.835963,
+                "Data": 1839473580.0,
+                "Date": 1839473580.0,
+                "High": 178.764284,
+                "MA20": 171.10419,
+                "MA50": 165.209122,
+                "Open": 177.456992,
+                "Close": 176.954997,
+                "Volume": 5066330.416667,
+                "MACD_lib": 3.93705,
+                "Momentum": 0.047629,
+                "RSI_Over": 0.0,
+                "hl_range": 2.928321,
+                "time_idx": 2629.225,
+                "MACD_Hist": 0.621162,
+                "MACD_Over": 1.045833,
+                "RSI_Close": 65.972806,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.491712,
+                "dayofweek": 4.183333,
+                "hl_center": 177.300124,
+                "KeltnerC_%": 1.408665,
+                "MACD_Under": 0.0,
+                "Volatility": 0.013146,
+                "Force_Index": 3195079.42039,
+                "MACD_signal": 3.315888,
+                "Williams_%R": -30.735681,
+                "Bollinger_%B": 0.823755,
+                "Close_Return": -0.002958,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.045833,
+                "Volume_Price_Trend": 39516698.744782
+              },
+              "prediction": "0"
+            },
+            {
+              "step": 12,
+              "inputs": {
+                "CCI": 97.708155,
+                "DLR": -0.002974,
+                "Low": 176.536505,
+                "Data": 1846802160.0,
+                "Date": 1846802160.0,
+                "High": 179.476492,
+                "MA20": 171.78588,
+                "MA50": 165.867325,
+                "Open": 178.163992,
+                "Close": 177.659997,
+                "Volume": 5086515.0,
+                "MACD_lib": 3.952735,
+                "Momentum": 0.047819,
+                "RSI_Over": 0.0,
+                "hl_range": 2.939987,
+                "time_idx": 2639.7,
+                "MACD_Hist": 0.623636,
+                "MACD_Over": 1.05,
+                "RSI_Close": 66.235646,
+                "RSI_Under": 0.0,
+                "RelVolume": 0.493671,
+                "dayofweek": 4.2,
+                "hl_center": 178.006499,
+                "KeltnerC_%": 1.414277,
+                "MACD_Under": 0.0,
+                "Volatility": 0.013198,
+                "Force_Index": 3207808.820471,
+                "MACD_signal": 3.329099,
+                "Williams_%R": -30.858133,
+                "Bollinger_%B": 0.827036,
+                "Close_Return": -0.00297,
+                "Williams_Over": 0.0,
+                "series_id_AMD": 0.0,
+                "series_id_nan": 0.0,
+                "Williams_Under": 0.0,
+                "series_id_AAPL": 0.0,
+                "series_id_NVDA": 0.0,
+                "series_id_QCOM": 1.05,
+                "Volume_Price_Trend": 39674135.791573
+              },
+              "prediction": "0"
+            }
+          ],
+          "baseline": {
+            "CCI": 93.055385,
+            "DLR": -0.002833,
+            "Low": 168.130005,
+            "Data": 1758859200.0,
+            "Date": 1758859200.0,
+            "High": 170.929993,
+            "MA20": 163.6056,
+            "MA50": 157.968881,
+            "Open": 169.679993,
+            "Close": 169.199997,
+            "Volume": 4844300.0,
+            "MACD_lib": 3.76451,
+            "Momentum": 0.045542,
+            "RSI_Over": 0.0,
+            "hl_range": 2.799988,
+            "time_idx": 2514.0,
+            "MACD_Hist": 0.593939,
+            "MACD_Over": 1.0,
+            "RSI_Close": 63.081567,
+            "RSI_Under": 0.0,
+            "RelVolume": 0.470163,
+            "dayofweek": 4.0,
+            "hl_center": 169.529999,
+            "KeltnerC_%": 1.346931,
+            "MACD_Under": 0.0,
+            "Volatility": 0.01257,
+            "Force_Index": 3055056.019497,
+            "MACD_signal": 3.17057,
+            "Williams_%R": -29.388699,
+            "Bollinger_%B": 0.787654,
+            "Close_Return": -0.002829,
+            "Williams_Over": 0.0,
+            "series_id_AMD": 0.0,
+            "series_id_nan": 0.0,
+            "Williams_Under": 0.0,
+            "series_id_AAPL": 0.0,
+            "series_id_NVDA": 0.0,
+            "series_id_QCOM": 1.0,
+            "Volume_Price_Trend": 37784891.23007
+          },
+          "model_id": 5,
+          "amplitude": 0.05,
+          "task_type": "classification",
+          "dataset_id": 4,
+          "inference_id": 8
+        },
+        "simulation_defaults": {
+          "steps": 12,
+          "strategy": "carry-forward",
+          "amplitude": 0.05
+        }
+      }
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Training workflow completed.",
+    "latest_timestamp": "2026-04-24T21:32:02.271257",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-24T21:30:59.934647",
+        "message": "training run created."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-04-24T21:30:59.966419",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:00.492097",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-04-24T21:31:00.517179",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-04-24T21:31:00.545521",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:02.065095",
+        "message": "Running PyTorch training epochs."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:04.690266",
+        "message": "Completed epoch 1 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:06.516854",
+        "message": "Completed epoch 2 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:07.869025",
+        "message": "Completed epoch 3 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:09.802116",
+        "message": "Completed epoch 4 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:11.074043",
+        "message": "Completed epoch 5 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:13.433323",
+        "message": "Completed epoch 6 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:15.683241",
+        "message": "Completed epoch 7 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:17.919069",
+        "message": "Completed epoch 8 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:19.230973",
+        "message": "Completed epoch 9 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:20.629290",
+        "message": "Completed epoch 10 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:21.927347",
+        "message": "Completed epoch 11 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:23.400082",
+        "message": "Completed epoch 12 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:24.770448",
+        "message": "Completed epoch 13 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:26.617123",
+        "message": "Completed epoch 14 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:28.046336",
+        "message": "Completed epoch 15 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:29.535745",
+        "message": "Completed epoch 16 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:30.913798",
+        "message": "Completed epoch 17 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:32.512140",
+        "message": "Completed epoch 18 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:33.868587",
+        "message": "Completed epoch 19 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-24T21:31:36.378943",
+        "message": "Completed epoch 20 of 20."
+      },
+      {
+        "status": "running",
+        "stage": "evaluating",
+        "timestamp": "2026-04-24T21:31:36.766383",
+        "message": "Scoring PyTorch predictions on the validation split."
+      },
+      {
+        "status": "running",
+        "stage": "persisting_artifacts",
+        "timestamp": "2026-04-24T21:31:37.853116",
+        "message": "Persisting artifacts, summaries, and runtime bundles."
+      },
+      {
+        "status": "running",
+        "stage": "logging_mlflow",
+        "timestamp": "2026-04-24T21:32:00.324688",
+        "message": "Logging monitoring summaries and artifact context."
+      },
+      {
+        "status": "running",
+        "stage": "syncing_inference",
+        "timestamp": "2026-04-24T21:32:02.229410",
+        "message": "Persisting run outputs to the registry and inference pair."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-04-24T21:32:02.271257",
+        "message": "Training workflow completed."
+      }
+    ],
+    "counters": {
+      "epochs_total": 20,
+      "epochs_completed": 20,
+      "train_loss": 144.00264090015776,
+      "val_loss": 2.4842567294836044,
+      "mlflow_run_id": "08f46ba8a5c64a5ea6016d4d5d9500a6",
+      "metric_count": 6
+    }
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-24T21:30:59.934647",
+      "message": "training run created."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-04-24T21:30:59.966419",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:00.492097",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-04-24T21:31:00.517179",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-04-24T21:31:00.545521",
+      "message": "Preparing dataset splits and feature encodings."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:02.065095",
+      "message": "Running PyTorch training epochs."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:04.690266",
+      "message": "Completed epoch 1 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:06.516854",
+      "message": "Completed epoch 2 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:07.869025",
+      "message": "Completed epoch 3 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:09.802116",
+      "message": "Completed epoch 4 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:11.074043",
+      "message": "Completed epoch 5 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:13.433323",
+      "message": "Completed epoch 6 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:15.683241",
+      "message": "Completed epoch 7 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:17.919069",
+      "message": "Completed epoch 8 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:19.230973",
+      "message": "Completed epoch 9 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:20.629290",
+      "message": "Completed epoch 10 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:21.927347",
+      "message": "Completed epoch 11 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:23.400082",
+      "message": "Completed epoch 12 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:24.770448",
+      "message": "Completed epoch 13 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:26.617123",
+      "message": "Completed epoch 14 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:28.046336",
+      "message": "Completed epoch 15 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:29.535745",
+      "message": "Completed epoch 16 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:30.913798",
+      "message": "Completed epoch 17 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:32.512140",
+      "message": "Completed epoch 18 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:33.868587",
+      "message": "Completed epoch 19 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-24T21:31:36.378943",
+      "message": "Completed epoch 20 of 20."
+    },
+    {
+      "status": "running",
+      "stage": "evaluating",
+      "timestamp": "2026-04-24T21:31:36.766383",
+      "message": "Scoring PyTorch predictions on the validation split."
+    },
+    {
+      "status": "running",
+      "stage": "persisting_artifacts",
+      "timestamp": "2026-04-24T21:31:37.853116",
+      "message": "Persisting artifacts, summaries, and runtime bundles."
+    },
+    {
+      "status": "running",
+      "stage": "logging_mlflow",
+      "timestamp": "2026-04-24T21:32:00.324688",
+      "message": "Logging monitoring summaries and artifact context."
+    },
+    {
+      "status": "running",
+      "stage": "syncing_inference",
+      "timestamp": "2026-04-24T21:32:02.229410",
+      "message": "Persisting run outputs to the registry and inference pair."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-04-24T21:32:02.271257",
+      "message": "Training workflow completed."
+    }
+  ],
+  "mlflow_run_id": "08f46ba8a5c64a5ea6016d4d5d9500a6"
+}

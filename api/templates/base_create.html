@@ -227,7 +227,10 @@
     <section class="form-section" id="supportSection">
         <h3>Supported File Types</h3>
         <p class="small-text">Upload support is capability-based. A file type might be registrable and inspectable, but not necessarily runnable for prediction or simulation.</p>
-        <div id="supportMatrix" class="support-grid"></div>
+        <details id="supportDetails">
+            <summary id="supportSummary" class="small-text">Show supported dataset and model formats</summary>
+            <div id="supportMatrix" class="support-grid" style="margin-top:1rem;"></div>
+        </details>
     </section>
 
     <section class="form-section" id="featuresSection">

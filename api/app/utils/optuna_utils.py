@@ -317,6 +317,7 @@ def optimize_with_tracking(
     objective_metric: Optional[str] = None,
     search_space: Optional[Mapping[str, Any]] = None,
     study_context: Optional[Mapping[str, Any]] = None,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> Dict[str, Any]:
     """
     Create, run, and log an Optuna study under a parent MLflow run.
@@ -385,12 +386,31 @@ def optimize_with_tracking(
             direction=direction,
             static_context=study_context,
         )
+        callbacks = []
+        if progress_callback is not None:
+            def _on_trial_complete(study_obj: Any, trial_obj: Any) -> None:
+                completed_trials = len(getattr(study_obj, "trials", []) or [])
+                try:
+                    best_value = getattr(study_obj, "best_value", None)
+                except Exception:
+                    best_value = None
+                progress_callback(
+                    {
+                        "trial_number": getattr(trial_obj, "number", None),
+                        "trial_state": getattr(getattr(trial_obj, "state", None), "name", None),
+                        "completed_trials": completed_trials,
+                        "total_trials": n_trials,
+                        "best_value": best_value,
+                    }
+                )
+            callbacks.append(_on_trial_complete)
         optimize_study(
             study=study,
             objective=wrapped_objective,
             n_trials=n_trials,
             n_jobs=n_jobs,
             show_progress_bar=show_progress_bar,
+            callbacks=callbacks,
         )
         summary = log_study_results(study, output_dir=output_dir)
         plot_paths = plot_optuna_results(study, output_dir=output_dir) if plot_results else []

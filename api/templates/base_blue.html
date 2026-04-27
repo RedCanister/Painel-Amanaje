@@ -150,6 +150,7 @@
     .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .run-scroll { max-height: 480px; overflow: auto; display: grid; gap: 1rem; }
 
     @media (max-width: 980px) {
         .layout-grid { grid-template-columns: 1fr; }
@@ -306,6 +307,10 @@
                 <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
             </div>
         </div>
+        <div class="surface" style="margin-top:1rem;">
+            <h4>Predicted Steps</h4>
+            <div id="simulationStepTable">The full simulation step table will appear here after a run.</div>
+        </div>
     </section>
 
     <section class="panel" id="panel-history">
@@ -328,6 +333,10 @@
                 <button type="button" class="btn btn-primary" id="btnViewExperiment">View Details</button>
             </div>
             <div id="experimentResults" style="margin-top:1rem;">No experiment selected.</div>
+            <div id="experimentRunList" class="run-scroll" style="margin-top:1rem;"></div>
+            <div class="actions-row" style="margin-top:1rem;">
+                <button type="button" class="btn btn-ghost" id="btnLoadMoreExperimentRuns" style="display:none;">Load More Runs</button>
+            </div>
         </div>
     </section>
 
@@ -358,6 +367,7 @@ let datasetCache = [];
 let inferenceCache = [];
 let productionHistoryCache = [];
 let activeWatchContextId = '';
+let experimentRunState = { experimentId: '', offset: 0, limit: 20, hasMore: false };
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -613,14 +623,15 @@ function renderSimulationResults(simulation = {}) {
     const series = Array.isArray(simulation.series) ? simulation.series : [];
     if (!series.length) {
         document.getElementById('simulationResults').innerHTML = 'Run a simulation to inspect predicted future values.';
+        document.getElementById('simulationStepTable').innerHTML = 'The full simulation step table will appear here after a run.';
         return;
     }
 
-    const previewRows = series.slice(0, 12).map((row) => `
+    const fullRows = series.map((row) => `
         <tr>
             <td>${escapeHtml(row.step)}</td>
             <td>${escapeHtml(typeof row.prediction === 'object' ? JSON.stringify(row.prediction) : row.prediction)}</td>
-            <td><code>${escapeHtml(JSON.stringify(row.inputs || {}, null, 2))}</code></td>
+            <td><code>${escapeHtml(JSON.stringify(row.inputs || {}))}</code></td>
         </tr>
     `).join('');
 
@@ -635,15 +646,54 @@ function renderSimulationResults(simulation = {}) {
             amplitude: simulation.amplitude
         })}
         ${renderPlotDeck(simulation.plots || [])}
-        <div class="log-card" style="margin-top:1rem;">
-            <h4>Predicted Steps</h4>
-            <div class="log-block">
-                <table class="summary-table">
-                    <tbody>${previewRows}</tbody>
-                </table>
-            </div>
+    `;
+    document.getElementById('simulationStepTable').innerHTML = `
+        <div class="table-scroll">
+            <table class="full-width-table">
+                <thead>
+                    <tr>
+                        <th>Step</th>
+                        <th>Prediction</th>
+                        <th>Inputs</th>
+                    </tr>
+                </thead>
+                <tbody>${fullRows}</tbody>
+            </table>
         </div>
     `;
+    AmanajeUI.enhanceCollapsibles(document.getElementById('simulationStepTable'));
+}
+
+function renderExperimentRunCards(runs = [], append = false) {
+    const target = document.getElementById('experimentRunList');
+    if (!append) {
+        target.innerHTML = '';
+    }
+    if (!runs.length && !append) {
+        target.innerHTML = '<div class="helper-text">No runs were returned for this experiment yet.</div>';
+        return;
+    }
+    target.insertAdjacentHTML('beforeend', runs.map((run) => `
+        <div class="history-card">
+            <h4>${escapeHtml(run.run_name || run.run_id)}</h4>
+            <div class="pill-row">
+                <span class="pill">${escapeHtml(run.status || 'unknown')}</span>
+                <span class="pill">${escapeHtml(`${Object.keys(run.metrics || {}).length} metrics`)}</span>
+                <span class="pill">${escapeHtml(`${Object.keys(run.params || {}).length} params`)}</span>
+            </div>
+            <div class="helper-text" style="margin:0.75rem 0;">Artifact URI: ${escapeHtml(run.artifact_uri || 'n/a')}</div>
+            ${AmanajeUI.renderCollapsibleJson(
+                {
+                    params: run.params || {},
+                    metrics: run.metrics || {},
+                    tags: run.tags || {},
+                    artifact_uri: run.artifact_uri || null
+                },
+                { title: 'Run Details', collapsed: true }
+            )}
+        </div>
+    `).join(''));
+    AmanajeUI.enhanceCollapsibles(target);
 }
 
 function renderHistory(runs = []) {
@@ -839,31 +889,51 @@ async function loadExperiments() {
         document.getElementById('experimentResults').innerHTML = health.warnings?.length
             ? `<div class="alert alert-info">${escapeHtml(health.warnings.join(' '))}</div>`
             : 'No experiment selected.';
+        document.getElementById('experimentRunList').innerHTML = '';
     } catch (error) {
         experimentSelect.innerHTML = '<option value="">Error loading experiments</option>';
         document.getElementById('experimentResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
-async function viewExperiment() {
+async function viewExperiment(append = false) {
     if (!experimentSelect.value) {
         document.getElementById('experimentResults').innerHTML = '<div class="alert alert-info">Select an experiment first.</div>';
         return;
     }
 
     try {
-        const response = await fetch(`/mlflow/experiments/${experimentSelect.value}`);
+        if (!append || experimentRunState.experimentId !== experimentSelect.value) {
+            experimentRunState = { experimentId: experimentSelect.value, offset: 0, limit: 20, hasMore: false };
+        }
+        const response = await fetch(`/mlflow/experiments/${experimentSelect.value}?limit=${experimentRunState.limit}&offset=${experimentRunState.offset}`);
         const payload = await response.json();
         const experiment = payload.experiment;
         const health = payload.health || {};
         if (!experiment) {
             document.getElementById('experimentResults').innerHTML = `<div class="alert alert-info">${escapeHtml((health.warnings || ['Experiment details are currently unavailable.']).join(' '))}</div>`;
+            document.getElementById('experimentRunList').innerHTML = '';
             return;
         }
+        experimentRunState.hasMore = Boolean(payload.has_more);
+        experimentRunState.offset += (experiment.runs || []).length;
         document.getElementById('experimentResults').innerHTML = `
             ${health.warnings?.length ? `<div class="alert alert-info">${escapeHtml(health.warnings.join(' '))}</div>` : ''}
-            ${buildSummaryMarkup(experiment)}
+            ${AmanajeUI.renderMetricCards([
+                { label: 'Visible Runs', value: experiment.run_summary?.visible_runs ?? 0, unit: 'count', reference: 'current page', expected_range: '>= 0', direction: 'context_only', explanation: 'Runs loaded in the current scroll window for this experiment.' },
+                { label: 'Offset', value: experiment.run_summary?.offset ?? 0, unit: 'count', reference: 'pagination', expected_range: '>= 0', direction: 'context_only', explanation: 'How many runs were skipped before the current page.' },
+                { label: 'Limit', value: experiment.run_summary?.limit ?? 20, unit: 'count', reference: 'pagination', expected_range: '1-100', direction: 'context_only', explanation: 'How many runs are requested per fetch.' }
+            ])}
+            ${buildSummaryMarkup({
+                id: experiment.id,
+                name: experiment.name,
+                lifecycle_stage: experiment.lifecycle_stage,
+                artifact_location: experiment.artifact_location,
+                last_update_time: experiment.last_update_time
+            })}
         `;
+        renderExperimentRunCards(experiment.runs || [], append);
+        document.getElementById('btnLoadMoreExperimentRuns').style.display = experimentRunState.hasMore ? 'inline-flex' : 'none';
     } catch (error) {
         document.getElementById('experimentResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
@@ -922,7 +992,8 @@ document.getElementById('btnRefreshActivity').addEventListener('click', async ()
     const status = await fetchJson('/production/status');
     renderActivityLog(status.activity_log || []);
 });
-document.getElementById('btnViewExperiment').addEventListener('click', viewExperiment);
+document.getElementById('btnViewExperiment').addEventListener('click', () => viewExperiment(false));
+document.getElementById('btnLoadMoreExperimentRuns').addEventListener('click', () => viewExperiment(true));
 
 document.addEventListener('DOMContentLoaded', async () => {
     await populateProductionOptions();

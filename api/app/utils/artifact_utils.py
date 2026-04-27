@@ -110,6 +110,33 @@ MODEL_CAPABILITY_MATRIX: dict[str, dict[str, Any]] = {
 }
 
 
+class RuntimeArtifactDependencyError(ValueError):
+    def __init__(
+        self,
+        message: str,
+        *,
+        missing_dependencies: Optional[list[str]] = None,
+        artifact_loader: Optional[str] = None,
+        remediation: Optional[str] = None,
+        manifest: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        super().__init__(message)
+        self.missing_dependencies = list(missing_dependencies or [])
+        self.artifact_loader = artifact_loader
+        self.remediation = remediation or (
+            "Install the missing runtime dependency or re-export the artifact into a portable format such as joblib or TorchScript."
+        )
+        self.manifest = dict(manifest or {})
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "missing_dependencies": self.missing_dependencies,
+            "artifact_loader": self.artifact_loader,
+            "remediation": self.remediation,
+            "artifact_manifest": self.manifest,
+        }
+
+
 def get_model_capability_matrix() -> dict[str, dict[str, Any]]:
     return {key: dict(value) for key, value in MODEL_CAPABILITY_MATRIX.items()}
 
@@ -302,7 +329,12 @@ def inspect_model_artifact(
     except Exception as exc:
         manifest["metadata"]["error"] = str(exc)
         error_text = str(exc)
-        if "__main__" in error_text or "Can't get attribute" in error_text:
+        if isinstance(exc, ModuleNotFoundError):
+            manifest["metadata"]["missing_dependency"] = getattr(exc, "name", None)
+            manifest["warnings"].append(
+                f"Missing runtime dependency: {getattr(exc, 'name', 'unknown module')}. Install the dependency or re-export the artifact as a portable bundle."
+            )
+        elif "__main__" in error_text or "Can't get attribute" in error_text:
             manifest["warnings"].append(
                 "This artifact references classes that are not importable in the current runtime. Re-export it as joblib, TorchScript, or an app-generated bundle."
             )
@@ -323,10 +355,26 @@ def load_runtime_artifact(
     if extension == ".joblib":
         if not JOBLIB_AVAILABLE or joblib is None:
             raise ValueError("joblib is not available in the current environment.")
-        model = joblib.load(path)
+        try:
+            model = joblib.load(path)
+        except ModuleNotFoundError as exc:
+            raise RuntimeArtifactDependencyError(
+                f"Missing runtime dependency '{getattr(exc, 'name', 'unknown')}' required to load '{path.name}'.",
+                missing_dependencies=[getattr(exc, "name", "unknown")],
+                artifact_loader="joblib",
+                manifest=manifest,
+            ) from exc
     elif extension in {".pkl", ".pickle"}:
-        with path.open("rb") as file_handle:
-            model = pickle.load(file_handle)
+        try:
+            with path.open("rb") as file_handle:
+                model = pickle.load(file_handle)
+        except ModuleNotFoundError as exc:
+            raise RuntimeArtifactDependencyError(
+                f"Missing runtime dependency '{getattr(exc, 'name', 'unknown')}' required to load '{path.name}'.",
+                missing_dependencies=[getattr(exc, "name", "unknown")],
+                artifact_loader="pickle",
+                manifest=manifest,
+            ) from exc
     elif extension in {".pt", ".pth"}:
         if not TORCH_AVAILABLE or torch is None:
             raise ValueError("PyTorch is not available in the current environment.")

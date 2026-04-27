@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-04-26T01:04:20.669246+00:00",
+  "output_dir": "api\\tests\\fixtures\\manual",
+  "datasets": {
+    "narrow_sample_xlsx": "api\\tests\\fixtures\\manual\\datasets\\narrow_sample.xlsx",
+    "narrow_sample_parquet": "api\\tests\\fixtures\\manual\\datasets\\narrow_sample.parquet"
+  },
+  "models": {
+    "valid_joblib": "api\\tests\\fixtures\\manual\\models\\valid_sklearn.joblib",
+    "valid_pickle": "api\\tests\\fixtures\\manual\\models\\valid_importable.pkl",
+    "broken_missing_module_pickle": "api\\tests\\fixtures\\manual\\models\\broken_missing_module.pkl",
+    "valid_torchscript": "api\\tests\\fixtures\\manual\\models\\valid_torchscript.pt",
+    "invalid_state_dict": "api\\tests\\fixtures\\manual\\models\\invalid_state_dict.pt",
+    "identity_onnx": "api\\tests\\fixtures\\manual\\models\\identity.onnx"
+  },
+  "source_fixtures": {
+    "narrow_sample_csv": "api\\tests\\fixtures\\datasets\\narrow_sample.csv",
+    "wide_columns_csv": "api\\tests\\fixtures\\datasets\\wide_columns.csv",
+    "github_vs_git_schema_mismatch_csv": "api\\tests\\fixtures\\datasets\\github_vs_git_schema_mismatch.csv"
+  }
+}

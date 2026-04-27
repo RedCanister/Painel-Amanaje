@@ -27,6 +27,7 @@ def create_run_entry(
 ) -> dict[str, Any]:
     run_id = f"{run_type}_{uuid.uuid4().hex[:12]}"
     now = datetime.now().isoformat()
+    created_message = f"{run_type} run created."
     payload = {
         "run_id": run_id,
         "run_type": run_type,
@@ -42,12 +43,26 @@ def create_run_entry(
         "artifacts": {},
         "result": {},
         "error": None,
+        "progress": {
+            "current_stage": "queued",
+            "latest_event": created_message,
+            "latest_timestamp": now,
+            "timeline": [
+                {
+                    "status": status,
+                    "stage": "queued",
+                    "timestamp": now,
+                    "message": created_message,
+                }
+            ],
+            "counters": {},
+        },
         "events": [
             {
                 "status": status,
                 "stage": "queued",
                 "timestamp": now,
-                "message": f"{run_type} run created.",
+                "message": created_message,
             }
         ],
     }
@@ -96,9 +111,22 @@ def update_run_entry(
         for key, value in merge.items():
             if key in {"context", "parameters", "metrics", "artifacts", "result"} and isinstance(value, Mapping):
                 payload[key] = {**dict(payload.get(key, {}) or {}), **dict(value)}
+            elif key == "progress" and isinstance(value, Mapping):
+                existing_progress = dict(payload.get("progress", {}) or {})
+                merged_progress = {**existing_progress, **dict(value)}
+                if isinstance(existing_progress.get("counters"), Mapping) or isinstance(value.get("counters"), Mapping):
+                    merged_progress["counters"] = {
+                        **dict(existing_progress.get("counters", {}) or {}),
+                        **dict(value.get("counters", {}) or {}),
+                    }
+                if isinstance(existing_progress.get("timeline"), list) and "timeline" not in value:
+                    merged_progress["timeline"] = list(existing_progress.get("timeline", []) or [])
+                payload[key] = merged_progress
             else:
                 payload[key] = value
     payload["updated_at"] = now
+    stage_changed = stage is not None
+    status_changed = status is not None
     if event_message:
         payload.setdefault("events", []).append(
             {
@@ -108,6 +136,22 @@ def update_run_entry(
                 "message": event_message,
             }
         )
+    if event_message or stage_changed or status_changed:
+        progress = dict(payload.get("progress", {}) or {})
+        progress["current_stage"] = payload.get("stage")
+        progress["latest_event"] = event_message or progress.get("latest_event") or ""
+        progress["latest_timestamp"] = now
+        timeline = list(progress.get("timeline", []) or [])
+        timeline.append(
+            {
+                "status": payload.get("status"),
+                "stage": payload.get("stage"),
+                "timestamp": now,
+                "message": event_message or "",
+            }
+        )
+        progress["timeline"] = timeline
+        payload["progress"] = progress
     write_run_entry(base_dir, payload)
     return payload
 

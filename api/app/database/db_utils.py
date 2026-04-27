@@ -1,11 +1,15 @@
+import ast
+import json
+from datetime import datetime, timezone
+from typing import Any, Type, List, Optional
+
+from pydantic import BaseModel
+from sqlalchemy import DateTime, func, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import text
-from typing import Type, List, Optional
-from pydantic import BaseModel
-from datetime import datetime
 
-from app.models.model_orm import ObjectORM
+from app.models.model_orm import DatasetORM, InferenceORM, LearningORM, ObjectORM, StudyORM
 
 from app.database.db_session import Base
 from app.utils.utils import debug_type
@@ -95,19 +99,77 @@ JSONB_CONTAINER_COLUMNS = {
 }
 
 
+def _parse_container_literal(value: Any) -> Any:
+    if not isinstance(value, str):
+        return value
+
+    trimmed = value.strip()
+    if not trimmed:
+        return value
+
+    try:
+        return json.loads(trimmed)
+    except json.JSONDecodeError:
+        pass
+
+    try:
+        return ast.literal_eval(trimmed)
+    except (ValueError, SyntaxError):
+        return value
+
+
+def _normalize_datetime_instance(value: Any) -> Any:
+    if isinstance(value, datetime) and value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
+
 def _normalize_datetime_value(value):
     """Convert supported datetime payloads to datetime objects."""
     if not isinstance(value, str):
-        return value
+        return _normalize_datetime_instance(value)
 
     normalized_value = value.strip()
     if normalized_value.endswith("Z"):
         normalized_value = normalized_value[:-1] + "+00:00"
 
     try:
-        return datetime.fromisoformat(normalized_value)
+        return _normalize_datetime_instance(datetime.fromisoformat(normalized_value))
     except (ValueError, TypeError):
         return value
+
+
+def _normalize_payload_for_orm(orm_model: Type[ObjectORM], payload: dict) -> dict:
+    mapper = getattr(orm_model, "__mapper__", None)
+    if mapper is None:
+        return payload
+
+    normalized = dict(payload)
+    column_by_key = {column.key: column for column in mapper.columns}
+
+    for field, value in list(normalized.items()):
+        column = column_by_key.get(field)
+        if field == "date" or isinstance(getattr(column, "type", None), DateTime):
+            normalized[field] = _normalize_datetime_value(value)
+            continue
+
+        column_type = getattr(column, "type", None)
+        parsed = _parse_container_literal(value)
+
+        if isinstance(column_type, JSONB):
+            if parsed == "":
+                normalized[field] = None
+            elif isinstance(parsed, (dict, list)):
+                normalized[field] = parsed
+            continue
+
+        if isinstance(column_type, ARRAY):
+            if parsed == "":
+                normalized[field] = None
+            elif isinstance(parsed, (list, tuple, set)):
+                normalized[field] = list(parsed)
+
+    return normalized
 
 
 def _normalize_polymorphic_identity(discriminator_key: str, value):
@@ -250,15 +312,9 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
     if not isinstance(payload, dict):
         raise TypeError("normalized payload must be a dict")
 
-    # Coerce string ISO datetime values to datetime objects for DateTime columns
-    # This handles payloads with ISO-formatted date strings from the frontend
-    if 'date' in payload.keys() and isinstance(payload['date'], str):
-        print("Date is not datetime.datetime...")
-        payload['date'] = _normalize_datetime_value(payload['date'])
-        print("Date is normalized")
-
     orm_model, payload = _resolve_polymorphic_model(orm_model, payload)
     payload = _sync_legacy_name_payload(orm_model, payload)
+    payload = _normalize_payload_for_orm(orm_model, payload)
 
     try:
         obj = orm_model(**payload)
@@ -363,9 +419,7 @@ async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int | s
 
     debug_type(updates)
 
-    # Coerce string ISO datetime values to datetime objects for DateTime columns
-    if 'date' in updates and isinstance(updates['date'], str):
-        updates['date'] = _normalize_datetime_value(updates['date'])
+    updates = _normalize_payload_for_orm(type(obj), updates)
 
     for field, value in updates.items():
         setattr(obj, field, value)
@@ -390,3 +444,48 @@ async def delete_entry(db: AsyncSession, orm_model:Type, entry_id: int | str) ->
     await db.commit()
 
     return True
+
+
+async def get_entry_dependencies(db: AsyncSession, orm_model: Type, entry_id: int | str) -> dict[str, Any]:
+    obj = await get_entry(db, orm_model, entry_id)
+    if not obj:
+        return {
+            "exists": False,
+            "can_delete": False,
+            "dependencies": [],
+            "message": f"{getattr(orm_model, '__name__', 'Object')} not found.",
+        }
+
+    normalized_id = int(getattr(obj, "id", entry_id))
+    dependencies: list[dict[str, Any]] = []
+
+    async def _count(model: Type, column_name: str, label: str) -> None:
+        result = await db.execute(select(func.count()).select_from(model).where(getattr(model, column_name) == normalized_id))
+        total = int(result.scalar() or 0)
+        if total > 0:
+            dependencies.append(
+                {
+                    "label": label,
+                    "orm_model": getattr(model, "__name__", str(model)),
+                    "count": total,
+                    "field": column_name,
+                }
+            )
+
+    if issubclass(orm_model, LearningORM):
+        await _count(StudyORM, "learning_model_id", "Linked studies")
+        await _count(InferenceORM, "learning_model_id", "Linked inference pairs")
+    elif issubclass(orm_model, DatasetORM):
+        await _count(StudyORM, "dataset_id", "Linked studies")
+        await _count(InferenceORM, "dataset_id", "Linked inference pairs")
+
+    return {
+        "exists": True,
+        "can_delete": not dependencies,
+        "dependencies": dependencies,
+        "message": (
+            "This registry item is still referenced by other records."
+            if dependencies
+            else "No blocking dependencies were found."
+        ),
+    }

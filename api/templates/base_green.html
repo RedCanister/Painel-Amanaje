@@ -522,6 +522,8 @@
         <h3 class="panel-title">Tracking and ONNX</h3>
         <p class="panel-subtitle">Snapshots stay collapsed by default so large dataset summaries remain readable, with one-click expansion into a dedicated detail modal.</p>
 
+        <div id="trackingMetricCards" style="margin-bottom:1rem;">Select a model to surface its most relevant metrics here before the full snapshots.</div>
+
         <div class="tracking-grid">
             <div class="snapshot-card">
                 <div class="toolbar-row">
@@ -624,10 +626,17 @@ const FRAMEWORK_DEFAULTS = {
 };
 
 const PIPELINE_STAGES = [
-    { id: 'registry', title: 'Registry Context', detail: 'Model, dataset, and optional study selections are synchronized.' },
-    { id: 'features', title: 'Feature Mapping', detail: 'Input and output features are aligned to the selected dataset.' },
-    { id: 'training', title: 'Training Run', detail: 'Runtime parameters are executed through the selected framework.' },
-    { id: 'inference', title: 'Inference Sync', detail: 'The trained pair is mirrored into the inference registry for production.' }
+    { id: 'queued', title: 'Queued', detail: 'The run was registered and is waiting to execute.' },
+    { id: 'resolving_context', title: 'Resolving Context', detail: 'Model, dataset, study, and inference-pair context are being resolved.' },
+    { id: 'validating_schema', title: 'Validating Schema', detail: 'The selected dataset is checked against the required input and output columns.' },
+    { id: 'preparing_dataset', title: 'Preparing Dataset', detail: 'Feature normalization, target encoding, and train/test splits are being prepared.' },
+    { id: 'training', title: 'Training', detail: 'Framework-specific fitting is currently running.' },
+    { id: 'optimizing', title: 'Optimizing Study', detail: 'Optuna trials are exploring the configured search space.' },
+    { id: 'evaluating', title: 'Evaluating', detail: 'Validation predictions and metrics are being computed.' },
+    { id: 'persisting_artifacts', title: 'Persisting Artifacts', detail: 'Training summaries, bundles, and plots are being written to disk.' },
+    { id: 'syncing_inference', title: 'Syncing Inference', detail: 'The registry and inference pair are being updated with the completed run.' },
+    { id: 'logging_mlflow', title: 'Logging MLflow', detail: 'Tracking metadata, monitoring snapshots, and artifacts are being mirrored to MLflow.' },
+    { id: 'completed', title: 'Completed', detail: 'The run finished successfully.' }
 ];
 
 function escapeHtml(value) {
@@ -696,13 +705,14 @@ function setTrainingTab(tabName) {
     });
 }
 
-function renderPipelineTimeline(activeStage = 'registry', statusLabel = 'Ready') {
+function renderPipelineTimeline(activeStage = 'queued', statusLabel = 'Ready') {
     const activeIndex = PIPELINE_STAGES.findIndex((stage) => stage.id === activeStage);
     document.getElementById('pipelineTimeline').innerHTML = PIPELINE_STAGES.map((stage, index) => {
         let state = 'pending';
         if (activeIndex > index) state = 'done';
         if (activeIndex === index) state = 'active';
         if (statusLabel === 'Completed' && activeIndex >= index) state = 'done';
+        if (statusLabel === 'Failed' && activeIndex === index) state = 'active';
         return `
             <div class="timeline-item ${state}">
                 <div class="timeline-badge">${index + 1}</div>
@@ -787,6 +797,46 @@ function buildSnapshotMarkup(title, summary, plots = []) {
             </div>
             ${buildSummaryTable(summary)}
             ${renderPlotDeck(plots)}
+        </div>
+    `;
+}
+
+function renderTrackingMetricCards(metrics = {}) {
+    const entries = Object.entries(metrics || {});
+    if (!entries.length) {
+        document.getElementById('trackingMetricCards').innerHTML = '<div class="helper-text">Select a model to surface the most important metrics here.</div>';
+        return;
+    }
+    document.getElementById('trackingMetricCards').innerHTML = AmanajeUI.renderMetricCards(
+        entries.map(([key, value]) => ({
+            label: key.replace(/_/g, ' '),
+            value,
+            unit: 'raw',
+            reference: 'selected model',
+            expected_range: 'metric specific',
+            direction: /loss|rmse|mse|mae/i.test(key) ? 'lower_is_better' : 'higher_is_better',
+            explanation: 'Raw model metric from the currently selected registry record, shown first so the user can orient before opening snapshots.'
+        }))
+    );
+}
+
+function renderRunProgressTimeline(run = {}) {
+    const timeline = Array.isArray(run.progress?.timeline) ? run.progress.timeline : [];
+    if (!timeline.length) {
+        return '<div class="helper-text">No progress events have been recorded yet.</div>';
+    }
+    return `
+        <div class="timeline-list">
+            ${timeline.slice(-8).map((entry, index) => `
+                <div class="timeline-item ${entry.stage === run.stage ? 'active' : 'done'}">
+                    <div class="timeline-badge">${index + 1}</div>
+                    <div>
+                        <strong>${escapeHtml(entry.stage || 'stage')}</strong>
+                        <div class="helper-text">${escapeHtml(entry.message || 'Progress updated.')}</div>
+                        <div class="helper-text">${escapeHtml(entry.timestamp || '')}</div>
+                    </div>
+                </div>
+            `).join('')}
         </div>
     `;
 }
@@ -876,7 +926,7 @@ function renderRunLedger(runs = []) {
             <div class="toolbar-row">
                 <div>
                     <h4 style="margin:0;">${escapeHtml(run.run_type || 'run')} <code>${escapeHtml(run.run_id)}</code></h4>
-                    <div class="helper-text">Status: ${escapeHtml(run.status || 'queued')} | Stage: ${escapeHtml(run.stage || '-')}</div>
+                    <div class="helper-text">Status: ${escapeHtml(run.status || 'queued')} | Stage: ${escapeHtml(run.stage || '-')} | Latest event: ${escapeHtml(run.progress?.latest_event || '-')}</div>
                 </div>
                 <div class="pill-row">
                     ${run.context?.inference_id ? `<span class="pill">inference ${escapeHtml(run.context.inference_id)}</span>` : ''}
@@ -885,6 +935,18 @@ function renderRunLedger(runs = []) {
                     ${run.context?.study_id ? `<span class="pill">study ${escapeHtml(run.context.study_id)}</span>` : ''}
                 </div>
             </div>
+            ${run.progress?.counters && Object.keys(run.progress.counters).length ? `
+                ${AmanajeUI.renderMetricCards(Object.entries(run.progress.counters).map(([key, value]) => ({
+                    label: key.replace(/_/g, ' '),
+                    value,
+                    unit: 'raw',
+                    reference: 'run progress',
+                    expected_range: 'context dependent',
+                    direction: 'context_only',
+                    explanation: 'Live counter recorded while the run was executing.'
+                })))}
+            ` : ''}
+            ${renderRunProgressTimeline(run)}
             ${run.error ? `<div class="alert alert-error">${escapeHtml(run.error)}</div>` : ''}
             ${run.result && Object.keys(run.result).length ? buildSnapshotMarkup('Run Result', run.result, []) : ''}
         </div>
@@ -901,6 +963,9 @@ async function loadRunLedger() {
         const result = await response.json();
         if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         renderRunLedger(result.runs || []);
+        if ((result.runs || []).length) {
+            renderPipelineTimeline(result.runs[0].stage || 'queued', String(result.runs[0].status || '').replace(/^./, (match) => match.toUpperCase()));
+        }
         const hasActiveRuns = (result.runs || []).some((run) => ['queued', 'running'].includes(run.status));
         if (runLedgerPollTimer) {
             clearTimeout(runLedgerPollTimer);
@@ -934,7 +999,19 @@ async function waitForRunCompletion(runId, targetId, successMessagePrefix) {
         if (run.status === 'failed') {
             throw new Error(run.error || 'The background run failed.');
         }
-        target.innerHTML = `<div class="alert alert-info">Run <code>${escapeHtml(runId)}</code> is ${escapeHtml(run.status)} at stage <code>${escapeHtml(run.stage || '-')}</code>.</div>`;
+        target.innerHTML = `
+            <div class="alert alert-info">Run <code>${escapeHtml(runId)}</code> is ${escapeHtml(run.status)} at stage <code>${escapeHtml(run.stage || '-')}</code>.</div>
+            ${run.progress?.latest_event ? `<div class="helper-text" style="margin-top:0.65rem;">Latest event: ${escapeHtml(run.progress.latest_event)}</div>` : ''}
+            ${run.progress?.counters && Object.keys(run.progress.counters).length ? AmanajeUI.renderMetricCards(Object.entries(run.progress.counters).map(([key, value]) => ({
+                label: key.replace(/_/g, ' '),
+                value,
+                unit: 'raw',
+                reference: 'live run',
+                expected_range: 'context dependent',
+                direction: 'context_only',
+                explanation: 'Live execution counter reported by the backend.'
+            }))) : ''}
+        `;
         await new Promise((resolve) => setTimeout(resolve, 2500));
     }
     throw new Error('The run did not finish within the polling window.');
@@ -1304,6 +1381,7 @@ async function populateRegistryOptions() {
 async function loadModelSnapshot() {
     if (!modelIdSelect.value) {
         document.getElementById('modelSnapshot').innerHTML = 'Select a model to load its current registry summary.';
+        renderTrackingMetricCards({});
         return;
     }
 
@@ -1312,8 +1390,10 @@ async function loadModelSnapshot() {
         const result = await response.json();
         if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         document.getElementById('modelSnapshot').innerHTML = buildSnapshotMarkup('LearningModel Summary', result.summary || {}, result.plots || []);
+        renderTrackingMetricCards(result.summary?.metrics || {});
     } catch (error) {
         document.getElementById('modelSnapshot').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+        renderTrackingMetricCards({});
     }
 }
 
@@ -1481,7 +1561,7 @@ trainingForm.addEventListener('submit', async (event) => {
             throw new Error(result.detail || 'Training submission failed');
         }
         const finalRun = await waitForRunCompletion(result.run_id, 'trainingResult', 'Training run completed.');
-        renderPipelineTimeline('inference', 'Completed');
+        renderPipelineTimeline('completed', 'Completed');
         await populateRegistryOptions();
         await loadModelSnapshot();
         await loadDatasetSnapshot();
@@ -1638,7 +1718,7 @@ modelIdSelect.addEventListener('change', async () => {
     syncGlobalContextFromLocal();
     updatePipelineSummary();
     renderRuntimeParameterFields();
-    renderPipelineTimeline('registry');
+    renderPipelineTimeline('resolving_context');
     await loadModelSnapshot();
     await loadRunLedger();
 });
@@ -1646,7 +1726,7 @@ modelIdSelect.addEventListener('change', async () => {
 datasetIdSelect.addEventListener('change', async () => {
     syncGlobalContextFromLocal();
     updatePipelineSummary();
-    renderPipelineTimeline('features');
+    renderPipelineTimeline('validating_schema');
     await loadDatasetSnapshot();
     await loadRunLedger();
 });
@@ -1715,7 +1795,7 @@ document.getElementById('trainingDetailModal').addEventListener('click', (event)
 
 document.addEventListener('DOMContentLoaded', async () => {
     updateStudyVisibility();
-    renderPipelineTimeline('registry');
+    renderPipelineTimeline('queued');
     await populateRegistryOptions();
     syncStudyFormWithTrainingSelection();
     syncGlobalContextFromLocal();

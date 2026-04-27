@@ -1,0 +1,2196 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "user",
+            "event_id",
+            "event_type",
+            "repo",
+            "event_url",
+            "event_watchs",
+            "event_stars",
+            "event_forks",
+            "event_issues",
+            "event_isfork",
+            "event_projects",
+            "event_downloads",
+            "event_wiki",
+            "event_pages",
+            "event_discussions",
+            "date_",
+            "time",
+            "language_1",
+            "lang_count_1",
+            "language_2",
+            "lang_count_2",
+            "language_3"
+        ],
+        "target_candidate": "lang_count_3",
+        "numeric_feature_count": 6,
+        "categorical_feature_count": 15,
+        "datetime_feature_count": 2
+    },
+    "manifest": {
+        "dataset_id": 13,
+        "dataset_name": "git_data",
+        "table_name": "dataset_13_git_data",
+        "shape": [
+            222420,
+            23
+        ],
+        "columns": [
+            {
+                "name": "lang_count_3",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 132464,
+                "null_ratio": 0.595558,
+                "unique_count": 2825,
+                "unique_ratio": 0.012701,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    6442.0,
+                    null,
+                    1734.0,
+                    null,
+                    153.0
+                ]
+            },
+            {
+                "name": "language_3",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 132464,
+                "null_ratio": 0.595558,
+                "unique_count": 141,
+                "unique_ratio": 0.000634,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Shell",
+                    null,
+                    "HTML",
+                    null,
+                    "Shell"
+                ]
+            },
+            {
+                "name": "lang_count_2",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 106565,
+                "null_ratio": 0.479116,
+                "unique_count": 6607,
+                "unique_ratio": 0.029705,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "8918.0",
+                    "6934.0",
+                    "16214.0",
+                    "399.0",
+                    "210.0"
+                ]
+            },
+            {
+                "name": "language_2",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 106565,
+                "null_ratio": 0.479116,
+                "unique_count": 154,
+                "unique_ratio": 0.000692,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "JavaScript",
+                    "HTML",
+                    "CSS",
+                    "Dockerfile",
+                    "Dockerfile"
+                ]
+            },
+            {
+                "name": "lang_count_1",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 53580,
+                "null_ratio": 0.240896,
+                "unique_count": 9860,
+                "unique_ratio": 0.044331,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "346955.0",
+                    "23871.0",
+                    "103150.0",
+                    "45553.0",
+                    "310623.0"
+                ]
+            },
+            {
+                "name": "language_1",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 53580,
+                "null_ratio": 0.240896,
+                "unique_count": 124,
+                "unique_ratio": 0.000558,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "TypeScript",
+                    "Python",
+                    "JavaScript",
+                    "Shell",
+                    "TypeScript"
+                ]
+            },
+            {
+                "name": "event_url",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 8075,
+                "unique_ratio": 0.036305,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "https://github.com/julep-ai/node-sdk",
+                    "https://github.com/paulobueno/django-pythonpro",
+                    "https://github.com/HimYu111/shareown-web-app",
+                    "https://github.com/hmcts/libragob-batch-jobs",
+                    "https://github.com/atlp-rwanda/atlp-pulse-bn"
+                ]
+            },
+            {
+                "name": "event_stars",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 890,
+                "unique_ratio": 0.004001,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ]
+            },
+            {
+                "name": "event_forks",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 638,
+                "unique_ratio": 0.002868,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    3.0
+                ]
+            },
+            {
+                "name": "event_issues",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 564,
+                "unique_ratio": 0.002536,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0,
+                    48.0,
+                    0.0,
+                    2.0,
+                    33.0
+                ]
+            },
+            {
+                "name": "event_watchs",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 310,
+                "unique_ratio": 0.001394,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    2.0,
+                    1.0,
+                    1.0,
+                    10.0,
+                    8.0
+                ]
+            },
+            {
+                "name": "event_isfork",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ]
+            },
+            {
+                "name": "event_projects",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    false,
+                    true,
+                    true,
+                    true,
+                    true
+                ]
+            },
+            {
+                "name": "event_downloads",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    true,
+                    true,
+                    true,
+                    true,
+                    true
+                ]
+            },
+            {
+                "name": "event_wiki",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    false,
+                    true,
+                    false,
+                    true,
+                    true
+                ]
+            },
+            {
+                "name": "event_pages",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ]
+            },
+            {
+                "name": "event_discussions",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 2225,
+                "null_ratio": 0.010004,
+                "unique_count": 2,
+                "unique_ratio": 9e-06,
+                "mixed_type": false,
+                "sample_types": [
+                    "bool"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    true
+                ]
+            },
+            {
+                "name": "event_id",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 9960,
+                "unique_ratio": 0.04478,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    42271873304,
+                    42271873289,
+                    42271873305,
+                    42271873296,
+                    42271873265
+                ]
+            },
+            {
+                "name": "repo",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 7643,
+                "unique_ratio": 0.034363,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "node-sdk",
+                    "django-pythonpro",
+                    "shareown-web-app",
+                    "libragob-batch-jobs",
+                    "atlp-pulse-bn"
+                ]
+            },
+            {
+                "name": "user",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 5817,
+                "unique_ratio": 0.026153,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "stainless-app[bot]",
+                    "paulobueno",
+                    "HimYu111",
+                    "djporta",
+                    "janet-barbie"
+                ]
+            },
+            {
+                "name": "time",
+                "dtype": "object",
+                "family": "datetime_candidate",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 617,
+                "unique_ratio": 0.002774,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 1.0,
+                "sample_values": [
+                    "19:52:22",
+                    "19:52:22",
+                    "19:52:22",
+                    "19:52:22",
+                    "19:52:22"
+                ]
+            },
+            {
+                "name": "event_type",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 15,
+                "unique_ratio": 6.7e-05,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "CreateEvent",
+                    "PushEvent",
+                    "PullRequestEvent",
+                    "PullRequestEvent",
+                    "PushEvent"
+                ]
+            },
+            {
+                "name": "date_",
+                "dtype": "object",
+                "family": "datetime_candidate",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 3,
+                "unique_ratio": 1.3e-05,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 1.0,
+                "sample_values": [
+                    "2024-09-25",
+                    "2024-09-25",
+                    "2024-09-25",
+                    "2024-09-25",
+                    "2024-09-25"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "user": "stainless-app[bot]",
+                "event_id": 42271873304,
+                "event_type": "CreateEvent",
+                "repo": "node-sdk",
+                "event_url": "https://github.com/julep-ai/node-sdk",
+                "event_watchs": 2.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": false,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "TypeScript",
+                "lang_count_1": "346955.0",
+                "language_2": "JavaScript",
+                "lang_count_2": "8918.0",
+                "language_3": "Shell",
+                "lang_count_3": 6442.0
+            },
+            {
+                "user": "paulobueno",
+                "event_id": 42271873289,
+                "event_type": "PushEvent",
+                "repo": "django-pythonpro",
+                "event_url": "https://github.com/paulobueno/django-pythonpro",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 48.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Python",
+                "lang_count_1": "23871.0",
+                "language_2": "HTML",
+                "lang_count_2": "6934.0",
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "HimYu111",
+                "event_id": 42271873305,
+                "event_type": "PullRequestEvent",
+                "repo": "shareown-web-app",
+                "event_url": "https://github.com/HimYu111/shareown-web-app",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "JavaScript",
+                "lang_count_1": "103150.0",
+                "language_2": "CSS",
+                "lang_count_2": "16214.0",
+                "language_3": "HTML",
+                "lang_count_3": 1734.0
+            },
+            {
+                "user": "djporta",
+                "event_id": 42271873296,
+                "event_type": "PullRequestEvent",
+                "repo": "libragob-batch-jobs",
+                "event_url": "https://github.com/hmcts/libragob-batch-jobs",
+                "event_watchs": 10.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 2.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Shell",
+                "lang_count_1": "45553.0",
+                "language_2": "Dockerfile",
+                "lang_count_2": "399.0",
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "janet-barbie",
+                "event_id": 42271873265,
+                "event_type": "PushEvent",
+                "repo": "atlp-pulse-bn",
+                "event_url": "https://github.com/atlp-rwanda/atlp-pulse-bn",
+                "event_watchs": 8.0,
+                "event_stars": 1.0,
+                "event_forks": 3.0,
+                "event_issues": 33.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": true,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "TypeScript",
+                "lang_count_1": "310623.0",
+                "language_2": "Dockerfile",
+                "lang_count_2": "210.0",
+                "language_3": "Shell",
+                "lang_count_3": 153.0
+            },
+            {
+                "user": "frdpzk4",
+                "event_id": 42271873251,
+                "event_type": "PushEvent",
+                "repo": "ppub",
+                "event_url": "https://github.com/frdpzk4/ppub",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": null,
+                "lang_count_1": null,
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "karpetrosyan",
+                "event_id": 42271873231,
+                "event_type": "PushEvent",
+                "repo": "hishel",
+                "event_url": "https://github.com/karpetrosyan/hishel",
+                "event_watchs": 3.0,
+                "event_stars": 163.0,
+                "event_forks": 19.0,
+                "event_issues": 25.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": true,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Python",
+                "lang_count_1": "311215.0",
+                "language_2": "Shell",
+                "lang_count_2": "940.0",
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "elmiko",
+                "event_id": 42271873254,
+                "event_type": "IssueCommentEvent",
+                "repo": "cloud-provider-sample",
+                "event_url": "https://github.com/kubernetes/cloud-provider-sample",
+                "event_watchs": 11.0,
+                "event_stars": 21.0,
+                "event_forks": 21.0,
+                "event_issues": 2.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": null,
+                "lang_count_1": null,
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "TVhhabjRJC",
+                "event_id": 42271873238,
+                "event_type": "PushEvent",
+                "repo": "flash-crypto",
+                "event_url": "https://github.com/TVhhabjRJC/flash-crypto",
+                "event_watchs": 1.0,
+                "event_stars": 1.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Python",
+                "lang_count_1": "14656.0",
+                "language_2": "Batchfile",
+                "lang_count_2": "14.0",
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "BrediMuliterno",
+                "event_id": 42271873241,
+                "event_type": "PushEvent",
+                "repo": "curso-DevOps-Github",
+                "event_url": "https://github.com/BrediMuliterno/curso-DevOps-Github",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "JavaScript",
+                "lang_count_1": "18147.0",
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "mchlpst",
+                "event_id": 42271873228,
+                "event_type": "PushEvent",
+                "repo": "awdtv",
+                "event_url": "https://github.com/mchlpst/awdtv",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "JavaScript",
+                "lang_count_1": "188870.0",
+                "language_2": "SCSS",
+                "lang_count_2": "57348.0",
+                "language_3": "HTML",
+                "lang_count_3": 4649.0
+            },
+            {
+                "user": "ThiagoMoraes-UERJ",
+                "event_id": 42271873222,
+                "event_type": "PushEvent",
+                "repo": "Vis-oComputacional",
+                "event_url": "https://github.com/ThiagoMoraes-UERJ/Vis-oComputacional",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": null,
+                "lang_count_1": null,
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "Chroiud",
+                "event_id": 42271873209,
+                "event_type": "PushEvent",
+                "repo": "playercount",
+                "event_url": "https://github.com/Chroiud/playercount",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": null,
+                "lang_count_1": null,
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "djordje-stankovic",
+                "event_id": 42271873220,
+                "event_type": "PushEvent",
+                "repo": "Bingo",
+                "event_url": "https://github.com/djordje-stankovic/Bingo",
+                "event_watchs": 2.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Python",
+                "lang_count_1": "10650.0",
+                "language_2": "JavaScript",
+                "lang_count_2": "7198.0",
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "smcquade86",
+                "event_id": 42271873210,
+                "event_type": "PushEvent",
+                "repo": "reception-perception-dashboard",
+                "event_url": "https://github.com/smcquade86/reception-perception-dashboard",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": true,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "TypeScript",
+                "lang_count_1": "23567.0",
+                "language_2": "CSS",
+                "lang_count_2": "778.0",
+                "language_3": "JavaScript",
+                "lang_count_3": 430.0
+            },
+            {
+                "user": "Pranshul-Thakur",
+                "event_id": 42271873212,
+                "event_type": "PushEvent",
+                "repo": "MultiTool",
+                "event_url": "https://github.com/Pranshul-Thakur/MultiTool",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Batchfile",
+                "lang_count_1": "4046.0",
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "callieEDU",
+                "event_id": 42271873205,
+                "event_type": "PushEvent",
+                "repo": "Power-Electronics",
+                "event_url": "https://github.com/MathWorks-Teaching-Resources/Power-Electronics",
+                "event_watchs": 2.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "MATLAB",
+                "lang_count_1": "5159599.0",
+                "language_2": null,
+                "lang_count_2": null,
+                "language_3": null,
+                "lang_count_3": null
+            },
+            {
+                "user": "Vara-Ali",
+                "event_id": 42271873221,
+                "event_type": "PublicEvent",
+                "repo": "portfolio",
+                "event_url": "https://github.com/Vara-Ali/portfolio",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": false,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "JavaScript",
+                "lang_count_1": "8820.0",
+                "language_2": "HTML",
+                "lang_count_2": "2143.0",
+                "language_3": "CSS",
+                "lang_count_3": 987.0
+            },
+            {
+                "user": "AlvesInfo",
+                "event_id": 42271873173,
+                "event_type": "PushEvent",
+                "repo": "heron",
+                "event_url": "https://github.com/AlvesInfo/heron",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 0.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": false,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Python",
+                "lang_count_1": "2699756.0",
+                "language_2": "HTML",
+                "lang_count_2": "833998.0",
+                "language_3": "Shell",
+                "lang_count_3": 69.0
+            },
+            {
+                "user": "rulues",
+                "event_id": 42271873176,
+                "event_type": "PushEvent",
+                "repo": "product",
+                "event_url": "https://github.com/rulues/product",
+                "event_watchs": 1.0,
+                "event_stars": 0.0,
+                "event_forks": 0.0,
+                "event_issues": 1.0,
+                "event_isfork": false,
+                "event_projects": true,
+                "event_downloads": true,
+                "event_wiki": true,
+                "event_pages": true,
+                "event_discussions": false,
+                "date_": "2024-09-25",
+                "time": "19:52:22",
+                "language_1": "Java",
+                "lang_count_1": "2816.0",
+                "language_2": "Dockerfile",
+                "lang_count_2": "1018.0",
+                "language_3": null,
+                "lang_count_3": null
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 222420,
+            "columns": 23,
+            "column_names": [
+                "user",
+                "event_id",
+                "event_type",
+                "repo",
+                "event_url",
+                "event_watchs",
+                "event_stars",
+                "event_forks",
+                "event_issues",
+                "event_isfork",
+                "event_projects",
+                "event_downloads",
+                "event_wiki",
+                "event_pages",
+                "event_discussions",
+                "date_",
+                "time",
+                "language_1",
+                "lang_count_1",
+                "language_2",
+                "lang_count_2",
+                "language_3",
+                "lang_count_3"
+            ],
+            "dtypes": {
+                "user": "object",
+                "event_id": "int64",
+                "event_type": "object",
+                "repo": "object",
+                "event_url": "object",
+                "event_watchs": "float64",
+                "event_stars": "float64",
+                "event_forks": "float64",
+                "event_issues": "float64",
+                "event_isfork": "object",
+                "event_projects": "object",
+                "event_downloads": "object",
+                "event_wiki": "object",
+                "event_pages": "object",
+                "event_discussions": "object",
+                "date_": "object",
+                "time": "object",
+                "language_1": "object",
+                "lang_count_1": "object",
+                "language_2": "object",
+                "lang_count_2": "object",
+                "language_3": "object",
+                "lang_count_3": "float64"
+            },
+            "missing_values": 609693,
+            "stats": {
+                "user": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 5817,
+                    "sample_values": [
+                        "stainless-app[bot]",
+                        "paulobueno",
+                        "HimYu111",
+                        "djporta",
+                        "janet-barbie"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "github-actions[bot]"
+                },
+                "event_id": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 9960,
+                    "sample_values": [
+                        42271873304,
+                        42271873289,
+                        42271873305,
+                        42271873296,
+                        42271873265
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 42310990548.67442,
+                    "std": 7596238.140910582,
+                    "min": 42271873085.0,
+                    "max": 42317717437.0
+                },
+                "event_type": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 15,
+                    "sample_values": [
+                        "CreateEvent",
+                        "PushEvent",
+                        "PullRequestEvent",
+                        "PullRequestEvent",
+                        "PushEvent"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "PushEvent"
+                },
+                "repo": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 7643,
+                    "sample_values": [
+                        "node-sdk",
+                        "django-pythonpro",
+                        "shareown-web-app",
+                        "libragob-batch-jobs",
+                        "atlp-pulse-bn"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "uk"
+                },
+                "event_url": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 8075,
+                    "sample_values": [
+                        "https://github.com/julep-ai/node-sdk",
+                        "https://github.com/paulobueno/django-pythonpro",
+                        "https://github.com/HimYu111/shareown-web-app",
+                        "https://github.com/hmcts/libragob-batch-jobs",
+                        "https://github.com/atlp-rwanda/atlp-pulse-bn"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "https://github.com/freeukapp/uk"
+                },
+                "event_watchs": {
+                    "type": "numeric",
+                    "null_count": 2225,
+                    "unique_values": 310,
+                    "sample_values": [
+                        2.0,
+                        1.0,
+                        1.0,
+                        10.0,
+                        8.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 31.901641726651377,
+                    "std": 281.80194062667147,
+                    "min": 0.0,
+                    "max": 9778.0
+                },
+                "event_stars": {
+                    "type": "numeric",
+                    "null_count": 2225,
+                    "unique_values": 890,
+                    "sample_values": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 1321.4779490905787,
+                    "std": 10772.705247368216,
+                    "min": 0.0,
+                    "max": 334471.0
+                },
+                "event_forks": {
+                    "type": "numeric",
+                    "null_count": 2225,
+                    "unique_values": 638,
+                    "sample_values": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        3.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 328.63499625332094,
+                    "std": 3322.6498360925325,
+                    "min": 0.0,
+                    "max": 145858.0
+                },
+                "event_issues": {
+                    "type": "numeric",
+                    "null_count": 2225,
+                    "unique_values": 564,
+                    "sample_values": [
+                        0.0,
+                        48.0,
+                        0.0,
+                        2.0,
+                        33.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 245.63338404595927,
+                    "std": 3283.0030619948134,
+                    "min": 0.0,
+                    "max": 110026.0
+                },
+                "event_isfork": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "False"
+                },
+                "event_projects": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        false,
+                        true,
+                        true,
+                        true,
+                        true
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "True"
+                },
+                "event_downloads": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        true,
+                        true,
+                        true,
+                        true,
+                        true
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "True"
+                },
+                "event_wiki": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        false,
+                        true,
+                        false,
+                        true,
+                        true
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "True"
+                },
+                "event_pages": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "False"
+                },
+                "event_discussions": {
+                    "type": "categorical",
+                    "null_count": 2225,
+                    "unique_values": 2,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        true
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "False"
+                },
+                "date_": {
+                    "type": "datetime_candidate",
+                    "null_count": 0,
+                    "unique_values": 3,
+                    "sample_values": [
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 1.0,
+                    "mode": "2024-09-26"
+                },
+                "time": {
+                    "type": "datetime_candidate",
+                    "null_count": 0,
+                    "unique_values": 617,
+                    "sample_values": [
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 1.0,
+                    "mode": "01:04:43"
+                },
+                "language_1": {
+                    "type": "categorical",
+                    "null_count": 53580,
+                    "unique_values": 124,
+                    "sample_values": [
+                        "TypeScript",
+                        "Python",
+                        "JavaScript",
+                        "Shell",
+                        "TypeScript"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "Python"
+                },
+                "lang_count_1": {
+                    "type": "categorical",
+                    "null_count": 53580,
+                    "unique_values": 9860,
+                    "sample_values": [
+                        "346955.0",
+                        "23871.0",
+                        "103150.0",
+                        "45553.0",
+                        "310623.0"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "2165"
+                },
+                "language_2": {
+                    "type": "categorical",
+                    "null_count": 106565,
+                    "unique_values": 154,
+                    "sample_values": [
+                        "JavaScript",
+                        "HTML",
+                        "CSS",
+                        "Dockerfile",
+                        "Dockerfile"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "CSS"
+                },
+                "lang_count_2": {
+                    "type": "categorical",
+                    "null_count": 106565,
+                    "unique_values": 6607,
+                    "sample_values": [
+                        "8918.0",
+                        "6934.0",
+                        "16214.0",
+                        "399.0",
+                        "210.0"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "647"
+                },
+                "language_3": {
+                    "type": "categorical",
+                    "null_count": 132464,
+                    "unique_values": 141,
+                    "sample_values": [
+                        "Shell",
+                        null,
+                        "HTML",
+                        null,
+                        "Shell"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "JavaScript"
+                },
+                "lang_count_3": {
+                    "type": "numeric",
+                    "null_count": 132464,
+                    "unique_values": 2825,
+                    "sample_values": [
+                        6442.0,
+                        null,
+                        1734.0,
+                        null,
+                        153.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 1282778.3786517854,
+                    "std": 13250134.566971213,
+                    "min": 1.0,
+                    "max": 194844636.0
+                }
+            },
+            "path": "/data/datasets/git_data.csv",
+            "profile": {
+                "numeric_columns": [
+                    "lang_count_3",
+                    "event_stars",
+                    "event_forks",
+                    "event_issues",
+                    "event_watchs",
+                    "event_id"
+                ],
+                "categorical_columns": [
+                    "language_3",
+                    "lang_count_2",
+                    "language_2",
+                    "lang_count_1",
+                    "language_1",
+                    "event_url",
+                    "event_isfork",
+                    "event_projects",
+                    "event_downloads",
+                    "event_wiki",
+                    "event_pages",
+                    "event_discussions",
+                    "repo",
+                    "user",
+                    "event_type"
+                ],
+                "datetime_columns": [
+                    "time",
+                    "date_"
+                ],
+                "recommended_target": "lang_count_3",
+                "recommended_inputs": [
+                    "user",
+                    "event_id",
+                    "event_type",
+                    "repo",
+                    "event_url",
+                    "event_watchs",
+                    "event_stars",
+                    "event_forks",
+                    "event_issues",
+                    "event_isfork",
+                    "event_projects",
+                    "event_downloads",
+                    "event_wiki",
+                    "event_pages",
+                    "event_discussions",
+                    "date_",
+                    "time",
+                    "language_1",
+                    "lang_count_1",
+                    "language_2",
+                    "lang_count_2",
+                    "language_3"
+                ]
+            },
+            "parser_report": {
+                "file_name": "git_data.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 222420,
+                "columns": 23,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "lang_count_3",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 132464,
+                    "null_ratio": 0.595558,
+                    "unique_count": 2825,
+                    "unique_ratio": 0.012701,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        6442.0,
+                        null,
+                        1734.0,
+                        null,
+                        153.0
+                    ]
+                },
+                {
+                    "name": "language_3",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 132464,
+                    "null_ratio": 0.595558,
+                    "unique_count": 141,
+                    "unique_ratio": 0.000634,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Shell",
+                        null,
+                        "HTML",
+                        null,
+                        "Shell"
+                    ]
+                },
+                {
+                    "name": "lang_count_2",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 106565,
+                    "null_ratio": 0.479116,
+                    "unique_count": 6607,
+                    "unique_ratio": 0.029705,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "8918.0",
+                        "6934.0",
+                        "16214.0",
+                        "399.0",
+                        "210.0"
+                    ]
+                },
+                {
+                    "name": "language_2",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 106565,
+                    "null_ratio": 0.479116,
+                    "unique_count": 154,
+                    "unique_ratio": 0.000692,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "JavaScript",
+                        "HTML",
+                        "CSS",
+                        "Dockerfile",
+                        "Dockerfile"
+                    ]
+                },
+                {
+                    "name": "lang_count_1",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 53580,
+                    "null_ratio": 0.240896,
+                    "unique_count": 9860,
+                    "unique_ratio": 0.044331,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "346955.0",
+                        "23871.0",
+                        "103150.0",
+                        "45553.0",
+                        "310623.0"
+                    ]
+                },
+                {
+                    "name": "language_1",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 53580,
+                    "null_ratio": 0.240896,
+                    "unique_count": 124,
+                    "unique_ratio": 0.000558,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "TypeScript",
+                        "Python",
+                        "JavaScript",
+                        "Shell",
+                        "TypeScript"
+                    ]
+                },
+                {
+                    "name": "event_url",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 8075,
+                    "unique_ratio": 0.036305,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "https://github.com/julep-ai/node-sdk",
+                        "https://github.com/paulobueno/django-pythonpro",
+                        "https://github.com/HimYu111/shareown-web-app",
+                        "https://github.com/hmcts/libragob-batch-jobs",
+                        "https://github.com/atlp-rwanda/atlp-pulse-bn"
+                    ]
+                },
+                {
+                    "name": "event_stars",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 890,
+                    "unique_ratio": 0.004001,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                },
+                {
+                    "name": "event_forks",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 638,
+                    "unique_ratio": 0.002868,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        3.0
+                    ]
+                },
+                {
+                    "name": "event_issues",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 564,
+                    "unique_ratio": 0.002536,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0,
+                        48.0,
+                        0.0,
+                        2.0,
+                        33.0
+                    ]
+                },
+                {
+                    "name": "event_watchs",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 310,
+                    "unique_ratio": 0.001394,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        2.0,
+                        1.0,
+                        1.0,
+                        10.0,
+                        8.0
+                    ]
+                },
+                {
+                    "name": "event_isfork",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ]
+                },
+                {
+                    "name": "event_projects",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        false,
+                        true,
+                        true,
+                        true,
+                        true
+                    ]
+                },
+                {
+                    "name": "event_downloads",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        true,
+                        true,
+                        true,
+                        true,
+                        true
+                    ]
+                },
+                {
+                    "name": "event_wiki",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        false,
+                        true,
+                        false,
+                        true,
+                        true
+                    ]
+                },
+                {
+                    "name": "event_pages",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        false
+                    ]
+                },
+                {
+                    "name": "event_discussions",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 2225,
+                    "null_ratio": 0.010004,
+                    "unique_count": 2,
+                    "unique_ratio": 9e-06,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "bool"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        false,
+                        false,
+                        false,
+                        false,
+                        true
+                    ]
+                },
+                {
+                    "name": "event_id",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 9960,
+                    "unique_ratio": 0.04478,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        42271873304,
+                        42271873289,
+                        42271873305,
+                        42271873296,
+                        42271873265
+                    ]
+                },
+                {
+                    "name": "repo",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 7643,
+                    "unique_ratio": 0.034363,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "node-sdk",
+                        "django-pythonpro",
+                        "shareown-web-app",
+                        "libragob-batch-jobs",
+                        "atlp-pulse-bn"
+                    ]
+                },
+                {
+                    "name": "user",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 5817,
+                    "unique_ratio": 0.026153,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "stainless-app[bot]",
+                        "paulobueno",
+                        "HimYu111",
+                        "djporta",
+                        "janet-barbie"
+                    ]
+                },
+                {
+                    "name": "time",
+                    "dtype": "object",
+                    "family": "datetime_candidate",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 617,
+                    "unique_ratio": 0.002774,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 1.0,
+                    "sample_values": [
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22",
+                        "19:52:22"
+                    ]
+                },
+                {
+                    "name": "event_type",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 15,
+                    "unique_ratio": 6.7e-05,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "CreateEvent",
+                        "PushEvent",
+                        "PullRequestEvent",
+                        "PullRequestEvent",
+                        "PushEvent"
+                    ]
+                },
+                {
+                    "name": "date_",
+                    "dtype": "object",
+                    "family": "datetime_candidate",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 3,
+                    "unique_ratio": 1.3e-05,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 1.0,
+                    "sample_values": [
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25",
+                        "2024-09-25"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [
+                    "lang_count_3",
+                    "event_stars",
+                    "event_forks",
+                    "event_issues",
+                    "event_watchs",
+                    "event_id"
+                ],
+                "categorical": [
+                    "language_3",
+                    "lang_count_2",
+                    "language_2",
+                    "lang_count_1",
+                    "language_1",
+                    "event_url",
+                    "event_isfork",
+                    "event_projects",
+                    "event_downloads",
+                    "event_wiki",
+                    "event_pages",
+                    "event_discussions",
+                    "repo",
+                    "user",
+                    "event_type"
+                ],
+                "datetime": [
+                    "time",
+                    "date_"
+                ]
+            },
+            "top_warnings": []
+        }
+    }
+}

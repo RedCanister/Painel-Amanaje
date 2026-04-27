@@ -11,7 +11,7 @@ from sqlalchemy.orm import DeclarativeMeta
 from sqlalchemy.inspection import inspect as sqlalchemy_inspect
 
 from app.database.db_session import Base, get_db
-from app.database.db_utils import create_entry, delete_entry, get_all_entries, get_entry, update_entry
+from app.database.db_utils import create_entry, delete_entry, get_all_entries, get_entry, get_entry_dependencies, update_entry
 
 
 SQLA_TYPE_MAP = {
@@ -238,12 +238,33 @@ class ModelRegistry:
 
         @router.delete("/delete/{item_id}", response_model=dict)
         async def delete_item(item_id: int | str, db: AsyncSession = Depends(get_db)):
+            dependency_report = await get_entry_dependencies(db, orm_model, item_id)
+            if not dependency_report.get("exists"):
+                raise HTTPException(status_code=404, detail=f"{name} not found")
+            if not dependency_report.get("can_delete", False):
+                return JSONResponse(
+                    {
+                        "status": "blocked",
+                        "detail": dependency_report.get("message"),
+                        "orm_model": str(orm_model),
+                        "id": item_id,
+                        "dependency_report": dependency_report,
+                    },
+                    status_code=409,
+                )
             ok = await delete_entry(db, orm_model, item_id)
 
             if ok:
                 return {"status": "deleted", "orm_model": str(orm_model), "id": item_id}
 
             raise HTTPException(status_code=404, detail=f"{name} not found")
+
+        @router.get("/dependencies/{item_id}", response_model=dict)
+        async def dependencies_item(item_id: int | str, db: AsyncSession = Depends(get_db)):
+            dependency_report = await get_entry_dependencies(db, orm_model, item_id)
+            if not dependency_report.get("exists"):
+                raise HTTPException(status_code=404, detail=f"{name} not found")
+            return dependency_report
 
         return router
 

@@ -382,6 +382,7 @@ def train_pytorch(
     tags: Optional[Mapping[str, str]] = None,
     log_every: int = 1,
     log_to_mlflow: bool = True,
+    progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> TrainingResult:
     """
     Train a PyTorch model and return a normalized ``TrainingResult``.
@@ -468,6 +469,19 @@ def train_pytorch(
 
             if log_every > 0 and epoch % log_every == 0:
                 logger.info("Epoch %d/%d metrics: %s", epoch, epochs, epoch_metrics)
+            if progress_callback is not None:
+                try:
+                    progress_callback(
+                        {
+                            "epoch": epoch,
+                            "epochs_total": epochs,
+                            "train_loss": avg_train_loss,
+                            "val_loss": epoch_metrics.get("val_loss"),
+                            "epoch_duration_sec": epoch_metrics.get("epoch_duration_sec"),
+                        }
+                    )
+                except Exception:
+                    logger.debug("PyTorch progress callback failed at epoch %d.", epoch, exc_info=True)
 
         summary_metrics = {key: values[-1] for key, values in history.items() if values}
         result = TrainingResult(

@@ -1,0 +1,26 @@
+{
+  "name": "script_2026-04-24",
+  "description": "Dataset created from the editor",
+  "object_type": "code_model",
+  "size": 0,
+  "path": "generated/galactic_dataset.csv",
+  "date": "2026-04-24T22:07:15.090Z",
+  "version": 1,
+  "history": [
+    {
+      "operation": "save_script",
+      "when": "2026-04-24T22:07:15.090Z"
+    }
+  ],
+  "variables": {
+    "dataset_name": "github_vs_git"
+  },
+  "code": {
+    "script": "print('dataset ready')",
+    "language": "python",
+    "metadata": {
+      "name": "script_2026-04-24",
+      "object_type": "code_model"
+    }
+  }
+}

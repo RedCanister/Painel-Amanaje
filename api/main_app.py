@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_session import get_db
-from app.database.db_utils import create_entry, get_all_entries, update_entry
+from app.database.db_utils import create_entry, get_all_entries, get_entry_dependencies, update_entry
 from app.models.model_objects import DatasetModel, LearningModel, StudyModel
 from app.models.model_orm import DatasetORM, InferenceORM, LearningORM, StudyORM
 from app.utils.deployment_utils import save_deployment_summary
@@ -430,6 +430,31 @@ def _resolve_watch_context_id(
     return _utils._watch_context_id(model_id=model_id, dataset_id=dataset_id, inference_id=inference_id)
 
 
+def _update_run_progress(
+    run_id: str,
+    *,
+    stage: str,
+    message: str,
+    status: Optional[str] = None,
+    counters: Optional[Mapping[str, Any]] = None,
+) -> None:
+    _utils.update_run_entry(
+        RUN_LEDGER_DIR,
+        run_id,
+        status=status,
+        stage=stage,
+        event_message=message,
+        merge={
+            "progress": {
+                "current_stage": stage,
+                "latest_event": message,
+                "latest_timestamp": datetime.now().isoformat(),
+                "counters": dict(counters or {}),
+            }
+        },
+    )
+
+
 async def _execute_training_run(
     run_id: str,
     *,
@@ -437,12 +462,11 @@ async def _execute_training_run(
     payload_data: Mapping[str, Any],
 ) -> None:
     try:
-        _utils.update_run_entry(
-            RUN_LEDGER_DIR,
+        _update_run_progress(
             run_id,
             status="running",
             stage="resolving_context",
-            event_message="Resolving model, dataset, and optional study context.",
+            message="Resolving model, dataset, and optional study context.",
         )
         validated_payload = validate_input(dict(payload_data), _utils.TrainingRequest)
         async with _utils.AsyncSessionLocal() as db:
@@ -461,6 +485,12 @@ async def _execute_training_run(
 
             merged_parameters = _utils._merge_training_parameters(learning_model, validated_payload, study_record)
             validate_required_keys(merged_parameters, ["framework"])
+            preflight = _utils._build_training_preflight(dataset_model, learning_model, merged_parameters)
+            if not preflight.get("ok", False):
+                raise ValueError(
+                    f"Missing required columns: {preflight.get('missing_columns', [])}. "
+                    f"Available columns: {preflight.get('available_columns', [])}"
+                )
             _utils.update_run_entry(
                 RUN_LEDGER_DIR,
                 run_id,
@@ -475,6 +505,11 @@ async def _execute_training_run(
                 },
                 event_message="Training workflow started.",
             )
+            _update_run_progress(
+                run_id,
+                stage="validating_schema",
+                message="Training preflight completed. Required dataset columns are available.",
+            )
 
             workflow = await asyncio.to_thread(
                 lambda: _utils._run_training_workflow(
@@ -482,6 +517,12 @@ async def _execute_training_run(
                     dataset_model,
                     merged_parameters,
                     job_id=run_id,
+                    progress_callback=lambda event: _update_run_progress(
+                        run_id,
+                        stage=str(event.get("stage") or "training"),
+                        message=str(event.get("message") or "Training workflow updated."),
+                        counters=event.get("counters") if isinstance(event.get("counters"), Mapping) else None,
+                    ),
                 )
             )
             result = workflow["result"]
@@ -570,6 +611,11 @@ async def _execute_training_run(
                     },
                 )
 
+            _update_run_progress(
+                run_id,
+                stage="syncing_inference",
+                message="Persisting run outputs to the registry and inference pair.",
+            )
             result_payload = {
                 "model_id": model_id,
                 "dataset_id": validated_payload.datasetId,
@@ -594,6 +640,12 @@ async def _execute_training_run(
                     "artifacts": artifacts,
                     "result": result_payload,
                     "mlflow_run_id": result.run_id,
+                    "progress": {
+                        "counters": {
+                            "mlflow_run_id": result.run_id,
+                            "metric_count": len(result.metrics or {}),
+                        }
+                    },
                 },
                 event_message="Training workflow completed.",
             )
@@ -630,18 +682,34 @@ async def _execute_study_run(
     payload_data: Mapping[str, Any],
 ) -> None:
     try:
-        _utils.update_run_entry(
-            RUN_LEDGER_DIR,
+        _update_run_progress(
             run_id,
             status="running",
-            stage="study_optimization",
-            event_message="Study optimization started.",
+            stage="resolving_context",
+            message="Resolving study, model, and dataset context.",
         )
         request_payload = validate_input(dict(payload_data), _utils.StudyOptimizationRequest)
         async with _utils.AsyncSessionLocal() as db:
             study_record = await StudyModel.read(db, study_id)
             if study_record is None:
                 raise ValueError("StudyModel not found")
+            learning_model = await LearningModel.read(db, int(study_record.learning_model_id))
+            dataset_model = await DatasetModel.read(db, int(study_record.dataset_id))
+            if learning_model is None or dataset_model is None:
+                raise ValueError("The selected study is not linked to a valid model and dataset.")
+            preflight = _utils._build_training_preflight(
+                dataset_model,
+                learning_model,
+                {
+                    **dict(getattr(learning_model, "parameters", {}) or {}),
+                    **dict(getattr(study_record, "study_params", {}) or {}),
+                },
+            )
+            if not preflight.get("ok", False):
+                raise ValueError(
+                    f"Missing required columns: {preflight.get('missing_columns', [])}. "
+                    f"Available columns: {preflight.get('available_columns', [])}"
+                )
             _utils.update_run_entry(
                 RUN_LEDGER_DIR,
                 run_id,
@@ -655,13 +723,45 @@ async def _execute_study_run(
                 },
                 event_message="Study context resolved.",
             )
-            result_payload = await _utils._optimize_study(study_record, db, request_payload)
+            _update_run_progress(
+                run_id,
+                stage="validating_schema",
+                message="Study preflight completed. Required dataset columns are available.",
+            )
+            result_payload = await _utils._optimize_study(
+                study_record,
+                db,
+                request_payload,
+                progress_callback=lambda event: _update_run_progress(
+                    run_id,
+                    stage=str(event.get("stage") or "optimizing"),
+                    message=str(event.get("message") or "Study optimization updated."),
+                    counters=event.get("counters") if isinstance(event.get("counters"), Mapping) else {
+                        key: value
+                        for key, value in {
+                            "trial_number": event.get("trial_number"),
+                            "completed_trials": event.get("completed_trials"),
+                            "total_trials": event.get("total_trials"),
+                            "best_value": event.get("best_value"),
+                        }.items()
+                        if value is not None
+                    },
+                ),
+            )
             _utils.update_run_entry(
                 RUN_LEDGER_DIR,
                 run_id,
                 status="completed",
                 stage="completed",
-                merge={"result": result_payload},
+                merge={
+                    "result": result_payload,
+                    "progress": {
+                        "counters": {
+                            "completed_trials": dict(result_payload.get("summary", {}) or {}).get("completed_trials"),
+                            "n_trials": dict(result_payload.get("summary", {}) or {}).get("n_trials"),
+                        }
+                    },
+                },
                 event_message="Study optimization completed.",
             )
     except Exception as exc:
@@ -671,7 +771,10 @@ async def _execute_study_run(
             run_id,
             status="failed",
             stage="failed",
-            merge={"error": str(exc)},
+            merge={
+                "error": str(exc),
+                "progress": {"latest_event": str(exc)},
+            },
             event_message=str(exc),
         )
     finally:
@@ -689,6 +792,27 @@ async def post_training(
         payload_dict = validated_payload.model_dump()
         if validated_payload.datasetId <= 0:
             return _utils._json_error("datasetId must be a positive integer", status_code=400)
+        learning_model = await LearningModel.read(db, model_id)
+        dataset_model = await DatasetModel.read(db, validated_payload.datasetId)
+        if learning_model is None:
+            return _utils._json_error("Learning model not found", status_code=404)
+        if dataset_model is None:
+            return _utils._json_error("Dataset not found", status_code=404)
+        study_record = None
+        if validated_payload.studyId not in (None, "", 0, "0"):
+            study_record = await StudyModel.read(db, validated_payload.studyId)
+            if study_record is None:
+                return _utils._json_error("StudyModel not found", status_code=404)
+        merged_parameters = _utils._merge_training_parameters(learning_model, validated_payload, study_record)
+        preflight = _utils._build_training_preflight(dataset_model, learning_model, merged_parameters)
+        if not preflight.get("ok", False):
+            return _utils._json_error(
+                "The selected dataset does not contain all required training columns.",
+                status_code=400,
+                missing_columns=preflight.get("missing_columns", []),
+                available_columns=preflight.get("available_columns", []),
+                recommended_pairing=preflight.get("recommended_pairing", {}),
+            )
         run_entry = _utils.create_run_entry(
             RUN_LEDGER_DIR,
             run_type="training",
@@ -698,7 +822,7 @@ async def post_training(
                 "study_id": _coerce_optional_int(validated_payload.studyId),
                 "inference_id": _coerce_optional_int(payload_dict.get("inferenceId")),
             },
-            parameters=validated_payload.parameters,
+            parameters=merged_parameters,
             status="queued",
         )
         task = asyncio.create_task(
@@ -721,6 +845,9 @@ async def post_training(
             },
             status_code=202,
         )
+    except ValueError as exc:
+        LOGGER.exception("Training failed for model_id=%s.", model_id)
+        return _utils._json_error(str(exc), status_code=400)
     except Exception as exc:
         LOGGER.exception("Training failed for model_id=%s.", model_id)
         return _utils._json_error(str(exc), status_code=500)
@@ -736,6 +863,26 @@ async def post_optimize_study(
         study_record = await StudyModel.read(db, study_id)
         if study_record is None:
             return _utils._json_error("StudyModel not found", status_code=404)
+        learning_model = await LearningModel.read(db, int(study_record.learning_model_id))
+        dataset_model = await DatasetModel.read(db, int(study_record.dataset_id))
+        if learning_model is None or dataset_model is None:
+            return _utils._json_error("The selected study is not linked to a valid model and dataset.", status_code=400)
+        preflight = _utils._build_training_preflight(
+            dataset_model,
+            learning_model,
+            {
+                **dict(getattr(learning_model, "parameters", {}) or {}),
+                **dict(getattr(study_record, "study_params", {}) or {}),
+            },
+        )
+        if not preflight.get("ok", False):
+            return _utils._json_error(
+                "The selected study references columns that are missing from the current dataset.",
+                status_code=400,
+                missing_columns=preflight.get("missing_columns", []),
+                available_columns=preflight.get("available_columns", []),
+                recommended_pairing=preflight.get("recommended_pairing", {}),
+            )
         run_entry = _utils.create_run_entry(
             RUN_LEDGER_DIR,
             run_type="study",
@@ -765,6 +912,9 @@ async def post_optimize_study(
             },
             status_code=202,
         )
+    except ValueError as exc:
+        LOGGER.exception("Optuna optimization failed for study_id=%s.", study_id)
+        return _utils._json_error(str(exc), status_code=400)
     except Exception as exc:
         LOGGER.exception("Optuna optimization failed for study_id=%s.", study_id)
         return _utils._json_error(str(exc), status_code=500)
@@ -821,6 +971,7 @@ async def extract_feature_candidates(
         dataframe = _utils._load_dataset_frame_from_record(dataset)
         summary = _utils._build_feature_extraction_summary(dataframe)
         manifest = _build_extraction_manifest(dataset, dataframe)
+        workspace_payload = _utils._build_feature_workspace_payload(dataset, dataframe, preview={"summary": summary})
         artifact_path = TRAINING_ARTIFACT_DIR / f"dataset_{dataset_id}_features.json"
         save_json({"summary": summary, "manifest": manifest}, artifact_path)
         await update_entry(
@@ -844,6 +995,11 @@ async def extract_feature_candidates(
                 "dataset_name": getattr(dataset, "name", None),
                 "summary": summary,
                 "manifest": manifest,
+                "preview_rows": workspace_payload.get("preview_rows", []),
+                "column_explorer": workspace_payload.get("column_explorer", []),
+                "metric_cards": workspace_payload.get("metric_cards", []),
+                "plots": workspace_payload.get("plots", []),
+                "transform_suggestions": workspace_payload.get("transform_suggestions", []),
             }
         )
     except Exception as exc:
@@ -860,16 +1016,15 @@ async def preview_feature_workspace(request: Request, db: AsyncSession = Depends
         if dataset is None:
             return _utils._json_error("Dataset not found", status_code=404)
         dataframe = _utils._load_dataset_frame_from_record(dataset)
-        transformed, transform_summary = _utils.apply_feature_operations(dataframe, payload.get("operations") or {})
-        manifest = _build_extraction_manifest(dataset, transformed)
-        return _utils._json_response(
-            {
-                "dataset_id": dataset_id,
-                "dataset_name": getattr(dataset, "name", None),
-                "preview": transform_summary,
-                "manifest": manifest,
-            }
+        operations = _utils._coerce_feature_operations_from_payload(payload)
+        transformed, transform_summary = _utils.apply_feature_operations(dataframe, operations)
+        workspace_payload = _utils._build_feature_workspace_payload(
+            dataset,
+            transformed,
+            preview=transform_summary,
+            operations=operations,
         )
+        return _utils._json_response(workspace_payload)
     except Exception as exc:
         LOGGER.exception("Feature preview failed.")
         return _utils._json_error(str(exc), status_code=500)
@@ -885,7 +1040,8 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
             return _utils._json_error("Dataset not found", status_code=404)
 
         dataframe = _utils._load_dataset_frame_from_record(dataset)
-        transformed, transform_summary = _utils.apply_feature_operations(dataframe, payload.get("operations") or {})
+        operations = _utils._coerce_feature_operations_from_payload(payload)
+        transformed, transform_summary = _utils.apply_feature_operations(dataframe, operations)
         transformed_name = str(payload.get("name") or f"{getattr(dataset, 'name', 'dataset')}_feature_view")
         table_name = str(
             payload.get("tableName")
@@ -937,6 +1093,12 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
         created_dataset = await create_entry(db, DatasetORM, dataset_payload)
         analysis = _utils._dataset_analysis_summary(transformed, str(output_path))
         save_json(analysis, FEATURE_ARTIFACT_DIR / f"{_normalize_registry_type(transformed_name)}_analysis.json")
+        workspace_payload = _utils._build_feature_workspace_payload(
+            created_dataset,
+            transformed,
+            preview=transform_summary,
+            operations=operations,
+        )
         return _utils._json_response(
             {
                 "status": "ok",
@@ -944,6 +1106,12 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
                 "preview": transform_summary,
                 "analysis": analysis,
                 "postgres": postgres_result,
+                "preview_rows": workspace_payload.get("preview_rows", []),
+                "column_explorer": workspace_payload.get("column_explorer", []),
+                "metric_cards": workspace_payload.get("metric_cards", []),
+                "plots": workspace_payload.get("plots", []),
+                "transform_suggestions": workspace_payload.get("transform_suggestions", []),
+                "operations": workspace_payload.get("operations", {}),
             }
         )
     except Exception as exc:
@@ -1038,6 +1206,28 @@ async def analysis_object(
         return _utils._json_error(str(exc), status_code=500)
 
 
+@app.get("/registry/dependencies/{registry_type}/{item_id}", response_class=JSONResponse)
+async def registry_dependencies(
+    registry_type: str,
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        binding = _get_registry_binding(registry_type)
+        dependency_report = await get_entry_dependencies(db, binding["orm"], item_id)
+        if not dependency_report.get("exists"):
+            return _utils._json_error(f"{binding['label']} not found", status_code=404)
+        return _utils._json_response(
+            {
+                "registry_type": binding["label"],
+                "item_id": item_id,
+                "dependency_report": dependency_report,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400)
+
+
 # TODO - The MLflow route should lead directly for MLflow :5000 for analysis
 @app.get("/mlflow/experiments", response_class=JSONResponse)
 async def mlflow_list_experiments() -> JSONResponse:
@@ -1050,10 +1240,19 @@ async def mlflow_list_experiments() -> JSONResponse:
 
 
 @app.get("/mlflow/experiments/{exp_id}", response_class=JSONResponse)
-async def mlflow_get_experiment(exp_id: str) -> JSONResponse:
+async def mlflow_get_experiment(exp_id: str, limit: int = 20, offset: int = 0) -> JSONResponse:
     health = _utils._build_mlflow_health_snapshot()
     try:
-        return _utils._json_response({"experiment": get_experiment_summary(exp_id), "health": health})
+        experiment = get_experiment_summary(exp_id, max_runs=max(1, min(limit, 100)), offset=max(0, offset))
+        return _utils._json_response(
+            {
+                "experiment": experiment,
+                "limit": max(1, min(limit, 100)),
+                "offset": max(0, offset),
+                "has_more": dict(experiment.get("run_summary", {}) or {}).get("has_more", False),
+                "health": health,
+            }
+        )
     except Exception as exc:
         LOGGER.exception("Unable to load MLflow experiment '%s'.", exp_id)
         return _utils._json_response({"experiment": None, "health": {**health, "status": "degraded", "warnings": [*health.get("warnings", []), str(exc)]}})
@@ -1160,6 +1359,13 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
 
         dataset_id = int(getattr(dataset_record, "id"))
         model_id = int(getattr(model_record, "id"))
+        runtime_probe = None
+        artifact_path = _utils._resolve_fs_path(getattr(model_record, "path", None), default_parent=REPO_ROOT)
+        if artifact_path is not None and artifact_path.exists():
+            runtime_probe = _utils.load_runtime_artifact(
+                artifact_path,
+                parameters=dict(getattr(model_record, "parameters", {}) or {}),
+            )
 
         deployment_summary = {
             "model_id": model_id,
@@ -1177,6 +1383,8 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
                 deployment_summary["artifact_metadata"] = recover_model_params(resolved_artifact_path or getattr(model_record, "path"))
             except Exception:
                 LOGGER.exception("Unable to recover deployment artifact metadata.")
+        if runtime_probe is not None:
+            deployment_summary["artifact_manifest"] = runtime_probe.get("manifest", {})
 
         save_deployment_summary(deployment_summary, str(DEPLOYMENT_ARTIFACT_DIR / f"deployment_{model_id}.json"))
         inference_record = await _upsert_inference_record(
@@ -1268,10 +1476,14 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
             }
         )
     except ValueError as exc:
+        extra_payload = {}
+        if isinstance(exc, _utils.RuntimeArtifactDependencyError):
+            extra_payload = exc.to_payload()
         return _utils._json_error(
             str(exc),
             status_code=400,
             watch_context_id=_resolve_watch_context_id(payload_data),
+            **extra_payload,
         )
     except Exception as exc:
         LOGGER.exception("Production start failed.")
@@ -1431,10 +1643,14 @@ async def production_monitor(request: Request, db: AsyncSession = Depends(get_db
             }
         )
     except ValueError as exc:
+        extra_payload = {}
+        if isinstance(exc, _utils.RuntimeArtifactDependencyError):
+            extra_payload = exc.to_payload()
         return _utils._json_error(
             str(exc),
             status_code=400,
             watch_context_id=_resolve_watch_context_id(payload_data),
+            **extra_payload,
         )
     except Exception as exc:
         LOGGER.exception("Production monitoring failed.")
@@ -1524,10 +1740,14 @@ async def production_retrain(request: Request, db: AsyncSession = Depends(get_db
             }
         )
     except ValueError as exc:
+        extra_payload = {}
+        if isinstance(exc, _utils.RuntimeArtifactDependencyError):
+            extra_payload = exc.to_payload()
         return _utils._json_error(
             str(exc),
             status_code=400,
             watch_context_id=_resolve_watch_context_id(payload_data),
+            **extra_payload,
         )
     except Exception as exc:
         LOGGER.exception("Production retraining failed.")
@@ -1716,10 +1936,14 @@ async def production_simulate(request: Request, db: AsyncSession = Depends(get_d
             }
         )
     except ValueError as exc:
+        extra_payload = {}
+        if isinstance(exc, _utils.RuntimeArtifactDependencyError):
+            extra_payload = exc.to_payload()
         return _utils._json_error(
             str(exc),
             status_code=400,
             watch_context_id=_resolve_watch_context_id(payload_data),
+            **extra_payload,
         )
     except Exception as exc:
         LOGGER.exception("Production simulation failed.")

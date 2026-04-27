@@ -1,0 +1,98 @@
+{
+  "run_id": "training_356479201f42",
+  "run_type": "training",
+  "status": "running",
+  "stage": "preparing_dataset",
+  "created_at": "2026-04-26T00:30:34.873964",
+  "updated_at": "2026-04-26T00:30:37.701786",
+  "started_at": "2026-04-26T00:30:34.962268",
+  "completed_at": null,
+  "context": {
+    "model_id": 18,
+    "dataset_id": 13,
+    "study_id": null,
+    "inference_id": null
+  },
+  "parameters": {
+    "framework": "sklearn",
+    "model_type": "GradientBoosting",
+    "features_count": 23,
+    "epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.001
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "preparing_dataset",
+    "latest_event": "Preparing dataset splits and feature encodings.",
+    "latest_timestamp": "2026-04-26T00:30:37.701786",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-26T00:30:34.873964",
+        "message": "training run created."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-04-26T00:30:34.962268",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-04-26T00:30:37.660680",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-04-26T00:30:37.682202",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-04-26T00:30:37.701786",
+        "message": "Preparing dataset splits and feature encodings."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-26T00:30:34.873964",
+      "message": "training run created."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-04-26T00:30:34.962268",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-04-26T00:30:37.660680",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-04-26T00:30:37.682202",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-04-26T00:30:37.701786",
+      "message": "Preparing dataset splits and feature encodings."
+    }
+  ]
+}

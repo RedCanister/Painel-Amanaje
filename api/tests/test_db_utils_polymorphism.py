@@ -7,6 +7,12 @@ from sqlalchemy.orm import declarative_base
 
 db_session_stub = ModuleType("app.database.db_session")
 db_session_stub.Base = declarative_base()
+db_session_stub.AsyncSessionLocal = None
+db_session_stub.init_models = lambda: None
+
+
+async def _fake_wait_for_database():
+    return None
 
 
 async def _fake_get_db():
@@ -14,10 +20,12 @@ async def _fake_get_db():
 
 
 db_session_stub.get_db = _fake_get_db
+db_session_stub.wait_for_database = _fake_wait_for_database
 sys.modules.setdefault("app.database.db_session", db_session_stub)
 
 from app.database.db_utils import (
     JSONB_CONTAINER_COLUMNS,
+    create_entry,
     get_entry,
     _resolve_polymorphic_model,
     _sync_legacy_name_payload,
@@ -173,3 +181,48 @@ def test_get_entry_uses_numeric_string_as_id_before_name_lookup():
     assert len(fake_db.calls) == 1
     assert "WHERE" in fake_db.calls[0]
     assert "datasets.id" in fake_db.calls[0]
+
+
+def test_create_entry_normalizes_stringified_jsonb_payloads_for_code_models():
+    class FakeDB:
+        def __init__(self):
+            self.added = None
+            self.refreshed = None
+            self.commit_count = 0
+            self.rollback_count = 0
+
+        def add(self, obj):
+            self.added = obj
+
+        async def commit(self):
+            self.commit_count += 1
+
+        async def refresh(self, obj):
+            self.refreshed = obj
+
+        async def rollback(self):
+            self.rollback_count += 1
+
+    payload = {
+        "name": "script_2026-04-24",
+        "description": "Dataset created from the editor",
+        "object_type": "code_model",
+        "size": 0,
+        "path": "generated/galactic_dataset.csv",
+        "date": "2026-04-24T22:07:15.090Z",
+        "version": 1,
+        "history": '[{"operation": "save_script", "when": "2026-04-24T22:07:15.090Z"}]',
+        "variables": '{"dataset_name": "github_vs_git"}',
+        "code": '{"script": "print(1)", "language": "python"}',
+    }
+
+    fake_db = FakeDB()
+    created = asyncio.run(create_entry(fake_db, CodeORM, payload))
+
+    assert created is fake_db.added
+    assert fake_db.commit_count == 1
+    assert isinstance(created.history, list)
+    assert created.history[0]["operation"] == "save_script"
+    assert created.variables == {"dataset_name": "github_vs_git"}
+    assert created.code["language"] == "python"
+    assert created.date.tzinfo is None

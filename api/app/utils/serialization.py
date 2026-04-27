@@ -160,6 +160,42 @@ def safe_log_params(obj: Any, max_value_length: int = 500) -> Dict[str, str]:
     return safe_params
 
 
+def canonicalize_scalar_for_logging(value: Any) -> str:
+    """
+    Normalize scalar-like values so semantically equivalent params such as
+    ``0`` and ``0.0`` do not conflict in immutable logging backends.
+    """
+
+    serialized = deep_asdict(value)
+
+    if serialized is None:
+        return ""
+    if isinstance(serialized, bool):
+        return "true" if serialized else "false"
+    if isinstance(serialized, str):
+        normalized = serialized.strip()
+        if not normalized:
+            return ""
+        if normalized.lower() in {"true", "false"}:
+            return normalized.lower()
+        try:
+            numeric_value = float(normalized)
+            if numeric_value.is_integer():
+                return str(int(numeric_value))
+            return format(numeric_value, ".12g")
+        except (TypeError, ValueError):
+            return normalized
+    if isinstance(serialized, int):
+        return str(serialized)
+    if isinstance(serialized, float):
+        if serialized.is_integer():
+            return str(int(serialized))
+        return format(serialized, ".12g")
+    if isinstance(serialized, (dict, list, tuple, set)):
+        return json.dumps(serialized, ensure_ascii=False, sort_keys=True, default=str)
+    return str(serialized)
+
+
 def safe_log_parames(obj: Any, max_value_length: int = 500) -> Dict[str, str]:
     """
     Backward-compatible alias for the previous misspelled helper name.

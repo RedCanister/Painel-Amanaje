@@ -23,6 +23,7 @@ def test_main_app_imports_and_registers_expected_routes():
         "/production/simulate",
         "/runs/list",
         "/runs/get/{run_id}",
+        "/registry/dependencies/{registry_type}/{item_id}",
         "/analysis/data",
         "/analysis/model",
         "/datasetmodel/list",
@@ -150,3 +151,79 @@ def test_production_simulate_returns_user_facing_runtime_errors(monkeypatch):
     assert '"status":"error"' in payload
     assert '"watch_context_id":"watch:test-runtime-error"' in payload
     assert 'TorchScript' in payload
+
+
+def test_production_simulate_returns_structured_dependency_errors(monkeypatch):
+    model_record = SimpleNamespace(id=10, name="model-a", path="runtime_artifacts/models/model.pkl")
+    dataset_record = SimpleNamespace(id=20, name="dataset-a")
+    inference_record = SimpleNamespace(id=30, name="model-a :: dataset-a")
+
+    class FakeRequest:
+        headers = {"content-type": "application/json"}
+
+        async def json(self):
+            return {
+                "modelId": 10,
+                "datasetId": 20,
+                "inferenceId": 30,
+                "watchContextId": "watch:test-dependency-error",
+            }
+
+    async def fake_resolve_runtime_context(*_args, **_kwargs):
+        return inference_record, model_record, dataset_record
+
+    def fake_prepare_runtime_execution(*_args, **_kwargs):
+        raise main_app._utils.RuntimeArtifactDependencyError(
+            "Missing runtime dependency 'lightfm' required to load 'model.pkl'.",
+            missing_dependencies=["lightfm"],
+            artifact_loader="pickle",
+        )
+
+    monkeypatch.setattr(main_app, "_resolve_runtime_context", fake_resolve_runtime_context)
+    monkeypatch.setattr(main_app, "_prepare_runtime_execution", fake_prepare_runtime_execution)
+
+    response = asyncio.run(main_app.production_simulate(FakeRequest(), db=object()))
+    payload = response.body.decode("utf-8")
+
+    assert response.status_code == 400
+    assert '"missing_dependencies":["lightfm"]' in payload
+    assert '"artifact_loader":"pickle"' in payload
+    assert '"watch_context_id":"watch:test-dependency-error"' in payload
+
+
+def test_post_training_returns_preflight_validation_error(monkeypatch):
+    async def fake_model_read(_db, _model_id):
+        return SimpleNamespace(id=11, name="broken-model", parameters={"framework": "sklearn"})
+
+    async def fake_dataset_read(_db, _dataset_id):
+        return SimpleNamespace(id=21, name="broken-dataset")
+
+    async def fake_study_read(_db, _study_id):
+        return None
+
+    monkeypatch.setattr(main_app.LearningModel, "read", fake_model_read)
+    monkeypatch.setattr(main_app.DatasetModel, "read", fake_dataset_read)
+    monkeypatch.setattr(main_app.StudyModel, "read", fake_study_read)
+    monkeypatch.setattr(
+        main_app._utils,
+        "_merge_training_parameters",
+        lambda *_args, **_kwargs: {"framework": "sklearn"},
+    )
+    monkeypatch.setattr(
+        main_app._utils,
+        "_build_training_preflight",
+        lambda *_args, **_kwargs: {
+            "ok": False,
+            "missing_columns": ["expected_engagement_score"],
+            "available_columns": ["followers", "public_repos"],
+            "recommended_pairing": {"output_feature": "followers"},
+        },
+    )
+
+    payload = main_app.TrainingRequest(datasetId=21, inputType="Manual", studyId=None, parameters={})
+    response = asyncio.run(main_app.post_training(11, payload=payload, db=object()))
+    body = response.body.decode("utf-8")
+
+    assert response.status_code == 400
+    assert '"missing_columns":["expected_engagement_score"]' in body
+    assert '"available_columns":["followers","public_repos"]' in body

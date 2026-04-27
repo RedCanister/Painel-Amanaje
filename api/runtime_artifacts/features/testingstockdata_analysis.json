@@ -1,0 +1,1788 @@
+{
+    "rows": 200,
+    "columns": 36,
+    "column_names": [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume",
+        "Close_Return",
+        "Volatility",
+        "MA20",
+        "MA50",
+        "Momentum",
+        "RelVolume",
+        "RSI_Close",
+        "Williams_%R",
+        "CCI",
+        "Bollinger_%B",
+        "KeltnerC_%",
+        "MACD_lib",
+        "MACD_signal",
+        "MACD_Hist",
+        "Force_Index",
+        "Volume_Price_Trend",
+        "DLR",
+        "RSI_Over",
+        "RSI_Under",
+        "Williams_Over",
+        "Williams_Under",
+        "MACD_Over",
+        "MACD_Under",
+        "Data",
+        "time_idx",
+        "series_id",
+        "hl_center",
+        "hl_range",
+        "DOW",
+        "month"
+    ],
+    "dtypes": {
+        "Date": "object",
+        "Open": "float64",
+        "High": "float64",
+        "Low": "float64",
+        "Close": "float64",
+        "Volume": "int64",
+        "Close_Return": "float64",
+        "Volatility": "float64",
+        "MA20": "float64",
+        "MA50": "float64",
+        "Momentum": "float64",
+        "RelVolume": "float64",
+        "RSI_Close": "float64",
+        "Williams_%R": "float64",
+        "CCI": "float64",
+        "Bollinger_%B": "float64",
+        "KeltnerC_%": "float64",
+        "MACD_lib": "float64",
+        "MACD_signal": "float64",
+        "MACD_Hist": "float64",
+        "Force_Index": "float64",
+        "Volume_Price_Trend": "float64",
+        "DLR": "float64",
+        "RSI_Over": "int64",
+        "RSI_Under": "int64",
+        "Williams_Over": "int64",
+        "Williams_Under": "int64",
+        "MACD_Over": "int64",
+        "MACD_Under": "int64",
+        "Data": "object",
+        "time_idx": "int64",
+        "series_id": "object",
+        "hl_center": "float64",
+        "hl_range": "float64",
+        "DOW": "int64",
+        "month": "int64"
+    },
+    "missing_values": 0,
+    "stats": {
+        "Date": {
+            "type": "datetime_candidate",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                "2015-09-29 00:00:00-04:00",
+                "2015-09-28 00:00:00-04:00",
+                "2015-09-30 00:00:00-04:00",
+                "2015-10-02 00:00:00-04:00",
+                "2015-10-01 00:00:00-04:00"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 1.0,
+            "mode": "2015-09-28 00:00:00-04:00"
+        },
+        "Open": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.5723042238696511,
+                0.5737619945223569,
+                0.5815387742861751,
+                0.5842118470088489,
+                0.5990356297714157
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8409873971695296,
+            "std": 0.17371481643881123,
+            "min": 0.5723042238696511,
+            "max": 1.2985032036858477
+        },
+        "High": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.5771645523065313,
+                0.5774072097234827,
+                0.5997650333135294,
+                0.6026811003684998,
+                0.6007367377930345
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8523897740522896,
+            "std": 0.17578034479826665,
+            "min": 0.5771645523065313,
+            "max": 1.3078317085166025
+        },
+        "Low": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 199,
+            "sample_values": [
+                0.5642846761548302,
+                0.5625832341435092,
+                0.5781365562633751,
+                0.5781364095614773,
+                0.5703596764020767
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8314231187901732,
+            "std": 0.17416366747542925,
+            "min": 0.5625832341435092,
+            "max": 1.2935939334601372
+        },
+        "Close": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 191,
+            "sample_values": [
+                0.5761924982070923,
+                0.566228449344635,
+                0.5990359783172607,
+                0.6026811003684998,
+                0.5873708724975586
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8433370009064675,
+            "std": 0.17557701705627513,
+            "min": 0.566228449344635,
+            "max": 1.2960494756698608
+        },
+        "Volume": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                380736000,
+                395584000,
+                556380000,
+                386144000,
+                489296000
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 371620360.0,
+            "std": 200826879.81901127,
+            "min": 52448000.0,
+            "max": 2110256000.0
+        },
+        "Close_Return": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 199,
+            "sample_values": [
+                0.0175972240073594,
+                0.0175972240073594,
+                0.0396455701545044,
+                0.0260656913507484,
+                -0.0194731305663314
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.004507660116187312,
+            "std": 0.023802174303653854,
+            "min": -0.0630982741709781,
+            "max": 0.1520946311473614
+        },
+        "Volatility": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 180,
+            "sample_values": [
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.021835021904909508,
+            "std": 0.00866450521810309,
+            "min": 0.0091794356647897,
+            "max": 0.0374307369217335
+        },
+        "MA20": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 181,
+            "sample_values": [
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8176001971960067,
+            "std": 0.15392784237835272,
+            "min": 0.6384531497955322,
+            "max": 1.180325263738632
+        },
+        "MA50": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 151,
+            "sample_values": [
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.7917813473820686,
+            "std": 0.1082755445352918,
+            "min": 0.7005018997192383,
+            "max": 1.0996859192848203
+        },
+        "Momentum": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 190,
+            "sample_values": [
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.0450076616306109,
+            "std": 0.08793147025496861,
+            "min": -0.1774875391838781,
+            "max": 0.2867177130742173
+        },
+        "RelVolume": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.822873649892472,
+                0.8549642007035417,
+                1.2024879216233126,
+                0.8345618030973659,
+                1.0575012223634934
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.803172282126078,
+            "std": 0.43404129788931606,
+            "min": 0.1133543378865155,
+            "max": 4.560834953688352
+        },
+        "RSI_Close": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 197,
+            "sample_values": [
+                100.0,
+                100.0,
+                100.0,
+                79.87258250163063,
+                71.86986396317697
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 64.8256056455325,
+            "std": 16.08894161044417,
+            "min": 25.09567915018488,
+            "max": 100.0
+        },
+        "Williams_%R": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 184,
+            "sample_values": [
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": -31.14098354463994,
+            "std": 28.013971158433947,
+            "min": -98.62699851725849,
+            "max": -0.0
+        },
+        "CCI": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 181,
+            "sample_values": [
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 60.6423090531498,
+            "std": 116.62211905190894,
+            "min": -344.0191649536108,
+            "max": 371.97655536509706
+        },
+        "Bollinger_%B": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 181,
+            "sample_values": [
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.6806544582354255,
+            "std": 0.33277605284754347,
+            "min": -0.344721041609216,
+            "max": 1.444373347677275
+        },
+        "KeltnerC_%": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.7002992801924307,
+                0.4152999911407119,
+                1.1436807322425286,
+                0.9755248235313868,
+                0.6864794835975624
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 1.1818196663691374,
+            "std": 1.1803561462096732,
+            "min": -2.293848567982257,
+            "max": 3.867149506987983
+        },
+        "MACD_lib": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 175,
+            "sample_values": [
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.020817497145022904,
+            "std": 0.022008086168109446,
+            "min": -0.0311779514625714,
+            "max": 0.0696918516877092
+        },
+        "MACD_signal": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 167,
+            "sample_values": [
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.02105932031873919,
+            "std": 0.020459329352418044,
+            "min": -0.0269707041970751,
+            "max": 0.0626813443987964
+        },
+        "MACD_Hist": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 167,
+            "sample_values": [
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.0005665299080114019,
+            "std": 0.007357345225405148,
+            "min": -0.0148090504659224,
+            "max": 0.0207897008839473
+        },
+        "Force_Index": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 187,
+            "sample_values": [
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 2782792.034150262,
+            "std": 6651915.213142531,
+            "min": -8375898.137235998,
+            "max": 38850464.09439312
+        },
+        "Volume_Price_Trend": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 198,
+            "sample_values": [
+                6699896.679665994,
+                6699896.679665994,
+                28757899.00222917,
+                29294884.42958884,
+                19229774.10864544
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 307956980.1021109,
+            "std": 204797822.36542687,
+            "min": 6699896.679665994,
+            "max": 701984579.8469845
+        },
+        "DLR": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 199,
+            "sample_values": [
+                0.0174441856198104,
+                0.0174441856198104,
+                0.038879857140109,
+                0.0257317713566083,
+                -0.0196652299132905
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.004225715213567738,
+            "std": 0.02322498515217421,
+            "min": -0.0651768839634806,
+            "max": 0.1415817039931717
+        },
+        "RSI_Over": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.395,
+            "std": 0.4900774218396365,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "RSI_Under": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.035,
+            "std": 0.18424093903932007,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "Williams_Over": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.425,
+            "std": 0.4955835096887071,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "Williams_Under": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.115,
+            "std": 0.3198225010233083,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "MACD_Over": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.35,
+            "std": 0.4781665150137575,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "MACD_Under": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.485,
+            "std": 0.5010290917239925,
+            "min": 0.0,
+            "max": 1.0
+        },
+        "Data": {
+            "type": "datetime_candidate",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                "2015-09-29 00:00:00-04:00",
+                "2015-09-28 00:00:00-04:00",
+                "2015-09-30 00:00:00-04:00",
+                "2015-10-02 00:00:00-04:00",
+                "2015-10-01 00:00:00-04:00"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 1.0,
+            "mode": "2015-09-28 00:00:00-04:00"
+        },
+        "time_idx": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                1,
+                0,
+                2,
+                4,
+                3
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 99.5,
+            "std": 57.879184513951124,
+            "min": 0.0,
+            "max": 199.0
+        },
+        "series_id": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 1,
+            "sample_values": [
+                "NVDA",
+                "NVDA",
+                "NVDA",
+                "NVDA",
+                "NVDA"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "NVDA"
+        },
+        "hl_center": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.5707246142306808,
+                0.5699952219334959,
+                0.5889507947884522,
+                0.5904087549649886,
+                0.5855482070975556
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.8419064464212311,
+            "std": 0.17491630525151033,
+            "min": 0.5699952219334959,
+            "max": 1.299730550503834
+        },
+        "hl_range": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 200,
+            "sample_values": [
+                0.012879876151701,
+                0.0148239755799735,
+                0.0216284770501542,
+                0.0245446908070224,
+                0.0303770613909577
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.020966655262116454,
+            "std": 0.008976079345718438,
+            "min": 0.0065863522206531,
+            "max": 0.0553312101897203
+        },
+        "DOW": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 5,
+            "sample_values": [
+                1,
+                0,
+                2,
+                4,
+                3
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 1.99,
+            "std": 1.3926945070437193,
+            "min": 0.0,
+            "max": 4.0
+        },
+        "month": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 11,
+            "sample_values": [
+                9,
+                9,
+                9,
+                10,
+                10
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 6.165,
+            "std": 3.7319448093857854,
+            "min": 1.0,
+            "max": 12.0
+        }
+    },
+    "path": "/app/runtime_artifacts/features/testingstockdata.csv",
+    "profile": {
+        "numeric_columns": [
+            "Open",
+            "High",
+            "Volume",
+            "RelVolume",
+            "KeltnerC_%",
+            "time_idx",
+            "hl_center",
+            "hl_range",
+            "Low",
+            "Close_Return",
+            "DLR",
+            "Volume_Price_Trend",
+            "RSI_Close",
+            "Close",
+            "Momentum",
+            "Force_Index",
+            "Williams_%R",
+            "MA20",
+            "CCI",
+            "Bollinger_%B",
+            "Volatility",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "MA50",
+            "month",
+            "DOW",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under"
+        ],
+        "categorical_columns": [
+            "series_id"
+        ],
+        "datetime_columns": [
+            "Date",
+            "Data"
+        ],
+        "recommended_target": "month",
+        "recommended_inputs": [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "Volume_Price_Trend",
+            "DLR",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under",
+            "Data",
+            "time_idx",
+            "series_id",
+            "hl_center",
+            "hl_range",
+            "DOW"
+        ]
+    },
+    "parser_report": {
+        "file_name": "testingstockdata.csv",
+        "file_type": ".csv",
+        "supported_file_types": [
+            ".csv",
+            ".json",
+            ".jsonl",
+            ".parquet",
+            ".tsv",
+            ".txt",
+            ".xls",
+            ".xlsx"
+        ],
+        "capability_matrix": {
+            ".csv": {
+                "label": "CSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                ]
+            },
+            ".tsv": {
+                "label": "TSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                ]
+            },
+            ".txt": {
+                "label": "Delimited Text",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                ]
+            },
+            ".json": {
+                "label": "JSON",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                ]
+            },
+            ".jsonl": {
+                "label": "JSON Lines",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Each non-empty line must contain one JSON object."
+                ]
+            },
+            ".parquet": {
+                "label": "Parquet",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                ]
+            },
+            ".xlsx": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                ]
+            },
+            ".xls": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                ]
+            }
+        },
+        "warnings": [],
+        "encoding": "utf-8-sig",
+        "loader": "csv",
+        "delimiter": ",",
+        "rows": 200,
+        "columns": 36,
+        "mixed_type_columns": []
+    },
+    "column_explorer": [
+        {
+            "name": "Date",
+            "dtype": "object",
+            "family": "datetime_candidate",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 1.0,
+            "sample_values": [
+                "2015-09-29 00:00:00-04:00",
+                "2015-09-28 00:00:00-04:00",
+                "2015-09-30 00:00:00-04:00",
+                "2015-10-02 00:00:00-04:00",
+                "2015-10-01 00:00:00-04:00"
+            ]
+        },
+        {
+            "name": "Open",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.5723042238696511,
+                0.5737619945223569,
+                0.5815387742861751,
+                0.5842118470088489,
+                0.5990356297714157
+            ]
+        },
+        {
+            "name": "High",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.5771645523065313,
+                0.5774072097234827,
+                0.5997650333135294,
+                0.6026811003684998,
+                0.6007367377930345
+            ]
+        },
+        {
+            "name": "Volume",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                380736000,
+                395584000,
+                556380000,
+                386144000,
+                489296000
+            ]
+        },
+        {
+            "name": "RelVolume",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.822873649892472,
+                0.8549642007035417,
+                1.2024879216233126,
+                0.8345618030973659,
+                1.0575012223634934
+            ]
+        },
+        {
+            "name": "KeltnerC_%",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.7002992801924307,
+                0.4152999911407119,
+                1.1436807322425286,
+                0.9755248235313868,
+                0.6864794835975624
+            ]
+        },
+        {
+            "name": "Data",
+            "dtype": "object",
+            "family": "datetime_candidate",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 1.0,
+            "sample_values": [
+                "2015-09-29 00:00:00-04:00",
+                "2015-09-28 00:00:00-04:00",
+                "2015-09-30 00:00:00-04:00",
+                "2015-10-02 00:00:00-04:00",
+                "2015-10-01 00:00:00-04:00"
+            ]
+        },
+        {
+            "name": "time_idx",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                1,
+                0,
+                2,
+                4,
+                3
+            ]
+        },
+        {
+            "name": "hl_center",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.5707246142306808,
+                0.5699952219334959,
+                0.5889507947884522,
+                0.5904087549649886,
+                0.5855482070975556
+            ]
+        },
+        {
+            "name": "hl_range",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 200,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.012879876151701,
+                0.0148239755799735,
+                0.0216284770501542,
+                0.0245446908070224,
+                0.0303770613909577
+            ]
+        },
+        {
+            "name": "Low",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 199,
+            "unique_ratio": 0.995,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.5642846761548302,
+                0.5625832341435092,
+                0.5781365562633751,
+                0.5781364095614773,
+                0.5703596764020767
+            ]
+        },
+        {
+            "name": "Close_Return",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 199,
+            "unique_ratio": 0.995,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0175972240073594,
+                0.0175972240073594,
+                0.0396455701545044,
+                0.0260656913507484,
+                -0.0194731305663314
+            ]
+        },
+        {
+            "name": "DLR",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 199,
+            "unique_ratio": 0.995,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0174441856198104,
+                0.0174441856198104,
+                0.038879857140109,
+                0.0257317713566083,
+                -0.0196652299132905
+            ]
+        },
+        {
+            "name": "Volume_Price_Trend",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 198,
+            "unique_ratio": 0.99,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                6699896.679665994,
+                6699896.679665994,
+                28757899.00222917,
+                29294884.42958884,
+                19229774.10864544
+            ]
+        },
+        {
+            "name": "RSI_Close",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 197,
+            "unique_ratio": 0.985,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                100.0,
+                100.0,
+                100.0,
+                79.87258250163063,
+                71.86986396317697
+            ]
+        },
+        {
+            "name": "Close",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 191,
+            "unique_ratio": 0.955,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.5761924982070923,
+                0.566228449344635,
+                0.5990359783172607,
+                0.6026811003684998,
+                0.5873708724975586
+            ]
+        },
+        {
+            "name": "Momentum",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 190,
+            "unique_ratio": 0.95,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423,
+                0.1309015186420423
+            ]
+        },
+        {
+            "name": "Force_Index",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 187,
+            "unique_ratio": 0.935,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366,
+                3645643.975864366
+            ]
+        },
+        {
+            "name": "Williams_%R",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 184,
+            "unique_ratio": 0.92,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288,
+                -11.570254713994288
+            ]
+        },
+        {
+            "name": "MA20",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 181,
+            "unique_ratio": 0.905,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322,
+                0.6384531497955322
+            ]
+        },
+        {
+            "name": "CCI",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 181,
+            "unique_ratio": 0.905,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673,
+                119.03434343505673
+            ]
+        },
+        {
+            "name": "Bollinger_%B",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 181,
+            "unique_ratio": 0.905,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728,
+                0.8796398654023728
+            ]
+        },
+        {
+            "name": "Volatility",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 180,
+            "unique_ratio": 0.9,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351,
+                0.0163138212675351
+            ]
+        },
+        {
+            "name": "MACD_lib",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 175,
+            "unique_ratio": 0.875,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793,
+                0.0249782568057793
+            ]
+        },
+        {
+            "name": "MACD_signal",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 167,
+            "unique_ratio": 0.835,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904,
+                0.0275070603541904
+            ]
+        },
+        {
+            "name": "MACD_Hist",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 167,
+            "unique_ratio": 0.835,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827,
+                0.0025730128610827
+            ]
+        },
+        {
+            "name": "MA50",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 151,
+            "unique_ratio": 0.755,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383,
+                0.7005018997192383
+            ]
+        },
+        {
+            "name": "month",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 11,
+            "unique_ratio": 0.055,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                9,
+                9,
+                9,
+                10,
+                10
+            ]
+        },
+        {
+            "name": "DOW",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 5,
+            "unique_ratio": 0.025,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                1,
+                0,
+                2,
+                4,
+                3
+            ]
+        },
+        {
+            "name": "RSI_Over",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                1,
+                1,
+                1,
+                1,
+                1
+            ]
+        },
+        {
+            "name": "RSI_Under",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "name": "Williams_Over",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "name": "Williams_Under",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "name": "MACD_Over",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "name": "MACD_Under",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.01,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "name": "series_id",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 1,
+            "unique_ratio": 0.005,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "NVDA",
+                "NVDA",
+                "NVDA",
+                "NVDA",
+                "NVDA"
+            ]
+        }
+    ],
+    "type_groups": {
+        "numeric": [
+            "Open",
+            "High",
+            "Volume",
+            "RelVolume",
+            "KeltnerC_%",
+            "time_idx",
+            "hl_center",
+            "hl_range",
+            "Low",
+            "Close_Return",
+            "DLR",
+            "Volume_Price_Trend",
+            "RSI_Close",
+            "Close",
+            "Momentum",
+            "Force_Index",
+            "Williams_%R",
+            "MA20",
+            "CCI",
+            "Bollinger_%B",
+            "Volatility",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "MA50",
+            "month",
+            "DOW",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under"
+        ],
+        "categorical": [
+            "series_id"
+        ],
+        "datetime": [
+            "Date",
+            "Data"
+        ]
+    },
+    "top_warnings": [
+        "Column 'Date' has high cardinality and may need filtering or encoding.",
+        "Column 'Open' has high cardinality and may need filtering or encoding.",
+        "Column 'High' has high cardinality and may need filtering or encoding.",
+        "Column 'Low' has high cardinality and may need filtering or encoding.",
+        "Column 'Close' has high cardinality and may need filtering or encoding.",
+        "Column 'Volume' has high cardinality and may need filtering or encoding.",
+        "Column 'Close_Return' has high cardinality and may need filtering or encoding.",
+        "Column 'Volatility' has high cardinality and may need filtering or encoding.",
+        "Column 'MA20' has high cardinality and may need filtering or encoding.",
+        "Column 'MA50' has high cardinality and may need filtering or encoding.",
+        "Column 'Momentum' has high cardinality and may need filtering or encoding.",
+        "Column 'RelVolume' has high cardinality and may need filtering or encoding.",
+        "Column 'RSI_Close' has high cardinality and may need filtering or encoding.",
+        "Column 'Williams_%R' has high cardinality and may need filtering or encoding.",
+        "Column 'CCI' has high cardinality and may need filtering or encoding.",
+        "Column 'Bollinger_%B' has high cardinality and may need filtering or encoding.",
+        "Column 'KeltnerC_%' has high cardinality and may need filtering or encoding.",
+        "Column 'MACD_lib' has high cardinality and may need filtering or encoding.",
+        "Column 'MACD_signal' has high cardinality and may need filtering or encoding.",
+        "Column 'MACD_Hist' has high cardinality and may need filtering or encoding.",
+        "Column 'Force_Index' has high cardinality and may need filtering or encoding.",
+        "Column 'Volume_Price_Trend' has high cardinality and may need filtering or encoding.",
+        "Column 'DLR' has high cardinality and may need filtering or encoding.",
+        "Column 'Data' has high cardinality and may need filtering or encoding."
+    ]
+}

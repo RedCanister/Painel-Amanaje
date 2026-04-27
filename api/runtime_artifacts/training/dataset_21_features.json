@@ -1,0 +1,3407 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "VPT",
+            "DLR",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under",
+            "Data",
+            "time_idx",
+            "series_id",
+            "hl_center",
+            "hl_range",
+            "dayofweek"
+        ],
+        "target_candidate": "month",
+        "numeric_feature_count": 33,
+        "categorical_feature_count": 1,
+        "datetime_feature_count": 2
+    },
+    "manifest": {
+        "dataset_id": 21,
+        "dataset_name": "transformed_stock_data",
+        "table_name": "dataset_21_transformed_stock_data",
+        "shape": [
+            200,
+            36
+        ],
+        "columns": [
+            {
+                "name": "Date",
+                "dtype": "object",
+                "family": "datetime_candidate",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 1.0,
+                "sample_values": [
+                    "2015-09-28 00:00:00-04:00",
+                    "2015-09-29 00:00:00-04:00",
+                    "2015-09-30 00:00:00-04:00",
+                    "2015-10-01 00:00:00-04:00",
+                    "2015-10-02 00:00:00-04:00"
+                ]
+            },
+            {
+                "name": "Open",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.5737619945223569,
+                    0.5723042238696511,
+                    0.5815387742861751,
+                    0.5990356297714157,
+                    0.5842118470088489
+                ]
+            },
+            {
+                "name": "High",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.5774072097234827,
+                    0.5771645523065313,
+                    0.5997650333135294,
+                    0.6007367377930345,
+                    0.6026811003684998
+                ]
+            },
+            {
+                "name": "Volume",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    395584000,
+                    380736000,
+                    556380000,
+                    489296000,
+                    386144000
+                ]
+            },
+            {
+                "name": "RelVolume",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.8549642007035417,
+                    0.822873649892472,
+                    1.2024879216233126,
+                    1.0575012223634934,
+                    0.8345618030973659
+                ]
+            },
+            {
+                "name": "KeltnerC_%",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.4152999911407119,
+                    0.7002992801924307,
+                    1.1436807322425286,
+                    0.6864794835975624,
+                    0.9755248235313868
+                ]
+            },
+            {
+                "name": "Data",
+                "dtype": "object",
+                "family": "datetime_candidate",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 1.0,
+                "sample_values": [
+                    "2015-09-28 00:00:00-04:00",
+                    "2015-09-29 00:00:00-04:00",
+                    "2015-09-30 00:00:00-04:00",
+                    "2015-10-01 00:00:00-04:00",
+                    "2015-10-02 00:00:00-04:00"
+                ]
+            },
+            {
+                "name": "time_idx",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            },
+            {
+                "name": "hl_center",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.5699952219334959,
+                    0.5707246142306808,
+                    0.5889507947884522,
+                    0.5855482070975556,
+                    0.5904087549649886
+                ]
+            },
+            {
+                "name": "hl_range",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 200,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0148239755799735,
+                    0.012879876151701,
+                    0.0216284770501542,
+                    0.0303770613909577,
+                    0.0245446908070224
+                ]
+            },
+            {
+                "name": "Low",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 199,
+                "unique_ratio": 0.995,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.5625832341435092,
+                    0.5642846761548302,
+                    0.5781365562633751,
+                    0.5703596764020767,
+                    0.5781364095614773
+                ]
+            },
+            {
+                "name": "Close_Return",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 199,
+                "unique_ratio": 0.995,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0175972240073594,
+                    0.0175972240073594,
+                    0.0396455701545044,
+                    -0.0194731305663314,
+                    0.0260656913507484
+                ]
+            },
+            {
+                "name": "DLR",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 199,
+                "unique_ratio": 0.995,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0174441856198104,
+                    0.0174441856198104,
+                    0.038879857140109,
+                    -0.0196652299132905,
+                    0.0257317713566083
+                ]
+            },
+            {
+                "name": "VPT",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 198,
+                "unique_ratio": 0.99,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    6699896.679665994,
+                    6699896.679665994,
+                    28757899.00222917,
+                    19229774.10864544,
+                    29294884.42958884
+                ]
+            },
+            {
+                "name": "RSI_Close",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 197,
+                "unique_ratio": 0.985,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    100.0,
+                    100.0,
+                    100.0,
+                    71.86986396317697,
+                    79.87258250163063
+                ]
+            },
+            {
+                "name": "Close",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 191,
+                "unique_ratio": 0.955,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.566228449344635,
+                    0.5761924982070923,
+                    0.5990359783172607,
+                    0.5873708724975586,
+                    0.6026811003684998
+                ]
+            },
+            {
+                "name": "Momentum",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 190,
+                "unique_ratio": 0.95,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.1309015186420423,
+                    0.1309015186420423,
+                    0.1309015186420423,
+                    0.1309015186420423,
+                    0.1309015186420423
+                ]
+            },
+            {
+                "name": "Force_Index",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 187,
+                "unique_ratio": 0.935,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    3645643.975864366,
+                    3645643.975864366,
+                    3645643.975864366,
+                    3645643.975864366,
+                    3645643.975864366
+                ]
+            },
+            {
+                "name": "Williams_%R",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 184,
+                "unique_ratio": 0.92,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    -11.570254713994288,
+                    -11.570254713994288,
+                    -11.570254713994288,
+                    -11.570254713994288,
+                    -11.570254713994288
+                ]
+            },
+            {
+                "name": "MA20",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 181,
+                "unique_ratio": 0.905,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.6384531497955322,
+                    0.6384531497955322,
+                    0.6384531497955322,
+                    0.6384531497955322,
+                    0.6384531497955322
+                ]
+            },
+            {
+                "name": "CCI",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 181,
+                "unique_ratio": 0.905,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    119.03434343505673,
+                    119.03434343505673,
+                    119.03434343505673,
+                    119.03434343505673,
+                    119.03434343505673
+                ]
+            },
+            {
+                "name": "Bollinger_%B",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 181,
+                "unique_ratio": 0.905,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.8796398654023728,
+                    0.8796398654023728,
+                    0.8796398654023728,
+                    0.8796398654023728,
+                    0.8796398654023728
+                ]
+            },
+            {
+                "name": "Volatility",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 180,
+                "unique_ratio": 0.9,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0163138212675351,
+                    0.0163138212675351,
+                    0.0163138212675351,
+                    0.0163138212675351,
+                    0.0163138212675351
+                ]
+            },
+            {
+                "name": "MACD_lib",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 175,
+                "unique_ratio": 0.875,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0249782568057793,
+                    0.0249782568057793,
+                    0.0249782568057793,
+                    0.0249782568057793,
+                    0.0249782568057793
+                ]
+            },
+            {
+                "name": "MACD_signal",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 167,
+                "unique_ratio": 0.835,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0275070603541904,
+                    0.0275070603541904,
+                    0.0275070603541904,
+                    0.0275070603541904,
+                    0.0275070603541904
+                ]
+            },
+            {
+                "name": "MACD_Hist",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 167,
+                "unique_ratio": 0.835,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.0025730128610827,
+                    0.0025730128610827,
+                    0.0025730128610827,
+                    0.0025730128610827,
+                    0.0025730128610827
+                ]
+            },
+            {
+                "name": "MA50",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 151,
+                "unique_ratio": 0.755,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0.7005018997192383,
+                    0.7005018997192383,
+                    0.7005018997192383,
+                    0.7005018997192383,
+                    0.7005018997192383
+                ]
+            },
+            {
+                "name": "month",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 11,
+                "unique_ratio": 0.055,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    9,
+                    9,
+                    9,
+                    10,
+                    10
+                ]
+            },
+            {
+                "name": "dayofweek",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 5,
+                "unique_ratio": 0.025,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                ]
+            },
+            {
+                "name": "RSI_Over",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                ]
+            },
+            {
+                "name": "RSI_Under",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "Williams_Over",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "Williams_Under",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "MACD_Over",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "MACD_Under",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.01,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            },
+            {
+                "name": "series_id",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 1,
+                "unique_ratio": 0.005,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "NVDA",
+                    "NVDA",
+                    "NVDA",
+                    "NVDA",
+                    "NVDA"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "Date": "2015-09-28 00:00:00-04:00",
+                "Open": 0.5737619945223569,
+                "High": 0.5774072097234827,
+                "Low": 0.5625832341435092,
+                "Close": 0.566228449344635,
+                "Volume": 395584000,
+                "Close_Return": 0.0175972240073594,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.8549642007035417,
+                "RSI_Close": 100.0,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 0.4152999911407119,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 6699896.679665994,
+                "DLR": 0.0174441856198104,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-09-28 00:00:00-04:00",
+                "time_idx": 0,
+                "series_id": "NVDA",
+                "hl_center": 0.5699952219334959,
+                "hl_range": 0.0148239755799735,
+                "dayofweek": 0,
+                "month": 9
+            },
+            {
+                "Date": "2015-09-29 00:00:00-04:00",
+                "Open": 0.5723042238696511,
+                "High": 0.5771645523065313,
+                "Low": 0.5642846761548302,
+                "Close": 0.5761924982070923,
+                "Volume": 380736000,
+                "Close_Return": 0.0175972240073594,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.822873649892472,
+                "RSI_Close": 100.0,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 0.7002992801924307,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 6699896.679665994,
+                "DLR": 0.0174441856198104,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-09-29 00:00:00-04:00",
+                "time_idx": 1,
+                "series_id": "NVDA",
+                "hl_center": 0.5707246142306808,
+                "hl_range": 0.012879876151701,
+                "dayofweek": 1,
+                "month": 9
+            },
+            {
+                "Date": "2015-09-30 00:00:00-04:00",
+                "Open": 0.5815387742861751,
+                "High": 0.5997650333135294,
+                "Low": 0.5781365562633751,
+                "Close": 0.5990359783172607,
+                "Volume": 556380000,
+                "Close_Return": 0.0396455701545044,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 1.2024879216233126,
+                "RSI_Close": 100.0,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.1436807322425286,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 28757899.00222917,
+                "DLR": 0.038879857140109,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-09-30 00:00:00-04:00",
+                "time_idx": 2,
+                "series_id": "NVDA",
+                "hl_center": 0.5889507947884522,
+                "hl_range": 0.0216284770501542,
+                "dayofweek": 2,
+                "month": 9
+            },
+            {
+                "Date": "2015-10-01 00:00:00-04:00",
+                "Open": 0.5990356297714157,
+                "High": 0.6007367377930345,
+                "Low": 0.5703596764020767,
+                "Close": 0.5873708724975586,
+                "Volume": 489296000,
+                "Close_Return": -0.0194731305663314,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 1.0575012223634934,
+                "RSI_Close": 71.86986396317697,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 0.6864794835975624,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 19229774.10864544,
+                "DLR": -0.0196652299132905,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-01 00:00:00-04:00",
+                "time_idx": 3,
+                "series_id": "NVDA",
+                "hl_center": 0.5855482070975556,
+                "hl_range": 0.0303770613909577,
+                "dayofweek": 3,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-02 00:00:00-04:00",
+                "Open": 0.5842118470088489,
+                "High": 0.6026811003684998,
+                "Low": 0.5781364095614773,
+                "Close": 0.6026811003684998,
+                "Volume": 386144000,
+                "Close_Return": 0.0260656913507484,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.8345618030973659,
+                "RSI_Close": 79.87258250163063,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 0.9755248235313868,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 29294884.42958884,
+                "DLR": 0.0257317713566083,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-02 00:00:00-04:00",
+                "time_idx": 4,
+                "series_id": "NVDA",
+                "hl_center": 0.5904087549649886,
+                "hl_range": 0.0245446908070224,
+                "dayofweek": 4,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-05 00:00:00-04:00",
+                "Open": 0.6065693780167382,
+                "High": 0.6252816304765677,
+                "Low": 0.6034101597903124,
+                "Close": 0.6177481412887573,
+                "Volume": 482024000,
+                "Close_Return": 0.0250000222523072,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 1.0417844601397528,
+                "RSI_Close": 84.53529259933421,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.200707244847247,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 41345495.155734986,
+                "DLR": 0.0246926342999393,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-05 00:00:00-04:00",
+                "time_idx": 5,
+                "series_id": "NVDA",
+                "hl_center": 0.6143458951334401,
+                "hl_range": 0.0218714706862552,
+                "dayofweek": 0,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-06 00:00:00-04:00",
+                "Open": 0.6111867268664579,
+                "High": 0.6284408702851524,
+                "Low": 0.6087565633734163,
+                "Close": 0.625767707824707,
+                "Volume": 453216000,
+                "Close_Return": 0.0129819355169877,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.9795225671059912,
+                "RSI_Close": 86.34809779833975,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.2875012856177277,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 47229116.04300212,
+                "DLR": 0.0128983924490902,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-06 00:00:00-04:00",
+                "time_idx": 6,
+                "series_id": "NVDA",
+                "hl_center": 0.6185987168292844,
+                "hl_range": 0.019684306911736,
+                "dayofweek": 1,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-07 00:00:00-04:00",
+                "Open": 0.6272259580478422,
+                "High": 0.6386477232303882,
+                "Low": 0.6170192459142337,
+                "Close": 0.6323292851448059,
+                "Volume": 310152000,
+                "Close_Return": 0.010485643854823,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.670322502367651,
+                "RSI_Close": 87.62617060299668,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.331885787405056,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 50481259.455863215,
+                "DLR": 0.0104310507886474,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-07 00:00:00-04:00",
+                "time_idx": 7,
+                "series_id": "NVDA",
+                "hl_center": 0.627833484572311,
+                "hl_range": 0.0216284773161544,
+                "dayofweek": 2,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-08 00:00:00-04:00",
+                "Open": 0.6296560886552155,
+                "High": 0.6376756353473392,
+                "Low": 0.618963321105932,
+                "Close": 0.6359745264053345,
+                "Volume": 460068000,
+                "Close_Return": 0.0057647832326692,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.9943315955379314,
+                "RSI_Close": 88.2824688612305,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.3402990779325108,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 53133451.7481509,
+                "DLR": 0.0057482304547931,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-08 00:00:00-04:00",
+                "time_idx": 8,
+                "series_id": "NVDA",
+                "hl_center": 0.6283194782266356,
+                "hl_range": 0.0187123142414071,
+                "dayofweek": 3,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-09 00:00:00-04:00",
+                "Open": 0.6325720949432864,
+                "High": 0.6386475321896519,
+                "Low": 0.6216363890153577,
+                "Close": 0.6335442066192627,
+                "Volume": 423248000,
+                "Close_Return": -0.0038214105835472,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.9147535997901144,
+                "RSI_Close": 85.04383542916092,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.221690137919135,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 51516047.3614857,
+                "DLR": -0.0038287308280287,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-09 00:00:00-04:00",
+                "time_idx": 9,
+                "series_id": "NVDA",
+                "hl_center": 0.6301419606025047,
+                "hl_range": 0.0170111431742941,
+                "dayofweek": 4,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-12 00:00:00-04:00",
+                "Open": 0.6342731762762575,
+                "High": 0.6439938870416603,
+                "Low": 0.6296559067417928,
+                "Close": 0.6403486132621765,
+                "Volume": 227588000,
+                "Close_Return": 0.0107402239209537,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1309015186420423,
+                "RelVolume": 0.491879329067196,
+                "RSI_Close": 86.53339219216187,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.3359386538857343,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 53960393.44320772,
+                "DLR": 0.010682957388039,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-12 00:00:00-04:00",
+                "time_idx": 10,
+                "series_id": "NVDA",
+                "hl_center": 0.6368248968917265,
+                "hl_range": 0.0143379802998674,
+                "dayofweek": 0,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-13 00:00:00-04:00",
+                "Open": 0.6352454547800782,
+                "High": 0.6454521081644461,
+                "Low": 0.6330582899378523,
+                "Close": 0.641563892364502,
+                "Volume": 298444000,
+                "Close_Return": 0.0018978398284246,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1134540875850038,
+                "RelVolume": 0.6450183422857543,
+                "RSI_Close": 86.78651120984438,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.3232942291279493,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 54526792.35296208,
+                "DLR": 0.0018960412057231,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-13 00:00:00-04:00",
+                "time_idx": 11,
+                "series_id": "NVDA",
+                "hl_center": 0.6392551990511492,
+                "hl_range": 0.0123938182265938,
+                "dayofweek": 1,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-14 00:00:00-04:00",
+                "Open": 0.6422928042529761,
+                "High": 0.6753430976899526,
+                "Low": 0.6415638073418535,
+                "Close": 0.664893388748169,
+                "Volume": 612148000,
+                "Close_Return": 0.0363634809585144,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1099389900017473,
+                "RelVolume": 1.3230176790069157,
+                "RSI_Close": 90.4841725933974,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.7568364575064612,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 76786624.4947548,
+                "DLR": 0.0357179326497574,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 0,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-14 00:00:00-04:00",
+                "time_idx": 12,
+                "series_id": "NVDA",
+                "hl_center": 0.658453452515903,
+                "hl_range": 0.0337792903480991,
+                "dayofweek": 2,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-15 00:00:00-04:00",
+                "Open": 0.666108151617972,
+                "High": 0.6802031286789123,
+                "Low": 0.659303719891755,
+                "Close": 0.6665942072868347,
+                "Volume": 526048000,
+                "Close_Return": 0.0025580319603839,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1348778744380203,
+                "RelVolume": 1.136932251687876,
+                "RSI_Close": 90.68874873530856,
+                "Williams_%R": -11.570254713994288,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.6996808901811369,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3645643.975864366,
+                "VPT": 78132272.09145087,
+                "DLR": 0.0025547657654637,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-15 00:00:00-04:00",
+                "time_idx": 13,
+                "series_id": "NVDA",
+                "hl_center": 0.6697534242853336,
+                "hl_range": 0.0208994087871573,
+                "dayofweek": 3,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-16 00:00:00-04:00",
+                "Open": 0.6687815505954675,
+                "High": 0.6833625293036802,
+                "Low": 0.6670803842671496,
+                "Close": 0.6770440936088562,
+                "Volume": 448396000,
+                "Close_Return": 0.015676533350859,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.1233869673279755,
+                "RelVolume": 0.9691052412096174,
+                "RSI_Close": 91.8483115249121,
+                "Williams_%R": -5.306138402517096,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.8799121419784588,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3794221.583205049,
+                "VPT": 85161566.93984267,
+                "DLR": 0.0155549257787847,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-16 00:00:00-04:00",
+                "time_idx": 14,
+                "series_id": "NVDA",
+                "hl_center": 0.6752214567854149,
+                "hl_range": 0.0162821450365306,
+                "dayofweek": 4,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-19 00:00:00-04:00",
+                "Open": 0.6792313878984105,
+                "High": 0.682390606350946,
+                "Low": 0.6680526238263115,
+                "Close": 0.6758291125297546,
+                "Volume": 294712000,
+                "Close_Return": -0.0017945375944797,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.0940204710609533,
+                "RelVolume": 0.6369524791643297,
+                "RSI_Close": 90.43811270499026,
+                "Williams_%R": -6.666572197504853,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.7888724676835106,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 3201037.142206588,
+                "VPT": 84632695.17629835,
+                "DLR": -0.0017961497060206,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-19 00:00:00-04:00",
+                "time_idx": 15,
+                "series_id": "NVDA",
+                "hl_center": 0.6752216150886288,
+                "hl_range": 0.0143379825246344,
+                "dayofweek": 0,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-20 00:00:00-04:00",
+                "Open": 0.6729129127975207,
+                "High": 0.678016238651325,
+                "Low": 0.6678095290040498,
+                "Close": 0.6748570203781128,
+                "Volume": 264824000,
+                "Close_Return": -0.0014383697500143,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.078446541647299,
+                "RelVolume": 0.5723564135230816,
+                "RSI_Close": 89.25731474918176,
+                "Williams_%R": -7.526809020453287,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.7265372092585685,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 2706969.931610447,
+                "VPT": 84251780.34562056,
+                "DLR": -0.0014394051968058,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-20 00:00:00-04:00",
+                "time_idx": 16,
+                "series_id": "NVDA",
+                "hl_center": 0.6729128838276874,
+                "hl_range": 0.0102067096472752,
+                "dayofweek": 1,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-21 00:00:00-04:00",
+                "Open": 0.6789882409051706,
+                "High": 0.6831195705947701,
+                "Low": 0.6648933171665419,
+                "Close": 0.6661083698272705,
+                "Volume": 386280000,
+                "Close_Return": -0.0129637097735761,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.0534200858255822,
+                "RelVolume": 0.8348557359442346,
+                "RSI_Close": 79.2310774319402,
+                "Williams_%R": -16.397221068952543,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.4374101413351883,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 1837484.4078404752,
+                "VPT": 79244158.53428355,
+                "DLR": -0.0130484720113943,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-21 00:00:00-04:00",
+                "time_idx": 17,
+                "series_id": "NVDA",
+                "hl_center": 0.674006443880656,
+                "hl_range": 0.0182262534282282,
+                "dayofweek": 2,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-22 00:00:00-04:00",
+                "Open": 0.6738850962209006,
+                "High": 0.6923543535480632,
+                "Low": 0.6729130422436138,
+                "Close": 0.6901671886444092,
+                "Volume": 306884000,
+                "Close_Return": 0.0361184754717576,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.0852120014073258,
+                "RelVolume": 0.6632594689590724,
+                "RSI_Close": 84.41554083612883,
+                "Williams_%R": -2.4590305575324987,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 1.9905207804536629,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 2629739.000131662,
+                "VPT": 90328340.76095842,
+                "DLR": 0.0354814958623218,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-22 00:00:00-04:00",
+                "time_idx": 18,
+                "series_id": "NVDA",
+                "hl_center": 0.6826336978958385,
+                "hl_range": 0.0194413113044493,
+                "dayofweek": 3,
+                "month": 10
+            },
+            {
+                "Date": "2015-10-23 00:00:00-04:00",
+                "Open": 0.6962424528127908,
+                "High": 0.6994016709015518,
+                "Low": 0.6857927448129654,
+                "Close": 0.6947843432426453,
+                "Volume": 381776000,
+                "Close_Return": 0.0066899074227286,
+                "Volatility": 0.0163138212675351,
+                "MA20": 0.6384531497955322,
+                "MA50": 0.7005018997192383,
+                "Momentum": 0.0966627679387583,
+                "RelVolume": 0.825121371662644,
+                "RSI_Close": 85.1801147647765,
+                "Williams_%R": -5.093852039916622,
+                "CCI": 119.03434343505673,
+                "Bollinger_%B": 0.8796398654023728,
+                "KeltnerC_%": 2.055052768856503,
+                "MACD_lib": 0.0249782568057793,
+                "MACD_signal": 0.0275070603541904,
+                "MACD_Hist": 0.0025730128610827,
+                "Force_Index": 2505878.9735265933,
+                "VPT": 92882386.85717808,
+                "DLR": 0.0066676292959417,
+                "RSI_Over": 1,
+                "RSI_Under": 0,
+                "Williams_Over": 1,
+                "Williams_Under": 0,
+                "MACD_Over": 0,
+                "MACD_Under": 0,
+                "Data": "2015-10-23 00:00:00-04:00",
+                "time_idx": 19,
+                "series_id": "NVDA",
+                "hl_center": 0.6925972078572586,
+                "hl_range": 0.0136089260885864,
+                "dayofweek": 4,
+                "month": 10
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 200,
+            "columns": 36,
+            "column_names": [
+                "Date",
+                "Open",
+                "High",
+                "Low",
+                "Close",
+                "Volume",
+                "Close_Return",
+                "Volatility",
+                "MA20",
+                "MA50",
+                "Momentum",
+                "RelVolume",
+                "RSI_Close",
+                "Williams_%R",
+                "CCI",
+                "Bollinger_%B",
+                "KeltnerC_%",
+                "MACD_lib",
+                "MACD_signal",
+                "MACD_Hist",
+                "Force_Index",
+                "VPT",
+                "DLR",
+                "RSI_Over",
+                "RSI_Under",
+                "Williams_Over",
+                "Williams_Under",
+                "MACD_Over",
+                "MACD_Under",
+                "Data",
+                "time_idx",
+                "series_id",
+                "hl_center",
+                "hl_range",
+                "dayofweek",
+                "month"
+            ],
+            "dtypes": {
+                "Date": "object",
+                "Open": "float64",
+                "High": "float64",
+                "Low": "float64",
+                "Close": "float64",
+                "Volume": "int64",
+                "Close_Return": "float64",
+                "Volatility": "float64",
+                "MA20": "float64",
+                "MA50": "float64",
+                "Momentum": "float64",
+                "RelVolume": "float64",
+                "RSI_Close": "float64",
+                "Williams_%R": "float64",
+                "CCI": "float64",
+                "Bollinger_%B": "float64",
+                "KeltnerC_%": "float64",
+                "MACD_lib": "float64",
+                "MACD_signal": "float64",
+                "MACD_Hist": "float64",
+                "Force_Index": "float64",
+                "VPT": "float64",
+                "DLR": "float64",
+                "RSI_Over": "int64",
+                "RSI_Under": "int64",
+                "Williams_Over": "int64",
+                "Williams_Under": "int64",
+                "MACD_Over": "int64",
+                "MACD_Under": "int64",
+                "Data": "object",
+                "time_idx": "int64",
+                "series_id": "object",
+                "hl_center": "float64",
+                "hl_range": "float64",
+                "dayofweek": "int64",
+                "month": "int64"
+            },
+            "missing_values": 0,
+            "stats": {
+                "Date": {
+                    "type": "datetime_candidate",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        "2015-09-28 00:00:00-04:00",
+                        "2015-09-29 00:00:00-04:00",
+                        "2015-09-30 00:00:00-04:00",
+                        "2015-10-01 00:00:00-04:00",
+                        "2015-10-02 00:00:00-04:00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 1.0,
+                    "mode": "2015-09-28 00:00:00-04:00"
+                },
+                "Open": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.5737619945223569,
+                        0.5723042238696511,
+                        0.5815387742861751,
+                        0.5990356297714157,
+                        0.5842118470088489
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8409873971695296,
+                    "std": 0.17371481643881123,
+                    "min": 0.5723042238696511,
+                    "max": 1.2985032036858477
+                },
+                "High": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.5774072097234827,
+                        0.5771645523065313,
+                        0.5997650333135294,
+                        0.6007367377930345,
+                        0.6026811003684998
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8523897740522896,
+                    "std": 0.17578034479826662,
+                    "min": 0.5771645523065313,
+                    "max": 1.3078317085166025
+                },
+                "Low": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 199,
+                    "sample_values": [
+                        0.5625832341435092,
+                        0.5642846761548302,
+                        0.5781365562633751,
+                        0.5703596764020767,
+                        0.5781364095614773
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8314231187901729,
+                    "std": 0.17416366747542925,
+                    "min": 0.5625832341435092,
+                    "max": 1.2935939334601372
+                },
+                "Close": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 191,
+                    "sample_values": [
+                        0.566228449344635,
+                        0.5761924982070923,
+                        0.5990359783172607,
+                        0.5873708724975586,
+                        0.6026811003684998
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8433370009064675,
+                    "std": 0.17557701705627515,
+                    "min": 0.566228449344635,
+                    "max": 1.2960494756698608
+                },
+                "Volume": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        395584000,
+                        380736000,
+                        556380000,
+                        489296000,
+                        386144000
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 371620360.0,
+                    "std": 200826879.81901127,
+                    "min": 52448000.0,
+                    "max": 2110256000.0
+                },
+                "Close_Return": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 199,
+                    "sample_values": [
+                        0.0175972240073594,
+                        0.0175972240073594,
+                        0.0396455701545044,
+                        -0.0194731305663314,
+                        0.0260656913507484
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.004507660116187312,
+                    "std": 0.023802174303653854,
+                    "min": -0.0630982741709781,
+                    "max": 0.1520946311473614
+                },
+                "Volatility": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 180,
+                    "sample_values": [
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.021835021904909505,
+                    "std": 0.00866450521810309,
+                    "min": 0.0091794356647897,
+                    "max": 0.0374307369217335
+                },
+                "MA20": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 181,
+                    "sample_values": [
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8176001971960067,
+                    "std": 0.15392784237835272,
+                    "min": 0.6384531497955322,
+                    "max": 1.180325263738632
+                },
+                "MA50": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 151,
+                    "sample_values": [
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.7917813473820686,
+                    "std": 0.1082755445352918,
+                    "min": 0.7005018997192383,
+                    "max": 1.0996859192848203
+                },
+                "Momentum": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 190,
+                    "sample_values": [
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.0450076616306109,
+                    "std": 0.08793147025496861,
+                    "min": -0.1774875391838781,
+                    "max": 0.2867177130742173
+                },
+                "RelVolume": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.8549642007035417,
+                        0.822873649892472,
+                        1.2024879216233126,
+                        1.0575012223634934,
+                        0.8345618030973659
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.803172282126078,
+                    "std": 0.43404129788931606,
+                    "min": 0.1133543378865155,
+                    "max": 4.560834953688352
+                },
+                "RSI_Close": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 197,
+                    "sample_values": [
+                        100.0,
+                        100.0,
+                        100.0,
+                        71.86986396317697,
+                        79.87258250163063
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 64.8256056455325,
+                    "std": 16.08894161044417,
+                    "min": 25.09567915018488,
+                    "max": 100.0
+                },
+                "Williams_%R": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 184,
+                    "sample_values": [
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": -31.14098354463994,
+                    "std": 28.013971158433947,
+                    "min": -98.62699851725849,
+                    "max": -0.0
+                },
+                "CCI": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 181,
+                    "sample_values": [
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 60.64230905314978,
+                    "std": 116.62211905190894,
+                    "min": -344.0191649536108,
+                    "max": 371.97655536509706
+                },
+                "Bollinger_%B": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 181,
+                    "sample_values": [
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.6806544582354255,
+                    "std": 0.33277605284754347,
+                    "min": -0.344721041609216,
+                    "max": 1.444373347677275
+                },
+                "KeltnerC_%": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.4152999911407119,
+                        0.7002992801924307,
+                        1.1436807322425286,
+                        0.6864794835975624,
+                        0.9755248235313868
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 1.1818196663691374,
+                    "std": 1.1803561462096732,
+                    "min": -2.293848567982257,
+                    "max": 3.867149506987983
+                },
+                "MACD_lib": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 175,
+                    "sample_values": [
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.020817497145022904,
+                    "std": 0.022008086168109446,
+                    "min": -0.0311779514625714,
+                    "max": 0.0696918516877092
+                },
+                "MACD_signal": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 167,
+                    "sample_values": [
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.02105932031873919,
+                    "std": 0.020459329352418044,
+                    "min": -0.0269707041970751,
+                    "max": 0.0626813443987964
+                },
+                "MACD_Hist": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 167,
+                    "sample_values": [
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.0005665299080114018,
+                    "std": 0.007357345225405147,
+                    "min": -0.0148090504659224,
+                    "max": 0.0207897008839473
+                },
+                "Force_Index": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 187,
+                    "sample_values": [
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 2782792.034150262,
+                    "std": 6651915.213142531,
+                    "min": -8375898.137235998,
+                    "max": 38850464.09439312
+                },
+                "VPT": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 198,
+                    "sample_values": [
+                        6699896.679665994,
+                        6699896.679665994,
+                        28757899.00222917,
+                        19229774.10864544,
+                        29294884.42958884
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 307956980.1021109,
+                    "std": 204797822.36542684,
+                    "min": 6699896.679665994,
+                    "max": 701984579.8469845
+                },
+                "DLR": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 199,
+                    "sample_values": [
+                        0.0174441856198104,
+                        0.0174441856198104,
+                        0.038879857140109,
+                        -0.0196652299132905,
+                        0.0257317713566083
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.004225715213567738,
+                    "std": 0.02322498515217421,
+                    "min": -0.0651768839634806,
+                    "max": 0.1415817039931717
+                },
+                "RSI_Over": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.395,
+                    "std": 0.4900774218396365,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "RSI_Under": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.035,
+                    "std": 0.18424093903932007,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "Williams_Over": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.425,
+                    "std": 0.4955835096887071,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "Williams_Under": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.115,
+                    "std": 0.3198225010233083,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "MACD_Over": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.35,
+                    "std": 0.4781665150137575,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "MACD_Under": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.485,
+                    "std": 0.5010290917239925,
+                    "min": 0.0,
+                    "max": 1.0
+                },
+                "Data": {
+                    "type": "datetime_candidate",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        "2015-09-28 00:00:00-04:00",
+                        "2015-09-29 00:00:00-04:00",
+                        "2015-09-30 00:00:00-04:00",
+                        "2015-10-01 00:00:00-04:00",
+                        "2015-10-02 00:00:00-04:00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 1.0,
+                    "mode": "2015-09-28 00:00:00-04:00"
+                },
+                "time_idx": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 99.5,
+                    "std": 57.879184513951124,
+                    "min": 0.0,
+                    "max": 199.0
+                },
+                "series_id": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 1,
+                    "sample_values": [
+                        "NVDA",
+                        "NVDA",
+                        "NVDA",
+                        "NVDA",
+                        "NVDA"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "NVDA"
+                },
+                "hl_center": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.5699952219334959,
+                        0.5707246142306808,
+                        0.5889507947884522,
+                        0.5855482070975556,
+                        0.5904087549649886
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.8419064464212311,
+                    "std": 0.17491630525151033,
+                    "min": 0.5699952219334959,
+                    "max": 1.299730550503834
+                },
+                "hl_range": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 200,
+                    "sample_values": [
+                        0.0148239755799735,
+                        0.012879876151701,
+                        0.0216284770501542,
+                        0.0303770613909577,
+                        0.0245446908070224
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 0.020966655262116454,
+                    "std": 0.008976079345718438,
+                    "min": 0.0065863522206531,
+                    "max": 0.0553312101897203
+                },
+                "dayofweek": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 5,
+                    "sample_values": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 1.99,
+                    "std": 1.3926945070437193,
+                    "min": 0.0,
+                    "max": 4.0
+                },
+                "month": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 11,
+                    "sample_values": [
+                        9,
+                        9,
+                        9,
+                        10,
+                        10
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 6.165,
+                    "std": 3.731944809385785,
+                    "min": 1.0,
+                    "max": 12.0
+                }
+            },
+            "path": "/app/runtime_artifacts/features/transformedstockdata.csv",
+            "profile": {
+                "numeric_columns": [
+                    "Open",
+                    "High",
+                    "Volume",
+                    "RelVolume",
+                    "KeltnerC_%",
+                    "time_idx",
+                    "hl_center",
+                    "hl_range",
+                    "Low",
+                    "Close_Return",
+                    "DLR",
+                    "VPT",
+                    "RSI_Close",
+                    "Close",
+                    "Momentum",
+                    "Force_Index",
+                    "Williams_%R",
+                    "MA20",
+                    "CCI",
+                    "Bollinger_%B",
+                    "Volatility",
+                    "MACD_lib",
+                    "MACD_signal",
+                    "MACD_Hist",
+                    "MA50",
+                    "month",
+                    "dayofweek",
+                    "RSI_Over",
+                    "RSI_Under",
+                    "Williams_Over",
+                    "Williams_Under",
+                    "MACD_Over",
+                    "MACD_Under"
+                ],
+                "categorical_columns": [
+                    "series_id"
+                ],
+                "datetime_columns": [
+                    "Date",
+                    "Data"
+                ],
+                "recommended_target": "month",
+                "recommended_inputs": [
+                    "Date",
+                    "Open",
+                    "High",
+                    "Low",
+                    "Close",
+                    "Volume",
+                    "Close_Return",
+                    "Volatility",
+                    "MA20",
+                    "MA50",
+                    "Momentum",
+                    "RelVolume",
+                    "RSI_Close",
+                    "Williams_%R",
+                    "CCI",
+                    "Bollinger_%B",
+                    "KeltnerC_%",
+                    "MACD_lib",
+                    "MACD_signal",
+                    "MACD_Hist",
+                    "Force_Index",
+                    "VPT",
+                    "DLR",
+                    "RSI_Over",
+                    "RSI_Under",
+                    "Williams_Over",
+                    "Williams_Under",
+                    "MACD_Over",
+                    "MACD_Under",
+                    "Data",
+                    "time_idx",
+                    "series_id",
+                    "hl_center",
+                    "hl_range",
+                    "dayofweek"
+                ]
+            },
+            "parser_report": {
+                "file_name": "transformedstockdata.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 200,
+                "columns": 36,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "Date",
+                    "dtype": "object",
+                    "family": "datetime_candidate",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 1.0,
+                    "sample_values": [
+                        "2015-09-28 00:00:00-04:00",
+                        "2015-09-29 00:00:00-04:00",
+                        "2015-09-30 00:00:00-04:00",
+                        "2015-10-01 00:00:00-04:00",
+                        "2015-10-02 00:00:00-04:00"
+                    ]
+                },
+                {
+                    "name": "Open",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.5737619945223569,
+                        0.5723042238696511,
+                        0.5815387742861751,
+                        0.5990356297714157,
+                        0.5842118470088489
+                    ]
+                },
+                {
+                    "name": "High",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.5774072097234827,
+                        0.5771645523065313,
+                        0.5997650333135294,
+                        0.6007367377930345,
+                        0.6026811003684998
+                    ]
+                },
+                {
+                    "name": "Volume",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        395584000,
+                        380736000,
+                        556380000,
+                        489296000,
+                        386144000
+                    ]
+                },
+                {
+                    "name": "RelVolume",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.8549642007035417,
+                        0.822873649892472,
+                        1.2024879216233126,
+                        1.0575012223634934,
+                        0.8345618030973659
+                    ]
+                },
+                {
+                    "name": "KeltnerC_%",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.4152999911407119,
+                        0.7002992801924307,
+                        1.1436807322425286,
+                        0.6864794835975624,
+                        0.9755248235313868
+                    ]
+                },
+                {
+                    "name": "Data",
+                    "dtype": "object",
+                    "family": "datetime_candidate",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 1.0,
+                    "sample_values": [
+                        "2015-09-28 00:00:00-04:00",
+                        "2015-09-29 00:00:00-04:00",
+                        "2015-09-30 00:00:00-04:00",
+                        "2015-10-01 00:00:00-04:00",
+                        "2015-10-02 00:00:00-04:00"
+                    ]
+                },
+                {
+                    "name": "time_idx",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ]
+                },
+                {
+                    "name": "hl_center",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.5699952219334959,
+                        0.5707246142306808,
+                        0.5889507947884522,
+                        0.5855482070975556,
+                        0.5904087549649886
+                    ]
+                },
+                {
+                    "name": "hl_range",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 200,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0148239755799735,
+                        0.012879876151701,
+                        0.0216284770501542,
+                        0.0303770613909577,
+                        0.0245446908070224
+                    ]
+                },
+                {
+                    "name": "Low",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 199,
+                    "unique_ratio": 0.995,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.5625832341435092,
+                        0.5642846761548302,
+                        0.5781365562633751,
+                        0.5703596764020767,
+                        0.5781364095614773
+                    ]
+                },
+                {
+                    "name": "Close_Return",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 199,
+                    "unique_ratio": 0.995,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0175972240073594,
+                        0.0175972240073594,
+                        0.0396455701545044,
+                        -0.0194731305663314,
+                        0.0260656913507484
+                    ]
+                },
+                {
+                    "name": "DLR",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 199,
+                    "unique_ratio": 0.995,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0174441856198104,
+                        0.0174441856198104,
+                        0.038879857140109,
+                        -0.0196652299132905,
+                        0.0257317713566083
+                    ]
+                },
+                {
+                    "name": "VPT",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 198,
+                    "unique_ratio": 0.99,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        6699896.679665994,
+                        6699896.679665994,
+                        28757899.00222917,
+                        19229774.10864544,
+                        29294884.42958884
+                    ]
+                },
+                {
+                    "name": "RSI_Close",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 197,
+                    "unique_ratio": 0.985,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        100.0,
+                        100.0,
+                        100.0,
+                        71.86986396317697,
+                        79.87258250163063
+                    ]
+                },
+                {
+                    "name": "Close",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 191,
+                    "unique_ratio": 0.955,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.566228449344635,
+                        0.5761924982070923,
+                        0.5990359783172607,
+                        0.5873708724975586,
+                        0.6026811003684998
+                    ]
+                },
+                {
+                    "name": "Momentum",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 190,
+                    "unique_ratio": 0.95,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423,
+                        0.1309015186420423
+                    ]
+                },
+                {
+                    "name": "Force_Index",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 187,
+                    "unique_ratio": 0.935,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366,
+                        3645643.975864366
+                    ]
+                },
+                {
+                    "name": "Williams_%R",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 184,
+                    "unique_ratio": 0.92,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288,
+                        -11.570254713994288
+                    ]
+                },
+                {
+                    "name": "MA20",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 181,
+                    "unique_ratio": 0.905,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322,
+                        0.6384531497955322
+                    ]
+                },
+                {
+                    "name": "CCI",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 181,
+                    "unique_ratio": 0.905,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673,
+                        119.03434343505673
+                    ]
+                },
+                {
+                    "name": "Bollinger_%B",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 181,
+                    "unique_ratio": 0.905,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728,
+                        0.8796398654023728
+                    ]
+                },
+                {
+                    "name": "Volatility",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 180,
+                    "unique_ratio": 0.9,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351,
+                        0.0163138212675351
+                    ]
+                },
+                {
+                    "name": "MACD_lib",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 175,
+                    "unique_ratio": 0.875,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793,
+                        0.0249782568057793
+                    ]
+                },
+                {
+                    "name": "MACD_signal",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 167,
+                    "unique_ratio": 0.835,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904,
+                        0.0275070603541904
+                    ]
+                },
+                {
+                    "name": "MACD_Hist",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 167,
+                    "unique_ratio": 0.835,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827,
+                        0.0025730128610827
+                    ]
+                },
+                {
+                    "name": "MA50",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 151,
+                    "unique_ratio": 0.755,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383,
+                        0.7005018997192383
+                    ]
+                },
+                {
+                    "name": "month",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 11,
+                    "unique_ratio": 0.055,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        9,
+                        9,
+                        9,
+                        10,
+                        10
+                    ]
+                },
+                {
+                    "name": "dayofweek",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 5,
+                    "unique_ratio": 0.025,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                    ]
+                },
+                {
+                    "name": "RSI_Over",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                {
+                    "name": "RSI_Under",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "Williams_Over",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "Williams_Under",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "MACD_Over",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "MACD_Under",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.01,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "name": "series_id",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 1,
+                    "unique_ratio": 0.005,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "NVDA",
+                        "NVDA",
+                        "NVDA",
+                        "NVDA",
+                        "NVDA"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [
+                    "Open",
+                    "High",
+                    "Volume",
+                    "RelVolume",
+                    "KeltnerC_%",
+                    "time_idx",
+                    "hl_center",
+                    "hl_range",
+                    "Low",
+                    "Close_Return",
+                    "DLR",
+                    "VPT",
+                    "RSI_Close",
+                    "Close",
+                    "Momentum",
+                    "Force_Index",
+                    "Williams_%R",
+                    "MA20",
+                    "CCI",
+                    "Bollinger_%B",
+                    "Volatility",
+                    "MACD_lib",
+                    "MACD_signal",
+                    "MACD_Hist",
+                    "MA50",
+                    "month",
+                    "dayofweek",
+                    "RSI_Over",
+                    "RSI_Under",
+                    "Williams_Over",
+                    "Williams_Under",
+                    "MACD_Over",
+                    "MACD_Under"
+                ],
+                "categorical": [
+                    "series_id"
+                ],
+                "datetime": [
+                    "Date",
+                    "Data"
+                ]
+            },
+            "top_warnings": [
+                "Column 'Date' has high cardinality and may need filtering or encoding.",
+                "Column 'Open' has high cardinality and may need filtering or encoding.",
+                "Column 'High' has high cardinality and may need filtering or encoding.",
+                "Column 'Low' has high cardinality and may need filtering or encoding.",
+                "Column 'Close' has high cardinality and may need filtering or encoding.",
+                "Column 'Volume' has high cardinality and may need filtering or encoding.",
+                "Column 'Close_Return' has high cardinality and may need filtering or encoding.",
+                "Column 'Volatility' has high cardinality and may need filtering or encoding.",
+                "Column 'MA20' has high cardinality and may need filtering or encoding.",
+                "Column 'MA50' has high cardinality and may need filtering or encoding.",
+                "Column 'Momentum' has high cardinality and may need filtering or encoding.",
+                "Column 'RelVolume' has high cardinality and may need filtering or encoding.",
+                "Column 'RSI_Close' has high cardinality and may need filtering or encoding.",
+                "Column 'Williams_%R' has high cardinality and may need filtering or encoding.",
+                "Column 'CCI' has high cardinality and may need filtering or encoding.",
+                "Column 'Bollinger_%B' has high cardinality and may need filtering or encoding.",
+                "Column 'KeltnerC_%' has high cardinality and may need filtering or encoding.",
+                "Column 'MACD_lib' has high cardinality and may need filtering or encoding.",
+                "Column 'MACD_signal' has high cardinality and may need filtering or encoding.",
+                "Column 'MACD_Hist' has high cardinality and may need filtering or encoding.",
+                "Column 'Force_Index' has high cardinality and may need filtering or encoding.",
+                "Column 'VPT' has high cardinality and may need filtering or encoding.",
+                "Column 'DLR' has high cardinality and may need filtering or encoding.",
+                "Column 'Data' has high cardinality and may need filtering or encoding."
+            ]
+        }
+    }
+}

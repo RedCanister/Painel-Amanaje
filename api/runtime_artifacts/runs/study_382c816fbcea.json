@@ -1,0 +1,476 @@
+{
+  "run_id": "study_382c816fbcea",
+  "run_type": "study",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-04-26T00:45:58.686422",
+  "updated_at": "2026-04-26T01:01:11.603724",
+  "started_at": "2026-04-26T00:45:58.715113",
+  "completed_at": "2026-04-26T01:01:11.603724",
+  "context": {
+    "study_id": 6,
+    "model_id": 5,
+    "dataset_id": 4,
+    "inference_id": null
+  },
+  "parameters": {
+    "nTrials": null,
+    "outputDir": null,
+    "plotResults": true,
+    "inferenceId": null
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "study": {
+      "id": 6,
+      "name": "nvidia-lstm-study",
+      "description": "StudyModel to serve a NVIDIA financial data .csv to a trained LSTM ready to be used in day-trade simulations.",
+      "learning_model_id": 5,
+      "dataset_id": 4,
+      "sampler": "TPESampler",
+      "objective": "maximize_accuracy",
+      "best_trial": {
+        "value": 0.09045725646123261
+      },
+      "best_params": {
+        "dropout": 0.30000000000000004,
+        "batch_size": 64,
+        "hidden_dim": 80,
+        "hidden_layers": 1,
+        "learning_rate": 0.0009906082638903074
+      },
+      "study_params": {
+        "metric": "accuracy",
+        "n_trials": 25,
+        "direction": "maximize",
+        "framework": "pytorch"
+      },
+      "path": "/app/runtime_artifacts/optuna/study_6/study_summary.json"
+    },
+    "summary": {
+      "study_name": "nvidia-lstm-study",
+      "direction": "MAXIMIZE",
+      "best_value": 0.09045725646123261,
+      "best_params": {
+        "hidden_dim": 80,
+        "hidden_layers": 1,
+        "dropout": 0.30000000000000004,
+        "learning_rate": 0.0009906082638903074,
+        "batch_size": 64
+      },
+      "n_trials": 25,
+      "completed_trials": 25,
+      "pruned_trials": 0,
+      "failed_trials": 0,
+      "has_best_trial": true
+    },
+    "plot_paths": [
+      "/app/runtime_artifacts/optuna/study_6/optimization_history.png",
+      "/app/runtime_artifacts/optuna/study_6/param_importances.png"
+    ],
+    "output_dir": "/app/runtime_artifacts/optuna/study_6",
+    "objective_metric": "eval_accuracy"
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Study optimization completed.",
+    "latest_timestamp": "2026-04-26T01:01:11.603724",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-26T00:45:58.686422",
+        "message": "study run created."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-04-26T00:45:58.715113",
+        "message": "Resolving study, model, and dataset context."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-04-26T00:45:59.300648",
+        "message": "Study context resolved."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-04-26T00:45:59.325307",
+        "message": "Study preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-04-26T00:45:59.390861",
+        "message": "Validating the linked model and dataset schema for the study."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:46:01.048828",
+        "message": "Running Optuna trials for the selected study."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:47:34.264516",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:48:39.492148",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:49:22.900062",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:49:51.073866",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:50:30.960855",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:52:08.215064",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:52:28.298476",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:52:59.843079",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:54:19.799372",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:54:52.120753",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:55:16.425104",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:55:42.796701",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:56:03.517636",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:56:24.099722",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:56:51.753954",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:57:21.445682",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:57:47.945695",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:58:13.210831",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:58:36.553323",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:59:02.456966",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:59:26.004469",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T00:59:48.960613",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T01:00:12.904244",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T01:00:40.459096",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-04-26T01:01:04.535280",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-04-26T01:01:11.603724",
+        "message": "Study optimization completed."
+      }
+    ],
+    "counters": {
+      "total_trials": 25,
+      "trial_number": 24,
+      "completed_trials": 25,
+      "best_value": 0.09045725646123261,
+      "n_trials": 25
+    }
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-26T00:45:58.686422",
+      "message": "study run created."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-04-26T00:45:58.715113",
+      "message": "Resolving study, model, and dataset context."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-04-26T00:45:59.300648",
+      "message": "Study context resolved."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-04-26T00:45:59.325307",
+      "message": "Study preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-04-26T00:45:59.390861",
+      "message": "Validating the linked model and dataset schema for the study."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:46:01.048828",
+      "message": "Running Optuna trials for the selected study."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:47:34.264516",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:48:39.492148",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:49:22.900062",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:49:51.073866",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:50:30.960855",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:52:08.215064",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:52:28.298476",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:52:59.843079",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:54:19.799372",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:54:52.120753",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:55:16.425104",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:55:42.796701",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:56:03.517636",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:56:24.099722",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:56:51.753954",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:57:21.445682",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:57:47.945695",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:58:13.210831",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:58:36.553323",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:59:02.456966",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:59:26.004469",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T00:59:48.960613",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T01:00:12.904244",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T01:00:40.459096",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-04-26T01:01:04.535280",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-04-26T01:01:11.603724",
+      "message": "Study optimization completed."
+    }
+  ]
+}

@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from .logging import get_logger
-from .serialization import safe_log_params, to_json
+from .serialization import canonicalize_scalar_for_logging, class_to_dict, safe_log_params, to_json
 
 logger = get_logger("mlflow_utils")
 _WORKSPACE_TMP_DIR = Path.cwd() / ".mlflow_tmp"
@@ -208,6 +208,7 @@ def list_experiments(max_results: int = 50) -> list[Dict[str, Any]]:
 def get_experiment_summary(
     experiment_id: str,
     max_runs: int = 20,
+    offset: int = 0,
 ) -> Dict[str, Any]:
     """
     Return a normalized experiment payload including recent runs.
@@ -215,14 +216,17 @@ def get_experiment_summary(
 
     client = get_client()
     experiment = client.get_experiment(str(experiment_id))
+    fetch_count = max(1, int(max_runs) + max(0, int(offset)) + 1)
     runs = client.search_runs(
         experiment_ids=[str(experiment_id)],
-        max_results=max_runs,
+        max_results=fetch_count,
         order_by=["attributes.start_time DESC"],
     )
 
     run_summaries = []
-    for run in runs:
+    sliced_runs = list(runs)[max(0, int(offset)) : max(0, int(offset)) + max(1, int(max_runs)) + 1]
+    has_more = len(sliced_runs) > max(1, int(max_runs))
+    for run in sliced_runs[: max(1, int(max_runs))]:
         run_summaries.append(
             {
                 "run_id": run.info.run_id,
@@ -245,6 +249,12 @@ def get_experiment_summary(
         "creation_time": getattr(experiment, "creation_time", None),
         "last_update_time": getattr(experiment, "last_update_time", None),
         "tags": dict(getattr(experiment, "tags", {}) or {}),
+        "run_summary": {
+            "visible_runs": len(run_summaries),
+            "offset": max(0, int(offset)),
+            "limit": max(1, int(max_runs)),
+            "has_more": has_more,
+        },
         "runs": run_summaries,
     }
 
@@ -338,14 +348,57 @@ def log_params(params: Any) -> None:
         logger.warning("No active MLflow run found. Skipping parameter logging.")
         return
 
+    raw_params = class_to_dict(params)
     safe_params = safe_log_params(params)
     if not safe_params:
         return
 
-    normalized_params = {sanitize_mlflow_key(key): value for key, value in safe_params.items()}
+    normalized_params = {
+        sanitize_mlflow_key(key): canonicalize_scalar_for_logging(raw_params.get(key))
+        for key in raw_params.keys()
+    }
+    if not normalized_params:
+        normalized_params = {sanitize_mlflow_key(key): value for key, value in safe_params.items()}
+
     try:
-        mlflow.log_params(normalized_params)
-        logger.info("Logged %d parameters to MLflow.", len(normalized_params))
+        client = get_client()
+        run_id = active_run_id()
+        existing_params = {}
+        if run_id:
+            try:
+                existing_params = dict(client.get_run(run_id).data.params)
+            except Exception:
+                logger.debug("Unable to read existing MLflow params for run '%s'.", run_id, exc_info=True)
+
+        loggable_params: Dict[str, str] = {}
+        skipped_params: Dict[str, Dict[str, str]] = {}
+        for key, value in normalized_params.items():
+            existing_value = existing_params.get(key)
+            if existing_value is None:
+                loggable_params[key] = value
+                continue
+            if canonicalize_scalar_for_logging(existing_value) == value:
+                continue
+            skipped_params[key] = {"existing": existing_value, "incoming": value}
+
+        if loggable_params:
+            mlflow.log_params(loggable_params)
+            logger.info("Logged %d parameters to MLflow.", len(loggable_params))
+
+        log_json(
+            {
+                "parameters": normalized_params,
+                "skipped_conflicts": skipped_params,
+            },
+            filename="parameter_snapshot.json",
+            artifact_path="tracking",
+        )
+
+        if skipped_params:
+            logger.warning(
+                "Skipped %d MLflow params because the active run already contains different immutable values.",
+                len(skipped_params),
+            )
     except Exception:
         logger.exception("Failed to log MLflow parameters.")
 

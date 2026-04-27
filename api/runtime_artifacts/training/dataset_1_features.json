@@ -1,0 +1,317 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "value"
+        ],
+        "target_candidate": "category",
+        "numeric_feature_count": 1,
+        "categorical_feature_count": 1,
+        "datetime_feature_count": 0
+    },
+    "manifest": {
+        "dataset_id": 1,
+        "dataset_name": "sample_dataset",
+        "table_name": "dataset_1_sample_dataset",
+        "shape": [
+            3,
+            2
+        ],
+        "columns": [
+            {
+                "name": "value",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 3,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    10,
+                    20,
+                    30
+                ]
+            },
+            {
+                "name": "category",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 3,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "a",
+                    "b",
+                    "c"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "value": 10,
+                "category": "a"
+            },
+            {
+                "value": 20,
+                "category": "b"
+            },
+            {
+                "value": 30,
+                "category": "c"
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 3,
+            "columns": 2,
+            "column_names": [
+                "value",
+                "category"
+            ],
+            "dtypes": {
+                "value": "int64",
+                "category": "object"
+            },
+            "missing_values": 0,
+            "stats": {
+                "value": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 3,
+                    "sample_values": [
+                        10,
+                        20,
+                        30
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 20.0,
+                    "std": 10.0,
+                    "min": 10.0,
+                    "max": 30.0
+                },
+                "category": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 3,
+                    "sample_values": [
+                        "a",
+                        "b",
+                        "c"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "a"
+                }
+            },
+            "path": "/data/datasets/sample_dataset.csv",
+            "profile": {
+                "numeric_columns": [
+                    "value"
+                ],
+                "categorical_columns": [
+                    "category"
+                ],
+                "datetime_columns": [],
+                "recommended_target": "category",
+                "recommended_inputs": [
+                    "value"
+                ]
+            },
+            "parser_report": {
+                "file_name": "sample_dataset.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 3,
+                "columns": 2,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "value",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 3,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        10,
+                        20,
+                        30
+                    ]
+                },
+                {
+                    "name": "category",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 3,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "a",
+                        "b",
+                        "c"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [
+                    "value"
+                ],
+                "categorical": [
+                    "category"
+                ],
+                "datetime": []
+            },
+            "top_warnings": [
+                "Column 'value' has high cardinality and may need filtering or encoding.",
+                "Column 'category' has high cardinality and may need filtering or encoding."
+            ]
+        }
+    }
+}
