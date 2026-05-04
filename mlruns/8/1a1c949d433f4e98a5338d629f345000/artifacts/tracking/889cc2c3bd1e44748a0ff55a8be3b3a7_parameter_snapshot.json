@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "epochs": "50",
+        "dropout": "0.4",
+        "framework": "pytorch",
+        "batch_size": "64",
+        "hidden_dim": "128",
+        "input_size": "1",
+        "hidden_size": "1",
+        "output_size": "1",
+        "hidden_layers": "1",
+        "learning_rate": "0.00270110344728",
+        "input_features": "[\"value\"]",
+        "output_features": "[\"category\"]",
+        "metric": "accuracy",
+        "n_trials": "25",
+        "direction": "maximize"
+    },
+    "skipped_conflicts": {}
+}

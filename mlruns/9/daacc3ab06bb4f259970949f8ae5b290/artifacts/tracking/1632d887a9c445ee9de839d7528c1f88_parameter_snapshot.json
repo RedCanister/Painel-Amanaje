@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "event_name": "assistant_training_dataset_rebuild",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "evaluation_profile": "assistant-training-dataset-v1"
+    },
+    "skipped_conflicts": {}
+}

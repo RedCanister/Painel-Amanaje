@@ -33,6 +33,8 @@ from app.database.db_utils import (
     normalize_legacy_polymorphic_identities,
 )
 from app.models.model_orm import (
+    AssistantORM,
+    AssistantTrainingDatasetORM,
     CodeORM,
     DatasetORM,
     LearningORM,
@@ -61,6 +63,16 @@ def test_resolve_dataset_file_format_alias_to_base_dataset():
     assert payload["dataset_type"] == "dataset"
 
 
+def test_resolve_assistant_training_dataset_alias_to_subclass():
+    orm_model, payload = _resolve_polymorphic_model(
+        DatasetORM,
+        {"dataset_type": "assistant_training"},
+    )
+
+    assert orm_model is AssistantTrainingDatasetORM
+    assert payload["dataset_type"] == "assistant_training_dataset"
+
+
 def test_resolve_model_alias_to_polymorphic_subclass():
     orm_model, payload = _resolve_polymorphic_model(
         LearningORM,
@@ -69,6 +81,16 @@ def test_resolve_model_alias_to_polymorphic_subclass():
 
     assert orm_model is SupervisedModelORM
     assert payload["model_type"] == "supervised_model"
+
+
+def test_resolve_assistant_model_alias_to_assistant_subclass():
+    orm_model, payload = _resolve_polymorphic_model(
+        LearningORM,
+        {"model_type": "assistant_llm_adapter"},
+    )
+
+    assert orm_model is AssistantORM
+    assert payload["model_type"] == "assistant_model"
 
 
 def test_resolve_object_type_alias_to_code_model():
@@ -226,3 +248,45 @@ def test_create_entry_normalizes_stringified_jsonb_payloads_for_code_models():
     assert created.variables == {"dataset_name": "github_vs_git"}
     assert created.code["language"] == "python"
     assert created.date.tzinfo is None
+
+
+def test_create_entry_packs_raw_assistant_model_runtime_fields():
+    class FakeDB:
+        def __init__(self):
+            self.added = None
+            self.commit_count = 0
+
+        def add(self, obj):
+            self.added = obj
+
+        async def commit(self):
+            self.commit_count += 1
+
+        async def refresh(self, obj):
+            return None
+
+        async def rollback(self):
+            return None
+
+    payload = {
+        "name": "registry_assistant",
+        "description": "Assistant runtime",
+        "object_type": "learning_model",
+        "size": 0,
+        "path": "runtime_artifacts/assistant_models/registry_assistant",
+        "version": 1,
+        "model_type": "assistant",
+        "parameters": "{}",
+        "metrics": "{}",
+        "base_url": "http://localhost:9100/v1",
+        "model_name": "registry-assistant",
+        "temperature": 0.4,
+    }
+
+    created = asyncio.run(create_entry(FakeDB(), LearningORM, payload))
+
+    assert isinstance(created, AssistantORM)
+    assert created.model_type == "assistant_model"
+    assert created.parameters["assistant"]["base_url"] == "http://localhost:9100/v1"
+    assert created.parameters["assistant"]["model_name"] == "registry-assistant"
+    assert created.parameters["assistant"]["temperature"] == 0.4

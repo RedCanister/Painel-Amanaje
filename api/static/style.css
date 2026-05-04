@@ -562,6 +562,72 @@ main.container :where(img, svg, canvas, video, iframe, table, pre) {
   display: block;
 }
 
+.assistant-collapsible {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.assistant-toggle {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--amanaje-primary-border-soft);
+  border-radius: 12px;
+  background: white;
+  color: var(--amanaje-primary-strong);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.assistant-toggle::before {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: var(--amanaje-primary-mid);
+  color: var(--amanaje-primary-strong);
+  font-weight: 900;
+}
+
+.assistant-toggle[aria-expanded="true"]::before {
+  content: "-";
+}
+
+.assistant-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--amanaje-primary-border-soft);
+  background: var(--amanaje-primary-softer);
+  color: var(--amanaje-primary-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.assistant-status-badge.needs_attention,
+.assistant-status-badge.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.assistant-status-badge.ready,
+.assistant-status-badge.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.assistant-panel[hidden] {
+  display: none !important;
+}
+
 #executionOutput {
   background-color: var(--amanaje-code-bg);
   color: var(--amanaje-code-fg);

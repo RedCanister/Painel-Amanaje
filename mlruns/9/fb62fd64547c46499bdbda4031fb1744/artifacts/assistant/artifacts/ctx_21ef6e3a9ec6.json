@@ -1,0 +1,217 @@
+{
+  "context_pack_id": "ctx_21ef6e3a9ec6",
+  "version": "assistant-context-pack-v1",
+  "prompt": "make a dataset about keyboards",
+  "workflow_goal": null,
+  "target_type": "dataset_generation",
+  "provider": "assistant_model_28",
+  "registry_type": null,
+  "form_values": {},
+  "constraints": {},
+  "safety_profile": "dataset_generation",
+  "allowed_imports": [
+    "datetime",
+    "math",
+    "numpy",
+    "pandas",
+    "random",
+    "statistics"
+  ],
+  "allowed_dependencies": [
+    "numpy",
+    "pandas"
+  ],
+  "content_references": [
+    {
+      "reference_id": "ref_system_project_schema_dataset_generation",
+      "source_type": "project_schema",
+      "name": "assistant_workflow_draft",
+      "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "target_type": "dataset_generation"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934533"
+    },
+    {
+      "reference_id": "ref_system_safety_dataset_generation",
+      "source_type": "safety_profile",
+      "name": "dataset_generation",
+      "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "allowed_imports": [
+          "math",
+          "datetime",
+          "statistics",
+          "pandas",
+          "numpy",
+          "random"
+        ],
+        "allowed_dependencies": [
+          "pandas",
+          "numpy"
+        ],
+        "required_outputs": [
+          "csv_text"
+        ]
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934578"
+    },
+    {
+      "reference_id": "ref_system_alignment_contracts",
+      "source_type": "alignment_contracts",
+      "name": "assistant_alignment_contracts",
+      "summary": "The five alignment contracts that every private assistant draft is evaluated against.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934596"
+    },
+    {
+      "reference_id": "ref_system_prompt_dataset_generation",
+      "source_type": "prompt_template",
+      "name": "amanaje-assistant-template-v1",
+      "summary": "Draft safe Python code that creates synthetic tabular data and exposes csv_text plus dataset metadata. Use only allowed dependencies, align names with trusted internal references, and never write files.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "prompt_template_version": "amanaje-assistant-template-v1"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934610"
+    },
+    {
+      "reference_id": "ref_system_writing_guide",
+      "source_type": "draft_writing_guide",
+      "name": "amanaje_assistant_writing_guide",
+      "summary": "Project writing guidance for draft titles, summaries, metadata, risks, assumptions, and next actions.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "voice": "Concrete, project-aware, concise, and operational.",
+        "titles": "Name the artifact or workflow outcome, not the assistant action.",
+        "summaries": "State what the draft creates, how it fits Painel Amanaje, and what remains for user approval.",
+        "metadata": "Prefer registry-compatible names, versions, paths, feature names, and dependency declarations.",
+        "risks": "Name practical limitations such as synthetic distribution mismatch, missing IDs, or untrained artifacts.",
+        "next_actions": "Use short workflow actions that match reviewed draft, guarded run, upload, or registry submit steps.",
+        "references": "Use internal reference summaries and cite their reference IDs in metadata when they shape the draft.",
+        "originality": "Generate project-specific assets from the request and internal references; do not copy raw reference text."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934625"
+    },
+    {
+      "reference_id": "ref_system_quality_rubric",
+      "source_type": "draft_quality_rubric",
+      "name": "amanaje_assistant_quality_rubric",
+      "summary": "Quality checks used to evaluate generated draft text and metadata.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "title_quality": "Title is specific to the requested artifact or workflow.",
+        "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+        "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+        "risk_quality": "Risks and assumptions are concrete enough for user review.",
+        "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934640"
+    },
+    {
+      "reference_id": "ref_system_mlflow_tracking",
+      "source_type": "mlflow_tracking",
+      "name": "assistant/amanaje_slm",
+      "summary": "Assistant model versions, evals, training examples, and promotion reports are tracked in MLflow.",
+      "trust_level": "system",
+      "uri": "assistant/amanaje_slm",
+      "metadata": {
+        "experiment_name": "assistant/amanaje_slm",
+        "evaluation_profile": "assistant-golden-v1",
+        "context_pack_version": "assistant-context-pack-v1"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934653"
+    },
+    {
+      "reference_id": "ref_runtime_assistant_reference_snapshot",
+      "source_type": "runtime_context",
+      "name": "assistant_reference_snapshot",
+      "summary": "keys: eval_dir, interactions_path, recent_evals, recent_examples, source_type",
+      "trust_level": "runtime",
+      "uri": null,
+      "metadata": {
+        "source_type": "assistant_reference_snapshot",
+        "interactions_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+        "eval_dir": "/app/runtime_artifacts/assistant_evals",
+        "recent_examples": [],
+        "recent_evals": [
+          {
+            "file": "draft_9f7d065eccb8_eval.json",
+            "draft_type": "registry_object",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          },
+          {
+            "file": "draft_2f983b78c89d_eval.json",
+            "draft_type": "registry_object",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          },
+          {
+            "file": "draft_47b256a1a886_eval.json",
+            "draft_type": "dataset_generation",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          }
+        ]
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-03T00:13:31.934725"
+    }
+  ],
+  "reference_pack_id": "refpack_689214cb7c14",
+  "reference_pack_hash": "fe28185230edc9a1b199d8e6a672b25e2ee8dc15f686198abf7154bdc5ebe9d0",
+  "selected_reference_ids": [
+    "ref_system_project_schema_dataset_generation",
+    "ref_system_safety_dataset_generation",
+    "ref_system_alignment_contracts",
+    "ref_system_prompt_dataset_generation",
+    "ref_system_writing_guide",
+    "ref_system_quality_rubric",
+    "ref_system_mlflow_tracking",
+    "ref_runtime_assistant_reference_snapshot"
+  ],
+  "reference_trust_levels": {
+    "ref_system_project_schema_dataset_generation": "system",
+    "ref_system_safety_dataset_generation": "system",
+    "ref_system_alignment_contracts": "system",
+    "ref_system_prompt_dataset_generation": "system",
+    "ref_system_writing_guide": "system",
+    "ref_system_quality_rubric": "system",
+    "ref_system_mlflow_tracking": "system",
+    "ref_runtime_assistant_reference_snapshot": "runtime"
+  },
+  "compact_summary": "target=dataset_generation; references=8",
+  "pack_hash": "9d0af96f53405590697fa82c602811134c10cb39be69a98f438931d0d8983ccd",
+  "created_at": "2026-05-03T00:13:31.935554"
+}

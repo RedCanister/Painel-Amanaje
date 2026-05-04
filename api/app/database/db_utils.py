@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.models.model_orm import DatasetORM, InferenceORM, LearningORM, ObjectORM, StudyORM
+from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, DatasetORM, InferenceORM, LearningORM, ObjectORM, StudyORM
 
 from app.database.db_session import Base
 from app.utils.utils import debug_type
@@ -37,6 +37,10 @@ POLYMORPHIC_IDENTITY_ALIASES = {
         "table": "dataset",
         "tabular": "dataset",
         "dataframe": "dataset",
+        "assistant_training": "assistant_training_dataset",
+        "assistant_training_dataset": "assistant_training_dataset",
+        "assistant_dataset": "assistant_training_dataset",
+        "assistanttrainingdataset": "assistant_training_dataset",
         "numerical": "numerical_dataset",
         "categorical": "categorical_dataset",
         "timeseries": "timeseries_dataset",
@@ -49,6 +53,13 @@ POLYMORPHIC_IDENTITY_ALIASES = {
         "mixed": "mixed_dataset",
     },
     "model_type": {
+        "assistant": "assistant_model",
+        "assistant_llm": "assistant_model",
+        "assistant_slm": "assistant_model",
+        "assistant_llm_adapter": "assistant_model",
+        "assistant_slm_adapter": "assistant_model",
+        "llm": "assistant_model",
+        "slm": "assistant_model",
         "supervised": "supervised_model",
         "unsupervised": "unsupervised_model",
         "reinforcement": "reinforcement_model",
@@ -96,6 +107,30 @@ JSONB_CONTAINER_COLUMNS = {
         "best_params": "{",
         "study_params": "{",
     },
+}
+
+ASSISTANT_MODEL_PARAMETER_FIELDS = {
+    "provider_type",
+    "base_url",
+    "chat_endpoint",
+    "model_name",
+    "model_version",
+    "api_key_env",
+    "adapter_path",
+    "prompt_template_version",
+    "context_pack_version",
+    "safety_profile_version",
+    "evaluation_profile",
+    "supported_draft_types",
+    "behavior_profile",
+    "reference_policy",
+    "training_profile",
+    "runtime_config",
+    "temperature",
+    "max_tokens",
+    "timeout_seconds",
+    "enabled",
+    "is_default",
 }
 
 
@@ -212,6 +247,29 @@ def _sync_legacy_name_payload(orm_model: Type[ObjectORM], payload: dict) -> dict
     return payload
 
 
+def _pack_assistant_model_payload(orm_model: Type[ObjectORM], payload: dict) -> dict:
+    is_assistant_orm = getattr(orm_model, "__name__", "") == "AssistantORM"
+    is_assistant_payload = _normalize_polymorphic_identity("model_type", payload.get("model_type")) == "assistant_model"
+    if not (is_assistant_orm or is_assistant_payload):
+        return payload
+
+    normalized = dict(payload)
+    normalized["model_type"] = "assistant_model"
+    parameters = _parse_container_literal(normalized.get("parameters") or {})
+    if not isinstance(parameters, dict):
+        parameters = {}
+    assistant_parameters = dict(parameters.get("assistant") or {})
+    for field_name in ASSISTANT_MODEL_PARAMETER_FIELDS:
+        if field_name in normalized:
+            value = normalized.pop(field_name)
+            if value is not None:
+                assistant_parameters[field_name] = value
+    assistant_parameters.setdefault("provider_type", "openai_compatible")
+    parameters["assistant"] = assistant_parameters
+    normalized["parameters"] = parameters
+    return normalized
+
+
 async def normalize_legacy_polymorphic_identities(db: AsyncSession) -> dict[str, int]:
     """Repair persisted discriminator aliases so ORM polymorphic loading can succeed."""
 
@@ -313,6 +371,7 @@ async def create_entry(db: AsyncSession, orm_model: ObjectORM, data: BaseModel |
         raise TypeError("normalized payload must be a dict")
 
     orm_model, payload = _resolve_polymorphic_model(orm_model, payload)
+    payload = _pack_assistant_model_payload(orm_model, payload)
     payload = _sync_legacy_name_payload(orm_model, payload)
     payload = _normalize_payload_for_orm(orm_model, payload)
 
@@ -419,6 +478,7 @@ async def update_entry(db: AsyncSession, orm_model: ObjectORM, entry_id: int | s
 
     debug_type(updates)
 
+    updates = _pack_assistant_model_payload(type(obj), updates)
     updates = _normalize_payload_for_orm(type(obj), updates)
 
     for field, value in updates.items():

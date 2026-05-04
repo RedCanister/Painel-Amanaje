@@ -1,6 +1,6 @@
 import ast
 import json
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from typing import Any, List, Optional, Dict
 from datetime import datetime
 import optuna as op
@@ -77,6 +77,35 @@ class DatasetModel(ObjectModel):
         return _coerce_list_field(value)
 
 
+class AssistantTrainingDatasetModel(DatasetModel):
+    """DatasetModel-compatible JSONL snapshot for AssistantModel training."""
+
+    dataset_type: str = "assistant_training_dataset"
+    shape: List[int] = Field(default_factory=lambda: [0, 0])
+    has_features: Optional[bool] = True
+    features_list: Optional[List[str]] = Field(
+        default_factory=lambda: [
+            "source_type",
+            "label",
+            "workflow_type",
+            "prompt",
+            "context_pack_hash",
+            "asset_summary",
+            "content",
+            "registry_metadata",
+            "source_path",
+            "source_hash",
+            "draft",
+            "review",
+            "user_edits",
+            "quality_signals",
+            "assistant_success",
+            "assistant_quality_label",
+        ]
+    )
+    connection_string: Optional[str] = None
+
+
 # Machine Learning Models - Entities: Learning Models, ONNX Models, Template Models. Using ./mlflow-server for model management. Or ./mlruns for run storage
 # Definitions - Send to database | Receive from database | Update in database | Delete from database | Train | Study | Deploy |
 class LearningModel(ObjectModel):
@@ -101,6 +130,92 @@ class LearningModel(ObjectModel):
     def _validate_learning_lists(cls, value: Any) -> Any:
         return _coerce_list_field(value)
     
+
+_ASSISTANT_MODEL_PARAMETER_FIELDS = (
+    "provider_type",
+    "base_url",
+    "chat_endpoint",
+    "model_name",
+    "model_version",
+    "api_key_env",
+    "adapter_path",
+    "prompt_template_version",
+    "context_pack_version",
+    "safety_profile_version",
+    "evaluation_profile",
+    "supported_draft_types",
+    "behavior_profile",
+    "reference_policy",
+    "training_profile",
+    "runtime_config",
+    "temperature",
+    "max_tokens",
+    "timeout_seconds",
+    "enabled",
+    "is_default",
+)
+
+
+class AssistantModel(LearningModel):
+    """LearningModel-compatible registry entry for assistant LLM/SLM runtimes."""
+
+    model_type: str = "assistant_model"
+    parameters: dict = Field(default_factory=dict)
+    metrics: dict = Field(default_factory=dict)
+    reference_data: Optional[str] = "runtime_artifacts/assistant_datasets/interactions.jsonl"
+    input_features: Optional[List[str]] = Field(default_factory=lambda: ["prompt", "context_pack", "target_type"])
+    output_features: Optional[List[str]] = Field(default_factory=lambda: ["workflow_draft"])
+    provider_type: Optional[str] = "openai_compatible"
+    base_url: Optional[str] = None
+    chat_endpoint: Optional[str] = None
+    model_name: Optional[str] = None
+    model_version: Optional[str] = None
+    api_key_env: Optional[str] = None
+    adapter_path: Optional[str] = None
+    prompt_template_version: Optional[str] = None
+    context_pack_version: Optional[str] = None
+    safety_profile_version: Optional[str] = None
+    evaluation_profile: Optional[str] = None
+    supported_draft_types: Optional[List[str]] = None
+    behavior_profile: Optional[Dict[str, Any]] = None
+    reference_policy: Optional[Dict[str, Any]] = None
+    training_profile: Optional[Dict[str, Any]] = None
+    runtime_config: Optional[Dict[str, Any]] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    timeout_seconds: Optional[float] = None
+    enabled: Optional[bool] = True
+    is_default: Optional[bool] = False
+
+    @model_validator(mode="after")
+    def _sync_assistant_parameters(self) -> "AssistantModel":
+        parameters = dict(self.parameters or {})
+        assistant_parameters = dict(parameters.get("assistant") or {})
+        for field_name in _ASSISTANT_MODEL_PARAMETER_FIELDS:
+            value = getattr(self, field_name, None)
+            if value is None and field_name in assistant_parameters:
+                setattr(self, field_name, assistant_parameters[field_name])
+            elif value is not None:
+                assistant_parameters[field_name] = value
+        assistant_parameters.setdefault("provider_type", self.provider_type or "openai_compatible")
+        parameters["assistant"] = assistant_parameters
+        self.parameters = parameters
+        return self
+
+    def model_dump(self, *args, **kwargs):
+        data = super().model_dump(*args, **kwargs)
+        parameters = dict(data.get("parameters") or {})
+        assistant_parameters = dict(parameters.get("assistant") or {})
+        for field_name in _ASSISTANT_MODEL_PARAMETER_FIELDS:
+            value = data.pop(field_name, None)
+            if value is not None:
+                assistant_parameters[field_name] = value
+        assistant_parameters.setdefault("provider_type", "openai_compatible")
+        parameters["assistant"] = assistant_parameters
+        data["parameters"] = parameters
+        data["model_type"] = "assistant_model"
+        return data
+
 
 class CodeModel(ObjectModel):
     

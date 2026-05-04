@@ -113,6 +113,14 @@ class MixedDatasetORM(DatasetORM):
     }
 
 
+class AssistantTrainingDatasetORM(DatasetORM):
+    """Assistant training snapshots stored in the datasets table."""
+
+    __mapper_args__ = {
+        "polymorphic_identity": "assistant_training_dataset"
+    }
+
+
 class LearningORM(ObjectORM):
     __tablename__ = "learning_models"
 
@@ -186,6 +194,14 @@ class TransformativeModelORM(LearningORM):
     __mapper_args__ = {
         "polymorphic_identity": "transformative_model"
     }       
+
+
+class AssistantORM(LearningORM):
+    """Assistant LLM/SLM registry entries stored in the learning_models table."""
+
+    __mapper_args__ = {
+        "polymorphic_identity": "assistant_model"
+    }
 
 
 

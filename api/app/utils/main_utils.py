@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import ast
 import base64
+import hashlib
 import json
+import math
 import os
 import sys
 import textwrap
@@ -25,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.inspection import inspect as sqlalchemy_inspect
 
 from app.database.db_session import AsyncSessionLocal, get_db, init_models, wait_for_database
 from app.database.db_utils import (
@@ -34,8 +37,8 @@ from app.database.db_utils import (
     normalize_legacy_polymorphic_identities,
     update_entry,
 )
-from app.models.model_objects import CodeModel, DatasetModel, InferenceModel, LearningModel, StudyModel
-from app.models.model_orm import CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
+from app.models.model_objects import AssistantModel, AssistantTrainingDatasetModel, CodeModel, DatasetModel, InferenceModel, LearningModel, StudyModel
+from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
 from app.models.model_registry import ModelRegistry
 from app.utils.config import merge_env_overrides, save_config_snapshot
 from app.utils.deployment_utils import (
@@ -172,6 +175,9 @@ SERVING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "serving")
 EXPORT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "exports")
 FEATURE_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "features")
 RUN_LEDGER_DIR = ensure_dir(RUNTIME_DIR / "runs")
+ASSISTANT_MODEL_DIR = ensure_dir(RUNTIME_DIR / "assistant_models")
+ASSISTANT_DATASET_DIR = ensure_dir(RUNTIME_DIR / "assistant_datasets")
+ASSISTANT_EVAL_DIR = ensure_dir(RUNTIME_DIR / "assistant_evals")
 
 LOG_DIR = ensure_dir(PROJECT_ROOT / "logs")
 MLRUNS_DIR = ensure_dir(PROJECT_ROOT / "mlruns")
@@ -204,6 +210,14 @@ CONTROL_PARAMETER_KEYS = {
     "search_space",
     "objective_metric",
     "plot_results",
+    "training_mode",
+    "base_model_id",
+    "base_artifact_path",
+    "base_run_id",
+    "transfer_strategy",
+    "warm_start_increment",
+    "training_lineage",
+    "artifact_manifest",
 }
 
 APP_LOGGER = init_global_logging(log_dir=str(LOG_DIR), logger_name="painel_amanaje")
@@ -212,8 +226,21 @@ LOGGER = get_logger("main_app", log_file=str(LOG_DIR / "main_app.log"))
 REGISTRY_MODEL_MAP: dict[str, dict[str, Any]] = {
     "datasetmodel": {"model": DatasetModel, "orm": DatasetORM, "label": "DatasetModel"},
     "dataset": {"model": DatasetModel, "orm": DatasetORM, "label": "DatasetModel"},
+    "assistanttrainingdatasetmodel": {
+        "model": AssistantTrainingDatasetModel,
+        "orm": AssistantTrainingDatasetORM,
+        "label": "AssistantTrainingDatasetModel",
+    },
+    "assistanttrainingdataset": {
+        "model": AssistantTrainingDatasetModel,
+        "orm": AssistantTrainingDatasetORM,
+        "label": "AssistantTrainingDatasetModel",
+    },
     "learningmodel": {"model": LearningModel, "orm": LearningORM, "label": "LearningModel"},
     "learning": {"model": LearningModel, "orm": LearningORM, "label": "LearningModel"},
+    "assistantmodel": {"model": AssistantModel, "orm": AssistantORM, "label": "AssistantModel"},
+    "assistant": {"model": AssistantModel, "orm": AssistantORM, "label": "AssistantModel"},
+    "assistant_model": {"model": AssistantModel, "orm": AssistantORM, "label": "AssistantModel"},
     "inferencemodel": {"model": InferenceModel, "orm": InferenceORM, "label": "InferenceModel"},
     "inference": {"model": InferenceModel, "orm": InferenceORM, "label": "InferenceModel"},
     "studymodel": {"model": StudyModel, "orm": StudyORM, "label": "StudyModel"},
@@ -242,6 +269,9 @@ def _build_runtime_config() -> dict[str, Any]:
             "optuna_dir": str(OPTUNA_ARTIFACT_DIR),
             "plots_dir": str(PLOT_ARTIFACT_DIR),
             "serving_dir": str(SERVING_ARTIFACT_DIR),
+            "assistant_models_dir": str(ASSISTANT_MODEL_DIR),
+            "assistant_datasets_dir": str(ASSISTANT_DATASET_DIR),
+            "assistant_evals_dir": str(ASSISTANT_EVAL_DIR),
         },
     }
     runtime_config = merge_env_overrides(base_config)
@@ -258,7 +288,9 @@ configure_tracking(
 def _register_models() -> None:
     registry_pairs = (
         (DatasetModel, DatasetORM),
+        (AssistantTrainingDatasetModel, AssistantTrainingDatasetORM),
         (LearningModel, LearningORM),
+        (AssistantModel, AssistantORM),
         (InferenceModel, InferenceORM),
         (CodeModel, CodeORM),
         (StudyModel, StudyORM),
@@ -380,8 +412,58 @@ def _render_page(template_name: str, request_: Request, **context: Any) -> HTMLR
         )
 
 
+def _strict_json_safe(value: Any) -> Any:
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        numeric_value = float(value)
+        return numeric_value if math.isfinite(numeric_value) else None
+    try:
+        missing = pd.isna(value)
+        if isinstance(missing, bool) and missing:
+            return None
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, BaseModel):
+        return _strict_json_safe(value.model_dump())
+    if getattr(value, "__mapper__", None) is not None:
+        try:
+            inspected = sqlalchemy_inspect(value)
+            return {
+                attr.key: _strict_json_safe(getattr(value, attr.key))
+                for attr in inspected.mapper.column_attrs
+            }
+        except Exception:
+            pass
+    if isinstance(value, Mapping):
+        return {str(key): _strict_json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_strict_json_safe(item) for item in value]
+    if hasattr(value, "tolist") and callable(getattr(value, "tolist")):
+        try:
+            return _strict_json_safe(value.tolist())
+        except Exception:
+            pass
+    if hasattr(value, "item") and callable(getattr(value, "item")):
+        try:
+            return _strict_json_safe(value.item())
+        except Exception:
+            pass
+    return value
+
+
 def _json_payload(payload: Any) -> Any:
-    return json.loads(to_json(payload))
+    sanitized = _strict_json_safe(payload)
+    try:
+        return json.loads(json.dumps(sanitized, ensure_ascii=False, allow_nan=False, default=str))
+    except (TypeError, ValueError):
+        return json.loads(to_json(sanitized))
 
 
 def _json_response(payload: Any, status_code: int = 200) -> JSONResponse:
@@ -484,13 +566,13 @@ def _slugify(value: str) -> str:
 
 def _json_safe(value: Any) -> Any:
     try:
-        return json.loads(to_json(value))
+        return _json_payload(value)
     except Exception:
         if isinstance(value, Mapping):
             return {str(key): _json_safe(item) for key, item in value.items()}
         if isinstance(value, list):
             return [_json_safe(item) for item in value]
-        return value
+        return _strict_json_safe(value)
 
 
 def _read_activity_log(limit: Optional[int] = None) -> list[dict[str, Any]]:
@@ -1659,7 +1741,65 @@ def _encode_target(target: pd.Series, task_type: str) -> tuple[pd.Series, dict[s
     return numeric_target.fillna(fill_value).astype(float), {}
 
 
+def _read_assistant_training_manifest(dataset_record: Any) -> dict[str, Any]:
+    manifest_path = getattr(dataset_record, "connection_string", None)
+    resolved_manifest = _resolve_fs_path(manifest_path, default_parent=REPO_ROOT)
+    if resolved_manifest is None or not resolved_manifest.exists():
+        return {}
+    try:
+        payload = json.loads(resolved_manifest.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return dict(payload) if isinstance(payload, Mapping) else {}
+
+
+def _assistant_training_path_candidates(dataset_record: Any, manifest: Mapping[str, Any]) -> tuple[list[Any], list[Any]]:
+    path_value = getattr(dataset_record, "path", None)
+    tabular_candidates = [
+        path_value,
+        manifest.get("tabular_csv_path"),
+        manifest.get("dataset_path") if str(manifest.get("dataset_path") or "").lower().endswith(".csv") else None,
+    ]
+    jsonl_candidates = [
+        manifest.get("canonical_jsonl_path"),
+        manifest.get("jsonl_path"),
+        path_value if str(path_value or "").lower().endswith(".jsonl") else None,
+        manifest.get("dataset_path") if str(manifest.get("dataset_path") or "").lower().endswith(".jsonl") else None,
+    ]
+    return [item for item in tabular_candidates if item], [item for item in jsonl_candidates if item]
+
+
+def _load_assistant_training_dataset_frame_from_record(dataset_record: Any) -> pd.DataFrame:
+    manifest = _read_assistant_training_manifest(dataset_record)
+    tabular_candidates, jsonl_candidates = _assistant_training_path_candidates(dataset_record, manifest)
+
+    for path_value in tabular_candidates:
+        resolved_path = _resolve_fs_path(path_value, default_parent=REPO_ROOT)
+        if resolved_path is not None and resolved_path.exists():
+            dataframe, _parser_report = load_tabular_from_path(resolved_path)
+            return dataframe
+
+    for jsonl_value in jsonl_candidates:
+        resolved_jsonl = _resolve_fs_path(jsonl_value, default_parent=REPO_ROOT)
+        if resolved_jsonl is None or not resolved_jsonl.exists():
+            continue
+        preferred_csv = manifest.get("tabular_csv_path") or resolved_jsonl.with_suffix(".csv")
+        resolved_csv = _resolve_fs_path(preferred_csv, default_parent=REPO_ROOT)
+        if resolved_csv is None:
+            resolved_csv = resolved_jsonl.with_suffix(".csv")
+        from app.utils.assistant_llmops import materialize_assistant_training_csv_from_jsonl
+
+        materialize_assistant_training_csv_from_jsonl(resolved_jsonl, resolved_csv)
+        dataframe, _parser_report = load_tabular_from_path(resolved_csv)
+        return dataframe
+
+    missing_path = getattr(dataset_record, "path", None) or manifest.get("tabular_csv_path") or manifest.get("canonical_jsonl_path")
+    raise FileNotFoundError(f"Assistant training dataset file not found: {missing_path}")
+
+
 def _load_dataset_frame_from_record(dataset_record: Any) -> pd.DataFrame:
+    if str(getattr(dataset_record, "dataset_type", "") or "").lower() == "assistant_training_dataset":
+        return _load_assistant_training_dataset_frame_from_record(dataset_record)
     path_value = getattr(dataset_record, "path", None)
     resolved_path = _resolve_fs_path(path_value, default_parent=REPO_ROOT)
     if resolved_path is None:
@@ -1758,6 +1898,144 @@ def _select_sklearn_estimator(estimator_class: Optional[str], task_type: str) ->
     return LogisticRegression if task_type == "classification" else RandomForestRegressor
 
 
+def _normalise_training_mode(value: Any) -> str:
+    normalized = str(value or "transfer").strip().lower()
+    return normalized if normalized in {"transfer", "fresh"} else "transfer"
+
+
+def _dataset_snapshot_hash(dataset_record: Any) -> Optional[str]:
+    manifest_path = getattr(dataset_record, "connection_string", None)
+    if manifest_path:
+        try:
+            resolved_manifest = _resolve_fs_path(manifest_path, default_parent=REPO_ROOT)
+            manifest = json.loads(Path(resolved_manifest or manifest_path).read_text(encoding="utf-8"))
+            dataset_hash = manifest.get("dataset_hash")
+            if dataset_hash:
+                return str(dataset_hash)
+        except Exception:
+            pass
+    path = _resolve_fs_path(getattr(dataset_record, "path", None), default_parent=REPO_ROOT)
+    if path is None or not path.exists() or not path.is_file():
+        return None
+    try:
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    except OSError:
+        return None
+
+
+def _public_transfer_context(context: Mapping[str, Any]) -> dict[str, Any]:
+    public = {
+        key: value
+        for key, value in dict(context or {}).items()
+        if key not in {"base_model"}
+    }
+    manifest = public.get("base_artifact_manifest")
+    if isinstance(manifest, Mapping):
+        public["base_artifact_manifest"] = {
+            "artifact_format": manifest.get("artifact_format"),
+            "framework": manifest.get("framework"),
+            "loader": manifest.get("loader"),
+            "warnings": list(manifest.get("warnings") or []),
+        }
+    return public
+
+
+def _build_transfer_learning_context(
+    model_record: Any,
+    dataset_record: Any,
+    parameters: Mapping[str, Any],
+    *,
+    framework: str,
+) -> dict[str, Any]:
+    mode = _normalise_training_mode(parameters.get("training_mode"))
+    strategy = str(parameters.get("transfer_strategy") or "auto")
+    base_artifact_path = parameters.get("base_artifact_path") or getattr(model_record, "path", None)
+    base_run_id = parameters.get("base_run_id") or dict(parameters.get("training_lineage") or {}).get("latest_run_id")
+    context: dict[str, Any] = {
+        "training_mode": mode,
+        "transfer_strategy": strategy,
+        "base_model_id": parameters.get("base_model_id") or getattr(model_record, "id", None),
+        "base_run_id": base_run_id,
+        "base_artifact_path": str(base_artifact_path) if base_artifact_path else None,
+        "dataset_snapshot_hash": _dataset_snapshot_hash(dataset_record),
+        "transfer_status": "pending",
+        "base_model_loaded": False,
+    }
+    if str(getattr(dataset_record, "dataset_type", "") or "").lower() == "assistant_training_dataset":
+        manifest = _read_assistant_training_manifest(dataset_record)
+        context.update(
+            {
+                "assistant_training_dataset": {
+                    "manifest_path": getattr(dataset_record, "connection_string", None),
+                    "canonical_jsonl_path": manifest.get("canonical_jsonl_path"),
+                    "tabular_csv_path": manifest.get("tabular_csv_path") or getattr(dataset_record, "path", None),
+                    "dataset_hash": manifest.get("dataset_hash"),
+                    "tabular_hash": manifest.get("tabular_hash"),
+                    "materialization_format": manifest.get("materialization_format"),
+                }
+            }
+        )
+    if mode == "fresh":
+        context["transfer_status"] = "fresh_requested"
+        return context
+    if not base_artifact_path:
+        context["transfer_status"] = "no_base_artifact"
+        return context
+    path = _resolve_fs_path(base_artifact_path, default_parent=REPO_ROOT)
+    if path is None or not path.exists():
+        context["transfer_status"] = "missing_base_artifact"
+        return context
+    if framework == "onnx":
+        context["transfer_status"] = "onnx_transfer_uses_backend_or_fresh"
+        return context
+    try:
+        runtime_payload = load_runtime_artifact(path, parameters=parameters)
+    except Exception as exc:
+        context["transfer_status"] = "incompatible_base_artifact"
+        context["transfer_error"] = str(exc)
+        return context
+    loaded_framework = str(runtime_payload.get("framework") or "").strip().lower()
+    expected_framework = "pytorch" if framework in {"pytorch", "torch"} else "sklearn"
+    if loaded_framework != expected_framework:
+        context["transfer_status"] = "incompatible_framework"
+        context["loaded_framework"] = loaded_framework
+        context["expected_framework"] = expected_framework
+        return context
+    context["base_model"] = runtime_payload.get("model")
+    context["base_artifact_manifest"] = runtime_payload.get("manifest", {})
+    context["base_model_loaded"] = True
+    context["loaded_framework"] = loaded_framework
+    context["transfer_status"] = "base_loaded"
+    return context
+
+
+def _prepare_sklearn_transfer_estimator(
+    base_model: Any,
+    parameters: Mapping[str, Any],
+) -> tuple[Any, str]:
+    if base_model is None or not hasattr(base_model, "fit"):
+        return None, "no_base_model"
+    if hasattr(base_model, "get_params") and hasattr(base_model, "set_params"):
+        try:
+            params = base_model.get_params(deep=True)
+            updates: dict[str, Any] = {}
+            if "warm_start" in params:
+                updates["warm_start"] = True
+                if "n_estimators" in params:
+                    increment = int(parameters.get("warm_start_increment") or 10)
+                    updates["n_estimators"] = int(params.get("n_estimators") or 0) + max(1, increment)
+            if updates:
+                base_model.set_params(**updates)
+                return base_model, "warm_start_enabled"
+        except Exception:
+            return base_model, "base_loaded_refit"
+    return base_model, "base_loaded_refit"
+
+
 def _log_model_artifact_to_mlflow(model: Any, framework: str) -> Optional[str]:
     if not MLFLOW_DIRECT_AVAILABLE or mlflow is None or not mlflow.active_run():
         return None
@@ -1813,6 +2091,7 @@ def _train_with_sklearn(
     model_record: Any,
     parameters: Mapping[str, Any],
     *,
+    transfer_context: Optional[Mapping[str, Any]] = None,
     progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> tuple[TrainingResult, np.ndarray]:
     estimator_class = parameters.get("estimator_class")
@@ -1820,7 +2099,18 @@ def _train_with_sklearn(
         estimator_class=str(estimator_class) if estimator_class else None,
         task_type=prepared.task_type,
     )
+    transfer_context = dict(transfer_context or {})
     estimator_instance = estimator_factory()
+    clone_estimator = True
+    if transfer_context.get("base_model_loaded"):
+        transferred_estimator, sklearn_transfer_status = _prepare_sklearn_transfer_estimator(
+            transfer_context.get("base_model"),
+            parameters,
+        )
+        if transferred_estimator is not None:
+            estimator_instance = transferred_estimator
+            clone_estimator = False
+            transfer_context["transfer_status"] = sklearn_transfer_status
     hyperparameters = _extract_model_hyperparameters(parameters)
     if estimator_factory.__name__ == "LogisticRegression":
         hyperparameters.setdefault("max_iter", 1000)
@@ -1849,6 +2139,7 @@ def _train_with_sklearn(
             run_name=None,
             tags=None,
             log_to_mlflow=True,
+            clone_estimator=clone_estimator,
         ),
         experiment_name=experiment_name,
         run_name=run_name,
@@ -1872,8 +2163,12 @@ def _train_with_sklearn(
         model_record,
         parameters,
         framework="sklearn",
-        extra_payload={"predictions_preview": predictions[:10].tolist()},
+        extra_payload={
+            "predictions_preview": predictions[:10].tolist(),
+            "transfer_learning": _public_transfer_context(transfer_context),
+        },
     )
+    result.metadata["transfer_learning"] = _public_transfer_context(transfer_context)
 
     return result, predictions
 
@@ -1883,6 +2178,7 @@ def _train_with_pytorch(
     model_record: Any,
     parameters: Mapping[str, Any],
     *,
+    transfer_context: Optional[Mapping[str, Any]] = None,
     progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> tuple[TrainingResult, np.ndarray]:
     import torch
@@ -1925,6 +2221,15 @@ def _train_with_pytorch(
         output_dim=output_dim,
         dropout=dropout,
     )
+    transfer_context = dict(transfer_context or {})
+    if transfer_context.get("base_model_loaded"):
+        try:
+            state_dict = transfer_context["base_model"].state_dict()
+            model.load_state_dict(state_dict, strict=False)
+            transfer_context["transfer_status"] = "base_weights_loaded"
+        except Exception as exc:
+            transfer_context["transfer_status"] = "base_weights_incompatible"
+            transfer_context["transfer_error"] = str(exc)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     experiment_name = str(parameters.get("experiment_name") or f"{model_record.name}_training")
@@ -2010,8 +2315,10 @@ def _train_with_pytorch(
         extra_payload={
             "predictions_preview": predictions[:10].tolist(),
             "evaluation_metrics": dict(eval_metrics),
+            "transfer_learning": _public_transfer_context(transfer_context),
         },
     )
+    result.metadata["transfer_learning"] = _public_transfer_context(transfer_context)
     pretty_print_metrics(result.metrics)
     return result, predictions
 
@@ -2214,6 +2521,8 @@ def _merge_training_parameters(
     parameters.update(dict(payload.parameters or {}))
     if "framework" not in parameters:
         parameters["framework"] = "pytorch" if "deep" in str(getattr(model_record, "model_type", "")).lower() else "sklearn"
+    parameters["training_mode"] = _normalise_training_mode(parameters.get("training_mode"))
+    parameters.setdefault("transfer_strategy", "auto")
     return parameters
 
 
@@ -2228,15 +2537,27 @@ def _run_training_workflow(
     if progress_callback is not None:
         progress_callback({"stage": "preparing_dataset", "message": "Preparing dataset splits and feature encodings."})
     prepared = _prepare_dataset_for_training(dataset_record, model_record, parameters)
-    framework = str(parameters.get("framework", "sklearn")).strip().lower()
+    requested_framework = str(parameters.get("framework", "sklearn")).strip().lower()
+    framework = requested_framework
     if framework == "onnx":
         framework = str(parameters.get("training_backend") or parameters.get("base_framework") or "sklearn").strip().lower()
+
+    transfer_context = _build_transfer_learning_context(
+        model_record,
+        dataset_record,
+        parameters,
+        framework=framework,
+    )
+    if requested_framework == "onnx":
+        transfer_context["requested_framework"] = "onnx"
+        transfer_context["backend_framework"] = framework
 
     if framework in {"sklearn", "scikit-learn", "scikitlearn"}:
         result, predictions = _train_with_sklearn(
             prepared,
             model_record,
             parameters,
+            transfer_context=transfer_context,
             progress_callback=progress_callback,
         )
         framework = "sklearn"
@@ -2245,6 +2566,7 @@ def _run_training_workflow(
             prepared,
             model_record,
             parameters,
+            transfer_context=transfer_context,
             progress_callback=progress_callback,
         )
         framework = "pytorch"
@@ -2252,6 +2574,7 @@ def _run_training_workflow(
         raise ValueError(f"Unsupported training framework: {framework}")
 
     result.framework = framework
+    result.metadata["transfer_learning"] = _public_transfer_context(transfer_context)
     pretty_print_metrics(result.metrics)
     with resume_run(result.run_id) as tracking_active:
         if progress_callback is not None:
@@ -2280,6 +2603,7 @@ def _run_training_workflow(
         "prepared": prepared,
         "artifacts": artifacts,
         "monitoring": monitoring,
+        "transfer_learning": _public_transfer_context(transfer_context),
     }
 
 

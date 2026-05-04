@@ -1,0 +1,27 @@
+{
+    "event_name": "reference_repository_sync",
+    "draft": null,
+    "review": {},
+    "evaluation": {
+        "evaluation_profile": "assistant-reference-sync-v1",
+        "passed": true,
+        "checks": {
+            "reference_repository_synced": true
+        },
+        "alignment_contracts": {
+            "output_alignment": true,
+            "safety_alignment": true,
+            "registry_alignment": true,
+            "dependency_alignment": true,
+            "mlflow_alignment": true
+        }
+    },
+    "artifact_paths": {},
+    "alignment_contracts": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+    }
+}

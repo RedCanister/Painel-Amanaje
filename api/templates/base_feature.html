@@ -148,7 +148,7 @@
                 <input id="featureViewName" type="text" placeholder="customer_churn_feature_view">
             </div>
             <div class="form-group">
-                <label for="featureLimitRows">Preview Row Limit</label>
+                <label for="featureLimitRows">Resulting Row Limit</label>
                 <input id="featureLimitRows" type="number" min="1" max="5000" value="200">
             </div>
         </div>
@@ -161,11 +161,14 @@
             <div class="actions-row">
                 <button type="button" class="btn btn-ghost" id="btnReloadFeatureProfile">Reload Profile</button>
                 <button type="button" class="btn btn-primary" id="btnPreviewFeatureView">Preview Transform</button>
-                <button type="button" class="btn btn-secondary" id="btnMaterializeFeatureView">Materialize View</button>
+                <button type="button" class="btn btn-secondary" id="btnMaterializeFeatureView">Materialize Transform</button>
             </div>
         </div>
 
         <div id="featureWorkspaceStatus" class="status"></div>
+
+        <!-- TODO - Implementing a SQL builder (probably aligned with postgres) would also help build up painel-amanaje's robustness and usability. As an option to either the JSON or visual builder. -->
+        <!-- TODO - Add mathematical operations to the dataset possible transformations. -->
 
         <div class="mode-panel active" data-mode-panel="visual">
             <div class="feature-layout">
@@ -208,36 +211,52 @@
     </section>
 
     <section class="feature-panel">
-        <div class="toolbar-row" style="margin-bottom:1rem;">
-            <div>
-                <h3 style="margin-bottom:0.2rem;">Assistant Studio</h3>
-                <div class="helper-text">Draft reviewed feature operations from the selected dataset context.</div>
-            </div>
-            <div class="actions-row">
-                <button type="button" class="btn btn-primary" id="btnAssistantDraft">Draft</button>
-                <button type="button" class="btn btn-secondary" id="btnAssistantApprove">Approve</button>
-                <button type="button" class="btn btn-ghost" id="btnAssistantPreview">Preview</button>
-            </div>
-        </div>
-        <div class="assistant-grid">
-            <div class="form-group">
-                <label for="assistantPrompt">Request</label>
-                <textarea id="assistantPrompt" spellcheck="true" placeholder="Clean missing target values, keep the preview small, and prepare this as a training-ready feature view."></textarea>
-            </div>
-            <div id="assistantWorkspaceOutput" class="assistant-output">
-                <h4>Review</h4>
-                <div class="helper-text">No assistant draft yet.</div>
+        <div class="assistant-collapsible" data-assistant-collapsible="feature">
+            <button type="button" class="assistant-toggle" data-assistant-toggle="feature" aria-expanded="false">
+                Assistant <span class="assistant-status-badge" data-assistant-status="feature">Ready</span>
+            </button>
+            <div class="assistant-panel" data-assistant-panel="feature" hidden>
+                <div class="toolbar-row" style="margin-bottom:1rem;">
+                    <div>
+                        <h3 style="margin-bottom:0.2rem;">Assistant Studio</h3>
+                        <div class="helper-text">Draft reviewed feature operations from the selected dataset context.</div>
+                    </div>
+                    <div class="actions-row">
+                        <button type="button" class="btn btn-primary" id="btnAssistantDraft">Draft</button>
+                        <button type="button" class="btn btn-secondary" id="btnAssistantApprove">Approve</button>
+                        <button type="button" class="btn btn-ghost" id="btnAssistantPreview">Preview</button>
+                    </div>
+                </div>
+                <div class="assistant-grid">
+                    <div class="form-group">
+                        <label for="assistantPrompt">Request</label>
+                        <textarea id="assistantPrompt" spellcheck="true" placeholder="Clean missing target values, keep the preview small, and prepare this as a training-ready feature view."></textarea>
+                        <label for="assistantFeatureModel" class="helper-text" style="margin-top:0.75rem;">Assistant Model</label>
+                        <select id="assistantFeatureModel">
+                            <option value="">Configured active provider</option>
+                        </select>
+                    </div>
+                    <div id="assistantWorkspaceOutput" class="assistant-output">
+                        <h4>Review</h4>
+                        <div class="helper-text">No assistant draft yet.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <section class="feature-panel">
+
+        <!-- TODO - The column explorer should be a scrollable after 5 items.-->
         <div class="toolbar-row">
             <div>
                 <h3 style="margin-bottom:0.2rem;">Column Explorer</h3>
                 <div class="helper-text">Search wide tables, compare null ratios and uniqueness, and add transforms straight from the explorer.</div>
             </div>
         </div>
+
+        <!-- TODO - The scroll bar should be stylized after the painel-amanaje's theme.
+                    Also, the sample should stand out more from the background, light gray is not ideal. -->
         <div class="column-toolbar">
             <input id="columnSearch" type="search" placeholder="Search columns, families, or sample values">
             <select id="columnSort">
@@ -387,10 +406,13 @@ function renderAssistantOutput(payload = {}) {
     const safety = review.safety || {};
     const actions = review.required_actions || [];
     const messages = review.messages || [];
+    const statusLabel = payload.status || review.status || 'draft';
+    const statusTone = actions.length ? 'needs_attention' : (review.approved ? 'success' : 'idle');
+    AmanajeUI.setAssistantStatus('feature', statusLabel, statusTone);
     target.innerHTML = `
         <h4>${AmanajeUI.escapeHtml(draft.title || 'Review')}</h4>
         <div class="chip-row">
-            <span class="chip">${AmanajeUI.escapeHtml(payload.status || review.status || 'draft')}</span>
+            <span class="chip">${AmanajeUI.escapeHtml(statusLabel)}</span>
             <span class="chip">Risk: ${AmanajeUI.escapeHtml(safety.risk_level || 'none')}</span>
         </div>
         <p class="helper-text">${AmanajeUI.escapeHtml(draft.summary || 'Assistant output will appear here.')}</p>
@@ -587,7 +609,10 @@ function renderFeatureResults(result = {}) {
     document.getElementById('featureWorkspaceResults').innerHTML = AmanajeUI.renderResultTabs(
         [
             { key: 'summary', label: 'Summary', content: previewSummary },
+
+            // TODO - Be sure to extend the plotly implementation to this function if able
             { key: 'plots', label: 'Plots', content: AmanajeUI.renderPlotDeck(result.plots || []) },
+            
             { key: 'details', label: 'Details', content: details }
         ],
         { idPrefix: 'feature_result_tabs' }
@@ -708,6 +733,7 @@ async function draftAssistantFeaturePlan() {
             body: JSON.stringify({
                 prompt,
                 target_type: 'feature_operations',
+                ...AmanajeUI.getAssistantModelRequest('assistantFeatureModel'),
                 context: {
                     datasetId: featureDatasetId.value ? Number(featureDatasetId.value) : null,
                     transforms: serializeVisualTransforms(),
@@ -811,6 +837,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('columnSort').addEventListener('change', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
     featureDatasetId.addEventListener('change', loadFeatureProfile);
     featureLimitRows.addEventListener('input', syncOperationsJson);
+    AmanajeUI.loadAssistantModelOptions('assistantFeatureModel');
     addTransform({ type: 'rename' });
 });
 </script>

@@ -128,6 +128,8 @@ def _build_estimator(
     model_or_factory: Any,
     params: Optional[Mapping[str, Any]],
     random_state: Optional[int],
+    *,
+    clone_estimator: bool = True,
 ) -> Any:
     """
     Instantiate or clone an estimator-like object.
@@ -136,6 +138,11 @@ def _build_estimator(
     estimator_params = dict(params or {})
 
     if hasattr(model_or_factory, "fit"):
+        if not clone_estimator:
+            estimator = model_or_factory
+            if estimator_params and hasattr(estimator, "set_params"):
+                estimator.set_params(**estimator_params)
+            return estimator
         try:
             from sklearn.base import clone
 
@@ -195,6 +202,7 @@ def train_sklearn(
     run_name: Optional[str] = None,
     tags: Optional[Mapping[str, str]] = None,
     log_to_mlflow: bool = True,
+    clone_estimator: bool = True,
 ) -> TrainingResult:
     """
     Train a scikit-learn estimator and return a normalized ``TrainingResult``.
@@ -206,7 +214,7 @@ def train_sklearn(
 
     failed = False
     try:
-        estimator = _build_estimator(model_or_factory, fit_parameters, random_state)
+        estimator = _build_estimator(model_or_factory, fit_parameters, random_state, clone_estimator=clone_estimator)
         if log_to_mlflow and fit_parameters:
             log_params(fit_parameters)
 

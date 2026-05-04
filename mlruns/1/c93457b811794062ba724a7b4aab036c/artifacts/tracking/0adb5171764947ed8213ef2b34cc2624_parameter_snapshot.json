@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "hidden_dim": "80",
+        "hidden_layers": "4",
+        "dropout": "0.4",
+        "learning_rate": "0.00074226218062",
+        "batch_size": "16"
+    },
+    "skipped_conflicts": {}
+}

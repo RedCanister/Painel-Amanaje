@@ -196,6 +196,7 @@
     <section class="form-section" id="uploadSection">
         <h3>Data Creation</h3>
 
+        <!-- TODO - Could instead of a selection list work as a button toggle for simplicity -->
         <form id="uploadForm" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="operationId">Operation Type:</label>
@@ -211,25 +212,40 @@
                 <button type="button" id="btnSaveScript" class="success">Save</button>
                 <button type="button" id="btnLoadScript" class="success">Load</button>
                 <button type="button" id="btnLoadTemplate" class="success">Load Template</button>
+
+                <!-- TODO - This button could generate a random sample of all the available  references in the SLM -->
                 <button type="button" id="btnGenerateScript" class="success">Generate</button>
+
                 <button type="button" id="btnExportJSON" class="success">Export JSON</button>
                 <button type="button" id="btnResetScript" class="success">Reset</button>
             </div>
 
-            <div class="assistant-create-grid">
-                <div class="form-group">
-                    <label for="assistantCreatePrompt">Assistant Request</label>
-                    <textarea id="assistantCreatePrompt" spellcheck="true" placeholder="Create a realistic dataset with feature_a, feature_b, segment, and target, or draft a scikit-learn joblib model for this project."></textarea>
-                    <div class="editor-controls" style="margin-bottom:0;">
-                        <button type="button" id="btnAssistantDraftScript" class="success">Draft</button>
-                        <button type="button" id="btnAssistantReviewScript">Review</button>
-                        <button type="button" id="btnAssistantRunScript">Run Draft</button>
-                        <button type="button" id="btnAssistantUseResult" class="success">Use Result</button>
+            <!-- This assistant button needs to fit the same styling of every other element in the interface-->
+            <div class="assistant-collapsible" data-assistant-collapsible="create">
+                <button type="button" class="assistant-toggle" data-assistant-toggle="create" aria-expanded="false">
+                    Assistant <span class="assistant-status-badge" data-assistant-status="create">Ready</span>
+                </button>
+                <div class="assistant-panel" data-assistant-panel="create" hidden>
+                    <div class="assistant-create-grid">
+                        <div class="form-group">
+                            <label for="assistantCreatePrompt">Assistant Request</label>
+                            <textarea id="assistantCreatePrompt" spellcheck="true" placeholder="Create a realistic dataset with feature_a, feature_b, segment, and target, or draft a scikit-learn joblib model for this project."></textarea>
+                            <label for="assistantCreateModel" class="small-text" style="margin-top:0.75rem;">Assistant Model</label>
+                            <select id="assistantCreateModel">
+                                <option value="">Configured active provider</option>
+                            </select>
+                            <div class="editor-controls" style="margin-bottom:0;">
+                                <button type="button" id="btnAssistantDraftScript" class="success">Draft</button>
+                                <button type="button" id="btnAssistantReviewScript">Review</button>
+                                <button type="button" id="btnAssistantRunScript">Run Draft</button>
+                                <button type="button" id="btnAssistantUseResult" class="success">Use Result</button>
+                            </div>
+                        </div>
+                        <div id="assistantCreateOutput" class="assistant-output">
+                            <h4>Assistant Review</h4>
+                            <p class="small-text">No assistant draft yet.</p>
+                        </div>
                     </div>
-                </div>
-                <div id="assistantCreateOutput" class="assistant-output">
-                    <h4>Assistant Review</h4>
-                    <p class="small-text">No assistant draft yet.</p>
                 </div>
             </div>
 
@@ -250,12 +266,13 @@
                     <div id="outputContent"></div>
                 </div>
                 
-                <!-- TODO - Turn Script Variables into a better metadata visualizer -->
+                <!-- TODO - Make Scripts Variables into a collapsable open JSON table -->
                 <div id="variablePanel" style="display:none;">
                     <h3>Script Variables</h3>
                     <div id="variableList"></div>
                 </div>
 
+                <!-- TODO - Saved Scripts should be scrollable after 5 items, and I would also like for it to be near the save and load buttons, for a UX improvement. -->
                 <div id="filePanel" style="display:none;">
                     <h3>Saved Scripts</h3>
                     <ul id="fileList" class="file-list"></ul>
@@ -278,6 +295,8 @@
         </details>
     </section>
 
+    <!-- TODO - We should merge the Analysis and History section into one, for simplicity. In the UX sense, picking below the selection for the function that is showed above can break the usage flow.
+     For both the datasets and models equally. Is it possible to use MultiObjectSelector here?-->
     <section class="form-section" id="featuresSection">
         <h3>Dataset History</h3>
         <div class="feature-controls">
@@ -296,6 +315,8 @@
         <div class="model-list" id="modelList"></div>
     </section>
 
+    <!-- TODO - We should merge the Analysis and History section into one, for simplicity. In the UX sense, picking below the selection for the function that is showed above can break the usage flow.
+     For both the datasets and models equally. Is it possible to use MultiObjectSelector here? -->
     <section class="form-section" id="analysisSection">
         <div id="datasetAnalysis">
             <h3>Data Analysis</h3>
@@ -308,6 +329,7 @@
             <div id="datasetAnalysisResults" class="data-grid"></div>
         </div>
 
+        <!-- TODO - The model analysis should show the parameters, input and output features-->
         <div id="modelAnalysis">
             <h3>Model Analysis</h3>
             <div class="analysis-controls">
@@ -319,6 +341,8 @@
             <div id="modelAnalysisResults" class="data-grid"></div>
         </div>
     </section>
+
+
 </div>
 {% endblock %}
 

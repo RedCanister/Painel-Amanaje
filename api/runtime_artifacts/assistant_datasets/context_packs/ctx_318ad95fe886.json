@@ -1,0 +1,60 @@
+{
+  "context_pack_id": "ctx_318ad95fe886",
+  "version": "assistant-context-pack-v1",
+  "prompt": "make a dataset about keyboards",
+  "workflow_goal": null,
+  "target_type": "registry_object",
+  "provider": "amanaje_slm",
+  "registry_type": "DatasetModel",
+  "form_values": {
+    "dataset_id": 1,
+    "registryType": "DatasetModel"
+  },
+  "constraints": {},
+  "safety_profile": "registry_object",
+  "allowed_imports": [],
+  "allowed_dependencies": [],
+  "content_references": [
+    {
+      "reference_id": "ref_f583915ed416",
+      "source_type": "project_schema",
+      "name": "assistant_workflow_draft",
+      "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+      "trust_level": "project",
+      "uri": null,
+      "metadata": {
+        "target_type": "registry_object"
+      },
+      "created_at": "2026-05-01T19:39:17.111013"
+    },
+    {
+      "reference_id": "ref_b7cb0b81fa3a",
+      "source_type": "safety_profile",
+      "name": "registry_object",
+      "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+      "trust_level": "project",
+      "uri": null,
+      "metadata": {
+        "allowed_imports": [],
+        "allowed_dependencies": [],
+        "required_outputs": []
+      },
+      "created_at": "2026-05-01T19:39:17.111222"
+    },
+    {
+      "reference_id": "ref_49cbe7c1d905",
+      "source_type": "registry_schema",
+      "name": "DatasetModel",
+      "summary": "Manual registry payload target: DatasetModel.",
+      "trust_level": "project",
+      "uri": null,
+      "metadata": {
+        "registry_type": "DatasetModel"
+      },
+      "created_at": "2026-05-01T19:39:17.111354"
+    }
+  ],
+  "compact_summary": "target=registry_object; registry_type=DatasetModel; form_keys=dataset_id,registryType; references=3",
+  "pack_hash": "35089044d7c1f0d485b629ce9f6b2ab4c054cdffd43212a05ddc497690842c5a",
+  "created_at": "2026-05-01T19:39:17.111630"
+}

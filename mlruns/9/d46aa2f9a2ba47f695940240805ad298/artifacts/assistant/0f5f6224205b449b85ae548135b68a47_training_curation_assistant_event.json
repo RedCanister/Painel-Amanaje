@@ -1,0 +1,20 @@
+{
+    "event_name": "training_curation",
+    "draft": null,
+    "review": {},
+    "evaluation": {
+        "evaluation_profile": "assistant-training-curation-v1",
+        "passed": true
+    },
+    "artifact_paths": {
+        "curated_path": "/app/runtime_artifacts/assistant_datasets/curated/curated_interactions.jsonl",
+        "manifest_path": "/app/runtime_artifacts/assistant_datasets/curated/curation_manifest.json"
+    },
+    "alignment_contracts": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+    }
+}

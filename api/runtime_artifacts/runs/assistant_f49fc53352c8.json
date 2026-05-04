@@ -1,0 +1,351 @@
+{
+  "run_id": "assistant_f49fc53352c8",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-05-01T20:04:57.441178",
+  "updated_at": "2026-05-01T20:04:57.466786",
+  "started_at": null,
+  "completed_at": "2026-05-01T20:04:57.466786",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_75818f297d80",
+    "draft_type": "dataset_generation",
+    "context_pack_id": "ctx_51585eadddb5",
+    "context_pack_hash": "3670f2b2ac1d6b773f353271c736bf3ece494a5c95db139b4617ff81f0c63f7d",
+    "model_version": "amanaje-slm-bootstrap-0.1",
+    "prompt_template_version": "amanaje-assistant-template-v1",
+    "evaluation_profile": "assistant-golden-v1"
+  },
+  "parameters": {
+    "prompt": "Example: Load a CSV file and calculate summary statistics.",
+    "provider": "amanaje_slm",
+    "requested_provider": "amanaje_slm",
+    "target_type": "dataset_generation",
+    "safety_profile": "dataset_generation"
+  },
+  "metrics": {
+    "assistant_latency_ms": 2.359,
+    "assistant_validation_passed": true
+  },
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_75818f297d80",
+      "session_id": null,
+      "draft_type": "dataset_generation",
+      "title": "Generated Dataset Draft",
+      "summary": "Creates a tabular dataset and exposes it as csv_text for the existing upload/create flow.",
+      "prompt": "Example: Load a CSV file and calculate summary statistics.",
+      "status": "draft",
+      "provider": "amanaje_slm",
+      "created_at": "2026-05-01T20:04:57.384350",
+      "code": "# Assistant dataset draft\n# Example: Load a CSV file and calculate summary statistics.\n\nimport numpy as np\nimport pandas as pd\n\nrng = np.random.default_rng(42)\nrow_count = 100\ndf = pd.DataFrame({\n    \"feature_a\": rng.normal(10, 2, row_count).round(4),\n    \"feature_b\": rng.integers(0, 5, row_count),\n    \"segment\": rng.choice([\"baseline\", \"growth\", \"risk\"], row_count),\n})\ndf[\"target\"] = (df[\"feature_a\"] * 0.7 + df[\"feature_b\"] * 1.5 + rng.normal(0, 0.5, row_count)).round(4)\n\ncsv_text = df.to_csv(index=False)\nname = \"assistant_generated_dataset\"\ndescription = \"Dataset drafted by the Amanaje assistant.\"\nobject_type = \"dataset\"\ndataset_type = \"dataset\"\nversion = 1\nconnection_string = \"\"",
+      "operations": [],
+      "registry_payload": {},
+      "registry_type": null,
+      "form_payload": {},
+      "training_request": {},
+      "study_request": {},
+      "execution_profile": "dataset_generation",
+      "materialized_outputs": [
+        "csv_text",
+        "name",
+        "description",
+        "object_type",
+        "dataset_type"
+      ],
+      "artifacts": {
+        "context_pack": {
+          "id": "ctx_51585eadddb5",
+          "hash": "3670f2b2ac1d6b773f353271c736bf3ece494a5c95db139b4617ff81f0c63f7d",
+          "version": "assistant-context-pack-v1",
+          "payload": {
+            "context_pack_id": "ctx_51585eadddb5",
+            "version": "assistant-context-pack-v1",
+            "prompt": "Example: Load a CSV file and calculate summary statistics.",
+            "workflow_goal": null,
+            "target_type": "dataset_generation",
+            "provider": "amanaje_slm",
+            "registry_type": null,
+            "form_values": {},
+            "constraints": {},
+            "safety_profile": "dataset_generation",
+            "allowed_imports": [
+              "datetime",
+              "math",
+              "numpy",
+              "pandas",
+              "random",
+              "statistics"
+            ],
+            "allowed_dependencies": [
+              "numpy",
+              "pandas"
+            ],
+            "content_references": [
+              {
+                "reference_id": "ref_0d2339b1eb44",
+                "source_type": "project_schema",
+                "name": "assistant_workflow_draft",
+                "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "target_type": "dataset_generation"
+                },
+                "created_at": "2026-05-01T20:04:57.382680"
+              },
+              {
+                "reference_id": "ref_45b24f72c8ac",
+                "source_type": "safety_profile",
+                "name": "dataset_generation",
+                "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "allowed_imports": [
+                    "math",
+                    "statistics",
+                    "datetime",
+                    "random",
+                    "numpy",
+                    "pandas"
+                  ],
+                  "allowed_dependencies": [
+                    "numpy",
+                    "pandas"
+                  ],
+                  "required_outputs": [
+                    "csv_text"
+                  ]
+                },
+                "created_at": "2026-05-01T20:04:57.382835"
+              }
+            ],
+            "compact_summary": "target=dataset_generation; references=2",
+            "pack_hash": "3670f2b2ac1d6b773f353271c736bf3ece494a5c95db139b4617ff81f0c63f7d",
+            "created_at": "2026-05-01T20:04:57.383069"
+          }
+        },
+        "assistant_model_registry_payload": {
+          "name": "amanaje_slm_assistant",
+          "description": "Private assistant model service used by Painel Amanaje.",
+          "object_type": "learning_model",
+          "size": 0,
+          "path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "version": "amanaje-slm-bootstrap-0.1",
+          "model_type": "assistant_llm_adapter",
+          "parameters": {
+            "provider": "amanaje_slm",
+            "base_model_name": "local-workflow-template",
+            "prompt_template_version": "amanaje-assistant-template-v1",
+            "context_pack_version": "assistant-context-pack-v1",
+            "safety_profile_version": "assistant-safety-v1"
+          },
+          "metrics": {
+            "evaluation_profile": "assistant-golden-v1",
+            "evaluation_score": null
+          },
+          "reference_data": "runtime_artifacts/assistant_datasets/interactions.jsonl",
+          "input_features": [
+            "prompt",
+            "context_pack",
+            "target_type"
+          ],
+          "output_features": [
+            "workflow_draft"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false,
+          "history": [
+            {
+              "operation": "assistant_model_registered_payload"
+            }
+          ]
+        }
+      },
+      "assumptions": [
+        "The generated dataset is synthetic.",
+        "The draft only prepares csv_text; it does not write files or registry rows."
+      ],
+      "risks": [
+        "Synthetic data may not represent the target production distribution."
+      ],
+      "context": {
+        "operationId": "datasets",
+        "existing_metadata": {
+          "name": "sample_dataset",
+          "description": "Dataset created from the editor",
+          "object_type": "dataset",
+          "path": "generated/sample_dataset.csv",
+          "version": 1,
+          "dataset_type": "dataset",
+          "connection_string": "",
+          "df": [
+            {
+              "value": 10,
+              "category": "a"
+            },
+            {
+              "value": 20,
+              "category": "b"
+            },
+            {
+              "value": 30,
+              "category": "c"
+            }
+          ],
+          "csv_text": "value,category\n10,a\n20,b\n30,c\n"
+        }
+      },
+      "next_actions": [
+        "Review safety report",
+        "Approve draft",
+        "Execute through the guarded execution path"
+      ],
+      "model_version": "amanaje-slm-bootstrap-0.1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "context_pack_id": "ctx_51585eadddb5",
+      "context_pack_hash": "3670f2b2ac1d6b773f353271c736bf3ece494a5c95db139b4617ff81f0c63f7d",
+      "evaluation_profile": "assistant-golden-v1",
+      "generation_provenance": {
+        "source_type": "assistant",
+        "provider": "amanaje_slm",
+        "model_version": "amanaje-slm-bootstrap-0.1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_id": "ctx_51585eadddb5",
+        "context_pack_hash": "3670f2b2ac1d6b773f353271c736bf3ece494a5c95db139b4617ff81f0c63f7d",
+        "fallback_provider": "local",
+        "created_at": "2026-05-01T20:04:57.384755"
+      },
+      "provider_metadata": {
+        "provider": "amanaje_slm",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "allowed_dependencies": [
+          "numpy",
+          "pandas"
+        ],
+        "fallback_provider": "local",
+        "latency_ms": 2.359,
+        "cache_hit": false,
+        "runtime": "bootstrap",
+        "fallback_reason": "No external SLM runtime is configured; using deterministic local fallback.",
+        "serving_mode": "separate-service-ready",
+        "slm_config": {
+          "enabled": false,
+          "base_url": "http://localhost:8000/v1",
+          "model_name": "amanaje-assistant",
+          "timeout_seconds": 20.0,
+          "max_tokens": 1600,
+          "api_key_configured": false,
+          "model_version": "amanaje-slm-bootstrap-0.1"
+        }
+      }
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "low",
+        "profile": "dataset_generation",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "statistics"
+        ],
+        "allowed_dependencies": [
+          "numpy",
+          "pandas"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ],
+        "materialized_output_checks": {
+          "csv_text": true
+        }
+      },
+      "messages": [
+        "Dataset code is review-safe and ready for explicit execution approval."
+      ],
+      "required_actions": [],
+      "reviewed_at": "2026-05-01T20:04:57.389743"
+    },
+    "evaluation": {
+      "evaluation_profile": "assistant-golden-v1",
+      "draft_type": "dataset_generation",
+      "passed": true,
+      "checks": {
+        "valid_workflow_draft": true,
+        "has_context_pack": true,
+        "has_model_version": true,
+        "has_prompt_template_version": true,
+        "review_approved": true,
+        "csv_text": true
+      }
+    },
+    "artifact_paths": {
+      "context_pack_path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_51585eadddb5.json",
+      "evaluation_path": "/app/runtime_artifacts/assistant_evals/draft_75818f297d80_eval.json"
+    },
+    "training_example_path": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-05-01T20:04:57.466786",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-01T20:04:57.441178",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-05-01T20:04:57.466786",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-01T20:04:57.441178",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-05-01T20:04:57.466786",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"source_type": "assistant_interaction", "label": "positive", "workflow_type": "dataset_generation", "prompt": "Create dataset. api_key=secret-value", "context_pack_hash": "ctx", "draft": {"title": "ok"}, "review": {"approved": true}, "user_edits": {}, "quality_signals": {"label": "positive", "review_status": null, "approved": true}, "metadata": {}}

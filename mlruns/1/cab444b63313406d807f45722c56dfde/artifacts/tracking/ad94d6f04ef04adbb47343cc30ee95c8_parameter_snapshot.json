@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "epochs": "20",
+        "metric": "accuracy",
+        "dropout": "0.2",
+        "n_trials": "25",
+        "direction": "maximize",
+        "framework": "pytorch",
+        "batch_size": "16",
+        "hidden_dim": "128",
+        "input_size": "4",
+        "num_layers": "2",
+        "hidden_size": "32",
+        "output_size": "1",
+        "hidden_layers": "2",
+        "learning_rate": "0.00200735364997",
+        "input_features": "[\"Date\", \"Open\", \"High\", \"Low\", \"Close\", \"Volume\", \"Close_Return\", \"Volatility\", \"MA20\", \"MA50\", \"Momentum\", \"RelVolume\", \"RSI_Close\", \"Williams_%R\", \"CCI\", \"Bollinger_%B\", \"KeltnerC_%\", \"MACD_lib\", \"MACD_signal\", \"MACD_Hist\", \"Force_Index\", \"Volume_Price_Trend\", \"DLR\", \"RSI_Over\", \"RSI_Under\", \"Williams_Over\", \"Williams_Under\", \"MACD_Over\", \"MACD_Under\", \"Data\", \"time_idx\", \"series_id\", \"hl_center\", \"hl_range\", \"dayofweek\"]",
+        "output_features": "[\"month\"]",
+        "artifact_manifest": "{\"artifact_format\": \".pt\", \"capability_matrix\": {\".joblib\": {\"inspect\": true, \"label\": \"scikit-learn Joblib\", \"monitor\": true, \"predict\": true, \"register\": true, \"simulate\": true, \"train\": false}, \".json\": {\"inspect\": true, \"label\": \"JSON Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".onnx\": {\"inspect\": true, \"label\": \"ONNX\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".pickle\": {\"inspect\": true, \"label\": \"Python Pickle\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pkl\": {\"inspect\": true, \"label\": \"Python Pickle\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pt\": {\"inspect\": true, \"label\": \"PyTorch Artifact\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pth\": {\"inspect\": true, \"label\": \"PyTorch Artifact\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".yaml\": {\"inspect\": true, \"label\": \"YAML Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".yml\": {\"inspect\": true, \"label\": \"YAML Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}}, \"entrypoint\": null, \"framework\": \"pytorch\", \"loader\": \"torchscript\", \"metadata\": {}, \"needs_companion_spec\": true, \"runtime_capabilities\": {\"inspect\": true, \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \"source\": \"/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt\", \"supported_file_types\": [\".joblib\", \".json\", \".onnx\", \".pickle\", \".pkl\", \".pt\", \".pth\", \".yaml\", \".yml\"], \"warnings\": [\"Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition.\"]}"
+    },
+    "skipped_conflicts": {}
+}

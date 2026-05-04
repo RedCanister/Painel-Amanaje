@@ -1,0 +1,375 @@
+{
+  "run_id": "assistant_a2724f8cec6f",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-05-01T19:12:06.450724",
+  "updated_at": "2026-05-01T19:12:06.488883",
+  "started_at": null,
+  "completed_at": "2026-05-01T19:12:06.488883",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_b06eaa7073a1",
+    "draft_type": "registry_object",
+    "context_pack_id": "ctx_0b82b58a47a3",
+    "context_pack_hash": "f83065a7e2e7cc64d2a6a9af4db7b25e49843de2b485d8a6aadae5361492c7da",
+    "model_version": "amanaje-slm-bootstrap-0.1",
+    "prompt_template_version": "amanaje-assistant-template-v1",
+    "evaluation_profile": "assistant-golden-v1"
+  },
+  "parameters": {
+    "prompt": "make a dataset about keyboards",
+    "provider": "amanaje_slm",
+    "requested_provider": "amanaje_slm",
+    "target_type": "registry_object",
+    "safety_profile": "registry_object"
+  },
+  "metrics": {
+    "assistant_latency_ms": 6.662,
+    "assistant_validation_passed": true
+  },
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_b06eaa7073a1",
+      "session_id": null,
+      "draft_type": "registry_object",
+      "title": "DatasetModel Draft",
+      "summary": "Prepares registry metadata for review before the user submits the manual create form.",
+      "prompt": "make a dataset about keyboards",
+      "status": "draft",
+      "provider": "amanaje_slm",
+      "created_at": "2026-05-01T19:12:06.379206",
+      "code": null,
+      "operations": [],
+      "registry_payload": {
+        "name": "assistant_datasetmodel",
+        "description": "DatasetModel drafted by the Amanaje assistant.",
+        "size": 0.0,
+        "date": null,
+        "version": 1,
+        "history": [
+          {
+            "operation": "assistant_draft"
+          }
+        ],
+        "object_type": "dataset",
+        "path": "data/datasets/artifact.csv",
+        "dataset_type": "dataset",
+        "shape": [
+          100,
+          4
+        ],
+        "has_features": false,
+        "features_list": [
+          "feature_a",
+          "feature_b",
+          "segment",
+          "target"
+        ],
+        "connection_string": ""
+      },
+      "registry_type": "DatasetModel",
+      "form_payload": {
+        "name": "assistant_datasetmodel",
+        "description": "DatasetModel drafted by the Amanaje assistant.",
+        "size": 0.0,
+        "date": null,
+        "version": 1,
+        "history": [
+          {
+            "operation": "assistant_draft"
+          }
+        ],
+        "object_type": "dataset",
+        "path": "data/datasets/artifact.csv",
+        "dataset_type": "dataset",
+        "shape": [
+          100,
+          4
+        ],
+        "has_features": false,
+        "features_list": [
+          "feature_a",
+          "feature_b",
+          "segment",
+          "target"
+        ],
+        "connection_string": ""
+      },
+      "training_request": {},
+      "study_request": {},
+      "execution_profile": "registry_object",
+      "materialized_outputs": [
+        "registry_payload"
+      ],
+      "artifacts": {
+        "context_pack": {
+          "id": "ctx_0b82b58a47a3",
+          "hash": "f83065a7e2e7cc64d2a6a9af4db7b25e49843de2b485d8a6aadae5361492c7da",
+          "version": "assistant-context-pack-v1",
+          "payload": {
+            "context_pack_id": "ctx_0b82b58a47a3",
+            "version": "assistant-context-pack-v1",
+            "prompt": "make a dataset about keyboards",
+            "workflow_goal": null,
+            "target_type": "registry_object",
+            "provider": "amanaje_slm",
+            "registry_type": "DatasetModel",
+            "form_values": {
+              "dataset_id": 1,
+              "registryType": "DatasetModel"
+            },
+            "constraints": {},
+            "safety_profile": "registry_object",
+            "allowed_imports": [],
+            "allowed_dependencies": [],
+            "content_references": [
+              {
+                "reference_id": "ref_28bbb956054a",
+                "source_type": "project_schema",
+                "name": "assistant_workflow_draft",
+                "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "target_type": "registry_object"
+                },
+                "created_at": "2026-05-01T19:12:06.373852"
+              },
+              {
+                "reference_id": "ref_106c1ee2a4b4",
+                "source_type": "safety_profile",
+                "name": "registry_object",
+                "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "allowed_imports": [],
+                  "allowed_dependencies": [],
+                  "required_outputs": []
+                },
+                "created_at": "2026-05-01T19:12:06.373995"
+              },
+              {
+                "reference_id": "ref_4db00d960c5c",
+                "source_type": "registry_schema",
+                "name": "DatasetModel",
+                "summary": "Manual registry payload target: DatasetModel.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "registry_type": "DatasetModel"
+                },
+                "created_at": "2026-05-01T19:12:06.374108"
+              }
+            ],
+            "compact_summary": "target=registry_object; registry_type=DatasetModel; form_keys=dataset_id,registryType; references=3",
+            "pack_hash": "f83065a7e2e7cc64d2a6a9af4db7b25e49843de2b485d8a6aadae5361492c7da",
+            "created_at": "2026-05-01T19:12:06.375928"
+          }
+        },
+        "assistant_model_registry_payload": {
+          "name": "amanaje_slm_assistant",
+          "description": "Private assistant model service used by Painel Amanaje.",
+          "object_type": "learning_model",
+          "size": 0,
+          "path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "version": "amanaje-slm-bootstrap-0.1",
+          "model_type": "assistant_llm_adapter",
+          "parameters": {
+            "provider": "amanaje_slm",
+            "base_model_name": "local-workflow-template",
+            "prompt_template_version": "amanaje-assistant-template-v1",
+            "context_pack_version": "assistant-context-pack-v1",
+            "safety_profile_version": "assistant-safety-v1"
+          },
+          "metrics": {
+            "evaluation_profile": "assistant-golden-v1",
+            "evaluation_score": null
+          },
+          "reference_data": "runtime_artifacts/assistant_datasets/interactions.jsonl",
+          "input_features": [
+            "prompt",
+            "context_pack",
+            "target_type"
+          ],
+          "output_features": [
+            "workflow_draft"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false,
+          "history": [
+            {
+              "operation": "assistant_model_registered_payload"
+            }
+          ]
+        }
+      },
+      "assumptions": [
+        "The target registry route will perform final Pydantic and ORM validation."
+      ],
+      "risks": [
+        "References to datasets, models, or studies must exist before the object can be saved."
+      ],
+      "context": {
+        "registryType": "DatasetModel",
+        "name": "",
+        "description": "",
+        "path": "data/datasets/artifact.csv",
+        "size": 0,
+        "version": 1,
+        "dataset_type": "dataset",
+        "has_features": false,
+        "connection_string": "",
+        "model_type": "learning_model",
+        "reference_data": "",
+        "is_trained": false,
+        "is_tested": false,
+        "is_deployed": false,
+        "learning_model_id": 1,
+        "dataset_id": 1,
+        "sampler": "",
+        "objective": ""
+      },
+      "next_actions": [
+        "Review metadata",
+        "Approve persistence",
+        "Check dependency report before deletion"
+      ],
+      "model_version": "amanaje-slm-bootstrap-0.1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "context_pack_id": "ctx_0b82b58a47a3",
+      "context_pack_hash": "f83065a7e2e7cc64d2a6a9af4db7b25e49843de2b485d8a6aadae5361492c7da",
+      "evaluation_profile": "assistant-golden-v1",
+      "generation_provenance": {
+        "source_type": "assistant",
+        "provider": "amanaje_slm",
+        "model_version": "amanaje-slm-bootstrap-0.1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_id": "ctx_0b82b58a47a3",
+        "context_pack_hash": "f83065a7e2e7cc64d2a6a9af4db7b25e49843de2b485d8a6aadae5361492c7da",
+        "fallback_provider": "local",
+        "created_at": "2026-05-01T19:12:06.379861"
+      },
+      "provider_metadata": {
+        "provider": "amanaje_slm",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "allowed_dependencies": [],
+        "fallback_provider": "local",
+        "latency_ms": 6.662,
+        "cache_hit": false,
+        "runtime": "bootstrap",
+        "fallback_reason": "No external SLM runtime is configured; using deterministic local fallback.",
+        "serving_mode": "separate-service-ready",
+        "slm_config": {
+          "enabled": false,
+          "base_url": "http://localhost:8000/v1",
+          "model_name": "amanaje-assistant",
+          "timeout_seconds": 20.0,
+          "max_tokens": 1600,
+          "api_key_configured": false,
+          "model_version": "amanaje-slm-bootstrap-0.1"
+        }
+      }
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "none",
+        "profile": "registry_object",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "sklearn",
+          "statistics"
+        ],
+        "allowed_dependencies": [],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ],
+        "materialized_output_checks": {}
+      },
+      "messages": [],
+      "required_actions": [],
+      "reviewed_at": "2026-05-01T19:12:06.383052"
+    },
+    "evaluation": {
+      "evaluation_profile": "assistant-golden-v1",
+      "draft_type": "registry_object",
+      "passed": true,
+      "checks": {
+        "valid_workflow_draft": true,
+        "has_context_pack": true,
+        "has_model_version": true,
+        "has_prompt_template_version": true,
+        "review_approved": true,
+        "registry_payload": true
+      }
+    },
+    "artifact_paths": {
+      "context_pack_path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_0b82b58a47a3.json",
+      "evaluation_path": "/app/runtime_artifacts/assistant_evals/draft_b06eaa7073a1_eval.json"
+    },
+    "training_example_path": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-05-01T19:12:06.488883",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-01T19:12:06.450724",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-05-01T19:12:06.488883",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-01T19:12:06.450724",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-05-01T19:12:06.488883",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

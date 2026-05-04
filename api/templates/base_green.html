@@ -231,15 +231,15 @@
 <div class="training-shell">
     <section class="global-context">
         <h3>Global Training Context</h3>
-        <p class="panel-subtitle">Keep the active inference pair context stable while switching tabs. Tabs now refine the current context instead of owning separate selections.</p>
+        <p class="panel-subtitle">Pick the objects to be used in studies or training. They persist among the tabs.</p>
         <div class="inline-grid">
             <div class="form-group">
                 <label for="globalInferencePairId">Inference Pair</label>
                 <select id="globalInferencePairId">
                     <option value="">Select an inference pair</option>
                 </select>
-                <div class="helper-text">Pick a registered inference pair to hydrate the model and dataset automatically.</div>
             </div>
+
             <div class="form-group">
                 <label for="globalModelId">Learning Model</label>
                 <select id="globalModelId">
@@ -258,6 +258,8 @@
                     <option value="">Optional study</option>
                 </select>
             </div>
+
+            <!-- TODO - Framework could be automatically infered from the model's metadata -->
             <div class="form-group">
                 <label for="globalFramework">Framework</label>
                 <select id="globalFramework">
@@ -268,25 +270,26 @@
             </div>
         </div>
         <div class="actions-row">
-            <button type="button" class="btn btn-primary" id="btnGlobalTrain">Train From Global Context</button>
-            <button type="button" class="btn btn-ghost" id="btnGlobalRunStudy">Run Study From Global Context</button>
+            <button type="button" class="btn btn-primary" id="btnGlobalTrain">Run Training</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalRunStudy">Run Study</button>
         </div>
     </section>
 
     <div class="workspace-tabs">
-        <button class="workspace-tab active" type="button" data-tab="orchestration">Training</button>
-        <button class="workspace-tab" type="button" data-tab="study">Study Registry</button>
+        <button class="workspace-tab active" type="button" data-tab="orchestration">Training </button>
+        <button class="workspace-tab" type="button" data-tab="study">Study </button>
         <button class="workspace-tab" type="button" data-tab="tracking">Tracking and ONNX</button>
     </div>
 
     <section class="training-panel active" id="panel-orchestration">
-        <h3 class="panel-title">Study-Orchestrated Training</h3>
+        <h3 class="panel-title">Training Orchestrator</h3>
         <p class="panel-subtitle">Select a registered model and dataset, hydrate parameters from an existing study when needed, and keep the pipeline summary in sync while the job runs.</p>
 
         <div class="pipeline-grid">
             <div class="surface-card">
-                <h4>Training Job</h4>
                 <form id="trainingForm">
+
+                    <!-- TODO - Consider removing the learning and dataset model selections from within the Training Orchestrator-->
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="modelId">Learning Model</label>
@@ -295,13 +298,14 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="datasetId">Dataset From PostgreSQL Registry</label>
+                            <label for="datasetId">Dataset Model</label>
                             <select id="datasetId" name="datasetId" required>
                                 <option value="">Select a dataset</option>
                             </select>
                         </div>
                     </div>
 
+                    <!-- TODO - Pick the framework automatically infered from the learning model-->
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="framework">Execution Framework</label>
@@ -325,14 +329,14 @@
                         <select id="studyId" name="studyId">
                             <option value="">Select a study</option>
                         </select>
-                        <div class="helper-text">Choosing a study hydrates the model, dataset, and best known parameter envelope automatically.</div>
+                        <div class="helper-text">Choosing a study automatically picks the best parameters detected in the trial runs. See more in the Study Registry.</div>
                     </div>
 
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="inputFeatures">Input Features</label>
                             <select id="inputFeatures" name="inputFeatures" multiple></select>
-                            <div class="helper-text">The feature list is populated from the selected dataset profile.</div>
+                            <div class="helper-text">The input features are populated automatically from the selected dataset.</div>
                         </div>
                         <div class="form-group">
                             <label for="outputFeatures">Output Features</label>
@@ -390,6 +394,7 @@
                     </div>
                 </div>
 
+                <!-- TODO - The pills should display interesting metadata or litte facts made from the dataset.-->
                 <div class="pill-row" id="pipelinePills">
                     <span class="pill">postgresql dataset registry</span>
                     <span class="pill">StudyModel coordination</span>
@@ -405,15 +410,15 @@
     </section>
 
     <section class="training-panel" id="panel-study">
-        <h3 class="panel-title">Study Registry</h3>
-        <p class="panel-subtitle">Reuse an existing study by name, or create a new study and define a parameter search space derived from the linked model.</p>
+        <h3 class="panel-title">Study Orchestrator </h3>
+        <p class="panel-subtitle"> Create, run and refine studies and define a parameter search space derived from the linked model.</p>
 
         <div class="pipeline-grid">
             <div class="surface-card">
-                <h4>Create or Reuse StudyModel</h4>
+                
                 <form id="studyForm">
                     <div class="form-group">
-                        <label for="existingStudyId">Reuse Existing Study</label>
+                        <label for="existingStudyId">Choose a Study </label>
                         <select id="existingStudyId">
                             <option value="">Create a new study</option>
                         </select>
@@ -437,13 +442,13 @@
 
                     <div class="inline-grid">
                         <div class="form-group">
-                            <label for="studyModelId">Linked LearningModel</label>
+                            <label for="studyModelId">Studied Learning Model</label>
                             <select id="studyModelId" name="studyModelId" required>
                                 <option value="">Select a model</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="studyDatasetId">Linked DatasetModel</label>
+                            <label for="studyDatasetId">Studied Dataset Model</label>
                             <select id="studyDatasetId" name="studyDatasetId" required>
                                 <option value="">Select a dataset</option>
                             </select>
@@ -488,7 +493,7 @@
                     </div>
 
                     <div class="actions-row">
-                        <button type="submit" class="btn btn-primary">Create StudyModel</button>
+                        <button type="submit" class="btn btn-primary">Create Study</button>
                         <button type="button" class="btn btn-secondary" id="btnSyncStudyForm">Use Selected Training Pair</button>
                         <button type="button" class="btn btn-ghost" id="btnRunStudy">Run Selected Study</button>
                     </div>
@@ -496,7 +501,7 @@
             </div>
 
             <div class="surface-card">
-                <h4>StudyModel Inventory</h4>
+                <h4>History & Statistics</h4>
                 <div class="summary-grid">
                     <div class="status-card">
                         <small>Total Studies</small>
@@ -520,7 +525,6 @@
 
     <section class="training-panel" id="panel-tracking">
         <h3 class="panel-title">Tracking and ONNX</h3>
-        <p class="panel-subtitle">Snapshots stay collapsed by default so large dataset summaries remain readable, with one-click expansion into a dedicated detail modal.</p>
 
         <div id="trackingMetricCards" style="margin-bottom:1rem;">Select a model to surface its most relevant metrics here before the full snapshots.</div>
 
@@ -553,9 +557,11 @@
         </div>
     </section>
 
+    <!-- TODO - Add a Run History tab besides the Run Ledger to show the user a simplified view of all their previous run, the resulting metrics and the parameters used,
+     with no JSONs to clog up the UI-->
     <section class="training-panel active" style="display:block;">
         <h3 class="panel-title">Run Ledger</h3>
-        <p class="panel-subtitle">Training and study runs now return immediately and keep their status here while you keep working on the page.</p>
+        <p class="panel-subtitle">All of your active runs are shown here. </p>
         <div id="runLedgerResults"></div>
     </section>
 </div>
@@ -807,6 +813,8 @@ function renderTrackingMetricCards(metrics = {}) {
         document.getElementById('trackingMetricCards').innerHTML = '<div class="helper-text">Select a model to surface the most important metrics here.</div>';
         return;
     }
+
+    // TODO - The explanation variable shown here need to be generated on a case-by-case basis
     document.getElementById('trackingMetricCards').innerHTML = AmanajeUI.renderMetricCards(
         entries.map(([key, value]) => ({
             label: key.replace(/_/g, ' '),

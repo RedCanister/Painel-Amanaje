@@ -1,0 +1,58 @@
+{
+  "run_id": "training_249ce5217104",
+  "run_type": "training",
+  "status": "running",
+  "stage": "training",
+  "created_at": "2026-05-03T23:00:06.148279",
+  "updated_at": "2026-05-03T23:00:06.158901",
+  "started_at": "2026-05-03T23:00:06.158901",
+  "completed_at": null,
+  "context": {
+    "model_id": 7,
+    "dataset_id": 11,
+    "inference_id": 13
+  },
+  "parameters": {
+    "framework": "sklearn"
+  },
+  "metrics": {
+    "eval_accuracy": 0.91
+  },
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "training",
+    "latest_event": "Training started.",
+    "latest_timestamp": "2026-05-03T23:00:06.158901",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-03T23:00:06.148279",
+        "message": "training run created."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-03T23:00:06.158901",
+        "message": "Training started."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-03T23:00:06.148279",
+      "message": "training run created."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-03T23:00:06.158901",
+      "message": "Training started."
+    }
+  ]
+}

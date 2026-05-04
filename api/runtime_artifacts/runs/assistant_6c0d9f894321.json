@@ -1,0 +1,365 @@
+{
+  "run_id": "assistant_6c0d9f894321",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-05-01T19:25:59.030215",
+  "updated_at": "2026-05-01T19:25:59.056263",
+  "started_at": null,
+  "completed_at": "2026-05-01T19:25:59.056263",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_19c0d5e74d86",
+    "draft_type": "model_generation",
+    "context_pack_id": "ctx_9e355ac30c2a",
+    "context_pack_hash": "9f55518fba6d5562e8305c75fa66ff98da49982461f892e0410298cffdcf161a",
+    "model_version": "amanaje-slm-bootstrap-0.1",
+    "prompt_template_version": "amanaje-assistant-template-v1",
+    "evaluation_profile": "assistant-golden-v1"
+  },
+  "parameters": {
+    "prompt": "make a model about regression",
+    "provider": "amanaje_slm",
+    "requested_provider": "amanaje_slm",
+    "target_type": "model_generation",
+    "safety_profile": "model_generation"
+  },
+  "metrics": {
+    "assistant_latency_ms": 1.449,
+    "assistant_validation_passed": true
+  },
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_19c0d5e74d86",
+      "session_id": null,
+      "draft_type": "model_generation",
+      "title": "Generated Model Draft",
+      "summary": "Creates a scikit-learn joblib artifact and matching LearningModel metadata for the Create workspace.",
+      "prompt": "make a model about regression",
+      "status": "draft",
+      "provider": "amanaje_slm",
+      "created_at": "2026-05-01T19:25:58.993808",
+      "code": "# Assistant model draft\n# make a model about regression\n\nimport base64\nimport io\nimport joblib\nfrom sklearn.ensemble import RandomForestRegressor\n\nmodel = RandomForestRegressor(n_estimators=80, random_state=42)\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\njoblib_bytes = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nname = \"assistant_generated_model\"\ndescription = \"Scikit-learn model artifact drafted by the Amanaje assistant.\"\nobject_type = \"learning_model\"\npath = \"generated/assistant_generated_model.joblib\"\nversion = 1\nmodel_type = \"supervised_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}\nmetrics = {\"task\": \"regression\", \"status\": \"untrained_template\"}\nreference_data = \"assistant_generated_dataset.csv\"\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\nis_trained = False\nis_tested = False\nis_deployed = False",
+      "operations": [],
+      "registry_payload": {},
+      "registry_type": null,
+      "form_payload": {},
+      "training_request": {},
+      "study_request": {},
+      "execution_profile": "model_generation",
+      "materialized_outputs": [
+        "joblib_bytes",
+        "name",
+        "parameters",
+        "metrics",
+        "input_features",
+        "output_features"
+      ],
+      "artifacts": {
+        "context_pack": {
+          "id": "ctx_9e355ac30c2a",
+          "hash": "9f55518fba6d5562e8305c75fa66ff98da49982461f892e0410298cffdcf161a",
+          "version": "assistant-context-pack-v1",
+          "payload": {
+            "context_pack_id": "ctx_9e355ac30c2a",
+            "version": "assistant-context-pack-v1",
+            "prompt": "make a model about regression",
+            "workflow_goal": null,
+            "target_type": "model_generation",
+            "provider": "amanaje_slm",
+            "registry_type": null,
+            "form_values": {},
+            "constraints": {},
+            "safety_profile": "model_generation",
+            "allowed_imports": [
+              "base64",
+              "io",
+              "joblib",
+              "numpy",
+              "pandas",
+              "sklearn"
+            ],
+            "allowed_dependencies": [
+              "joblib",
+              "numpy",
+              "pandas",
+              "scikit-learn"
+            ],
+            "content_references": [
+              {
+                "reference_id": "ref_47eadd9a967d",
+                "source_type": "project_schema",
+                "name": "assistant_workflow_draft",
+                "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "target_type": "model_generation"
+                },
+                "created_at": "2026-05-01T19:25:58.992650"
+              },
+              {
+                "reference_id": "ref_6527f181ca34",
+                "source_type": "safety_profile",
+                "name": "model_generation",
+                "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+                "trust_level": "project",
+                "uri": null,
+                "metadata": {
+                  "allowed_imports": [
+                    "io",
+                    "sklearn",
+                    "numpy",
+                    "joblib",
+                    "base64",
+                    "pandas"
+                  ],
+                  "allowed_dependencies": [
+                    "joblib",
+                    "scikit-learn",
+                    "numpy",
+                    "pandas"
+                  ],
+                  "required_outputs": [
+                    "joblib_bytes"
+                  ]
+                },
+                "created_at": "2026-05-01T19:25:58.992712"
+              }
+            ],
+            "compact_summary": "target=model_generation; references=2",
+            "pack_hash": "9f55518fba6d5562e8305c75fa66ff98da49982461f892e0410298cffdcf161a",
+            "created_at": "2026-05-01T19:25:58.992831"
+          }
+        },
+        "assistant_model_registry_payload": {
+          "name": "amanaje_slm_assistant",
+          "description": "Private assistant model service used by Painel Amanaje.",
+          "object_type": "learning_model",
+          "size": 0,
+          "path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "version": "amanaje-slm-bootstrap-0.1",
+          "model_type": "assistant_llm_adapter",
+          "parameters": {
+            "provider": "amanaje_slm",
+            "base_model_name": "local-workflow-template",
+            "prompt_template_version": "amanaje-assistant-template-v1",
+            "context_pack_version": "assistant-context-pack-v1",
+            "safety_profile_version": "assistant-safety-v1"
+          },
+          "metrics": {
+            "evaluation_profile": "assistant-golden-v1",
+            "evaluation_score": null
+          },
+          "reference_data": "runtime_artifacts/assistant_datasets/interactions.jsonl",
+          "input_features": [
+            "prompt",
+            "context_pack",
+            "target_type"
+          ],
+          "output_features": [
+            "workflow_draft"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false,
+          "history": [
+            {
+              "operation": "assistant_model_registered_payload"
+            }
+          ]
+        }
+      },
+      "assumptions": [
+        "The first assistant-generated model artifact is a scikit-learn joblib template.",
+        "The generated artifact is intended for registry creation, not immediate production deployment."
+      ],
+      "risks": [
+        "The model is not trained until it is paired with a dataset and submitted to the training workflow."
+      ],
+      "context": {
+        "operationId": "models",
+        "existing_metadata": {
+          "name": "assistant_generated_model",
+          "description": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+          "object_type": "learning_model",
+          "path": "generated/assistant_generated_model.joblib",
+          "version": 1,
+          "model_type": "supervised_model",
+          "parameters": {
+            "framework": "sklearn",
+            "estimator_class": "RandomForestRegressor",
+            "n_estimators": 80,
+            "random_state": 42
+          },
+          "metrics": {
+            "task": "regression",
+            "status": "untrained_template"
+          },
+          "reference_data": "assistant_generated_dataset.csv",
+          "input_features": [
+            "feature_a",
+            "feature_b"
+          ],
+          "output_features": [
+            "target"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false
+        }
+      },
+      "next_actions": [
+        "Review safety report",
+        "Run through guarded execution",
+        "Create the model through the existing upload backend"
+      ],
+      "model_version": "amanaje-slm-bootstrap-0.1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "context_pack_id": "ctx_9e355ac30c2a",
+      "context_pack_hash": "9f55518fba6d5562e8305c75fa66ff98da49982461f892e0410298cffdcf161a",
+      "evaluation_profile": "assistant-golden-v1",
+      "generation_provenance": {
+        "source_type": "assistant",
+        "provider": "amanaje_slm",
+        "model_version": "amanaje-slm-bootstrap-0.1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_id": "ctx_9e355ac30c2a",
+        "context_pack_hash": "9f55518fba6d5562e8305c75fa66ff98da49982461f892e0410298cffdcf161a",
+        "fallback_provider": "local",
+        "created_at": "2026-05-01T19:25:58.994062"
+      },
+      "provider_metadata": {
+        "provider": "amanaje_slm",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "allowed_dependencies": [
+          "joblib",
+          "numpy",
+          "pandas",
+          "scikit-learn"
+        ],
+        "fallback_provider": "local",
+        "latency_ms": 1.449,
+        "cache_hit": false,
+        "runtime": "bootstrap",
+        "fallback_reason": "No external SLM runtime is configured; using deterministic local fallback.",
+        "serving_mode": "separate-service-ready",
+        "slm_config": {
+          "enabled": false,
+          "base_url": "http://localhost:8000/v1",
+          "model_name": "amanaje-assistant",
+          "timeout_seconds": 20.0,
+          "max_tokens": 1600,
+          "api_key_configured": false,
+          "model_version": "amanaje-slm-bootstrap-0.1"
+        }
+      }
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "low",
+        "profile": "model_generation",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "base64",
+          "io",
+          "joblib",
+          "numpy",
+          "pandas",
+          "sklearn"
+        ],
+        "allowed_dependencies": [
+          "joblib",
+          "numpy",
+          "pandas",
+          "scikit-learn"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ],
+        "materialized_output_checks": {
+          "joblib_bytes": true
+        }
+      },
+      "messages": [
+        "Model code is review-safe and ready for guarded execution."
+      ],
+      "required_actions": [],
+      "reviewed_at": "2026-05-01T19:25:59.000604"
+    },
+    "evaluation": {
+      "evaluation_profile": "assistant-golden-v1",
+      "draft_type": "model_generation",
+      "passed": true,
+      "checks": {
+        "valid_workflow_draft": true,
+        "has_context_pack": true,
+        "has_model_version": true,
+        "has_prompt_template_version": true,
+        "review_approved": true,
+        "joblib_bytes": true
+      }
+    },
+    "artifact_paths": {
+      "context_pack_path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_9e355ac30c2a.json",
+      "evaluation_path": "/app/runtime_artifacts/assistant_evals/draft_19c0d5e74d86_eval.json"
+    },
+    "training_example_path": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-05-01T19:25:59.056263",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-01T19:25:59.030215",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-05-01T19:25:59.056263",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-01T19:25:59.030215",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-05-01T19:25:59.056263",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

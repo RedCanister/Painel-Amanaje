@@ -1,0 +1,33 @@
+{
+  "recorded_at": "2026-05-02T21:40:11.482220",
+  "dataset_type": "assistant_training_dataset",
+  "dataset_path": "api\\tests\\.tmp\\assistant_dataset_smoke_08f7f70b\\assistant_datasets\\snapshots\\assistant_training_dataset_20260502_214011.jsonl",
+  "manifest_path": "api\\tests\\.tmp\\assistant_dataset_smoke_08f7f70b\\assistant_datasets\\snapshots\\assistant_training_dataset_20260502_214011_manifest.json",
+  "dataset_hash": "56de9714cec2386a6686d20ccb3a4035774eb34913ae7ee82fec0a9127564559",
+  "record_count": 1,
+  "feature_count": 9,
+  "features_list": [
+    "source_type",
+    "label",
+    "workflow_type",
+    "prompt",
+    "context_pack_hash",
+    "draft",
+    "review",
+    "user_edits",
+    "quality_signals"
+  ],
+  "shape": [
+    1,
+    9
+  ],
+  "source_files": [
+    {
+      "path": "api\\tests\\.tmp\\assistant_dataset_smoke_08f7f70b\\assistant_datasets\\interactions.jsonl",
+      "sha256": "3764b5ce3697ecaab3bf8f664702ccb624c42b44aefbc86326237c938894e005",
+      "source_type": "assistant_interactions"
+    }
+  ],
+  "source_file_count": 1,
+  "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted."
+}

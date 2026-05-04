@@ -32,9 +32,12 @@ class AssistantDraftRequest(BaseModel):
     session_id: Optional[str] = None
     workflow_goal: Optional[str] = None
     target_type: Optional[str] = None
-    provider: str = "local"
+    provider: str = "auto"
+    assistant_model_id: Optional[int | str] = None
+    reference_ids: list[str] = Field(default_factory=list)
     context: dict[str, Any] = Field(default_factory=dict)
     constraints: dict[str, Any] = Field(default_factory=dict)
+    provider_overrides: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("prompt")
     @classmethod
@@ -54,6 +57,72 @@ class AssistantDraftRequest(BaseModel):
             allowed = ", ".join(sorted(ASSISTANT_DRAFT_TYPES))
             raise ValueError(f"target_type must be one of: {allowed}")
         return normalized
+
+
+class ContentReference(BaseModel):
+    reference_id: str = Field(default_factory=lambda: _default_id("ref"))
+    source_type: str
+    name: Optional[str] = None
+    summary: str = ""
+    trust_level: str = "project"
+    uri: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    content_hash: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class AssistantReferenceRequest(BaseModel):
+    source_type: str = "user_text"
+    name: Optional[str] = None
+    summary: Optional[str] = None
+    content_text: Optional[str] = None
+    file_name: Optional[str] = None
+    trust_level: str = "user"
+    uri: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class AssistantReferenceSearchRequest(BaseModel):
+    query: str = ""
+    tags: list[str] = Field(default_factory=list)
+    source_types: list[str] = Field(default_factory=list)
+    limit: int = 20
+
+
+class AssistantContextPack(BaseModel):
+    context_pack_id: str = Field(default_factory=lambda: _default_id("ctx"))
+    version: str = "assistant-context-pack-v1"
+    prompt: str
+    workflow_goal: Optional[str] = None
+    target_type: str
+    provider: str = "local"
+    registry_type: Optional[str] = None
+    form_values: dict[str, Any] = Field(default_factory=dict)
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    safety_profile: str = "dataset_generation"
+    allowed_imports: list[str] = Field(default_factory=list)
+    allowed_dependencies: list[str] = Field(default_factory=list)
+    content_references: list[ContentReference] = Field(default_factory=list)
+    reference_pack_id: str = Field(default_factory=lambda: _default_id("refpack"))
+    reference_pack_hash: str = ""
+    selected_reference_ids: list[str] = Field(default_factory=list)
+    reference_trust_levels: dict[str, str] = Field(default_factory=dict)
+    compact_summary: str = ""
+    pack_hash: str = ""
+    created_at: datetime = Field(default_factory=datetime.now)
+
+
+class GenerationProvenance(BaseModel):
+    source_type: str = "assistant"
+    provider: str
+    model_version: Optional[str] = None
+    prompt_template_version: Optional[str] = None
+    context_pack_id: Optional[str] = None
+    context_pack_hash: Optional[str] = None
+    fallback_provider: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.now)
 
 
 class WorkflowDraft(BaseModel):
@@ -80,6 +149,13 @@ class WorkflowDraft(BaseModel):
     risks: list[str] = Field(default_factory=list)
     context: dict[str, Any] = Field(default_factory=dict)
     next_actions: list[str] = Field(default_factory=list)
+    model_version: Optional[str] = None
+    prompt_template_version: Optional[str] = None
+    context_pack_id: Optional[str] = None
+    context_pack_hash: Optional[str] = None
+    evaluation_profile: Optional[str] = None
+    generation_provenance: dict[str, Any] = Field(default_factory=dict)
+    provider_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("draft_type")
     @classmethod
@@ -94,6 +170,15 @@ class WorkflowDraft(BaseModel):
 class AssistantReviewRequest(BaseModel):
     draft: WorkflowDraft
     context: dict[str, Any] = Field(default_factory=dict)
+
+
+class AssistantFeedbackRequest(BaseModel):
+    draft: WorkflowDraft
+    run_id: Optional[str] = None
+    label: str = "negative"
+    reason: Optional[str] = None
+    notes: Optional[str] = None
+    user_edits: dict[str, Any] = Field(default_factory=dict)
 
 
 class SafetyViolation(BaseModel):
@@ -130,6 +215,7 @@ class AssistantApprovalRequest(BaseModel):
     run_id: Optional[str] = None
     reviewer: str = "local-user"
     notes: Optional[str] = None
+    user_edits: dict[str, Any] = Field(default_factory=dict)
 
 
 class AssistantSubmitRequest(BaseModel):

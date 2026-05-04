@@ -1,0 +1,499 @@
+{% extends "base_template.html" %}
+
+{% block title %}Assistant Management - Painel Amanaje{% endblock %}
+
+{% block body_class %}purple-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --amanaje-primary: #6d28d9;
+        --amanaje-primary-strong: #581c87;
+        --amanaje-primary-soft: #f3e8ff;
+        --amanaje-primary-softer: #faf5ff;
+        --amanaje-primary-mid: #e9d5ff;
+        --amanaje-primary-border: #c084fc;
+        --amanaje-primary-border-soft: #e9d5ff;
+        --amanaje-primary-accent: #9333ea;
+        --amanaje-primary-gradient: #7c3aed;
+        --amanaje-primary-shadow: rgba(109, 40, 217, 0.08);
+        --amanaje-primary-shadow-strong: rgba(109, 40, 217, 0.2);
+        --amanaje-code-bg: #1e1b4b;
+        --amanaje-code-fg: #ede9fe;
+        --amanaje-code-border: #5b21b6;
+        --amanaje-body-bg: #fbf7ff;
+    }
+
+    .assistant-management {
+        display: grid;
+        gap: 1.2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .assistant-hero {
+        background: var(--amanaje-primary);
+        color: white;
+        padding: 2rem;
+        border-radius: 18px;
+        box-shadow: 0 18px 40px var(--amanaje-primary-shadow-strong);
+    }
+
+    .assistant-hero h2 {
+        margin: 0 0 0.5rem;
+    }
+
+    .assistant-hero p {
+        max-width: 820px;
+        margin: 0;
+        color: #f5f3ff;
+    }
+
+    .assistant-toolbar,
+    .assistant-tab-strip,
+    .assistant-actions,
+    .assistant-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        align-items: center;
+    }
+
+    .assistant-toolbar {
+        justify-content: space-between;
+    }
+
+    .assistant-tab-strip {
+        margin: 0.2rem 0;
+    }
+
+    .assistant-tab-button {
+        border: none;
+        border-radius: 999px;
+        padding: 0.82rem 1rem;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        cursor: pointer;
+        font-weight: 800;
+    }
+
+    .assistant-tab-button.active {
+        background: var(--amanaje-primary);
+        color: white;
+    }
+
+    .assistant-tab-panel {
+        display: none;
+    }
+
+    .assistant-tab-panel.active {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .assistant-panel-card,
+    .assistant-section {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        padding: 1.25rem;
+    }
+
+    .assistant-section h3,
+    .assistant-panel-card h3,
+    .assistant-panel-card h4 {
+        margin-top: 0;
+        color: var(--amanaje-primary-strong);
+    }
+
+    .assistant-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .assistant-two-column {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 0.7fr);
+    }
+
+    .assistant-metric {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 1rem;
+        background: var(--amanaje-primary-softer);
+    }
+
+    .assistant-metric span {
+        display: block;
+        color: #6b7280;
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+    .assistant-metric strong {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--amanaje-primary-strong);
+        font-size: 1.2rem;
+        word-break: break-word;
+    }
+
+    .assistant-form-grid {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .assistant-form-grid label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+
+    .assistant-form-grid input,
+    .assistant-form-grid select,
+    .assistant-form-grid textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: white;
+    }
+
+    .assistant-form-grid textarea {
+        min-height: 130px;
+        resize: vertical;
+        font-family: Consolas, "Courier New", monospace;
+    }
+
+    .assistant-code-area {
+        min-height: 240px;
+    }
+
+    .assistant-button {
+        border: none;
+        border-radius: 12px;
+        padding: 0.78rem 1rem;
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font-weight: 800;
+    }
+
+    .assistant-button.primary {
+        background: var(--amanaje-primary-gradient);
+        color: white;
+    }
+
+    .assistant-button.danger {
+        background: #dc2626;
+        color: white;
+    }
+
+    .assistant-alert {
+        display: none;
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-primary-strong);
+    }
+
+    .assistant-alert.visible {
+        display: block;
+    }
+
+    .assistant-alert.error {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+
+    .assistant-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.28rem 0.65rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        color: var(--amanaje-primary-strong);
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .assistant-output,
+    .assistant-json {
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        border: 1px solid var(--amanaje-code-border);
+        border-radius: 14px;
+        padding: 0.9rem;
+        min-height: 120px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+    }
+
+    .assistant-table-wrapper {
+        overflow-x: auto;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: white;
+    }
+
+    .assistant-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .assistant-table th,
+    .assistant-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--amanaje-primary-border-soft);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .assistant-table thead {
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-primary-strong);
+    }
+
+    .assistant-empty {
+        padding: 1rem;
+        color: #6b7280;
+    }
+
+    @media (max-width: 900px) {
+        .assistant-two-column {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="assistant-management">
+    <section class="assistant-hero">
+        <h2>Assistant Management</h2>
+        <p>Inspect, test, curate, and operate the full Painel Amanaje assistant system from one Management workspace.</p>
+    </section>
+
+    <div class="assistant-toolbar">
+        <div class="assistant-pill-row" id="assistantHeaderPills">
+            <span class="assistant-pill">Loading assistant status</span>
+        </div>
+        <button type="button" class="assistant-button primary" id="btnAssistantRefresh">Refresh Overview</button>
+    </div>
+
+    <div id="assistantAlert" class="assistant-alert"></div>
+
+    <nav class="assistant-tab-strip" aria-label="Assistant management tabs">
+        <button type="button" class="assistant-tab-button active" data-assistant-tab="overview">Overview</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="models">Models</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="datasets">Datasets</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="references">References</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="draft">Draft Lab</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="execution">Safety & Execution</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="evals">Evals & Training</button>
+        <button type="button" class="assistant-tab-button" data-assistant-tab="routes">Routes & Files</button>
+    </nav>
+
+    <section id="assistantTabOverview" class="assistant-tab-panel active">
+        <div class="assistant-grid" id="assistantOverviewMetrics"></div>
+        <div class="assistant-two-column">
+            <article class="assistant-panel-card">
+                <h3>Provider State</h3>
+                <div class="assistant-actions">
+                    <button type="button" class="assistant-button primary" id="btnAssistantProviderTest">Test Active Provider</button>
+                </div>
+                <pre id="assistantProviderOutput" class="assistant-json">Provider status will appear here.</pre>
+            </article>
+            <article class="assistant-panel-card">
+                <h3>Alignment Contracts</h3>
+                <div id="assistantContractsOutput" class="assistant-empty">Contracts will appear here.</div>
+            </article>
+        </div>
+    </section>
+
+    <section id="assistantTabModels" class="assistant-tab-panel">
+        <div class="assistant-section">
+            <h3>Assistant Models</h3>
+            <div class="assistant-form-grid">
+                <div>
+                    <label for="assistantModelSelect">Registered AssistantModel</label>
+                    <select id="assistantModelSelect">
+                        <option value="">Configured active provider</option>
+                    </select>
+                </div>
+                <div class="assistant-actions">
+                    <button type="button" class="assistant-button primary" id="btnAssistantModelTest">Test Model</button>
+                    <button type="button" class="assistant-button" id="btnAssistantModelStatus">Model Status</button>
+                    <button type="button" class="assistant-button" id="btnAssistantAttachDataset">Attach Latest Dataset</button>
+                    <button type="button" class="assistant-button" id="btnAssistantCurateModel">Curate Model Training</button>
+                </div>
+            </div>
+        </div>
+        <div id="assistantModelsOutput" class="assistant-table-wrapper"></div>
+        <pre id="assistantModelActionOutput" class="assistant-json">Model action results will appear here.</pre>
+    </section>
+
+    <section id="assistantTabDatasets" class="assistant-tab-panel">
+        <div class="assistant-section">
+            <h3>Assistant Training Dataset</h3>
+            <p class="helper-text">Materialized redacted JSONL snapshots can train any registered AssistantModel.</p>
+            <div class="assistant-actions">
+                <button type="button" class="assistant-button primary" id="btnAssistantDatasetRebuild">Rebuild Dataset</button>
+                <button type="button" class="assistant-button" id="btnAssistantDatasetLatest">Load Latest Dataset</button>
+            </div>
+        </div>
+        <pre id="assistantDatasetOutput" class="assistant-json">Dataset status will appear here.</pre>
+    </section>
+
+    <section id="assistantTabReferences" class="assistant-tab-panel">
+        <div class="assistant-section">
+            <h3>Internal Reference Repository</h3>
+            <p class="helper-text">References are synced from configured project folders and used automatically through context packs. Raw file text is not exposed here.</p>
+            <div class="assistant-form-grid">
+                <div>
+                    <label for="assistantReferenceMaxFiles">Max files per sync</label>
+                    <input type="number" id="assistantReferenceMaxFiles" min="1" max="1000" value="100">
+                </div>
+                <div>
+                    <label for="assistantReferenceQuery">Reference metadata search</label>
+                    <input type="text" id="assistantReferenceQuery" placeholder="schema, registry, training, eval">
+                </div>
+                <div class="assistant-actions">
+                    <button type="button" class="assistant-button primary" id="btnAssistantReferenceSync">Sync Repository</button>
+                    <button type="button" class="assistant-button" id="btnAssistantReferenceSearch">Search References</button>
+                </div>
+            </div>
+        </div>
+        <pre id="assistantReferenceOutput" class="assistant-json">Reference status will appear here.</pre>
+    </section>
+
+    <section id="assistantTabDraft" class="assistant-tab-panel">
+        <div class="assistant-two-column">
+            <article class="assistant-section">
+                <h3>Draft Lab</h3>
+                <div class="assistant-form-grid">
+                    <div>
+                        <label for="assistantDraftPrompt">Assistant Request</label>
+                        <textarea id="assistantDraftPrompt" placeholder="Create a keyboard testing dataset with switch type, layout, latency, typing accuracy, and defect target."></textarea>
+                    </div>
+                    <div>
+                        <label for="assistantDraftTarget">Draft Type</label>
+                        <select id="assistantDraftTarget">
+                            <option value="dataset_generation">Dataset Generation</option>
+                            <option value="model_generation">Model Generation</option>
+                            <option value="registry_object">Registry Object</option>
+                            <option value="feature_operations">Feature Operations</option>
+                            <option value="training_run">Training Run</option>
+                            <option value="study">Study</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="assistantDraftModelSelect">Assistant Model</label>
+                        <select id="assistantDraftModelSelect">
+                            <option value="">Configured active provider</option>
+                        </select>
+                    </div>
+                    <div class="assistant-actions">
+                        <button type="button" class="assistant-button primary" id="btnAssistantDraft">Draft</button>
+                        <button type="button" class="assistant-button" id="btnAssistantReview">Review</button>
+                        <button type="button" class="assistant-button" id="btnAssistantApprove">Approve</button>
+                        <button type="button" class="assistant-button" id="btnAssistantFeedback">Record Feedback</button>
+                        <button type="button" class="assistant-button" id="btnAssistantSubmit">Submit Approved</button>
+                    </div>
+                </div>
+            </article>
+            <article class="assistant-section">
+                <h3>Draft Result</h3>
+                <pre id="assistantDraftOutput" class="assistant-json">No draft yet.</pre>
+            </article>
+        </div>
+    </section>
+
+    <section id="assistantTabExecution" class="assistant-tab-panel">
+        <div class="assistant-two-column">
+            <article class="assistant-section">
+                <h3>Guarded Execution</h3>
+                <div class="assistant-form-grid">
+                    <div>
+                        <label for="assistantExecutionProfile">Safety Profile</label>
+                        <select id="assistantExecutionProfile">
+                            <option value="dataset_generation">Dataset Generation</option>
+                            <option value="model_generation">Model Generation</option>
+                            <option value="registry_object">Registry Object</option>
+                            <option value="feature_operations">Feature Operations</option>
+                            <option value="training_run">Training Run</option>
+                            <option value="study">Study</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="assistantExecutionCode">Generated Code</label>
+                        <textarea id="assistantExecutionCode" class="assistant-code-area" placeholder="Paste reviewed assistant code here, or draft code in Draft Lab first."></textarea>
+                    </div>
+                    <div class="assistant-actions">
+                        <button type="button" class="assistant-button primary" id="btnAssistantExecutionReview">Review Code</button>
+                        <button type="button" class="assistant-button" id="btnAssistantExecutionRun">Run Approved Code</button>
+                    </div>
+                </div>
+            </article>
+            <article class="assistant-section">
+                <h3>Safety Result</h3>
+                <pre id="assistantExecutionOutput" class="assistant-json">Execution review will appear here.</pre>
+            </article>
+        </div>
+    </section>
+
+    <section id="assistantTabEvals" class="assistant-tab-panel">
+        <div class="assistant-grid">
+            <article class="assistant-section">
+                <h3>Golden Evals</h3>
+                <div class="assistant-form-grid">
+                    <div>
+                        <label for="assistantEvalProvider">Provider</label>
+                        <select id="assistantEvalProvider">
+                            <option value="amanaje_slm">amanaje_slm</option>
+                            <option value="local">local</option>
+                            <option value="auto">auto</option>
+                        </select>
+                    </div>
+                    <button type="button" class="assistant-button primary" id="btnAssistantEvalRun">Run Golden Evals</button>
+                </div>
+            </article>
+            <article class="assistant-section">
+                <h3>Training Curation</h3>
+                <p class="helper-text">Curate accepted, corrected, rejected, and unsafe drafts into training-ready JSONL artifacts.</p>
+                <button type="button" class="assistant-button primary" id="btnAssistantTrainingCurate">Curate Global Training</button>
+            </article>
+        </div>
+        <pre id="assistantEvalOutput" class="assistant-json">Eval and training results will appear here.</pre>
+    </section>
+
+    <section id="assistantTabRoutes" class="assistant-tab-panel">
+        <div class="assistant-grid">
+            <article class="assistant-section">
+                <h3>Routes</h3>
+                <div id="assistantRouteCatalog" class="assistant-table-wrapper"></div>
+            </article>
+            <article class="assistant-section">
+                <h3>Files & Artifacts</h3>
+                <div id="assistantArtifactLocations" class="assistant-table-wrapper"></div>
+            </article>
+        </div>
+        <pre id="assistantRawOverview" class="assistant-json">Raw overview JSON will appear here.</pre>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/assistant-page.js') }}?v=20260502-1"></script>
+{% endblock %}

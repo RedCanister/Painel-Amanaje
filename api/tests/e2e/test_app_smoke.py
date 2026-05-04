@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from .page_objects import CreatePage, FeaturePage, ProductionPage, TrainingPage, UploadPage
+from .page_objects import AssistantPage, CreatePage, FeaturePage, ProductionPage, TrainingPage, UploadPage
 
 
 pytestmark = pytest.mark.e2e
@@ -16,6 +16,7 @@ pytestmark = pytest.mark.e2e
         (FeaturePage, "/feature", "Feature Workspace"),
         (TrainingPage, "/training", "Global Training Context"),
         (ProductionPage, "/production", "Global Production Watch"),
+        (AssistantPage, "/assistant", "Assistant Management"),
     ],
 )
 def test_primary_routes_render_core_workspace_surfaces(page, page_cls, path, expected_text):

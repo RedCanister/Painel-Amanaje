@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import warnings
+from collections.abc import Hashable
 from io import BytesIO, StringIO
 from pathlib import Path
 from typing import Any, Mapping, Optional
@@ -269,6 +270,51 @@ def _column_family(series: pd.Series, datetime_confidence: float) -> str:
     return "categorical"
 
 
+def _safe_profile_value(value: Any) -> Any:
+    try:
+        missing = pd.isna(value)
+        if isinstance(missing, bool) and missing:
+            return None
+    except (TypeError, ValueError):
+        pass
+    if isinstance(value, (list, tuple, set)):
+        return [_safe_profile_value(item) for item in value]
+    if isinstance(value, Mapping):
+        return {str(key): _safe_profile_value(item) for key, item in value.items()}
+    if isinstance(value, Hashable):
+        return value
+    return str(value)
+
+
+def _safe_hashable_value(value: Any) -> Any:
+    normalized = _safe_profile_value(value)
+    if isinstance(normalized, (list, dict)):
+        return json.dumps(normalized, sort_keys=True, ensure_ascii=False, default=str)
+    if isinstance(normalized, set):
+        return json.dumps(sorted(normalized), ensure_ascii=False, default=str)
+    if isinstance(normalized, Hashable):
+        return normalized
+    return str(normalized)
+
+
+def _safe_unique_count(series: pd.Series) -> int:
+    try:
+        return int(series.nunique(dropna=True))
+    except Exception:
+        normalized = series.dropna().map(_safe_hashable_value)
+        return int(normalized.nunique(dropna=True))
+
+
+def _safe_mode_value(series: pd.Series) -> Any:
+    try:
+        mode = series.mode(dropna=True)
+        return None if mode.empty else _safe_profile_value(mode.iloc[0])
+    except Exception:
+        normalized = series.dropna().map(_safe_hashable_value)
+        mode = normalized.mode(dropna=True)
+        return None if mode.empty else mode.iloc[0]
+
+
 def build_column_explorer(df: pd.DataFrame) -> list[dict[str, Any]]:
     explorer: list[dict[str, Any]] = []
     total_rows = max(int(df.shape[0]), 1)
@@ -276,7 +322,7 @@ def build_column_explorer(df: pd.DataFrame) -> list[dict[str, Any]]:
     for column_name in df.columns:
         series = df[column_name]
         null_count = int(series.isna().sum())
-        unique_count = int(series.nunique(dropna=True))
+        unique_count = _safe_unique_count(series)
         datetime_confidence = _safe_datetime_confidence(series) if series.dtype == object else 0.0
         family = _column_family(series, datetime_confidence)
         sample_types = sorted({type(item).__name__ for item in series.dropna().head(_DATETIME_SAMPLE_SIZE).tolist()})
@@ -294,7 +340,7 @@ def build_column_explorer(df: pd.DataFrame) -> list[dict[str, Any]]:
                 "sample_types": sample_types,
                 "high_cardinality": bool(high_cardinality),
                 "datetime_confidence": round(datetime_confidence, 4),
-                "sample_values": [None if pd.isna(item) else item for item in series.head(_SAMPLE_VALUE_COUNT).tolist()],
+                "sample_values": [_safe_profile_value(item) for item in series.head(_SAMPLE_VALUE_COUNT).tolist()],
             }
         )
 
@@ -339,7 +385,7 @@ def build_dataset_analysis_summary(
         summary = {
             "type": explorer_entry.get("family", "categorical"),
             "null_count": int(column.isnull().sum()),
-            "unique_values": int(column.nunique(dropna=True)),
+            "unique_values": _safe_unique_count(column),
             "sample_values": explorer_entry.get("sample_values", []),
             "mixed_type": bool(explorer_entry.get("mixed_type", False)),
             "datetime_confidence": explorer_entry.get("datetime_confidence", 0.0),
@@ -354,8 +400,7 @@ def build_dataset_analysis_summary(
                 }
             )
         else:
-            mode = column.mode(dropna=True)
-            summary["mode"] = None if mode.empty else str(mode.iloc[0])
+            summary["mode"] = _safe_mode_value(column)
         if summary["mixed_type"]:
             top_warnings.append(f"Column '{column_name}' mixes multiple observed Python value types.")
         if explorer_entry.get("high_cardinality"):

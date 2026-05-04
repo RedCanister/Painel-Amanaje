@@ -1,0 +1,67 @@
+{
+  "context_pack_id": "ctx_c1ed885e6c7a",
+  "version": "assistant-context-pack-v1",
+  "prompt": "make a dataset about keyboards",
+  "workflow_goal": null,
+  "target_type": "dataset_generation",
+  "provider": "amanaje_slm",
+  "registry_type": null,
+  "form_values": {},
+  "constraints": {},
+  "safety_profile": "dataset_generation",
+  "allowed_imports": [
+    "datetime",
+    "math",
+    "numpy",
+    "pandas",
+    "random",
+    "statistics"
+  ],
+  "allowed_dependencies": [
+    "numpy",
+    "pandas"
+  ],
+  "content_references": [
+    {
+      "reference_id": "ref_655b1f39ec8a",
+      "source_type": "project_schema",
+      "name": "assistant_workflow_draft",
+      "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+      "trust_level": "project",
+      "uri": null,
+      "metadata": {
+        "target_type": "dataset_generation"
+      },
+      "created_at": "2026-05-01T19:12:27.435709"
+    },
+    {
+      "reference_id": "ref_7714a4122415",
+      "source_type": "safety_profile",
+      "name": "dataset_generation",
+      "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+      "trust_level": "project",
+      "uri": null,
+      "metadata": {
+        "allowed_imports": [
+          "math",
+          "statistics",
+          "datetime",
+          "random",
+          "numpy",
+          "pandas"
+        ],
+        "allowed_dependencies": [
+          "numpy",
+          "pandas"
+        ],
+        "required_outputs": [
+          "csv_text"
+        ]
+      },
+      "created_at": "2026-05-01T19:12:27.435823"
+    }
+  ],
+  "compact_summary": "target=dataset_generation; references=2",
+  "pack_hash": "b60db6cbc0998a81b4ec07c24d86fc7c442461f988278722d9dcfeedc9e30d0b",
+  "created_at": "2026-05-01T19:12:27.436025"
+}

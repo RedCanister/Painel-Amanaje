@@ -1,0 +1,132 @@
+{
+  "run_id": "assistant_1f9d9cd331d9",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-04-28T17:14:23.523001",
+  "updated_at": "2026-04-28T17:14:23.545608",
+  "started_at": null,
+  "completed_at": "2026-04-28T17:14:23.545608",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_fa6f5257283a",
+    "draft_type": "dataset_generation"
+  },
+  "parameters": {
+    "prompt": "Make a dataset about keyboards",
+    "provider": "local",
+    "target_type": "dataset_generation"
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_fa6f5257283a",
+      "session_id": null,
+      "draft_type": "dataset_generation",
+      "title": "Generated Dataset Draft",
+      "summary": "Creates a tabular dataset and exposes it as csv_text for the existing upload/create flow.",
+      "prompt": "Make a dataset about keyboards",
+      "status": "draft",
+      "provider": "local",
+      "created_at": "2026-04-28T17:14:23.310909",
+      "code": "# Assistant dataset draft\n# Make a dataset about keyboards\n\nimport numpy as np\nimport pandas as pd\n\nrng = np.random.default_rng(42)\nrow_count = 100\ndf = pd.DataFrame({\n    \"feature_a\": rng.normal(10, 2, row_count).round(4),\n    \"feature_b\": rng.integers(0, 5, row_count),\n    \"segment\": rng.choice([\"baseline\", \"growth\", \"risk\"], row_count),\n})\ndf[\"target\"] = (df[\"feature_a\"] * 0.7 + df[\"feature_b\"] * 1.5 + rng.normal(0, 0.5, row_count)).round(4)\n\ncsv_text = df.to_csv(index=False)\nname = \"assistant_generated_dataset\"\ndescription = \"Dataset drafted by the Amanaje assistant.\"\nobject_type = \"dataset\"\ndataset_type = \"dataset\"\nversion = 1\nconnection_string = \"\"",
+      "operations": [],
+      "registry_payload": {},
+      "training_request": {},
+      "study_request": {},
+      "artifacts": {},
+      "assumptions": [
+        "The generated dataset is synthetic.",
+        "The draft only prepares csv_text; it does not write files or registry rows."
+      ],
+      "risks": [
+        "Synthetic data may not represent the target production distribution."
+      ],
+      "context": {
+        "operationId": "datasets",
+        "existing_metadata": {}
+      },
+      "next_actions": [
+        "Review safety report",
+        "Approve draft",
+        "Execute through the guarded execution path"
+      ]
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "low",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "sklearn",
+          "statistics"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ]
+      },
+      "messages": [
+        "Dataset code is review-safe and ready for explicit execution approval."
+      ],
+      "required_actions": [],
+      "reviewed_at": "2026-04-28T17:14:23.522898"
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-04-28T17:14:23.545608",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-28T17:14:23.523001",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-04-28T17:14:23.545608",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-28T17:14:23.523001",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-04-28T17:14:23.545608",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

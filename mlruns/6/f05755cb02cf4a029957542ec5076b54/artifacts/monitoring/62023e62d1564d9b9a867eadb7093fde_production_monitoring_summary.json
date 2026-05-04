@@ -1,0 +1,198 @@
+{
+    "model_id": 5,
+    "dataset_id": 4,
+    "metrics": {
+        "live_accuracy": 0.08846918489065607,
+        "live_precision": 0.007372432074221339,
+        "live_recall": 0.08333333333333333,
+        "live_f1": 0.013546423135464232
+    },
+    "drift_results": {
+        "Date": false,
+        "Open": false,
+        "High": false,
+        "Low": false,
+        "Close": false,
+        "Volume": false,
+        "Close_Return": false,
+        "Volatility": false,
+        "MA20": false,
+        "MA50": false,
+        "Momentum": false,
+        "RelVolume": false,
+        "RSI_Close": false,
+        "Williams_%R": false,
+        "CCI": false,
+        "Bollinger_%B": false,
+        "KeltnerC_%": false,
+        "MACD_lib": false,
+        "MACD_signal": false,
+        "MACD_Hist": false,
+        "Force_Index": false,
+        "Volume_Price_Trend": false,
+        "DLR": false,
+        "RSI_Over": false,
+        "RSI_Under": false,
+        "Williams_Over": false,
+        "Williams_Under": false,
+        "MACD_Over": false,
+        "MACD_Under": false,
+        "Data": false,
+        "time_idx": false,
+        "hl_center": false,
+        "hl_range": false,
+        "dayofweek": false,
+        "series_id_AAPL": false,
+        "series_id_AMD": false,
+        "series_id_NVDA": false,
+        "series_id_QCOM": false,
+        "series_id_nan": false
+    },
+    "degradation_results": {},
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+    },
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 0
+    },
+    "retrain_recommended": false,
+    "evaluated_at": "2026-04-27T19:15:54.920162",
+    "artifact_manifest": {
+        "artifact_format": ".pt",
+        "loader": "torchscript",
+        "runtime_capabilities": {
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": true,
+            "simulate": true,
+            "monitor": true
+        },
+        "framework": "pytorch",
+        "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "entrypoint": "forward",
+        "needs_companion_spec": false,
+        "warnings": [],
+        "metadata": {
+            "python_type": "torch.jit._script.RecursiveScriptModule",
+            "public_methods": [
+                "add_module",
+                "apply",
+                "bfloat16",
+                "buffers",
+                "children",
+                "compile",
+                "cpu",
+                "cuda",
+                "define",
+                "double",
+                "eval",
+                "extra_repr",
+                "float",
+                "forward",
+                "forward",
+                "forward_magic_method",
+                "get_buffer",
+                "get_debug_state",
+                "get_extra_state",
+                "get_parameter"
+            ]
+        },
+        "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+        ],
+        "capability_matrix": {
+            ".joblib": {
+                "label": "scikit-learn Joblib",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": true,
+                "simulate": true,
+                "monitor": true
+            },
+            ".pkl": {
+                "label": "Python Pickle",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": "guarded",
+                "simulate": "guarded",
+                "monitor": "guarded"
+            },
+            ".pickle": {
+                "label": "Python Pickle",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": "guarded",
+                "simulate": "guarded",
+                "monitor": "guarded"
+            },
+            ".pt": {
+                "label": "PyTorch Artifact",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": "guarded",
+                "simulate": "guarded",
+                "monitor": "guarded"
+            },
+            ".pth": {
+                "label": "PyTorch Artifact",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": "guarded",
+                "simulate": "guarded",
+                "monitor": "guarded"
+            },
+            ".onnx": {
+                "label": "ONNX",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": false,
+                "simulate": false,
+                "monitor": false
+            },
+            ".json": {
+                "label": "JSON Config",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": false,
+                "simulate": false,
+                "monitor": false
+            },
+            ".yaml": {
+                "label": "YAML Config",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": false,
+                "simulate": false,
+                "monitor": false
+            },
+            ".yml": {
+                "label": "YAML Config",
+                "register": true,
+                "inspect": true,
+                "train": false,
+                "predict": false,
+                "simulate": false,
+                "monitor": false
+            }
+        }
+    }
+}

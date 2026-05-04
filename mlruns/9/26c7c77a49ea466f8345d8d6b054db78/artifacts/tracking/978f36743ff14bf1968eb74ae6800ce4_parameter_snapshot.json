@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "event_name": "submission",
+        "provider": "assistant_model_28",
+        "draft_type": "model_generation",
+        "model_version": "registry-assistant-draft-0.1",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_version": "assistant-context-pack-v1",
+        "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+        "reference_pack_hash": "fd1834b7e52be19ffb8fd1e92be4a19e2386f9d2e5c4477dda1cd62dee2a96f4",
+        "safety_profile_version": "assistant-safety-v1",
+        "evaluation_profile": "assistant-golden-v1",
+        "fallback_provider": "local",
+        "submit_action": "prepare"
+    },
+    "skipped_conflicts": {}
+}

@@ -1,0 +1,17 @@
+# Example only. Use this as the shape for a separate SLM runtime service.
+# The actual model server can be llama.cpp, vLLM, text-generation-webui,
+# llama-cpp-python server, or any runtime exposing /v1/chat/completions.
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Replace these lines with the runtime you choose.
+# RUN pip install --no-cache-dir llama-cpp-python[server]
+# COPY ./models /models
+
+EXPOSE 8080
+
+# Example command for an OpenAI-compatible local server.
+# CMD ["python", "-m", "llama_cpp.server", "--host", "0.0.0.0", "--port", "8080", "--model", "/models/amanaje-assistant.gguf"]
+CMD ["python", "-c", "print('Replace this example with your OpenAI-compatible SLM runtime command.')"]

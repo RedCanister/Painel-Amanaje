@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import pickle
+import json
 from pathlib import Path
 from uuid import uuid4
 
+import numpy as np
+
 from app.utils.artifact_utils import inspect_model_artifact, load_runtime_artifact
+from app.utils import main_utils
 from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
 from app.utils.serialization import canonicalize_scalar_for_logging
-from app.utils.tabular_utils import build_dataset_analysis_summary, load_tabular_from_bytes
+from app.utils.tabular_utils import build_dataset_analysis_summary, build_feature_extraction_summary, load_tabular_from_bytes
 
 
 class PredictableModel:
@@ -44,6 +48,56 @@ def test_build_dataset_analysis_summary_exposes_column_explorer_and_profile():
     assert summary["column_explorer"]
     assert any(column["name"] == "feature_b" for column in summary["column_explorer"])
     assert "parser_report" in summary
+
+
+def test_tabular_profile_handles_unhashable_list_values():
+    dataframe, parser_report = load_tabular_from_bytes(
+        b'id,tags,target\n1,"[red,blue]",0\n2,"[red]",1\n',
+        filename="sample.csv",
+    )
+    dataframe["tags"] = [["red", "blue"], ["red"]]
+
+    summary = build_dataset_analysis_summary(dataframe, "sample.csv", parser_report=parser_report)
+    extraction = build_feature_extraction_summary(dataframe)
+
+    tags_summary = summary["stats"]["tags"]
+    assert tags_summary["unique_values"] == 2
+    assert tags_summary["sample_values"] == [["red", "blue"], ["red"]]
+    assert extraction["target_candidate"] == "target"
+
+
+def test_dataset_analysis_route_wrapper_handles_unhashable_list_values():
+    dataframe, _parser_report = load_tabular_from_bytes(
+        b'id,tags,target\n1,"[red,blue]",0\n2,"[red]",1\n',
+        filename="sample.csv",
+    )
+    dataframe["tags"] = [["red", "blue"], ["red"]]
+
+    summary = main_utils._dataset_analysis_summary(dataframe, "missing-sample.csv")
+
+    assert summary["stats"]["tags"]["unique_values"] == 2
+    assert summary["column_explorer"][0]["unique_count"] >= 1
+
+
+def test_json_response_normalizes_non_finite_dataset_analysis_values():
+    dataframe, _parser_report = load_tabular_from_bytes(
+        b"feature,target\n1,0\n",
+        filename="sample.csv",
+    )
+    summary = main_utils._dataset_analysis_summary(dataframe, "missing-sample.csv")
+    response = main_utils._json_response(
+        {
+            "summary": summary,
+            "plots": main_utils._build_dataset_plots(summary),
+            "non_finite": [float("nan"), float("inf"), float("-inf")],
+            "numpy_non_finite": [np.float64("nan"), np.float32("inf")],
+        }
+    )
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert payload["summary"]["stats"]["feature"]["std"] is None
+    assert payload["non_finite"] == [None, None, None]
+    assert payload["numpy_non_finite"] == [None, None]
 
 
 def test_pickle_artifact_manifest_and_runtime_loader_support_predictable_models():

@@ -8,7 +8,8 @@ class AmanajePage:
         self.page = page
 
     def goto(self, path: str) -> None:
-        self.page.goto(path, wait_until="networkidle")
+        self.page.goto(path, wait_until="domcontentloaded")
+        self.page.locator("main.container").wait_for(state="visible")
 
     def heading_text(self, selector: str = "h3") -> str:
         return self.page.locator(selector).first.inner_text()
@@ -17,11 +18,13 @@ class AmanajePage:
 class UploadPage(AmanajePage):
     def expand_support(self) -> None:
         self.page.locator("#supportSummary").click()
+        self.page.locator("#supportMatrix .support-card").first.wait_for(state="visible")
 
 
 class CreatePage(AmanajePage):
     def expand_support(self) -> None:
         self.page.locator("#supportSummary").click()
+        self.page.locator("#supportMatrix .support-card").first.wait_for(state="visible")
 
 
 class FeaturePage(AmanajePage):
@@ -33,4 +36,8 @@ class TrainingPage(AmanajePage):
 
 
 class ProductionPage(AmanajePage):
+    pass
+
+
+class AssistantPage(AmanajePage):
     pass

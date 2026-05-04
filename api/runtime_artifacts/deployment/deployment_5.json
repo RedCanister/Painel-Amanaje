@@ -5,7 +5,7 @@
     "model_name": "lstm_finance",
     "dataset_name": "stock_data",
     "artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
-    "started_at": "2026-04-25T23:59:58.491176",
+    "started_at": "2026-05-01T23:13:32.571289",
     "status": "active",
     "artifact_metadata": {
         "artifact_format": ".pt",

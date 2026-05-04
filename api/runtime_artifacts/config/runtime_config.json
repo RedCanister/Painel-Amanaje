@@ -14,6 +14,9 @@
         "deployment_dir": "/app/runtime_artifacts/deployment",
         "optuna_dir": "/app/runtime_artifacts/optuna",
         "plots_dir": "/app/runtime_artifacts/plots",
-        "serving_dir": "/app/runtime_artifacts/serving"
+        "serving_dir": "/app/runtime_artifacts/serving",
+        "assistant_models_dir": "/app/runtime_artifacts/assistant_models",
+        "assistant_datasets_dir": "/app/runtime_artifacts/assistant_datasets",
+        "assistant_evals_dir": "/app/runtime_artifacts/assistant_evals"
     }
 }

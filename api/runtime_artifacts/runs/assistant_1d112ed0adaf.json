@@ -1,0 +1,142 @@
+{
+  "run_id": "assistant_1d112ed0adaf",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "executed",
+  "created_at": "2026-05-03T13:37:22.752581",
+  "updated_at": "2026-05-03T13:37:24.992795",
+  "started_at": null,
+  "completed_at": "2026-05-03T13:37:24.992795",
+  "context": {
+    "draft_id": "draft_75e8680bd3b7",
+    "profile": "model_generation",
+    "source": "assistant_management"
+  },
+  "parameters": {
+    "scope": "execution_run"
+  },
+  "metrics": {
+    "assistant_execution_success": true,
+    "assistant_output_count": 15
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "metadata_keys": [
+      "description",
+      "input_features",
+      "is_deployed",
+      "is_tested",
+      "is_trained",
+      "joblib_bytes",
+      "metrics",
+      "model_type",
+      "name",
+      "object_type",
+      "output_features",
+      "parameters",
+      "path",
+      "reference_data",
+      "version"
+    ],
+    "defined_names": [
+      "joblib_bytes",
+      "name",
+      "description",
+      "object_type",
+      "path",
+      "version",
+      "model_type",
+      "parameters",
+      "metrics",
+      "reference_data",
+      "input_features",
+      "output_features",
+      "is_trained",
+      "is_tested",
+      "is_deployed"
+    ],
+    "safety": {
+      "ok": true,
+      "risk_level": "low",
+      "profile": "model_generation",
+      "violations": [],
+      "warnings": [],
+      "allowed_imports": [
+        "base64",
+        "io",
+        "joblib",
+        "numpy",
+        "pandas",
+        "sklearn"
+      ],
+      "allowed_dependencies": [
+        "joblib",
+        "numpy",
+        "pandas",
+        "scikit-learn"
+      ],
+      "blocked_names": [
+        "__import__",
+        "breakpoint",
+        "compile",
+        "delattr",
+        "dir",
+        "eval",
+        "exec",
+        "getattr",
+        "globals",
+        "input",
+        "locals",
+        "open",
+        "setattr",
+        "vars"
+      ],
+      "materialized_output_checks": {
+        "joblib_bytes": true
+      }
+    },
+    "context_pack_hash": null,
+    "mlflow_tracking": {
+      "status": "logged",
+      "experiment_name": "assistant/amanaje_slm",
+      "run_id": "1e26d7623c1b43239d77c2140b106998",
+      "artifact_paths": {}
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "executed",
+    "latest_event": "Assistant guarded execution completed.",
+    "latest_timestamp": "2026-05-03T13:37:24.992795",
+    "timeline": [
+      {
+        "status": "running",
+        "stage": "queued",
+        "timestamp": "2026-05-03T13:37:22.752581",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "executed",
+        "timestamp": "2026-05-03T13:37:24.992795",
+        "message": "Assistant guarded execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "running",
+      "stage": "queued",
+      "timestamp": "2026-05-03T13:37:22.752581",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "executed",
+      "timestamp": "2026-05-03T13:37:24.992795",
+      "message": "Assistant guarded execution completed."
+    }
+  ]
+}

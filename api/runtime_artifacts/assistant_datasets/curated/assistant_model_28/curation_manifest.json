@@ -1,0 +1,12 @@
+{
+  "recorded_at": "2026-05-03T13:32:46.727184",
+  "source_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+  "curated_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_28/curated_interactions.jsonl",
+  "manifest_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_28/curation_manifest.json",
+  "record_count": 0,
+  "rejected_records": 0,
+  "labels": {},
+  "workflow_types": {},
+  "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted.",
+  "ready_for_fine_tuning": false
+}

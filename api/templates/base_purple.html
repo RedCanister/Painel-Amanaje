@@ -220,19 +220,30 @@
                 <button class="mode-button" type="button" data-mode="upload">Upload and Register</button>
             </div>
 
-            <div class="assistant-registry-panel">
-                <div class="assistant-registry-grid">
-                    <div class="form-group">
-                        <label for="registryAssistantPrompt">Assistant Draft</label>
-                        <textarea id="registryAssistantPrompt" placeholder="Draft a complete registry entry for the selected type, using project-compatible defaults and the current form context."></textarea>
-                        <div class="button-group" style="margin-top:0.75rem;">
-                            <button type="button" class="btn btn-primary" id="btnRegistryAssistantDraft">Draft Fields</button>
-                            <button type="button" class="btn btn-secondary" id="btnRegistryAssistantApply">Apply Draft</button>
+            <div class="assistant-collapsible" data-assistant-collapsible="registry">
+                <button type="button" class="assistant-toggle" data-assistant-toggle="registry" aria-expanded="false">
+                    Assistant <span class="assistant-status-badge" data-assistant-status="registry">Ready</span>
+                </button>
+                <div class="assistant-panel" data-assistant-panel="registry" hidden>
+                    <div class="assistant-registry-panel">
+                        <div class="assistant-registry-grid">
+                            <div class="form-group">
+                                <label for="registryAssistantPrompt">Assistant Draft</label>
+                                <textarea id="registryAssistantPrompt" placeholder="Draft a complete registry entry for the selected type, using project-compatible defaults and the current form context."></textarea>
+                                <label for="registryAssistantModel" class="helper-text" style="margin-top:0.75rem;">Assistant Model</label>
+                                <select id="registryAssistantModel">
+                                    <option value="">Configured active provider</option>
+                                </select>
+                                <div class="button-group" style="margin-top:0.75rem;">
+                                    <button type="button" class="btn btn-primary" id="btnRegistryAssistantDraft">Draft Fields</button>
+                                    <button type="button" class="btn btn-secondary" id="btnRegistryAssistantApply">Apply Draft</button>
+                                </div>
+                            </div>
+                            <div id="registryAssistantOutput" class="assistant-registry-output">
+                                <strong>Assistant Review</strong>
+                                <div class="helper-text">Select a registry type and draft fields before manual creation.</div>
+                            </div>
                         </div>
-                    </div>
-                    <div id="registryAssistantOutput" class="assistant-registry-output">
-                        <strong>Assistant Review</strong>
-                        <div class="helper-text">Select a registry type and draft fields before manual creation.</div>
                     </div>
                 </div>
             </div>
@@ -255,7 +266,9 @@
                     <select id="modelType" name="modelType" required>
                         <option value="">Select a type...</option>
                         <option value="DatasetModel">Dataset Model</option>
+                        <option value="AssistantTrainingDatasetModel">Assistant Training Dataset</option>
                         <option value="LearningModel">Learning Model</option>
+                        <option value="AssistantModel">Assistant Model</option>
                         <option value="InferenceModel">Inference Model</option>
                         <option value="StudyModel">Study Model</option>
                         <option value="CodeModel">Code Model</option>
@@ -305,6 +318,7 @@
                             <label for="datasetType">Dataset Type</label>
                             <select id="datasetType" name="datasetType">
                                 <option value="dataset">Generic Dataset</option>
+                                <option value="assistant_training_dataset">Assistant Training Dataset</option>
                                 <option value="numerical_dataset">Numerical Dataset</option>
                                 <option value="categorical_dataset">Categorical Dataset</option>
                                 <option value="timeseries_dataset">Time Series Dataset</option>
@@ -342,9 +356,10 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="learningModelType">Learning Model Type</label>
-                            <select id="learningModelType" name="learningModelType">
-                                <option value="learning_model">Generic Learning Model</option>
-                                <option value="supervised_model">Supervised Model</option>
+                        <select id="learningModelType" name="learningModelType">
+                            <option value="learning_model">Generic Learning Model</option>
+                            <option value="assistant_model">Assistant Model</option>
+                            <option value="supervised_model">Supervised Model</option>
                                 <option value="unsupervised_model">Unsupervised Model</option>
                                 <option value="reinforcement_model">Reinforcement Model</option>
                                 <option value="deep_learning_model">Deep Learning Model</option>
@@ -503,7 +518,9 @@
                     <select id="searchType" onchange="loadSearchList()">
                         <option value="">All Types</option>
                         <option value="DatasetModel">Datasets</option>
+                        <option value="AssistantTrainingDatasetModel">Assistant Training Datasets</option>
                         <option value="LearningModel">Learning Models</option>
+                        <option value="AssistantModel">Assistant Models</option>
                         <option value="InferenceModel">Inference Models</option>
                         <option value="StudyModel">Studies</option>
                         <option value="CodeModel">Code Models</option>
@@ -550,12 +567,26 @@
             defaultFolder: 'data/datasets',
             supportsUpload: true
         },
+        AssistantTrainingDatasetModel: {
+            endpoint: '/assistanttrainingdatasetmodel',
+            label: 'Assistant Training Dataset',
+            objectType: 'dataset',
+            defaultFolder: 'runtime_artifacts/assistant_datasets/snapshots',
+            supportsUpload: false
+        },
         LearningModel: {
             endpoint: '/learningmodel',
             label: 'Learning Model',
             objectType: 'learning_model',
             defaultFolder: 'models',
             supportsUpload: true
+        },
+        AssistantModel: {
+            endpoint: '/assistantmodel',
+            label: 'Assistant Model',
+            objectType: 'learning_model',
+            defaultFolder: 'runtime_artifacts/assistant_models',
+            supportsUpload: false
         },
         InferenceModel: {
             endpoint: '/inferencemodel',
@@ -716,6 +747,7 @@
     function collectRegistryAssistantContext() {
         return {
             registryType: document.getElementById('modelType').value || 'DatasetModel',
+            assistant_model_id: document.getElementById('registryAssistantModel')?.value || null,
             name: document.getElementById('objectName').value.trim(),
             description: document.getElementById('description').value.trim(),
             path: document.getElementById('objectPath').value.trim(),
@@ -763,10 +795,13 @@
         const review = payload.review || currentRegistryAssistantReview || {};
         const actions = review.required_actions || [];
         const payloadKeys = Object.keys(draft.form_payload || draft.registry_payload || {});
+        const statusLabel = payload.status || review.status || 'draft';
+        const statusTone = actions.length ? 'needs_attention' : (review.approved ? 'success' : 'idle');
+        AmanajeUI.setAssistantStatus('registry', statusLabel, statusTone);
         target.innerHTML = `
             <strong>${escapeHtml(draft.title || 'Assistant Review')}</strong>
             <div class="pill-row">
-                <span class="pill">${escapeHtml(payload.status || review.status || 'draft')}</span>
+                <span class="pill">${escapeHtml(statusLabel)}</span>
                 <span class="pill">${escapeHtml(draft.registry_type || document.getElementById('modelType').value || 'Registry')}</span>
             </div>
             <div class="helper-text">${escapeHtml(draft.summary || 'Assistant registry draft will appear here.')}</div>
@@ -844,6 +879,7 @@
                 body: JSON.stringify({
                     prompt,
                     target_type: 'registry_object',
+                    ...AmanajeUI.getAssistantModelRequest('registryAssistantModel'),
                     context: collectRegistryAssistantContext()
                 })
             });
@@ -885,7 +921,7 @@
         const pathField = document.getElementById('objectPath');
         const sizeField = document.getElementById('objectSize');
         const fileName = file?.name || '';
-        const fallbackExtension = type === 'DatasetModel' ? '.csv' : '.json';
+        const fallbackExtension = type === 'DatasetModel' ? '.csv' : (type === 'AssistantTrainingDatasetModel' ? '.jsonl' : '.json');
         const generatedPath = getDefaultPath(type, name, fileName || `${slugify(name || 'artifact')}${fallbackExtension}`);
 
         pathField.placeholder = generatedPath || 'Select a model type to generate a default path';
@@ -895,7 +931,7 @@
 
         if (createMode === 'upload' && file) {
             sizeField.value = (file.size / (1024 * 1024)).toFixed(4);
-        } else if (!sizeField.value && type && type !== 'DatasetModel' && type !== 'LearningModel') {
+        } else if (!sizeField.value && type && type !== 'DatasetModel' && type !== 'AssistantTrainingDatasetModel' && type !== 'LearningModel') {
             sizeField.value = '0';
         }
 
@@ -965,11 +1001,60 @@
 
     function updateFieldsForType() {
         const type = document.getElementById('modelType').value;
-        document.getElementById('datasetFields').style.display = type === 'DatasetModel' ? 'block' : 'none';
-        document.getElementById('modelFields').style.display = type === 'LearningModel' ? 'block' : 'none';
+        document.getElementById('datasetFields').style.display = (type === 'DatasetModel' || type === 'AssistantTrainingDatasetModel') ? 'block' : 'none';
+        document.getElementById('modelFields').style.display = (type === 'LearningModel' || type === 'AssistantModel') ? 'block' : 'none';
         document.getElementById('inferenceFields').style.display = type === 'InferenceModel' ? 'block' : 'none';
         document.getElementById('studyFields').style.display = type === 'StudyModel' ? 'block' : 'none';
         document.getElementById('codeFields').style.display = type === 'CodeModel' ? 'block' : 'none';
+        if (type === 'AssistantTrainingDatasetModel') {
+            document.getElementById('datasetType').value = 'assistant_training_dataset';
+            document.getElementById('hasFeatures').checked = true;
+            if (!document.getElementById('featuresList').value.trim()) {
+                document.getElementById('featuresList').value = JSON.stringify([
+                    'source_type',
+                    'label',
+                    'workflow_type',
+                    'prompt',
+                    'context_pack_hash',
+                    'draft',
+                    'review',
+                    'user_edits',
+                    'quality_signals'
+                ]);
+            }
+        } else if (type === 'DatasetModel' && document.getElementById('datasetType').value === 'assistant_training_dataset') {
+            document.getElementById('datasetType').value = 'dataset';
+        }
+
+        if (type === 'AssistantModel') {
+            document.getElementById('learningModelType').value = 'assistant_model';
+            if (!document.getElementById('parameters').value.trim()) {
+                document.getElementById('parameters').value = JSON.stringify({
+                    assistant: {
+                        provider_type: 'openai_compatible',
+                        base_url: 'http://localhost:8000/v1',
+                        model_name: 'amanaje-assistant',
+                        model_version: 'assistant-registry-0.1',
+                        temperature: 0.2,
+                        max_tokens: 1600,
+                        timeout_seconds: 20,
+                        enabled: true,
+                        supported_draft_types: [
+                            'dataset_generation',
+                            'model_generation',
+                            'registry_object',
+                            'feature_operations',
+                            'training_run',
+                            'study'
+                        ],
+                        reference_policy: { mode: 'automatic_internal_repository' },
+                        training_profile: { curation: 'approved_and_corrected_drafts' }
+                    }
+                }, null, 2);
+            }
+        } else if (type === 'LearningModel' && document.getElementById('learningModelType').value === 'assistant_model') {
+            document.getElementById('learningModelType').value = 'learning_model';
+        }
 
         const config = getConfigForType(type);
         if (createMode === 'upload' && config && !config.supportsUpload) {
@@ -998,22 +1083,54 @@
             throw new Error('Name, path, and size are required.');
         }
 
-        if (modelType === 'DatasetModel') {
-            payload.dataset_type = document.getElementById('datasetType').value || 'dataset';
+        if (modelType === 'DatasetModel' || modelType === 'AssistantTrainingDatasetModel') {
+            payload.dataset_type = modelType === 'AssistantTrainingDatasetModel'
+                ? 'assistant_training_dataset'
+                : (document.getElementById('datasetType').value || 'dataset');
             payload.shape = parseArrayField(document.getElementById('datasetShape').value, 'Shape').map((value) => Number(value));
             if (payload.shape.some((value) => Number.isNaN(value))) throw new Error('Shape must contain only numbers.');
-            payload.has_features = document.getElementById('hasFeatures').checked;
+            payload.has_features = modelType === 'AssistantTrainingDatasetModel' ? true : document.getElementById('hasFeatures').checked;
             payload.features_list = parseArrayField(document.getElementById('featuresList').value, 'Features List');
             payload.connection_string = document.getElementById('connectionString').value.trim() || null;
         }
 
-        if (modelType === 'LearningModel') {
-            payload.model_type = document.getElementById('learningModelType').value || 'learning_model';
+        if (modelType === 'LearningModel' || modelType === 'AssistantModel') {
+            payload.model_type = modelType === 'AssistantModel'
+                ? 'assistant_model'
+                : (document.getElementById('learningModelType').value || 'learning_model');
             payload.parameters = parseObjectField(document.getElementById('parameters').value, 'Parameters');
+            if (modelType === 'AssistantModel') {
+                payload.parameters.assistant = {
+                    provider_type: 'openai_compatible',
+                    base_url: 'http://localhost:8000/v1',
+                    model_name: payload.name,
+                    model_version: `assistant-registry-${payload.version || 1}`,
+                    temperature: 0.2,
+                    max_tokens: 1600,
+                    timeout_seconds: 20,
+                    enabled: true,
+                    supported_draft_types: [
+                        'dataset_generation',
+                        'model_generation',
+                        'registry_object',
+                        'feature_operations',
+                        'training_run',
+                        'study'
+                    ],
+                    reference_policy: { mode: 'automatic_internal_repository' },
+                    training_profile: { curation: 'approved_and_corrected_drafts' },
+                    ...(payload.parameters.assistant || {})
+                };
+            }
             payload.metrics = parseObjectField(document.getElementById('metrics').value, 'Metrics');
-            payload.reference_data = document.getElementById('referenceData').value.trim() || null;
+            payload.reference_data = document.getElementById('referenceData').value.trim()
+                || (modelType === 'AssistantModel' ? 'runtime_artifacts/assistant_datasets/interactions.jsonl' : null);
             payload.input_features = parseArrayField(document.getElementById('inputFeatures').value, 'Input Features');
             payload.output_features = parseArrayField(document.getElementById('outputFeatures').value, 'Output Features');
+            if (modelType === 'AssistantModel') {
+                if (!payload.input_features.length) payload.input_features = ['prompt', 'context_pack', 'target_type'];
+                if (!payload.output_features.length) payload.output_features = ['workflow_draft'];
+            }
             payload.is_trained = document.getElementById('isTrained').checked;
             payload.is_tested = document.getElementById('isTested').checked;
             payload.is_deployed = document.getElementById('isDeployed').checked;
@@ -1092,6 +1209,7 @@
             body: JSON.stringify({
                 prompt: `Validate and enrich this ${modelType} registry payload before manual create.`,
                 target_type: 'registry_object',
+                ...AmanajeUI.getAssistantModelRequest('registryAssistantModel'),
                 context: {
                     registryType: modelType,
                     registry_payload: payload
@@ -1499,6 +1617,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
         updateFieldsForType();
         setCreateMode('manual');
+        await AmanajeUI.loadAssistantModelOptions('registryAssistantModel');
         await populateReferenceSelects();
     });
 </script>

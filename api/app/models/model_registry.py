@@ -38,13 +38,15 @@ class ModelRegistry:
     def _ensure_defaults_registered(cls) -> None:
         """Populate the registry with the canonical model pairs defined in the app."""
 
-        from .model_objects import CodeModel, DatasetModel, InferenceModel, LearningModel, ObjectModel, StudyModel
-        from .model_orm import CodeORM, DatasetORM, InferenceORM, LearningORM, ObjectORM, StudyORM
+        from .model_objects import AssistantModel, AssistantTrainingDatasetModel, CodeModel, DatasetModel, InferenceModel, LearningModel, ObjectModel, StudyModel
+        from .model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, ObjectORM, StudyORM
 
         default_pairs = (
             (ObjectModel, ObjectORM),
             (DatasetModel, DatasetORM),
+            (AssistantTrainingDatasetModel, AssistantTrainingDatasetORM),
             (LearningModel, LearningORM),
+            (AssistantModel, AssistantORM),
             (InferenceModel, InferenceORM),
             (CodeModel, CodeORM),
             (StudyModel, StudyORM),

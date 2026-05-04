@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-05-01T19:38:06.427002",
+  "draft_id": "draft_da7b78dc55ac",
+  "draft_type": "dataset_generation",
+  "provider": "amanaje_slm",
+  "model_version": "amanaje-slm-bootstrap-0.1",
+  "context_pack_hash": "1e328c79a268c289e3cd09f3d05a1616fd5e890b5446ab153db4cfc54742e0f5",
+  "evaluation": {
+    "evaluation_profile": "assistant-golden-v1",
+    "draft_type": "dataset_generation",
+    "passed": true,
+    "checks": {
+      "valid_workflow_draft": true,
+      "has_context_pack": true,
+      "has_model_version": true,
+      "has_prompt_template_version": true,
+      "review_approved": true,
+      "csv_text": true
+    }
+  }
+}

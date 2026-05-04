@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import math
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime, time
 from enum import Enum
@@ -26,8 +27,10 @@ def deep_asdict(obj: Any) -> Any:
     Recursively convert supported objects into plain Python primitives.
     """
 
-    if obj is None or isinstance(obj, (str, int, float, bool)):
+    if obj is None or isinstance(obj, (str, int, bool)):
         return obj
+    if isinstance(obj, float):
+        return obj if math.isfinite(obj) else None
 
     if isinstance(obj, (datetime, date, time)):
         return obj.isoformat()
@@ -124,7 +127,7 @@ def to_json(obj: Any, indent: int = 4, ensure_ascii: bool = False) -> str:
     Convert any supported object into a JSON string.
     """
 
-    return json.dumps(deep_asdict(obj), indent=indent, ensure_ascii=ensure_ascii, default=str)
+    return json.dumps(deep_asdict(obj), indent=indent, ensure_ascii=ensure_ascii, allow_nan=False, default=str)
 
 
 def from_json(json_str: str) -> Any:

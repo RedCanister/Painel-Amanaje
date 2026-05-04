@@ -1,0 +1,595 @@
+{
+  "recorded_at": "2026-05-04T04:44:45.307833",
+  "dataset_type": "assistant_training_dataset",
+  "dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260504_044443.jsonl",
+  "manifest_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260504_044443_manifest.json",
+  "dataset_hash": "6b0713c07e19d394a48ad98d8a8a20f14cac1db7d054c93fd88efc08ae3facf6",
+  "record_count": 125,
+  "feature_count": 14,
+  "features_list": [
+    "source_type",
+    "label",
+    "workflow_type",
+    "prompt",
+    "context_pack_hash",
+    "asset_summary",
+    "content",
+    "registry_metadata",
+    "source_path",
+    "source_hash",
+    "draft",
+    "review",
+    "user_edits",
+    "quality_signals"
+  ],
+  "shape": [
+    125,
+    14
+  ],
+  "source_files": [
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+      "sha256": "67bd04de8588d53704083a3307e6c83e9777d396ac66ce977290b84bcff8af5d",
+      "source_type": "assistant_interactions"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_b8a4a60bcf6e.json",
+      "sha256": "d474c7be2744c6531b42545a47127da5bd3e0811aa28c2c3d3760b6abe137559",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_aa993866a852.json",
+      "sha256": "49f2fa8fc41f7ddab164d59908af4256c6109efd8d01776e60dbb9b251ad965b",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_43d5db79505f.json",
+      "sha256": "4a08d0f05a93b0b738eb3442391c5698a12e35470130ad35e5b812144daec372",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_ffb9d2489520.json",
+      "sha256": "151558985c35ddd663bf12ea0c488f9472806e0c7b0e9d76d6675953e46abb2d",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_e911621c07ce.json",
+      "sha256": "7b7ba1b29b43aea23ea22640f5a4e5e58190da1fbe553f45459e5f0bf19f2be5",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_67d5a42213d5.json",
+      "sha256": "6e70b6cc4d0b2369da677d30910e274c5ff63ca8a4269217ed98564a25c34f0f",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_21ef6e3a9ec6.json",
+      "sha256": "8f1a054f22e560f57a89b9453c2ff73133c4c18331aacae078f9e179da947b81",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_e0c9b8eda547.json",
+      "sha256": "76fc526ebd5861598d80fda0c3fedcb3bc70dd585df72461733f40d12686e2bf",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_f07091433d6c.json",
+      "sha256": "7b68c4a449ca5067fb2bc1d844c4a75fb228d794a077b9f25a7a70e9a3e5aeaf",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_b61cfa589550.json",
+      "sha256": "2704e0a41e831b1b0400ab725010260cf8f6f15d3f717db4385c9e6b67226b75",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_3bb85c7e0ba6.json",
+      "sha256": "cfb18647c160f4a7f9317a8233c079a2c5a876872460e61dda95af4e0c148cb7",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_581d3eb42362.json",
+      "sha256": "eca3d2b509eb955f024291b2b4f9c9c823bd07265f0b3fb35c88d480ff3da17d",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_93bce0250c15.json",
+      "sha256": "eb8e5c3442386fde67c64f66d69bca8d63672ef9b839a44874762da2c25578f1",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_44d010ce081a.json",
+      "sha256": "2b0f0a150d4650079f310cc6fb72c09c4cddd5188449490ebeae4c3bf6409979",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_51585eadddb5.json",
+      "sha256": "51ce00f9841122abc93c9e2d5653715ca672de34be1d9aaa0ae34cd5a9e2ab11",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_318ad95fe886.json",
+      "sha256": "72436a350f6cb9201f4b719aee789669b1ad98db369602f7b72037a78afc90fd",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_d14cbf7d7f7b.json",
+      "sha256": "8802fab20effbf3634908bed7023d1235688c2ad21684dc81ff4dd0d8b61901d",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_9e355ac30c2a.json",
+      "sha256": "9bd7ac1ea9f56395c0c852825cdb3b936e9cdb772cdd08759304fdef23bd126a",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_465dde78acc3.json",
+      "sha256": "1dc7beaa5068e21e97bfc0c3b47a05177378cec57fc9a658785ab05df048c388",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_c1ed885e6c7a.json",
+      "sha256": "d45040acfab46dc2c5f1e100afe81304a61af5b03286ea3f844712f943ef12fa",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_0b82b58a47a3.json",
+      "sha256": "33458ab6a474e67f63c99ba76c823066c6cfa3aa4e7749071defce9a6351c750",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_c1f96ff53bd3.json",
+      "sha256": "dc393027c1a69d66e603ffef25841e307da9fcad79c90694ad4ecb8abcc0f42c",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_5608c5f323ee.json",
+      "sha256": "ba552a885c6eaa833bf84f14cbadc98496a5426779b0959bbcdf8c866b95487c",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_2455160a405b.json",
+      "sha256": "352151785fadd806b2bde0fb90c7f652017a0710dd42b5f5f7195bf0a589dff5",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_bda6dbbad0f0.json",
+      "sha256": "b8ce437f3bf617feef262cce6d327be5a806e562120721812e80b7f59ff94081",
+      "source_type": "context_pack"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260504033635.json",
+      "sha256": "47fd600328a3b6e62b5d5452ff92247b76611e7d77fded1bfdc56bd1fb3f5c1e",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_688139d63d24_eval.json",
+      "sha256": "67a60c0918829f0d173cd6a5e2f2e759f8f4e2e52e44257898b5d8fdc689a24f",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_e2f086b16407_eval.json",
+      "sha256": "256bb4fd133596ed05597261f1e422a0413b640f65513eeadd040b78f5716da9",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_a5af108cf892_eval.json",
+      "sha256": "3ef476c631822de0ed631d47778c0e61890836377fa664fbc1bcb02e0512209f",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503133748.json",
+      "sha256": "691ecc012d65fe0489d991352feb00a33fc366042a319335f8eb292f8d01442d",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_75e8680bd3b7_eval.json",
+      "sha256": "66408ae4b705c43957781a982b8ac68db452329d5cd011c5ee6f49ea3bf1c939",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_cbf487d5d426_eval.json",
+      "sha256": "3e10230f7119db2d99a1daf14447e08616c26a4705d3e87a0b453afee358cc0e",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012524.json",
+      "sha256": "51ac15f11e3301d1331a9148b3f941923094294f20c2ad9af35275db8bbb732b",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012518.json",
+      "sha256": "b39322c2d5a0f6ce198ab98928b71a3c8183b974fe333c5f49cba19f9ba5449b",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012456.json",
+      "sha256": "962e1619fc917cae493ae16800c4a27f0df6762c4bf390e5acd024fae53ddc85",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503010544.json",
+      "sha256": "540ee0293dfdb4d55d1e1d7cd3d768995d0a397e83ce150c88b05e952fbb7044",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_5eec14546243_eval.json",
+      "sha256": "5272cfa0b0f84784b56aa2f9dbccf7fd653e17bfc0d7b39bb840aabcd42f3c65",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_1c6b0d9283c5_eval.json",
+      "sha256": "f24a347aa7ca327ffa2efefa4368357bc1e3b6437b2caaca5d62cf13e78cab74",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_9f7d065eccb8_eval.json",
+      "sha256": "a3c2545ba16ec4113206dfb55fe545eb766f5b0ab8d7188648f39df2c354b177",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_2f983b78c89d_eval.json",
+      "sha256": "63d8b95b03fafa87fd73d15c7b84890effd7cf02d6c89eb9d60619353650da6d",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_47b256a1a886_eval.json",
+      "sha256": "ea8bdc05721567692f25cd131bc7369191fdb95d862dc99abc01a93ad7e61fdb",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_e39c8db6f2b2_eval.json",
+      "sha256": "431b333ffc65de09099b24281c894eceebd23e4e54ef5e906520901035e009c4",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_6025bf012ca7_eval.json",
+      "sha256": "5840eae498796c8c7dab2405c9ffaa340a1314f567ce822af14c2679effd3108",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_032d14e583e8_eval.json",
+      "sha256": "e262a0df29ca29c730be882316c01c0905701243e5a995111b9a1a99dcb09658",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_fdd67650f779_eval.json",
+      "sha256": "eb7bc097769ece83d4a17cca195c6e6aed11f66a2d610cde51443e3e33a73c8b",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_75818f297d80_eval.json",
+      "sha256": "ae457ac026970ed2dda3bbea9e011d8715f9c1342fa309d7cb9869c6c21e3314",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_a6806f81d20d_eval.json",
+      "sha256": "fac327039fa27eadb3746dddc6a2da70c424ff581a6c4d23fa9a06c2698efa2f",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_da7b78dc55ac_eval.json",
+      "sha256": "11fa683ce7421e128a378c6a1c840117ed7482a9b32f2d766c8b3eaaef040118",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_19c0d5e74d86_eval.json",
+      "sha256": "aec15ca303f5b51b268fc38e28f3a816c2141a6f2743d52e99258e56a0d084d3",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_4bee2bf636d6_eval.json",
+      "sha256": "10a25b9145cc372870d1228b46030d992fd81427c86017015975f499f2ed3068",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_f15deb5c5aa4_eval.json",
+      "sha256": "8c60e859165a17e93ccb65df7b07aa038eb50e9d4f0e2f358b79bb12c34f3e4d",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_b06eaa7073a1_eval.json",
+      "sha256": "19140159af69ab737497208dc9d229cc3aa6aedd5bc05bdaa31d2540a1ac6c65",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_74d97532a840_eval.json",
+      "sha256": "99f01aca7caa1ab454284f9e0f0e9145060818a430655e5f51acf35db7df26e0",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_b783d05ded36_eval.json",
+      "sha256": "8e75bb98a1b481504c6900e29f81731d30f8df4f904bfd19d3ee4672b2110864",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_3e993ddd578b_eval.json",
+      "sha256": "d7e3b4738ef9b5320fc86b18b984162eaf16dfdb1898748ec18de26396ccfb74",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/assistant_evals/draft_1d0ea7d0737a_eval.json",
+      "sha256": "a2ca0da8eb26eb6c4185e04c0e21767f032d3209f6157dd6106a6795828c366b",
+      "source_type": "assistant_eval"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_c59dd667c9c1.json",
+      "sha256": "008875c73f707e5bd7c66a2a47b0ac158eb009569ae368c8b0af29d9582c0dad",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_4382bf126802.json",
+      "sha256": "bb425fade1f968cf7001658f0c3c725b5ea88a6abff7e93efb152ae138ea05da",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_87dbae7a65f2.json",
+      "sha256": "dcde691d9bb69f18e97200258d480d72c3dd80c2b851ef0e2924dd2dd17a2e5d",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_025490877773.json",
+      "sha256": "c94e9f893e8a95358d3ed6ae4ffe6021b6276689d7268045edea768ce64b1670",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_b2e0bc09e0d3.json",
+      "sha256": "abad61e5a67fe2f0a417c7cbb8a51e0b1c96c9ed4c2aecc1a44ecaacccb086e2",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_1d112ed0adaf.json",
+      "sha256": "e98ec28933cd073fd827eb24932faddbfac2da38d76a4bd992e138cdb496501b",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_878f52aca266.json",
+      "sha256": "f3eee6b26c99f2871c27d6504f124d943b4eb18a3da17692844311d38d99a561",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_959d4f5245ea.json",
+      "sha256": "b53514fca7ee77aeaca4bd26884dd231b843613df5e81dcae1f2959cce407283",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_c25cb466a976.json",
+      "sha256": "90ec2c9d7863b2f2b0f8ada2c15af1fc934ea6d564584599b21459044d945f2f",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_de6242458b41.json",
+      "sha256": "f2845a36da902d517054c021bf3c84f50906a4169814a29d852dfcbe40575a62",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_fe78266846c0.json",
+      "sha256": "c1123397abcb3d5f828395f9deefaa8e71b545ee9cf52dababa09ddc6d03abdd",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_d73badf81498.json",
+      "sha256": "3ae8262555e68aa31b2bf6b955364dd041f7223225f7ea181b295ecc911a2878",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_5616f8d66a38.json",
+      "sha256": "29f5cd4a0935189769120b8fade0ff0e53f81cfd3671d2d60ec0227d2a11736a",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_b1822953f487.json",
+      "sha256": "fe3e0f8f28257f652c5e97e1c7f630ce0f16089715a707e154c2ffe1a9510541",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_9c3b5afe032b.json",
+      "sha256": "81ff75698fcb35f32ec155325833145443b2dc3297fbebbc9f9b826b46e00724",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_e9323a17f365.json",
+      "sha256": "fed256aa6da1fefa5b596100ecf508182bd6981c298d2fedcc5d7716cef5d666",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_c1746a19cbbe.json",
+      "sha256": "4c4c0586a3a9e87543456b5efcbdcde40dc6cf14283766caf939deef27e92f7b",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/study_e1e363a697f2.json",
+      "sha256": "1a5e51c6b18c602e1c1dd3e4fdbb483fe4d65a82276669e835185ff10125afa2",
+      "source_type": "study_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_f49fc53352c8.json",
+      "sha256": "fc44660f82cd80a4f546d89c10ef824a1289a912a25fced63b08b8a2d89a83d0",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_df2d2d4fbf7a.json",
+      "sha256": "c1bddd9ffea0ff09239a1c1a1c1143addcbf4f926a8db679d269ec238d63f6e0",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_81bf90152a6f.json",
+      "sha256": "383f9c7e32b0d569b6fcf6847a380692109d05a495f6ddacc434e52564ec92f8",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_f31801765519.json",
+      "sha256": "aaf60a187a4886c6bce8d6ad3029cb79d0848ab3a6a399e160738a5f73ee1ba9",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_439bbe7ebc7e.json",
+      "sha256": "5745e2ff460fdc69b83aab3d1cc4b9d66454bd64b506de47f865512d9dfa33ad",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_6c0d9f894321.json",
+      "sha256": "8a622f52704d3126f3f970c370030d07280a5e4cda1858d310d668be18ad5013",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_61d09ecd109e.json",
+      "sha256": "5b5529350c3b0d34ae7c4bfb694a873ad9371768577a4088ac947d5610a942b1",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_1ae0441f062d.json",
+      "sha256": "0749a1369c83ee42be9345e589e1baea91227fe3fd7223ea87169a6abfe15fce",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_a2724f8cec6f.json",
+      "sha256": "8f3ca151cbe61bea0d8fbe6ace5be09297d2bcfdab9648d919c747d80f2e7aee",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_c65069a884ad.json",
+      "sha256": "d59d113701540ec7fa0a430d12c49b16ba33934d19fbf7e0e1be9da1ab6774e6",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_47187723958a.json",
+      "sha256": "06a8b624c640fd30aa1f5421ac16a1d6c3f343b216ff366a0875c53eb6dd1e04",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_2f18768b6d6a.json",
+      "sha256": "735945dff5fef7847553430086666042b91445581e757236eba1ffb39eb05ca9",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_9e0d9dadba6a.json",
+      "sha256": "01b610969b658a9cae200a212430ad7e23f1c8b5b71705c462eddd2dc993a5a4",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_12b98d383155.json",
+      "sha256": "82f61180f69355d1f6dc2fdfbdbc99b4165907d1cf1cdf15e740ee72a1f196c1",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_1f9d9cd331d9.json",
+      "sha256": "d311949221a35be24468be7d848839fa4b0a698ed20b0b33382df30a0e983a7c",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_0fdc1e610d12.json",
+      "sha256": "907290b56a724f3b25762e36bebe9f24b2276d3e037030cdf425a5b9494e2b66",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_12bdf0c09757.json",
+      "sha256": "9b3a3c2ba73b740806576290dcee53b5e38d4b46952e902bb475af45e467b4da",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/study_2454e64618bb.json",
+      "sha256": "6054ae61545d8d91e0a6eac62fd3cb502ccbade97c5ea43536ff1131791e7af9",
+      "source_type": "study_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_b9cac8814828.json",
+      "sha256": "45e0ff24fedbbdc2afa718320cbcec69b82b905b7a3aa17c9a914d6c0fd75a6d",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_816ea459ad02.json",
+      "sha256": "dd25e3a6386d23c0faf4f670de27c2f09a1f475b53427588fadd360e90caae7a",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_ec1dec2b76b3.json",
+      "sha256": "4e81660f134ab45d51a66a3d0e3f498e78b93e626a4e80ab028297d9a152e026",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/assistant_d8b75168f192.json",
+      "sha256": "a79666c2ad8d70d5ae877ae436baa35977338d60ba905cc4aeddf153cd8b6763",
+      "source_type": "assistant_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/study_382c816fbcea.json",
+      "sha256": "0bc7337d9049ad060cc4ea6dc37f2ff2472d4138a8daa53105e5b490b5797295",
+      "source_type": "study_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_356479201f42.json",
+      "sha256": "b0bc7aac62050615313921e6ed584eb1395ca9dd152cf0562224f93eda3dc439",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_bd377016052d.json",
+      "sha256": "51a1da8ffc0df76e2094030b0ad2fdfb44c3fdcc01df1c8f44213d8a40faef10",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_4f59147fb253.json",
+      "sha256": "8966200b8a0119173d90c595d6c7c45c0df544c0472be97f6b8f0b9f6821e26c",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_9b751e60e831.json",
+      "sha256": "ec943b28078b8c8259fa7d978346874a1292fa0c4c8aeb6ac5e1b78ea6425ab0",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_5c0e65e02802.json",
+      "sha256": "ee34ff37e5c9034f1971dad6b0f386fb2b57d8b11974d8cdbc885f234f1cb70f",
+      "source_type": "training_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/study_e58a3698db57.json",
+      "sha256": "baa46247a3c04cc4c32bb491b8f31278e1ae5744b122f596b432a5bc58376513",
+      "source_type": "study_run"
+    },
+    {
+      "path": "/app/runtime_artifacts/runs/training_d90e65ee2d27.json",
+      "sha256": "aff4c8b0647ee2f33fd22433e8f16c149c1db19a5e16889b1aade1d3ae20a127",
+      "source_type": "training_run"
+    },
+    {
+      "path": "registry://datasets",
+      "sha256": "79899b3948bbe70831c4a5750ee045752f5af87442429770dfb19ba3b16ac99b",
+      "source_type": "registry_datasets",
+      "record_count": 5
+    },
+    {
+      "path": "registry://assistant_models",
+      "sha256": "49f669d106c57cf43d2877017a08727189fc267275d424bdb3159a2cf641b38d",
+      "source_type": "registry_assistant_models",
+      "record_count": 1
+    },
+    {
+      "path": "registry://code_models",
+      "sha256": "d8b6d3f7423a54ab31476a276c29b0ab962d4d063ee74e5bcae7a61964fdcbe8",
+      "source_type": "registry_code_models",
+      "record_count": 4
+    },
+    {
+      "path": "registry://inference_models",
+      "sha256": "10fad0d18fd284283678545424242e764f68a2402697a352550f8f1af2d50c94",
+      "source_type": "registry_inference_models",
+      "record_count": 4
+    },
+    {
+      "path": "registry://study_models",
+      "sha256": "8ef0fc2bc53467cfae5b027ce8ec976a516e48b6666c5a94649faac74c816e53",
+      "source_type": "registry_study_models",
+      "record_count": 4
+    }
+  ],
+  "source_file_count": 110,
+  "registry_record_counts": {
+    "datasets": 5,
+    "assistant_models": 1,
+    "code_models": 4,
+    "inference_models": 4,
+    "study_models": 4
+  },
+  "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted."
+}

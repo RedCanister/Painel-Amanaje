@@ -1,0 +1,213 @@
+{
+  "run_id": "assistant_0fdc1e610d12",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "approved",
+  "created_at": "2026-04-28T17:13:59.127557",
+  "updated_at": "2026-04-28T17:14:04.855466",
+  "started_at": null,
+  "completed_at": "2026-04-28T17:14:04.855466",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_1c8634cae5e4",
+    "draft_type": "feature_operations"
+  },
+  "parameters": {
+    "prompt": "Select half the values of this dataset",
+    "provider": "local",
+    "target_type": "feature_operations"
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_1c8634cae5e4",
+      "session_id": null,
+      "draft_type": "feature_operations",
+      "title": "Feature Transformation Draft",
+      "summary": "Prepares visual feature operations for /features/preview before materialization.",
+      "prompt": "Select half the values of this dataset",
+      "status": "draft",
+      "provider": "local",
+      "created_at": "2026-04-28T17:13:59.127278",
+      "code": null,
+      "operations": [
+        {
+          "type": "rename",
+          "column": "",
+          "operator": "==",
+          "value": "",
+          "ascending": true
+        },
+        {
+          "type": "limit",
+          "value": 200
+        }
+      ],
+      "registry_payload": {},
+      "training_request": {},
+      "study_request": {},
+      "artifacts": {
+        "preview_endpoint": "/features/preview",
+        "materialize_endpoint": "/features/materialize"
+      },
+      "assumptions": [
+        "Existing Feature Workspace operation schemas remain the source of truth."
+      ],
+      "risks": [
+        "Column names must match the selected dataset before preview can succeed."
+      ],
+      "context": {
+        "datasetId": 21,
+        "transforms": [
+          {
+            "type": "rename",
+            "column": "",
+            "operator": "==",
+            "value": "",
+            "ascending": true
+          },
+          {
+            "type": "limit",
+            "value": 200
+          }
+        ],
+        "columns": [
+          "Date",
+          "Open",
+          "High",
+          "Volume",
+          "RelVolume",
+          "KeltnerC_%",
+          "Data",
+          "time_idx",
+          "hl_center",
+          "hl_range",
+          "Low",
+          "Close_Return",
+          "DLR",
+          "VPT",
+          "RSI_Close",
+          "Close",
+          "Momentum",
+          "Force_Index",
+          "Williams_%R",
+          "MA20",
+          "CCI",
+          "Bollinger_%B",
+          "Volatility",
+          "MACD_lib",
+          "MACD_signal",
+          "MACD_Hist",
+          "MA50",
+          "month",
+          "dayofweek",
+          "RSI_Over",
+          "RSI_Under",
+          "Williams_Over",
+          "Williams_Under",
+          "MACD_Over",
+          "MACD_Under",
+          "series_id"
+        ],
+        "limitRows": 200
+      },
+      "next_actions": [
+        "Preview transforms",
+        "Approve materialization",
+        "Register the derived dataset"
+      ]
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "none",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "sklearn",
+          "statistics"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ]
+      },
+      "messages": [],
+      "required_actions": [],
+      "reviewed_at": "2026-04-28T17:14:04.825865"
+    },
+    "approval": {
+      "approval_id": "approval_e16b4f84aada",
+      "reviewer": "feature-workspace",
+      "notes": null,
+      "approved_at": "2026-04-28T17:14:04.839834"
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "approved",
+    "latest_event": "Assistant draft approved.",
+    "latest_timestamp": "2026-04-28T17:14:04.855466",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-04-28T17:13:59.127557",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-04-28T17:13:59.237266",
+        "message": "Assistant draft created and reviewed."
+      },
+      {
+        "status": "completed",
+        "stage": "approved",
+        "timestamp": "2026-04-28T17:14:04.855466",
+        "message": "Assistant draft approved."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-04-28T17:13:59.127557",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-04-28T17:13:59.237266",
+      "message": "Assistant draft created and reviewed."
+    },
+    {
+      "status": "completed",
+      "stage": "approved",
+      "timestamp": "2026-04-28T17:14:04.855466",
+      "message": "Assistant draft approved."
+    }
+  ]
+}

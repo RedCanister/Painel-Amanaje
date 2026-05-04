@@ -1,0 +1,25 @@
+{
+  "draft_type": "dataset_generation",
+  "title": "Provider Contract Dataset Fixture",
+  "summary": "Minimal fixture proving an assistant server can return a valid WorkflowDraft JSON object.",
+  "prompt": "Return a minimal valid WorkflowDraft contract response.",
+  "code": "import pandas as pd\n\ndf = pd.DataFrame({'feature_a': [1], 'target': [0]})\ncsv_text = df.to_csv(index=False)\nname = 'provider_contract_dataset'\ndescription = 'Provider contract fixture dataset.'\nobject_type = 'dataset'\ndataset_type = 'dataset'",
+  "execution_profile": "dataset_generation",
+  "materialized_outputs": [
+    "csv_text",
+    "name",
+    "description",
+    "object_type",
+    "dataset_type"
+  ],
+  "assumptions": [
+    "This is a server contract fixture."
+  ],
+  "risks": [
+    "This fixture is not production data."
+  ],
+  "next_actions": [
+    "Validate WorkflowDraft",
+    "Run assistant safety review"
+  ]
+}

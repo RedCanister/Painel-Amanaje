@@ -479,11 +479,14 @@ function renderCreateAssistantOutput(payload = {}) {
     const actions = review.required_actions || [];
     const messages = review.messages || [];
     const outputKeys = Object.keys(execution?.metadata || {});
+    const statusLabel = payload.status || review.status || execution?.status || 'draft';
+    const statusTone = actions.length ? 'needs_attention' : (execution?.status === 'success' || review.approved ? 'success' : 'idle');
+    window.AmanajeUI?.setAssistantStatus?.('create', statusLabel, statusTone);
 
     target.innerHTML = `
         <h4>${escapeHtml(draft.title || 'Assistant Review')}</h4>
         <div class="assistant-pill-row">
-            <span class="assistant-pill">${escapeHtml(payload.status || review.status || execution?.status || 'draft')}</span>
+            <span class="assistant-pill">${escapeHtml(statusLabel)}</span>
             <span class="assistant-pill">Profile: ${escapeHtml(safety.profile || getCreateAssistantProfile())}</span>
             <span class="assistant-pill">Risk: ${escapeHtml(safety.risk_level || 'none')}</span>
         </div>
@@ -509,6 +512,7 @@ async function draftCreateAssistantScript() {
             body: JSON.stringify({
                 prompt,
                 target_type: getCreateAssistantTargetType(),
+                ...window.AmanajeUI?.getAssistantModelRequest?.('assistantCreateModel'),
                 context: {
                     operationId: document.getElementById('operationId').value,
                     existing_metadata: getUploadMetadata()
@@ -721,6 +725,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayMetadataPanel(getUploadMetadata());
     });
 
+    await window.AmanajeUI?.loadAssistantModelOptions?.('assistantCreateModel');
     await refreshSelectors();
     await refreshFeatures();
     await refreshModels();

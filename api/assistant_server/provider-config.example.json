@@ -1,0 +1,41 @@
+{
+  "active_provider": "amanaje_slm",
+  "providers": {
+    "amanaje_slm": {
+      "type": "openai_compatible",
+      "enabled": true,
+      "base_url": "http://localhost:8080/v1",
+      "health_url": "http://localhost:8080/health",
+      "model_name": "amanaje-assistant",
+      "model_version": "amanaje-slm-local-0.1",
+      "base_model_name": "local-foundation-model",
+      "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+      "timeout_seconds": 45,
+      "max_tokens": 2500,
+      "temperature": 0.2,
+      "supports_json_mode": true,
+      "supported_draft_types": [
+        "dataset_generation",
+        "feature_operations",
+        "model_generation",
+        "registry_object",
+        "study",
+        "training_run"
+      ],
+      "fallback_provider": "local"
+    },
+    "remote_lab_slm": {
+      "type": "openai_compatible",
+      "enabled": true,
+      "base_url": "https://assistant-runtime.example.com/v1",
+      "health_url": "https://assistant-runtime.example.com/health",
+      "model_name": "remote-amanaje-draft-model",
+      "model_version": "remote-amanaje-draft-model-0.1",
+      "api_key_env": "REMOTE_LAB_SLM_API_KEY",
+      "timeout_seconds": 60,
+      "max_tokens": 3000,
+      "temperature": 0.2,
+      "fallback_provider": "local"
+    }
+  }
+}

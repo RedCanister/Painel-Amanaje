@@ -68,7 +68,7 @@
             { title, collapsed: options.collapsed !== false, containerClass: options.containerClass || "" }
         );
     }
-
+     // TODO - Be sure to extend the plotly implementation to this function
     function renderPlotDeck(plots = []) {
         const usablePlots = Array.isArray(plots) ? plots.filter((plot) => Array.isArray(plot.series) && plot.series.length) : [];
         if (!usablePlots.length) return '<div class="helper-text">No plots available for this result yet.</div>';
@@ -213,6 +213,75 @@
         });
     }
 
+    function initAssistantCollapsibles(root = document) {
+        root.querySelectorAll("[data-assistant-toggle]").forEach((button) => {
+            if (button.dataset.assistantToggleBound === "true") return;
+            button.dataset.assistantToggleBound = "true";
+            const wrapper = button.closest(".assistant-collapsible");
+            const panel = wrapper ? wrapper.querySelector("[data-assistant-panel]") : null;
+            const expanded = button.getAttribute("aria-expanded") === "true";
+            if (panel && !expanded) {
+                panel.setAttribute("hidden", "");
+            }
+            button.addEventListener("click", () => {
+                if (!panel) return;
+                const isHidden = panel.hasAttribute("hidden");
+                if (isHidden) {
+                    panel.removeAttribute("hidden");
+                    button.setAttribute("aria-expanded", "true");
+                } else {
+                    panel.setAttribute("hidden", "");
+                    button.setAttribute("aria-expanded", "false");
+                }
+            });
+        });
+    }
+
+    function setAssistantStatus(key, label = "Ready", tone = "idle") {
+        const badge = document.querySelector(`[data-assistant-status="${key}"]`);
+        if (!badge) return;
+        badge.textContent = label;
+        badge.className = `assistant-status-badge ${tone || "idle"}`;
+    }
+
+    async function loadAssistantModelOptions(select, options = {}) {
+        const element = typeof select === "string" ? document.getElementById(select) : select;
+        if (!element) return [];
+        const currentValue = element.value;
+        const defaultLabel = options.defaultLabel || "Configured active provider";
+        element.innerHTML = `<option value="">${escapeHtml(defaultLabel)}</option>`;
+        try {
+            const response = await fetch("/assistant/models/list");
+            const payload = await response.json();
+            if (!response.ok || payload?.status === "error") {
+                throw new Error(payload?.detail || `HTTP ${response.status}`);
+            }
+            const models = Array.isArray(payload.models) ? payload.models : [];
+            element.insertAdjacentHTML(
+                "beforeend",
+                models.map((model) => {
+                    const id = model.id;
+                    const name = model.name || `Assistant Model #${id}`;
+                    const version = model.model_version || model.assistant_config?.model_version || model.version || "unversioned";
+                    return `<option value="${escapeHtml(id)}">${escapeHtml(name)} (${escapeHtml(version)})</option>`;
+                }).join("")
+            );
+            if (currentValue && Array.from(element.options).some((option) => option.value === currentValue)) {
+                element.value = currentValue;
+            }
+            return models;
+        } catch (error) {
+            element.insertAdjacentHTML("beforeend", `<option value="" disabled>Registry models unavailable</option>`);
+            return [];
+        }
+    }
+
+    function getAssistantModelRequest(select) {
+        const element = typeof select === "string" ? document.getElementById(select) : select;
+        const selected = element?.value ? String(element.value).trim() : "";
+        return selected ? { assistant_model_id: selected, provider: "auto" } : { provider: "auto" };
+    }
+
     window.AmanajeUI = {
         escapeHtml,
         renderMetricCards,
@@ -222,17 +291,23 @@
         renderResultTabs,
         activateTabs,
         enhanceCollapsibles,
+        initAssistantCollapsibles,
+        loadAssistantModelOptions,
+        getAssistantModelRequest,
+        setAssistantStatus,
     };
 
     document.addEventListener("DOMContentLoaded", () => {
         activateTabs(document);
         enhanceCollapsibles(document);
+        initAssistantCollapsibles(document);
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
                     if (!(node instanceof HTMLElement)) return;
                     activateTabs(node);
                     enhanceCollapsibles(node);
+                    initAssistantCollapsibles(node);
                 });
             });
         });

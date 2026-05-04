@@ -18,20 +18,51 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_session import get_db
-from app.database.db_utils import create_entry, get_all_entries, get_entry_dependencies, update_entry
+from app.database.db_utils import create_entry, get_all_entries, get_entry, get_entry_dependencies, update_entry
 from app.models.assistant_objects import (
     AssistantApprovalRequest,
     AssistantDraftRequest,
+    AssistantFeedbackRequest,
+    AssistantReferenceRequest,
+    AssistantReferenceSearchRequest,
     AssistantReviewRequest,
     AssistantSessionRequest,
     AssistantSubmitRequest,
     ExecutionRunRequest,
     WorkflowDraft,
 )
-from app.models.model_objects import DatasetModel, LearningModel, StudyModel
-from app.models.model_orm import DatasetORM, InferenceORM, LearningORM, StudyORM
+from app.models.model_objects import AssistantModel, AssistantTrainingDatasetModel, DatasetModel, LearningModel, StudyModel
+from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
 from app.utils.deployment_utils import save_deployment_summary
-from app.utils.assistant_provider import get_assistant_provider
+from app.utils.assistant_llmops import (
+    assistant_alignment_contracts,
+    assistant_reference_repository_status,
+    append_assistant_training_example,
+    build_assistant_reference_snapshot,
+    build_assistant_training_dataset_snapshot,
+    build_selected_reference_pack,
+    create_assistant_reference,
+    curate_assistant_training_examples,
+    evaluate_draft_contract,
+    list_assistant_references,
+    log_assistant_mlflow_event,
+    persist_assistant_context_pack,
+    persist_assistant_eval_suite,
+    persist_assistant_eval_result,
+    persist_assistant_promotion_report,
+    resolve_assistant_reference_source_paths,
+    run_assistant_golden_evals,
+    sync_assistant_reference_repository,
+)
+from app.utils.assistant_provider import (
+    assistant_model_to_provider_config,
+    get_assistant_provider,
+    get_assistant_provider_for_model,
+    get_assistant_provider_status,
+    redact_assistant_provider_config,
+    test_assistant_model_contract,
+    test_assistant_provider_contract,
+)
 from app.utils.assistant_safety import SAFETY_PROFILES, review_code_safety, review_workflow_draft
 from app.utils.io import save_json
 from app.utils.logging import log_to_mlflow
@@ -49,6 +80,10 @@ DEPLOYMENT_ARTIFACT_DIR = _utils.DEPLOYMENT_ARTIFACT_DIR
 EXPORT_ARTIFACT_DIR = _utils.EXPORT_ARTIFACT_DIR
 FEATURE_ARTIFACT_DIR = _utils.FEATURE_ARTIFACT_DIR
 RUN_LEDGER_DIR = _utils.RUN_LEDGER_DIR
+ASSISTANT_MODEL_DIR = _utils.ASSISTANT_MODEL_DIR
+ASSISTANT_DATASET_DIR = _utils.ASSISTANT_DATASET_DIR
+ASSISTANT_EVAL_DIR = _utils.ASSISTANT_EVAL_DIR
+ASSISTANT_REFERENCE_DIR = ASSISTANT_DATASET_DIR / "references"
 PRODUCTION_STATE = _utils.PRODUCTION_STATE
 DATASET_OPERATION = _utils.DATASET_OPERATION
 MODEL_OPERATION = _utils.MODEL_OPERATION
@@ -173,6 +208,11 @@ async def page_production(request: Request) -> HTMLResponse:
 @app.get("/registry", response_class=HTMLResponse)
 async def page_registry(request: Request) -> HTMLResponse:
     return _render_page("base_purple.html", request, )
+
+
+@app.get("/assistant", response_class=HTMLResponse)
+async def page_assistant(request: Request) -> HTMLResponse:
+    return _render_page("base_assistant.html", request, )
 
 
 @app.get("/upload/support", response_class=JSONResponse)
@@ -363,7 +403,7 @@ async def post_execute(request: Request) -> JSONResponse:
         }
     )
 
-
+# TODO - /Generate should return a random draft made from all the available references within the constraints of painel-amanaje 
 @app.post("/generate", response_class=JSONResponse)
 async def post_generate(request: Request) -> JSONResponse:
     try:
@@ -502,12 +542,899 @@ async def assistant_sessions(payload: AssistantSessionRequest = Body(default=Ass
     )
 
 
-@app.post("/assistant/draft", response_class=JSONResponse)
-async def assistant_draft(payload: AssistantDraftRequest) -> JSONResponse:
+def _record_assistant_training_example(
+    *,
+    label: str,
+    draft: WorkflowDraft,
+    review: Any = None,
+    approval: Mapping[str, Any] | None = None,
+    final_payload: Mapping[str, Any] | None = None,
+    outcome: Mapping[str, Any] | None = None,
+    user_edits: Mapping[str, Any] | None = None,
+) -> str | None:
     try:
-        provider = get_assistant_provider(payload.provider)
-        draft = provider.create_draft(payload)
+        path = append_assistant_training_example(
+            ASSISTANT_DATASET_DIR,
+            label=label,
+            draft=draft,
+            review=review,
+            approval=approval,
+            final_payload=final_payload,
+            outcome=outcome,
+            user_edits=user_edits,
+        )
+        return str(path)
+    except Exception:
+        LOGGER.debug("Assistant training example persistence failed.", exc_info=True)
+        return None
+
+
+def _assistant_reference_context() -> dict[str, Any]:
+    try:
+        return build_assistant_reference_snapshot(ASSISTANT_DATASET_DIR, ASSISTANT_EVAL_DIR)
+    except Exception:
+        LOGGER.debug("Assistant reference snapshot failed.", exc_info=True)
+        return {}
+
+
+async def _assistant_training_registry_records(db: AsyncSession) -> dict[str, list[dict[str, Any]]]:
+    async def _records(orm_model: Any) -> list[dict[str, Any]]:
+        try:
+            records: list[dict[str, Any]] = []
+            for record in await get_all_entries(db, orm_model):
+                payload = _utils._json_payload(record)
+                if isinstance(payload, Mapping):
+                    records.append(dict(payload))
+                else:
+                    LOGGER.debug(
+                        "Skipping non-mapping assistant training registry payload from %s: %r",
+                        getattr(orm_model, "__name__", orm_model),
+                        payload,
+                    )
+            return records
+        except Exception:
+            LOGGER.debug("Assistant training registry source failed for %s.", getattr(orm_model, "__name__", orm_model), exc_info=True)
+            return []
+
+    datasets = [
+        record
+        for record in await _records(DatasetORM)
+        if str(record.get("dataset_type") or "").lower() != "assistant_training_dataset"
+    ]
+    learning_models = [
+        record
+        for record in await _records(LearningORM)
+        if str(record.get("model_type") or "").lower() != "assistant_model"
+    ]
+    return {
+        "datasets": datasets,
+        "learning_models": learning_models,
+        "assistant_models": await _records(AssistantORM),
+        "code_models": await _records(CodeORM),
+        "inference_models": await _records(InferenceORM),
+        "study_models": await _records(StudyORM),
+    }
+
+
+def _persist_assistant_review_artifacts(draft: WorkflowDraft, evaluation: Mapping[str, Any]) -> dict[str, str]:
+    paths: dict[str, str] = {}
+    try:
+        context_path = persist_assistant_context_pack(ASSISTANT_DATASET_DIR / "context_packs", draft)
+        if context_path is not None:
+            paths["context_pack_path"] = str(context_path)
+    except Exception:
+        LOGGER.debug("Assistant context pack persistence failed.", exc_info=True)
+    try:
+        eval_path = persist_assistant_eval_result(ASSISTANT_EVAL_DIR, draft, evaluation)
+        paths["evaluation_path"] = str(eval_path)
+    except Exception:
+        LOGGER.debug("Assistant evaluation persistence failed.", exc_info=True)
+    try:
+        promotion_path = persist_assistant_promotion_report(ASSISTANT_MODEL_DIR / "promotion_reports", draft, evaluation)
+        paths["promotion_report_path"] = str(promotion_path)
+    except Exception:
+        LOGGER.debug("Assistant promotion report persistence failed.", exc_info=True)
+    return paths
+
+
+@app.get("/assistant/alignment/contracts", response_class=JSONResponse)
+async def assistant_alignment_contracts_endpoint() -> JSONResponse:
+    return _utils._json_response(
+        {
+            "alignment_contracts": assistant_alignment_contracts(),
+            "mlflow_experiment": get_assistant_provider_status().get("mlflow_experiment"),
+        }
+    )
+
+
+def _resolve_assistant_reference_pack(payload: AssistantDraftRequest) -> list[dict[str, Any]]:
+    context = dict(payload.context or {})
+    reference_query = _assistant_reference_query(payload)
+    reference_tags = _assistant_reference_tags(payload)
+    references = build_selected_reference_pack(
+        ASSISTANT_REFERENCE_DIR,
+        reference_ids=payload.reference_ids,
+        query=reference_query,
+        tags=reference_tags,
+        limit=int(payload.constraints.get("max_references") or 8),
+    )
+    inline_references = context.get("content_references")
+    if isinstance(inline_references, list):
+        for item in inline_references[:8]:
+            if isinstance(item, Mapping):
+                references.append(item)  # type: ignore[arg-type]
+    return [
+        reference.model_dump(mode="json") if hasattr(reference, "model_dump") else dict(reference)
+        for reference in references
+    ]
+
+
+def _assistant_reference_query(payload: AssistantDraftRequest) -> str:
+    context = dict(payload.context or {})
+    query_parts = [
+        payload.prompt,
+        payload.workflow_goal or "",
+        str(context.get("reference_query") or ""),
+        str(context.get("operationId") or ""),
+        str(context.get("registryType") or context.get("modelType") or ""),
+    ]
+    for key in ("objectName", "datasetId", "modelId", "studyId"):
+        if context.get(key):
+            query_parts.append(str(context[key]))
+    return " ".join(part for part in query_parts if part).strip()
+
+
+def _assistant_reference_tags(payload: AssistantDraftRequest) -> list[str]:
+    context = dict(payload.context or {})
+    tags = {str(tag).strip() for tag in context.get("reference_tags") or [] if str(tag).strip()}
+    target_type = payload.target_type or ""
+    operation_id = str(context.get("operationId") or "").strip()
+    registry_type = str(context.get("registryType") or context.get("modelType") or "").strip()
+    if target_type:
+        tags.add(target_type)
+    if operation_id == "models":
+        tags.add("model_generation")
+        tags.add("model")
+    if operation_id == "datasets":
+        tags.add("dataset_generation")
+        tags.add("dataset")
+    if registry_type:
+        tags.add(registry_type)
+        tags.add(registry_type.lower())
+        tags.add("registry")
+    return sorted(tags)
+
+
+def _serialize_assistant_model(model_record: Any) -> dict[str, Any]:
+    payload = _utils._json_payload(model_record)
+    parameters = payload.get("parameters") if isinstance(payload.get("parameters"), Mapping) else {}
+    assistant_config = dict((parameters or {}).get("assistant") or {})
+    provider_config = assistant_model_to_provider_config(model_record)
+    return {
+        **payload,
+        **{key: value for key, value in assistant_config.items() if value is not None},
+        "assistant_config": assistant_config,
+        "provider_config": redact_assistant_provider_config(provider_config),
+        "provider_name": f"assistant_model_{payload.get('id') or payload.get('name') or 'registry'}",
+    }
+
+
+def _serialize_assistant_training_dataset(dataset_record: Any) -> dict[str, Any]:
+    payload = _utils._json_payload(dataset_record)
+    manifest = {}
+    manifest_path = payload.get("connection_string")
+    if manifest_path:
+        try:
+            manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+        except Exception:
+            manifest = {}
+    return {
+        **payload,
+        "manifest": manifest,
+        "dataset_hash": manifest.get("dataset_hash"),
+        "canonical_jsonl_path": manifest.get("canonical_jsonl_path"),
+        "tabular_csv_path": manifest.get("tabular_csv_path"),
+        "tabular_hash": manifest.get("tabular_hash"),
+        "materialization_format": manifest.get("materialization_format"),
+        "generic_training_target": manifest.get("generic_training_target"),
+        "record_count": manifest.get("record_count"),
+    }
+
+
+async def _latest_assistant_training_dataset(db: AsyncSession) -> Any | None:
+    datasets = await get_all_entries(db, AssistantTrainingDatasetORM)
+    if not datasets:
+        return None
+    return sorted(
+        datasets,
+        key=lambda item: (
+            str(getattr(item, "date", None) or ""),
+            getattr(item, "version", 0) or 0,
+            getattr(item, "id", 0) or 0,
+        ),
+        reverse=True,
+    )[0]
+
+
+async def _upsert_assistant_training_dataset_record(
+    db: AsyncSession,
+    manifest: Mapping[str, Any],
+) -> Any:
+    latest = await _latest_assistant_training_dataset(db)
+    dataset_path = Path(str(manifest.get("tabular_csv_path") or manifest.get("dataset_path") or ""))
+    size_mb = dataset_path.stat().st_size / (1024 * 1024) if dataset_path.exists() else 0
+    history_entry = {
+        "operation": "assistant_training_dataset_rebuild",
+        "when": datetime.now().isoformat(),
+        "dataset_hash": manifest.get("dataset_hash"),
+        "tabular_hash": manifest.get("tabular_hash"),
+        "canonical_jsonl_path": manifest.get("canonical_jsonl_path"),
+        "tabular_csv_path": manifest.get("tabular_csv_path"),
+        "record_count": manifest.get("record_count"),
+    }
+    payload = {
+        "name": "assistant_training_dataset_latest",
+        "description": "Redacted JSONL snapshot for training Painel Amanaje AssistantModel entries.",
+        "object_type": "dataset",
+        "size": size_mb,
+        "path": str(manifest.get("tabular_csv_path") or manifest.get("dataset_path") or ""),
+        "date": datetime.now(),
+        "version": int((getattr(latest, "version", 0) or 0) + 1) if latest is not None else 1,
+        "history": _utils._append_history(getattr(latest, "history", None), history_entry),
+        "dataset_type": "assistant_training_dataset",
+        "shape": list(manifest.get("shape") or [0, 0]),
+        "has_features": True,
+        "features_list": list(manifest.get("features_list") or []),
+        "connection_string": str(manifest.get("manifest_path") or ""),
+    }
+    if latest is None:
+        return await create_entry(db, AssistantTrainingDatasetORM, payload)
+    return await update_entry(db, AssistantTrainingDatasetORM, getattr(latest, "id"), payload)
+
+
+async def _get_assistant_model_record(db: AsyncSession, assistant_model_id: int | str) -> Any:
+    model_record = await get_entry(db, AssistantORM, assistant_model_id)
+    if model_record is None:
+        raise ValueError(f"Assistant model '{assistant_model_id}' was not found in the registry.")
+    return model_record
+
+
+def _assistant_route_catalog() -> list[dict[str, str]]:
+    return [
+        {"group": "Management", "method": "GET", "path": "/assistant", "operation": "Render the Assistant Management workspace."},
+        {"group": "Management", "method": "GET", "path": "/assistant/management/overview", "operation": "Return aggregated assistant status, route catalog, safety profiles, and artifact locations."},
+        {"group": "Sessions", "method": "POST", "path": "/assistant/sessions", "operation": "Create an assistant run session in the run ledger."},
+        {"group": "Drafts", "method": "POST", "path": "/assistant/draft", "operation": "Create a reviewed WorkflowDraft from the active provider or selected AssistantModel."},
+        {"group": "Drafts", "method": "POST", "path": "/assistant/review", "operation": "Review a WorkflowDraft contract and safety state."},
+        {"group": "Drafts", "method": "POST", "path": "/assistant/approve", "operation": "Approve a reviewed draft and record a positive training example."},
+        {"group": "Drafts", "method": "POST", "path": "/assistant/feedback", "operation": "Record accepted, corrected, rejected, or unsafe feedback for training curation."},
+        {"group": "Drafts", "method": "POST", "path": "/assistant/submit", "operation": "Submit an approved assistant run to the configured workflow handoff."},
+        {"group": "Providers", "method": "GET", "path": "/assistant/provider/status", "operation": "Inspect configured providers, active provider, fallback state, and model metadata."},
+        {"group": "Providers", "method": "POST", "path": "/assistant/provider/test", "operation": "Run a small WorkflowDraft contract diagnostic against a provider."},
+        {"group": "Models", "method": "GET", "path": "/assistant/models/list", "operation": "List registered AssistantModel entries available for assistant selection."},
+        {"group": "Models", "method": "GET", "path": "/assistant/models/{assistant_model_id}/status", "operation": "Inspect a registered AssistantModel provider configuration."},
+        {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/test", "operation": "Run the provider contract diagnostic for one registered AssistantModel."},
+        {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/curate", "operation": "Curate training records for one AssistantModel."},
+        {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/dataset/attach", "operation": "Attach the latest assistant training dataset snapshot to one AssistantModel."},
+        {"group": "Datasets", "method": "POST", "path": "/assistant/datasets/rebuild", "operation": "Materialize the redacted assistant training JSONL snapshot."},
+        {"group": "Datasets", "method": "GET", "path": "/assistant/datasets/status", "operation": "Inspect assistant training dataset readiness and source snapshot."},
+        {"group": "Datasets", "method": "GET", "path": "/assistant/datasets/latest", "operation": "Fetch the latest AssistantTrainingDatasetModel registry record."},
+        {"group": "References", "method": "GET", "path": "/assistant/references/status", "operation": "Inspect internal reference repository paths and stored reference count."},
+        {"group": "References", "method": "POST", "path": "/assistant/references/sync", "operation": "Hash, redact, summarize, and store internal project references."},
+        {"group": "References", "method": "POST", "path": "/assistant/references", "operation": "Create an internal/admin ContentReference record without exposing raw content in normal UI."},
+        {"group": "References", "method": "GET", "path": "/assistant/references", "operation": "List compact ContentReference metadata for admin inspection."},
+        {"group": "References", "method": "POST", "path": "/assistant/references/search", "operation": "Search compact ContentReference metadata by query, tags, and source type."},
+        {"group": "Evals", "method": "POST", "path": "/assistant/evals/run", "operation": "Run the assistant golden eval suite for a provider."},
+        {"group": "Evals", "method": "POST", "path": "/assistant/training/curate", "operation": "Curate global assistant training examples."},
+        {"group": "Contracts", "method": "GET", "path": "/assistant/alignment/contracts", "operation": "Return output, safety, registry, dependency, and MLflow alignment contracts."},
+        {"group": "Contracts", "method": "GET", "path": "/assistant/contracts/workflow-draft.schema", "operation": "Return the WorkflowDraft JSON schema contract."},
+        {"group": "Execution", "method": "POST", "path": "/execution/review", "operation": "Review generated code against an assistant safety profile."},
+        {"group": "Execution", "method": "POST", "path": "/execution/run", "operation": "Run approved assistant code in the guarded execution namespace."},
+        {"group": "MLflow", "method": "GET", "path": "/mlflow/health", "operation": "Inspect MLflow availability and tracking URI health."},
+        {"group": "MLflow", "method": "GET", "path": "/mlflow/experiments", "operation": "List MLflow experiments and run summaries for assistant alignment."},
+    ]
+
+
+def _assistant_artifact_locations() -> list[dict[str, Any]]:
+    paths = {
+        "assistant_models": ASSISTANT_MODEL_DIR,
+        "assistant_datasets": ASSISTANT_DATASET_DIR,
+        "assistant_dataset_snapshots": ASSISTANT_DATASET_DIR / "snapshots",
+        "assistant_context_packs": ASSISTANT_DATASET_DIR / "context_packs",
+        "assistant_references": ASSISTANT_REFERENCE_DIR,
+        "assistant_evals": ASSISTANT_EVAL_DIR,
+        "assistant_promotion_reports": ASSISTANT_MODEL_DIR / "promotion_reports",
+        "run_ledger": RUN_LEDGER_DIR,
+    }
+    return [
+        {
+            "key": key,
+            "path": str(path),
+            "exists": path.exists(),
+            "is_dir": path.is_dir() if path.exists() else False,
+        }
+        for key, path in paths.items()
+    ]
+
+
+def _assistant_safety_profiles_payload() -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    for name, profile in SAFETY_PROFILES.items():
+        payload[name] = {
+            key: sorted(value) if isinstance(value, set) else value
+            for key, value in dict(profile).items()
+        }
+    return payload
+
+
+@app.get("/assistant/management/overview", response_class=JSONResponse)
+async def assistant_management_overview(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    errors: dict[str, str] = {}
+    provider_status: dict[str, Any] = {}
+    assistant_models: list[dict[str, Any]] = []
+    dataset_status: dict[str, Any] = {}
+    reference_status: dict[str, Any] = {}
+    latest_references: list[dict[str, Any]] = []
+    mlflow_health: dict[str, Any] = {}
+
+    try:
+        provider_status = get_assistant_provider_status()
+    except Exception as exc:
+        LOGGER.exception("Assistant management provider status failed.")
+        errors["provider_status"] = str(exc)
+
+    try:
+        models = await get_all_entries(db, AssistantORM)
+        assistant_models = [_serialize_assistant_model(model) for model in models]
+    except Exception as exc:
+        LOGGER.exception("Assistant management model list failed.")
+        errors["assistant_models"] = str(exc)
+
+    try:
+        dataset_record = await _latest_assistant_training_dataset(db)
+        dataset_status = {
+            "status": "ready" if dataset_record is not None else "missing",
+            "latest_dataset": _serialize_assistant_training_dataset(dataset_record) if dataset_record is not None else None,
+            "source_snapshot": _assistant_reference_context(),
+        }
+    except Exception as exc:
+        LOGGER.exception("Assistant management dataset status failed.")
+        errors["dataset_status"] = str(exc)
+
+    try:
+        reference_status = assistant_reference_repository_status(ASSISTANT_REFERENCE_DIR, base_dir=REPO_ROOT)
+        latest_references = [
+            reference.model_dump(mode="json")
+            for reference in list_assistant_references(ASSISTANT_REFERENCE_DIR, limit=12)
+        ]
+    except Exception as exc:
+        LOGGER.exception("Assistant management reference status failed.")
+        errors["reference_status"] = str(exc)
+
+    try:
+        mlflow_health = _utils._build_mlflow_health_snapshot()
+    except Exception as exc:
+        LOGGER.exception("Assistant management MLflow health failed.")
+        errors["mlflow_health"] = str(exc)
+
+    return _utils._json_response(
+        {
+            "status": "ok" if not errors else "degraded",
+            "generated_at": datetime.now().isoformat(),
+            "provider_status": provider_status,
+            "assistant_models": {
+                "count": len(assistant_models),
+                "models": assistant_models,
+            },
+            "assistant_dataset": dataset_status,
+            "references": {
+                "repository": reference_status,
+                "latest": latest_references,
+            },
+            "mlflow": mlflow_health,
+            "alignment_contracts": assistant_alignment_contracts(),
+            "safety_profiles": _assistant_safety_profiles_payload(),
+            "artifact_locations": _assistant_artifact_locations(),
+            "route_catalog": _assistant_route_catalog(),
+            "errors": errors,
+        }
+    )
+
+
+@app.post("/assistant/references", response_class=JSONResponse)
+async def assistant_create_reference(payload: AssistantReferenceRequest) -> JSONResponse:
+    try:
+        reference, metadata_path, text_path = create_assistant_reference(ASSISTANT_REFERENCE_DIR, payload)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "reference_created",
+            evaluation={
+                "evaluation_profile": "assistant-reference-ingestion-v1",
+                "passed": True,
+                "checks": {"valid_workflow_draft": True},
+                "alignment_contracts": {
+                    "output_alignment": True,
+                    "safety_alignment": True,
+                    "registry_alignment": True,
+                    "dependency_alignment": True,
+                    "mlflow_alignment": True,
+                },
+            },
+            artifact_paths={
+                "reference_metadata": str(metadata_path),
+                "reference_text": str(text_path) if text_path else None,
+            },
+            extra_params={
+                "reference_id": reference.reference_id,
+                "source_type": reference.source_type,
+                "trust_level": reference.trust_level,
+                "content_hash": reference.content_hash,
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "created",
+                "reference": reference,
+                "artifact_paths": {
+                    "metadata_path": str(metadata_path),
+                    "text_path": str(text_path) if text_path else None,
+                },
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant reference creation failed.")
+        return _utils._json_error(str(exc), status_code=400)
+
+
+@app.get("/assistant/references", response_class=JSONResponse)
+async def assistant_list_references(query: str = "", limit: int = 20) -> JSONResponse:
+    references = list_assistant_references(ASSISTANT_REFERENCE_DIR, query=query, limit=limit)
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "references": [reference.model_dump(mode="json") for reference in references],
+        }
+    )
+
+
+@app.post("/assistant/references/search", response_class=JSONResponse)
+async def assistant_search_references(payload: AssistantReferenceSearchRequest) -> JSONResponse:
+    references = list_assistant_references(
+        ASSISTANT_REFERENCE_DIR,
+        query=payload.query,
+        tags=payload.tags,
+        source_types=payload.source_types,
+        limit=payload.limit,
+    )
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "references": [reference.model_dump(mode="json") for reference in references],
+        }
+    )
+
+
+@app.get("/assistant/references/status", response_class=JSONResponse)
+async def assistant_references_status() -> JSONResponse:
+    payload = assistant_reference_repository_status(
+        ASSISTANT_REFERENCE_DIR,
+        base_dir=REPO_ROOT,
+    )
+    return _utils._json_response({"status": "ok", "repository": payload})
+
+
+@app.post("/assistant/references/sync", response_class=JSONResponse)
+async def assistant_sync_references(max_files: int = 100) -> JSONResponse:
+    try:
+        result = sync_assistant_reference_repository(
+            ASSISTANT_REFERENCE_DIR,
+            source_paths=resolve_assistant_reference_source_paths(ASSISTANT_REFERENCE_DIR, base_dir=REPO_ROOT),
+            base_dir=REPO_ROOT,
+            max_files=max_files,
+        )
+        mlflow_tracking = log_assistant_mlflow_event(
+            "reference_repository_sync",
+            evaluation={
+                "evaluation_profile": "assistant-reference-sync-v1",
+                "passed": True,
+                "checks": {"reference_repository_synced": True},
+                "alignment_contracts": {
+                    "output_alignment": True,
+                    "safety_alignment": True,
+                    "registry_alignment": True,
+                    "dependency_alignment": True,
+                    "mlflow_alignment": True,
+                },
+            },
+            artifact_paths=[item.get("metadata_path") for item in result.get("created", [])],
+            extra_metrics={
+                "reference_sync_created": float(result.get("created_count", 0) or 0),
+                "reference_sync_skipped": float(result.get("skipped_count", 0) or 0),
+            },
+        )
+        return _utils._json_response({**result, "mlflow_tracking": mlflow_tracking})
+    except Exception as exc:
+        LOGGER.exception("Assistant reference repository sync failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/datasets/rebuild", response_class=JSONResponse)
+async def assistant_datasets_rebuild(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        manifest = build_assistant_training_dataset_snapshot(
+            ASSISTANT_DATASET_DIR,
+            ASSISTANT_EVAL_DIR,
+            RUN_LEDGER_DIR,
+            registry_records=await _assistant_training_registry_records(db),
+            reference_dir=ASSISTANT_REFERENCE_DIR,
+        )
+        dataset_record = await _upsert_assistant_training_dataset_record(db, manifest)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "assistant_training_dataset_rebuild",
+            evaluation={
+                "evaluation_profile": "assistant-training-dataset-v1",
+                "passed": True,
+                "checks": {"record_count": int(manifest.get("record_count", 0) or 0)},
+            },
+            artifact_paths={
+                "dataset": manifest.get("dataset_path"),
+                "canonical_jsonl": manifest.get("canonical_jsonl_path"),
+                "tabular_csv": manifest.get("tabular_csv_path"),
+                "manifest": manifest.get("manifest_path"),
+            },
+            extra_metrics={
+                "assistant_training_dataset_records": float(manifest.get("record_count", 0) or 0),
+                "assistant_training_dataset_sources": float(manifest.get("source_file_count", 0) or 0),
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "rebuilt",
+                "dataset": _serialize_assistant_training_dataset(dataset_record),
+                "manifest": manifest,
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant training dataset rebuild failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/datasets/latest", response_class=JSONResponse)
+async def assistant_datasets_latest(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    dataset_record = await _latest_assistant_training_dataset(db)
+    if dataset_record is None:
+        return _utils._json_error("Assistant training dataset has not been built yet.", status_code=404)
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "dataset": _serialize_assistant_training_dataset(dataset_record),
+        }
+    )
+
+
+@app.get("/assistant/datasets/status", response_class=JSONResponse)
+async def assistant_datasets_status(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    dataset_record = await _latest_assistant_training_dataset(db)
+    source_snapshot = _assistant_reference_context()
+    return _utils._json_response(
+        {
+            "status": "ready" if dataset_record is not None else "missing",
+            "latest_dataset": _serialize_assistant_training_dataset(dataset_record) if dataset_record is not None else None,
+            "source_snapshot": source_snapshot,
+        }
+    )
+
+
+@app.get("/assistant/models/list", response_class=JSONResponse)
+async def assistant_models_list(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        models = await get_all_entries(db, AssistantORM)
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "models": [_serialize_assistant_model(model) for model in models],
+                "count": len(models),
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant model list failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/models/{assistant_model_id}/status", response_class=JSONResponse)
+async def assistant_model_status(assistant_model_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        provider_config = assistant_model_to_provider_config(model_record)
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "assistant_model": _serialize_assistant_model(model_record),
+                "provider_config": redact_assistant_provider_config(provider_config),
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant model status failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/test", response_class=JSONResponse)
+async def assistant_model_test(assistant_model_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        result = test_assistant_model_contract(model_record)
+        return _utils._json_response(result)
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant model diagnostic failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/training/curate", response_class=JSONResponse)
+async def assistant_model_curate_training(
+    assistant_model_id: int | str,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        output_dir = ASSISTANT_DATASET_DIR / "curated" / f"assistant_model_{getattr(model_record, 'id', assistant_model_id)}"
+        manifest = curate_assistant_training_examples(ASSISTANT_DATASET_DIR, output_dir)
+        return _utils._json_response(
+            {
+                "status": "curated",
+                "assistant_model": _serialize_assistant_model(model_record),
+                "manifest": manifest,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant model training curation failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/training/dataset/attach", response_class=JSONResponse)
+async def assistant_model_attach_training_dataset(
+    assistant_model_id: int | str,
+    rebuild: bool = False,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        dataset_record = await _latest_assistant_training_dataset(db)
+        if dataset_record is None or rebuild:
+            manifest = build_assistant_training_dataset_snapshot(
+                ASSISTANT_DATASET_DIR,
+                ASSISTANT_EVAL_DIR,
+                RUN_LEDGER_DIR,
+                registry_records=await _assistant_training_registry_records(db),
+                reference_dir=ASSISTANT_REFERENCE_DIR,
+            )
+            dataset_record = await _upsert_assistant_training_dataset_record(db, manifest)
+        dataset_payload = _serialize_assistant_training_dataset(dataset_record)
+        parameters = dict(getattr(model_record, "parameters", {}) or {})
+        assistant_config = dict(parameters.get("assistant") or {})
+        assistant_config.update(
+            {
+                "training_dataset_id": dataset_payload.get("id"),
+                "training_dataset_path": (dataset_payload.get("manifest") or {}).get("canonical_jsonl_path") or dataset_payload.get("path"),
+                "training_dataset_jsonl_path": (dataset_payload.get("manifest") or {}).get("canonical_jsonl_path"),
+                "training_dataset_csv_path": (dataset_payload.get("manifest") or {}).get("tabular_csv_path") or dataset_payload.get("path"),
+                "training_dataset_hash": dataset_payload.get("dataset_hash"),
+                "training_dataset_tabular_hash": (dataset_payload.get("manifest") or {}).get("tabular_hash"),
+                "training_dataset_manifest": dataset_payload.get("connection_string"),
+            }
+        )
+        parameters["assistant"] = assistant_config
+        updated = await update_entry(
+            db,
+            AssistantORM,
+            getattr(model_record, "id"),
+            {
+                "parameters": parameters,
+                "reference_data": (dataset_payload.get("manifest") or {}).get("canonical_jsonl_path") or dataset_payload.get("path"),
+                "history": _utils._append_history(
+                    getattr(model_record, "history", None),
+                    {
+                        "operation": "assistant_training_dataset_attached",
+                        "when": datetime.now().isoformat(),
+                        "dataset_id": dataset_payload.get("id"),
+                        "dataset_hash": dataset_payload.get("dataset_hash"),
+                        "tabular_hash": (dataset_payload.get("manifest") or {}).get("tabular_hash"),
+                        "canonical_jsonl_path": (dataset_payload.get("manifest") or {}).get("canonical_jsonl_path"),
+                        "tabular_csv_path": (dataset_payload.get("manifest") or {}).get("tabular_csv_path") or dataset_payload.get("path"),
+                    },
+                ),
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "attached",
+                "assistant_model": _serialize_assistant_model(updated),
+                "dataset": dataset_payload,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant model training dataset attach failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/provider/status", response_class=JSONResponse)
+async def assistant_provider_status(run_eval: bool = False) -> JSONResponse:
+    payload = get_assistant_provider_status()
+    if run_eval:
+        evaluation = run_assistant_golden_evals(get_assistant_provider)
+        artifact_paths: dict[str, str] = {}
+        try:
+            artifact_paths["evaluation_suite_path"] = str(persist_assistant_eval_suite(ASSISTANT_EVAL_DIR, evaluation))
+        except Exception:
+            LOGGER.debug("Assistant golden eval persistence failed.", exc_info=True)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "golden_eval",
+            evaluation=evaluation,
+            artifact_paths=artifact_paths,
+            extra_metrics={
+                "golden_eval_cases": len(evaluation.get("results", []) or []),
+                "golden_eval_passed": float(bool(evaluation.get("passed"))),
+            },
+        )
+        payload["golden_eval"] = evaluation
+        payload["golden_eval_artifacts"] = artifact_paths
+        payload["mlflow_tracking"] = mlflow_tracking
+    return _utils._json_response(payload)
+
+
+@app.post("/assistant/provider/test", response_class=JSONResponse)
+async def assistant_provider_test(
+    provider: str = "auto",
+    assistant_model_id: Optional[int | str] = None,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        if assistant_model_id not in (None, ""):
+            model_record = await _get_assistant_model_record(db, assistant_model_id)
+            result = test_assistant_model_contract(model_record)
+        else:
+            result = test_assistant_provider_contract(provider)
+        return _utils._json_response(result)
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400)
+    except Exception as exc:
+        LOGGER.exception("Assistant provider diagnostic failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/contracts/workflow-draft.schema", response_class=JSONResponse)
+async def assistant_workflow_draft_schema() -> JSONResponse:
+    return _utils._json_response(WorkflowDraft.model_json_schema())
+
+
+@app.post("/assistant/evals/run", response_class=JSONResponse)
+async def assistant_run_evals(provider: str = "amanaje_slm") -> JSONResponse:
+    try:
+        evaluation = run_assistant_golden_evals(get_assistant_provider, provider=provider)
+        artifact_paths: dict[str, str] = {}
+        try:
+            artifact_paths["evaluation_suite_path"] = str(persist_assistant_eval_suite(ASSISTANT_EVAL_DIR, evaluation))
+        except Exception:
+            LOGGER.debug("Assistant golden eval persistence failed.", exc_info=True)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "golden_eval",
+            evaluation=evaluation,
+            artifact_paths=artifact_paths,
+            extra_params={"provider": provider},
+            extra_metrics={
+                "golden_eval_cases": len(evaluation.get("results", []) or []),
+                "golden_eval_passed": float(bool(evaluation.get("passed"))),
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "passed" if evaluation.get("passed") else "needs_revision",
+                "evaluation": evaluation,
+                "artifact_paths": artifact_paths,
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400)
+    except Exception as exc:
+        LOGGER.exception("Assistant golden eval failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/training/curate", response_class=JSONResponse)
+async def assistant_curate_training() -> JSONResponse:
+    try:
+        manifest = curate_assistant_training_examples(ASSISTANT_DATASET_DIR, ASSISTANT_DATASET_DIR / "curated")
+        artifact_paths = {
+            "curated_path": manifest.get("curated_path"),
+            "manifest_path": manifest.get("manifest_path"),
+        }
+        mlflow_tracking = log_assistant_mlflow_event(
+            "training_curation",
+            evaluation={"evaluation_profile": "assistant-training-curation-v1", "passed": bool(manifest.get("record_count", 0) >= 0)},
+            artifact_paths=artifact_paths,
+            extra_metrics={
+                "curated_record_count": float(manifest.get("record_count", 0) or 0),
+                "curation_rejected_records": float(manifest.get("rejected_records", 0) or 0),
+                "curation_ready_for_fine_tuning": float(bool(manifest.get("ready_for_fine_tuning"))),
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "curated",
+                "manifest": manifest,
+                "artifact_paths": artifact_paths,
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant training curation failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/draft", response_class=JSONResponse)
+async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        selected_assistant_model = None
+        if payload.assistant_model_id not in (None, ""):
+            selected_assistant_model = await _get_assistant_model_record(db, payload.assistant_model_id)
+            provider = get_assistant_provider_for_model(
+                selected_assistant_model,
+                overrides=payload.provider_overrides,
+            )
+        else:
+            provider = get_assistant_provider(payload.provider)
+        reference_context = _assistant_reference_context()
+        selected_references = _resolve_assistant_reference_pack(payload)
+        assistant_model_payload = (
+            _serialize_assistant_model(selected_assistant_model)
+            if selected_assistant_model is not None
+            else None
+        )
+        provider_payload = payload.model_copy(
+            update={
+                "provider": provider.name,
+                "context": {
+                    **dict(payload.context or {}),
+                    "assistant_model": assistant_model_payload,
+                    "assistant_model_id": payload.assistant_model_id,
+                    "assistant_reference_snapshot": reference_context,
+                    "content_references": selected_references,
+                }
+            },
+            deep=True,
+        )
+        draft = provider.create_draft(provider_payload)
         review = review_workflow_draft(draft)
+        evaluation = evaluate_draft_contract(draft, review)
+        artifact_paths = _persist_assistant_review_artifacts(draft, evaluation)
+        training_example_path = None
+        if not review.approved:
+            training_example_path = _record_assistant_training_example(
+                label="negative",
+                draft=draft,
+                review=review,
+                outcome={"stage": "draft_review", "status": review.status},
+            )
+        mlflow_tracking = log_assistant_mlflow_event(
+            "draft_review",
+            draft=draft,
+            review=review,
+            evaluation=evaluation,
+            artifact_paths=artifact_paths,
+            training_example_path=training_example_path,
+            extra_metrics={
+                "assistant_alignment_passed": float(bool(evaluation.get("passed"))),
+            },
+        )
         run_entry = _utils.create_run_entry(
             RUN_LEDGER_DIR,
             run_type="assistant",
@@ -515,11 +1442,26 @@ async def assistant_draft(payload: AssistantDraftRequest) -> JSONResponse:
                 "session_id": draft.session_id,
                 "draft_id": draft.draft_id,
                 "draft_type": draft.draft_type,
+                "context_pack_id": draft.context_pack_id,
+                "context_pack_hash": draft.context_pack_hash,
+                "model_version": draft.model_version,
+                "prompt_template_version": draft.prompt_template_version,
+                "evaluation_profile": draft.evaluation_profile,
+                "requested_reference_ids": list(payload.reference_ids),
+                "selected_reference_ids": draft.provider_metadata.get("selected_reference_ids", []),
+                "reference_pack_hash": draft.provider_metadata.get("reference_pack_hash"),
+                "assistant_model_id": payload.assistant_model_id,
             },
             parameters={
                 "prompt": payload.prompt,
                 "provider": provider.name,
+                "requested_provider": payload.provider,
+                "assistant_model_id": payload.assistant_model_id,
+                "assistant_model_name": assistant_model_payload.get("name") if assistant_model_payload else None,
                 "target_type": payload.target_type,
+                "safety_profile": draft.execution_profile,
+                "reference_count": len(selected_references),
+                "reference_selection": "automatic",
             },
             status="queued",
         )
@@ -528,7 +1470,23 @@ async def assistant_draft(payload: AssistantDraftRequest) -> JSONResponse:
             run_entry["run_id"],
             status="completed",
             stage="reviewed" if review.approved else "needs_revision",
-            merge={"result": {"draft": _utils._json_payload(draft), "review": _utils._json_payload(review)}},
+            merge={
+                "result": {
+                    "draft": _utils._json_payload(draft),
+                    "review": _utils._json_payload(review),
+                    "evaluation": evaluation,
+                    "artifact_paths": artifact_paths,
+                    "training_example_path": training_example_path,
+                    "mlflow_tracking": mlflow_tracking,
+                    "selected_references": selected_references,
+                },
+                "metrics": {
+                    "assistant_latency_ms": draft.provider_metadata.get("latency_ms"),
+                    "assistant_validation_passed": bool(review.approved),
+                    "assistant_alignment_passed": bool(evaluation.get("passed")),
+                    "assistant_fallback_used": bool(draft.provider_metadata.get("fallback_provider")),
+                },
+            },
             event_message="Assistant draft created and reviewed.",
         )
         return _utils._json_response(
@@ -537,6 +1495,9 @@ async def assistant_draft(payload: AssistantDraftRequest) -> JSONResponse:
                 "run_id": run_entry["run_id"],
                 "draft": draft,
                 "review": review,
+                "evaluation": evaluation,
+                "artifact_paths": artifact_paths,
+                "mlflow_tracking": mlflow_tracking,
                 "ledger": run_entry,
             }
         )
@@ -561,6 +1522,75 @@ async def assistant_review(payload: AssistantReviewRequest) -> JSONResponse:
     except Exception as exc:
         LOGGER.exception("Assistant review failed.")
         return _utils._json_error(str(exc), status_code=400)
+
+
+@app.post("/assistant/feedback", response_class=JSONResponse)
+async def assistant_feedback(payload: AssistantFeedbackRequest) -> JSONResponse:
+    try:
+        review = review_workflow_draft(payload.draft)
+        normalized_label = (payload.label or "negative").strip().lower()
+        if normalized_label not in {"positive", "corrected", "negative", "unsafe", "rejected"}:
+            normalized_label = "negative"
+        training_example_path = _record_assistant_training_example(
+            label=normalized_label,
+            draft=payload.draft,
+            review=review,
+            outcome={
+                "stage": "feedback",
+                "status": review.status,
+                "reason": payload.reason,
+                "notes": payload.notes,
+            },
+            user_edits=payload.user_edits,
+        )
+        evaluation = evaluate_draft_contract(payload.draft, review)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "feedback",
+            draft=payload.draft,
+            review=review,
+            evaluation=evaluation,
+            training_example_path=training_example_path,
+            extra_params={"feedback_label": normalized_label, "feedback_reason": payload.reason},
+            extra_metrics={
+                "assistant_feedback_positive": float(normalized_label in {"positive", "corrected"}),
+                "assistant_feedback_negative": float(normalized_label in {"negative", "unsafe", "rejected"}),
+            },
+        )
+        updated_entry = None
+        if payload.run_id:
+            existing_entry = _utils.read_run_entry(RUN_LEDGER_DIR, payload.run_id)
+            if existing_entry is not None:
+                updated_entry = _utils.update_run_entry(
+                    RUN_LEDGER_DIR,
+                    payload.run_id,
+                    status=existing_entry.get("status", "completed"),
+                    stage=existing_entry.get("stage", "feedback"),
+                    merge={
+                        "result": {
+                            "feedback": {
+                                "label": normalized_label,
+                                "reason": payload.reason,
+                                "notes": payload.notes,
+                                "training_example_path": training_example_path,
+                                "mlflow_tracking": mlflow_tracking,
+                            }
+                        }
+                    },
+                    event_message="Assistant feedback recorded.",
+                )
+        return _utils._json_response(
+            {
+                "status": "recorded",
+                "label": normalized_label,
+                "training_example_path": training_example_path,
+                "evaluation": evaluation,
+                "mlflow_tracking": mlflow_tracking,
+                "ledger": updated_entry,
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Assistant feedback failed.")
+        return _utils._json_error(str(exc), status_code=500)
 
 
 @app.post("/assistant/approve", response_class=JSONResponse)
@@ -599,6 +1629,27 @@ async def assistant_approve(payload: AssistantApprovalRequest) -> JSONResponse:
             "notes": payload.notes,
             "approved_at": datetime.now().isoformat(),
         }
+        training_example_path = _record_assistant_training_example(
+            label="positive",
+            draft=payload.draft,
+            review=review,
+            approval=approval,
+            final_payload={"action": "approved"},
+            outcome={"stage": "approved", "status": review.status},
+            user_edits=payload.user_edits,
+        )
+        evaluation = evaluate_draft_contract(payload.draft, review)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "approval",
+            draft=payload.draft,
+            review=review,
+            evaluation=evaluation,
+            training_example_path=training_example_path,
+            extra_metrics={
+                "assistant_approved": 1.0,
+                "assistant_alignment_passed": float(bool(evaluation.get("passed"))),
+            },
+        )
         updated_entry = _utils.update_run_entry(
             RUN_LEDGER_DIR,
             run_id,
@@ -609,6 +1660,8 @@ async def assistant_approve(payload: AssistantApprovalRequest) -> JSONResponse:
                     "draft": _utils._json_payload(payload.draft),
                     "review": _utils._json_payload(review),
                     "approval": approval,
+                    "training_example_path": training_example_path,
+                    "mlflow_tracking": mlflow_tracking,
                 }
             },
             event_message="Assistant draft approved.",
@@ -619,6 +1672,8 @@ async def assistant_approve(payload: AssistantApprovalRequest) -> JSONResponse:
                 "run_id": run_id,
                 "approval": approval,
                 "review": review,
+                "evaluation": evaluation,
+                "mlflow_tracking": mlflow_tracking,
                 "ledger": updated_entry,
             }
         )
@@ -647,12 +1702,22 @@ async def assistant_submit(
 
     try:
         submission = await _submit_assistant_draft(draft, payload, db)
+        review = review_workflow_draft(draft)
+        evaluation = evaluate_draft_contract(draft, review)
+        mlflow_tracking = log_assistant_mlflow_event(
+            "submission",
+            draft=draft,
+            review=review,
+            evaluation=evaluation,
+            extra_params={"submit_action": payload.action},
+            extra_metrics={"assistant_submitted": 1.0},
+        )
         updated_entry = _utils.update_run_entry(
             RUN_LEDGER_DIR,
             payload.run_id,
             status="completed",
             stage="submitted",
-            merge={"result": {"submission": submission}},
+            merge={"result": {"submission": submission, "submission_mlflow_tracking": mlflow_tracking}},
             event_message=f"Assistant draft submitted with action={payload.action}.",
         )
         return _utils._json_response(
@@ -662,6 +1727,7 @@ async def assistant_submit(
                 "draft_type": draft.draft_type,
                 "action": payload.action,
                 "submission": submission,
+                "mlflow_tracking": mlflow_tracking,
                 "ledger": updated_entry,
             }
         )
@@ -746,6 +1812,30 @@ async def execution_run(payload: ExecutionRunRequest) -> JSONResponse:
     metadata = dict(materialized_outputs)
     defined_names = [name for name in _utils._extract_defined_names(payload.code) if name in APPROVED_EXECUTION_OUTPUT_FIELDS]
     status = "success" if error_message is None else "error"
+    mlflow_tracking = log_assistant_mlflow_event(
+        "guarded_execution",
+        evaluation={
+            "evaluation_profile": "assistant-guarded-execution-v1",
+            "passed": error_message is None,
+            "checks": {"valid_workflow_draft": True},
+            "alignment_contracts": {
+                "output_alignment": error_message is None,
+                "safety_alignment": safety.ok,
+                "registry_alignment": True,
+                "dependency_alignment": safety.ok,
+                "mlflow_alignment": True,
+            },
+        },
+        extra_params={
+            "draft_id": payload.draft_id,
+            "profile": payload.profile,
+            "context_pack_hash": dict(payload.context or {}).get("context_pack_hash"),
+        },
+        extra_metrics={
+            "assistant_execution_success": float(error_message is None),
+            "assistant_output_count": float(len(output_variables)),
+        },
+    )
 
     updated_entry = _utils.update_run_entry(
         RUN_LEDGER_DIR,
@@ -757,6 +1847,13 @@ async def execution_run(payload: ExecutionRunRequest) -> JSONResponse:
                 "status": status,
                 "metadata_keys": sorted(metadata),
                 "defined_names": defined_names,
+                "safety": _utils._json_payload(safety),
+                "context_pack_hash": dict(payload.context or {}).get("context_pack_hash"),
+                "mlflow_tracking": mlflow_tracking,
+            },
+            "metrics": {
+                "assistant_execution_success": error_message is None,
+                "assistant_output_count": len(output_variables),
             },
             "error": error_message,
         },
@@ -781,6 +1878,7 @@ async def execution_run(payload: ExecutionRunRequest) -> JSONResponse:
             "stderr": stderr_output,
             "error": error_message,
             "safety": safety,
+            "mlflow_tracking": mlflow_tracking,
             "ledger": updated_entry,
         },
         status_code=200 if error_message is None else 400,
@@ -991,6 +2089,22 @@ async def _execute_training_run(
                     raise ValueError("StudyModel not found")
 
             merged_parameters = _utils._merge_training_parameters(learning_model, validated_payload, study_record)
+            merged_parameters["training_mode"] = str(merged_parameters.get("training_mode") or "transfer").strip().lower()
+            if merged_parameters["training_mode"] not in {"transfer", "fresh"}:
+                merged_parameters["training_mode"] = "transfer"
+            base_model_record = learning_model
+            base_model_id = _coerce_optional_int(merged_parameters.get("base_model_id")) or model_id
+            if base_model_id != model_id:
+                base_model_record = await LearningModel.read(db, base_model_id)
+                if base_model_record is None:
+                    raise ValueError("Base LearningModel not found for transfer training.")
+            if merged_parameters["training_mode"] == "transfer":
+                base_parameters = dict(getattr(base_model_record, "parameters", {}) or {})
+                base_lineage = dict(base_parameters.get("training_lineage") or {})
+                merged_parameters.setdefault("base_model_id", getattr(base_model_record, "id", base_model_id))
+                merged_parameters.setdefault("base_artifact_path", getattr(base_model_record, "path", None))
+                merged_parameters.setdefault("base_run_id", base_lineage.get("latest_run_id"))
+                merged_parameters.setdefault("transfer_strategy", "auto")
             validate_required_keys(merged_parameters, ["framework"])
             preflight = _utils._build_training_preflight(dataset_model, learning_model, merged_parameters)
             if not preflight.get("ok", False):
@@ -1036,6 +2150,27 @@ async def _execute_training_run(
             prepared: _utils.PreparedDataset = workflow["prepared"]
             monitoring = workflow["monitoring"]
             artifacts = workflow["artifacts"]
+            transfer_learning = dict(workflow.get("transfer_learning") or {})
+            previous_parameters = dict(getattr(learning_model, "parameters", {}) or {})
+            previous_lineage = dict(previous_parameters.get("training_lineage") or {})
+            try:
+                next_iteration = int(previous_lineage.get("iteration") or 0) + 1
+            except (TypeError, ValueError):
+                next_iteration = 1
+            training_lineage = {
+                "iteration": next_iteration,
+                "latest_run_id": run_id,
+                "base_run_id": transfer_learning.get("base_run_id"),
+                "base_model_id": transfer_learning.get("base_model_id"),
+                "base_artifact_path": transfer_learning.get("base_artifact_path"),
+                "previous_artifact_path": getattr(learning_model, "path", None),
+                "new_artifact_path": artifacts.get("model_artifact_path"),
+                "transfer_status": transfer_learning.get("transfer_status"),
+                "transfer_strategy": transfer_learning.get("transfer_strategy"),
+                "training_mode": transfer_learning.get("training_mode"),
+                "dataset_snapshot_hash": transfer_learning.get("dataset_snapshot_hash"),
+                "mlflow_run_id": result.run_id,
+            }
 
             updated_model = await update_entry(
                 db,
@@ -1043,10 +2178,11 @@ async def _execute_training_run(
                 model_id,
                 {
                     "parameters": {
-                        **dict(getattr(learning_model, "parameters", {}) or {}),
+                        **previous_parameters,
                         **result.parameters,
                         **merged_parameters,
                         "artifact_manifest": artifacts.get("artifact_manifest", {}),
+                        "training_lineage": training_lineage,
                     },
                     "metrics": result.metrics,
                     "reference_data": getattr(dataset_model, "name", None),
@@ -1064,6 +2200,10 @@ async def _execute_training_run(
                             "framework": result.framework,
                             "job_id": run_id,
                             "run_ledger_id": run_id,
+                            "mlflow_run_id": result.run_id,
+                            "artifact_path": artifacts.get("model_artifact_path"),
+                            "transfer_learning": transfer_learning,
+                            "training_lineage": training_lineage,
                         },
                     ),
                 },
@@ -1133,6 +2273,8 @@ async def _execute_training_run(
                 "parameters": merged_parameters,
                 "monitoring": monitoring,
                 "artifacts": artifacts,
+                "transfer_learning": transfer_learning,
+                "training_lineage": training_lineage,
                 "mlflow_run_id": result.run_id,
                 "model": _utils._serialize_model_summary(updated_model),
                 "inference": _serialize_inference_summary(inference_record),

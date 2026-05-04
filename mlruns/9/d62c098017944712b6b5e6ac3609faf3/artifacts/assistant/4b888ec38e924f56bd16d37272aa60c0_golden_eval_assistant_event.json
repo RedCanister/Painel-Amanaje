@@ -1,0 +1,227 @@
+{
+    "event_name": "golden_eval",
+    "draft": null,
+    "review": {},
+    "evaluation": {
+        "evaluation_profile": "assistant-golden-v1",
+        "provider": "amanaje_slm",
+        "passed": true,
+        "results": [
+            {
+                "evaluation_profile": "assistant-golden-v1",
+                "draft_type": "dataset_generation",
+                "passed": true,
+                "checks": {
+                    "valid_workflow_draft": true,
+                    "has_context_pack": true,
+                    "has_model_version": true,
+                    "has_prompt_template_version": true,
+                    "review_approved": true,
+                    "csv_text": true
+                },
+                "draft_quality": {
+                    "title_quality": true,
+                    "summary_quality": true,
+                    "risk_or_assumption_quality": true,
+                    "next_action_quality": true,
+                    "reference_traceability": true
+                },
+                "draft_quality_rubric": {
+                    "title_quality": "Title is specific to the requested artifact or workflow.",
+                    "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                    "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                    "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                    "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "alignment_contracts": {
+                    "output_alignment": true,
+                    "safety_alignment": true,
+                    "registry_alignment": true,
+                    "dependency_alignment": true,
+                    "mlflow_alignment": true
+                },
+                "alignment_contract_descriptions": {
+                    "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                    "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                    "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                    "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                    "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                }
+            },
+            {
+                "evaluation_profile": "assistant-golden-v1",
+                "draft_type": "model_generation",
+                "passed": true,
+                "checks": {
+                    "valid_workflow_draft": true,
+                    "has_context_pack": true,
+                    "has_model_version": true,
+                    "has_prompt_template_version": true,
+                    "review_approved": true,
+                    "joblib_bytes": true
+                },
+                "draft_quality": {
+                    "title_quality": true,
+                    "summary_quality": true,
+                    "risk_or_assumption_quality": true,
+                    "next_action_quality": true,
+                    "reference_traceability": true
+                },
+                "draft_quality_rubric": {
+                    "title_quality": "Title is specific to the requested artifact or workflow.",
+                    "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                    "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                    "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                    "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "alignment_contracts": {
+                    "output_alignment": true,
+                    "safety_alignment": true,
+                    "registry_alignment": true,
+                    "dependency_alignment": true,
+                    "mlflow_alignment": true
+                },
+                "alignment_contract_descriptions": {
+                    "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                    "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                    "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                    "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                    "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                }
+            },
+            {
+                "evaluation_profile": "assistant-golden-v1",
+                "draft_type": "registry_object",
+                "passed": true,
+                "checks": {
+                    "valid_workflow_draft": true,
+                    "has_context_pack": true,
+                    "has_model_version": true,
+                    "has_prompt_template_version": true,
+                    "review_approved": true,
+                    "registry_payload": true
+                },
+                "draft_quality": {
+                    "title_quality": true,
+                    "summary_quality": true,
+                    "risk_or_assumption_quality": true,
+                    "next_action_quality": true,
+                    "reference_traceability": true
+                },
+                "draft_quality_rubric": {
+                    "title_quality": "Title is specific to the requested artifact or workflow.",
+                    "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                    "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                    "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                    "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "alignment_contracts": {
+                    "output_alignment": true,
+                    "safety_alignment": true,
+                    "registry_alignment": true,
+                    "dependency_alignment": true,
+                    "mlflow_alignment": true
+                },
+                "alignment_contract_descriptions": {
+                    "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                    "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                    "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                    "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                    "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                }
+            },
+            {
+                "evaluation_profile": "assistant-golden-v1",
+                "draft_type": "training_run",
+                "passed": true,
+                "checks": {
+                    "valid_workflow_draft": true,
+                    "has_context_pack": true,
+                    "has_model_version": true,
+                    "has_prompt_template_version": true,
+                    "review_approved": true,
+                    "training_request": true
+                },
+                "draft_quality": {
+                    "title_quality": true,
+                    "summary_quality": true,
+                    "risk_or_assumption_quality": true,
+                    "next_action_quality": true,
+                    "reference_traceability": true
+                },
+                "draft_quality_rubric": {
+                    "title_quality": "Title is specific to the requested artifact or workflow.",
+                    "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                    "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                    "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                    "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "alignment_contracts": {
+                    "output_alignment": true,
+                    "safety_alignment": true,
+                    "registry_alignment": true,
+                    "dependency_alignment": true,
+                    "mlflow_alignment": true
+                },
+                "alignment_contract_descriptions": {
+                    "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                    "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                    "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                    "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                    "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                }
+            },
+            {
+                "evaluation_profile": "assistant-golden-v1",
+                "draft_type": "study",
+                "passed": true,
+                "checks": {
+                    "valid_workflow_draft": true,
+                    "has_context_pack": true,
+                    "has_model_version": true,
+                    "has_prompt_template_version": true,
+                    "review_approved": true,
+                    "study_request": true
+                },
+                "draft_quality": {
+                    "title_quality": true,
+                    "summary_quality": true,
+                    "risk_or_assumption_quality": true,
+                    "next_action_quality": true,
+                    "reference_traceability": true
+                },
+                "draft_quality_rubric": {
+                    "title_quality": "Title is specific to the requested artifact or workflow.",
+                    "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                    "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                    "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                    "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "alignment_contracts": {
+                    "output_alignment": true,
+                    "safety_alignment": true,
+                    "registry_alignment": true,
+                    "dependency_alignment": true,
+                    "mlflow_alignment": true
+                },
+                "alignment_contract_descriptions": {
+                    "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                    "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                    "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                    "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                    "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                }
+            }
+        ]
+    },
+    "artifact_paths": {
+        "evaluation_suite_path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260504033635.json"
+    },
+    "alignment_contracts": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+    }
+}
