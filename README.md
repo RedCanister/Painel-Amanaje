@@ -1,3 +1,5 @@
+<img width="1480" height="412" alt="painel-amanaje-banner" src="https://github.com/user-attachments/assets/a972310c-c5ff-4589-8b53-6d2d48419840" />
+
 # Painel Amanaje
 
 Painel Amanaje is a local-first MLOps workspace for building, training, tracking, and operating machine learning workflows from one place.
@@ -37,7 +39,6 @@ It combines a FastAPI control plane, a multi-page HTML interface, registry-backe
 | `/assistant` | Code editor and code generation |
 | `/editor` | Code editor and code generation |
 | `/settings` | Code editor and code generation |
-
 
 ### Registry resources
 
@@ -90,6 +91,9 @@ pip install -r requirements.txt
 uvicorn main_app:app --reload --host 0.0.0.0 --port 8000
 ```
 
+<img width="1517" height="1063" alt="painel-amanaje-registry" src="https://github.com/user-attachments/assets/5562699c-0e2b-4b1a-8c67-de270ee889d7" />
+
+
 ## Local stack
 
 The main `docker-compose.yaml` currently brings up:
@@ -130,6 +134,9 @@ airflow/                   Airflow dependencies
 docker-compose.yaml        full local stack
 ```
 
+<img width="1447" height="1432" alt="painel-amanaje-training" src="https://github.com/user-attachments/assets/87f0dac8-52a1-447f-8f94-ad3fa82bb547" />
+
+
 ## Main workflows
 
 ### 1. Upload
@@ -168,6 +175,9 @@ Use `/training` to run model training and the study tab for study-driven tuning.
 - `scikit-learn==1.7.2`
 - `torch==2.9.0`
 
+<img width="1478" height="928" alt="painel-amanaje-creator" src="https://github.com/user-attachments/assets/ba8c4a98-9477-4755-9244-5234188c987c" />
+
+
 ### 4. Operate in production
 
 Use `/production` to:
@@ -177,6 +187,9 @@ Use `/production` to:
 - run simulation scenarios
 - trigger retraining flows
 - review production history and activity logs
+
+<img width="1493" height="1140" alt="painel-amanaje-production" src="https://github.com/user-attachments/assets/7b5e46b9-ab18-4218-8049-d35c7df91501" />
+
 
 ## Testing
 
