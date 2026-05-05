@@ -27,41 +27,53 @@
 
     .production-shell { display: grid; gap: 1.25rem; }
     .global-watch-panel {
-        background: white;
-        border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 18px;
-        padding: 1.25rem;
-        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        background:
+            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
+            var(--amanaje-shell-panel);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 24px;
+        padding: 1.45rem;
+        box-shadow: 0 20px 42px var(--amanaje-primary-shadow);
     }
-    .global-watch-panel h3 { margin-top: 0; color: var(--amanaje-primary); }
+    .global-watch-panel h3 {
+        margin-top: 0;
+        margin-bottom: 0.45rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.8rem, 2.4vw, 2.45rem);
+    }
     .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
     .workspace-tab {
         border: 1px solid var(--amanaje-primary-border);
-        background: var(--amanaje-primary-soft);
-        color: var(--amanaje-primary);
+        background: rgba(255,255,255,0.76);
+        color: var(--amanaje-primary-strong);
         padding: 0.8rem 1rem;
         border-radius: 999px;
         cursor: pointer;
         font-weight: 700;
     }
-    .workspace-tab.active { background: var(--amanaje-primary); color: white; border-color: var(--amanaje-primary); }
+    .workspace-tab.active { background: var(--amanaje-primary-gradient); color: white; border-color: transparent; }
     .panel {
         display: none;
-        background: white;
-        border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 18px;
+        background: var(--amanaje-surface);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 22px;
         padding: 1.5rem;
-        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
     }
     .panel.active { display: block; }
-    .panel-title { margin: 0 0 0.45rem; color: var(--amanaje-primary); }
+    .panel-title {
+        margin: 0 0 0.45rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+    }
     .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
     .layout-grid, .metric-grid, .history-grid, .plot-grid { display: grid; gap: 1rem; }
     .layout-grid { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); }
     .metric-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .history-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
     .surface, .metric-card, .plot-card, .history-card, .log-card {
-        background: var(--amanaje-primary-softer);
+        background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 16px;
         padding: 1rem;
@@ -88,7 +100,7 @@
         border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: white;
+        background: var(--amanaje-surface-3);
     }
     .form-group textarea { min-height: 150px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
@@ -103,8 +115,8 @@
     }
     .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
     .btn-danger { background: #dc2626; color: white; }
-    .btn-secondary { background: #f3f4f6; color: #374151; }
-    .btn-ghost { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .btn-secondary { background: var(--amanaje-surface-3); color: #374151; }
+    .btn-ghost { background: rgba(255,255,255,0.8); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .helper-text { color: #6b7280; font-size: 0.9rem; }
     .summary-table { width: 100%; border-collapse: collapse; }
     .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
@@ -129,7 +141,7 @@
     .history-card .pill-row, .surface .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
     .watch-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1rem; }
     .watch-card {
-        background: var(--amanaje-primary-softer);
+        background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 0.95rem;
@@ -161,6 +173,7 @@
 {% block content %}
 <div class="production-shell">
     <section class="global-watch-panel">
+        <span class="workspace-eyebrow">MLOps domain</span>
         <h3>Global Production Watch</h3>
     <!-- <p class="panel-subtitle">An inference pair is the production contract between one learning model and one dataset. Use this bar to keep the active watch context stable while the tabs below show monitoring, simulation, history, MLflow, and activity details.</p>
     -->    
@@ -263,14 +276,20 @@
                 <div class="metric-value" id="retrainFlag">No</div>
             </div>
         </div>
-
+        
+        <!-- TODO - The monitoring Summary needs an indication that the app is running the retraining procedure as feedback, or
+         the user won't know this is working.-->
         <div id="monitoringSummary" style="margin-top:1rem;"></div>
+
     </section>
 
     <section class="panel" id="panel-simulation">
         <h3 class="panel-title">Simulation</h3>
         <p class="panel-subtitle">Run future-step predictions from the currently selected production pair and inspect the generated input drift alongside the prediction path.</p>
 
+        <!-- TODO - The entire simulation needs work and attention. Whenever running a simulation, the output must have emphasis on the
+         output target of each LearningModel being run alongside the details. Be sure to come back here when considering the
+         implementation of a table system that can replace the JSONS in this visualization.-->
         <div class="layout-grid">
             <div class="surface">
                 <h4>Simulation Controls</h4>
@@ -741,6 +760,9 @@ function renderActivityLog(entries = []) {
 }
 
 async function fetchJson(url, options = {}) {
+    if (window.AmanajeUI?.fetchJson) {
+        return window.AmanajeUI.fetchJson(url, options, { source: 'production-page' });
+    }
     const response = await fetch(url, options);
     const data = await response.json();
     if (!response.ok || data.status === 'error') {
@@ -879,8 +901,7 @@ async function loadProductionHistory() {
 
 async function loadExperiments() {
     try {
-        const response = await fetch('/mlflow/experiments');
-        const payload = await response.json();
+        const payload = await fetchJson('/mlflow/experiments');
         const experiments = payload.experiments || [];
         const health = payload.health || {};
         experimentSelect.innerHTML = `
@@ -907,8 +928,7 @@ async function viewExperiment(append = false) {
         if (!append || experimentRunState.experimentId !== experimentSelect.value) {
             experimentRunState = { experimentId: experimentSelect.value, offset: 0, limit: 20, hasMore: false };
         }
-        const response = await fetch(`/mlflow/experiments/${experimentSelect.value}?limit=${experimentRunState.limit}&offset=${experimentRunState.offset}`);
-        const payload = await response.json();
+        const payload = await fetchJson(`/mlflow/experiments/${encodeURIComponent(experimentSelect.value)}?limit=${experimentRunState.limit}&offset=${experimentRunState.offset}`);
         const experiment = payload.experiment;
         const health = payload.health || {};
         if (!experiment) {

@@ -4,16 +4,24 @@
 
 {% block extra_css %}
 <style>
-    .registry-container { max-width: 1400px; margin: 0 auto; padding: 2rem 0; }
+    .registry-container { max-width: 1400px; margin: 0 auto; padding: 1.4rem 0 2rem; }
     .registry-header {
-        background: #6d28d9;
-        color: white;
-        padding: 2rem;
-        border-radius: 18px;
+        background:
+            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
+            var(--amanaje-shell-panel);
+        color: var(--amanaje-text-strong);
+        padding: 1.75rem;
+        border: 1px solid var(--amanaje-border);
+        border-radius: 26px;
         margin-bottom: 1.5rem;
-        box-shadow: 0 18px 40px rgba(109, 40, 217, 0.2);
+        box-shadow: 0 22px 44px rgba(109, 40, 217, 0.14);
     }
-    .registry-header h2 { margin: 0 0 0.5rem; }
+    .registry-header h2 {
+        margin: 0 0 0.5rem;
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.95rem, 2.7vw, 2.7rem);
+    }
+    .registry-header p { margin: 0; color: var(--amanaje-muted); max-width: 68ch; }
     .tabs-container, .mode-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
     .tab-button, .mode-button {
         padding: 0.85rem 1.1rem;
@@ -22,17 +30,17 @@
         cursor: pointer;
         font-weight: 700;
     }
-    .tab-button { background: #f3e8ff; color: #6d28d9; }
-    .tab-button.active { background: #6d28d9; color: white; }
-    .mode-button { background: #ede9fe; color: #5b21b6; }
+    .tab-button { background: rgba(255,255,255,0.8); color: #5b21b6; border: 1px solid var(--amanaje-primary-border-soft); }
+    .tab-button.active { background: var(--amanaje-primary-gradient); color: white; }
+    .mode-button { background: var(--amanaje-surface-3); color: #5b21b6; border: 1px solid var(--amanaje-primary-border-soft); }
     .mode-button.active { background: #9333ea; color: white; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .form-section, .detail-section, .table-wrapper, .item-card, .modal-content {
-        background: white;
-        border: 1px solid #e9d5ff;
-        border-radius: 18px;
-        box-shadow: 0 12px 28px rgba(109, 40, 217, 0.08);
+        background: var(--amanaje-surface);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 22px;
+        box-shadow: 0 18px 38px rgba(109, 40, 217, 0.08);
     }
     .form-section, .detail-section, .modal-content { padding: 1.5rem; }
     .form-group { margin-bottom: 1rem; }
@@ -58,7 +66,7 @@
         border: 1px solid #e9d5ff;
         border-radius: 14px;
         padding: 0.85rem 1rem;
-        background: #faf5ff;
+        background: var(--amanaje-surface-2);
     }
     .checkbox-card input[type="checkbox"] { width: auto; margin: 0; accent-color: #7c3aed; }
     .button-group, .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
@@ -96,8 +104,8 @@
         grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
     }
     .assistant-registry-output {
-        background: white;
-        border: 1px solid #e9d5ff;
+        background: var(--amanaje-surface);
+        border: 1px solid var(--amanaje-border);
         border-radius: 14px;
         padding: 1rem;
         min-height: 150px;
@@ -115,7 +123,7 @@
     }
     .items-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     .item-card { padding: 1.25rem; }
-    .item-card h3 { margin: 0 0 0.4rem; color: #6d28d9; }
+    .item-card h3 { margin: 0 0 0.4rem; color: var(--amanaje-text-strong); font-family: var(--amanaje-heading-font); }
     .item-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
     .table-wrapper { overflow-x: auto; padding: 0; }
     table { width: 100%; border-collapse: collapse; }
@@ -197,6 +205,7 @@
 {% block content %}
 <div class="registry-container">
     <div class="registry-header">
+        <span class="workspace-eyebrow">Management domain</span>
         <h2>Model Registry - CRUD Management</h2>
         <p>Create, upload, inspect, edit, download, and organize dataset, learning, inference, study, and code entries in a single registry workspace.</p>
     </div>
@@ -654,6 +663,9 @@
     }
 
     async function fetchJson(url, options = {}) {
+        if (window.AmanajeUI?.fetchJson) {
+            return window.AmanajeUI.fetchJson(url, options, { source: 'registry-page' });
+        }
         const response = await fetch(url, options);
         const text = await response.text();
         let data = null;

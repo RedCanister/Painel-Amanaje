@@ -26,15 +26,21 @@
     }
 
     .data-operations { display: grid; gap: 1.25rem; }
+    .data-hero { margin-bottom: 0.2rem; }
     .form-section {
-        background: white;
-        border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 18px;
-        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        background: var(--amanaje-surface);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 22px;
+        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
         margin-bottom: 0;
-        padding: 1.5rem;
+        padding: 1.55rem;
     }
-    .form-section h3 { color: var(--amanaje-primary); margin-top: 0; }
+    .form-section h3 {
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        margin-top: 0;
+        margin-bottom: 0.45rem;
+    }
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
     .form-group input,
@@ -46,16 +52,16 @@
         border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: white;
+        background: var(--amanaje-surface-2);
     }
     .form-group textarea { min-height: 110px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .upload-area {
         border: 1px dashed var(--amanaje-primary-border);
-        border-radius: 16px;
+        border-radius: 20px;
         padding: 2rem;
         text-align: center;
         margin: 1rem 0;
-        background: var(--amanaje-primary-softer);
+        background: linear-gradient(135deg, var(--amanaje-primary-softer), rgba(255,255,255,0.7));
         color: var(--amanaje-primary-strong);
         cursor: pointer;
     }
@@ -69,7 +75,7 @@
     .analysis-controls select { max-width: 320px; }
     .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
     .feature-item, .model-item, .analysis-result {
-        background: var(--amanaje-primary-softer);
+        background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 0.9rem;
@@ -83,8 +89,9 @@
         border-radius: 12px;
         cursor: pointer;
         font-weight: 700;
-        background: var(--amanaje-primary-mid);
+        background: var(--amanaje-surface-3);
         color: var(--amanaje-primary-strong);
+        border: 1px solid var(--amanaje-primary-border-soft);
     }
     .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
     .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
@@ -97,7 +104,7 @@
     .analysis-result th, .analysis-result td { color: #1f2937; }
     .support-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .support-card {
-        background: var(--amanaje-primary-softer);
+        background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 1rem;
@@ -123,7 +130,7 @@
         margin: 1rem 0;
     }
     .analysis-kpi {
-        background: white;
+        background: var(--amanaje-surface);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 12px;
         padding: 0.8rem;
@@ -146,7 +153,7 @@
     .analysis-table {
         width: 100%;
         border-collapse: collapse;
-        background: white;
+        background: var(--amanaje-surface);
         border-radius: 14px;
         overflow: hidden;
     }
@@ -176,6 +183,11 @@
 
 {% block content %}
 <div class="data-operations">
+    <section class="workspace-intro data-hero">
+        <span class="workspace-eyebrow">Data domain</span>
+        <h2>Data upload operations  with a drag-and-drop</h2>
+        <p>Upload, register, inspect, and analyze assets in a simple workspace where the work spreads through the application.</p>
+    </section>
     <!-- Upload Section -->
     <section class="form-section" id="uploadSection">
         <h3>Data Upload</h3>

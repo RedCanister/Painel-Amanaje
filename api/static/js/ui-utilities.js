@@ -220,6 +220,12 @@
             const wrapper = button.closest(".assistant-collapsible");
             const panel = wrapper ? wrapper.querySelector("[data-assistant-panel]") : null;
             const expanded = button.getAttribute("aria-expanded") === "true";
+            if (panel && !panel.id) {
+                panel.id = `assistant-panel-${button.dataset.assistantToggle || "global"}`;
+            }
+            if (panel) {
+                button.setAttribute("aria-controls", panel.id);
+            }
             if (panel && !expanded) {
                 panel.setAttribute("hidden", "");
             }
@@ -244,6 +250,143 @@
         badge.className = `assistant-status-badge ${tone || "idle"}`;
     }
 
+    function isDebugModeEnabled() {
+        return Boolean(window.AmanajeDebug || window.AmanajeSettings?.feature_flags?.debug_mode);
+    }
+
+    function captureFrontendError(error, context = {}) {
+        const normalizedError = error instanceof Error ? error : new Error(String(error ?? "Unknown frontend error"));
+        const debugEnabled = isDebugModeEnabled();
+        const safeContext = { ...(context || {}) };
+        if (!debugEnabled) {
+            delete safeContext.backend_debug;
+            delete safeContext.frontend_stack;
+            delete safeContext.stack;
+            delete safeContext.traceback;
+        }
+        const payload = {
+            message: normalizedError.message,
+            name: normalizedError.name || "Error",
+            page: {
+                path: window.location?.pathname || "",
+                search: window.location?.search || "",
+                title: document.title || "",
+            },
+            context: safeContext,
+            captured_at: new Date().toISOString(),
+        };
+        if (debugEnabled) {
+            payload.stack = normalizedError.stack || null;
+            payload.backend_debug = safeContext.backend_debug || normalizedError.backendDebug || null;
+        }
+        window.AmanajeLastFrontendError = payload;
+        window.dispatchEvent(new CustomEvent("amanaje:frontend-error", { detail: payload }));
+        if (debugEnabled) {
+            console.debug("[Amanaje] Frontend debug capture", payload);
+        }
+        return payload;
+    }
+
+    function decorateApiError(error, payload, context = {}) {
+        error.payload = payload;
+        if (payload?.debug) {
+            error.backendDebug = payload.debug;
+        }
+        error.fetchContext = context;
+        return error;
+    }
+
+    function shouldSetJsonContentType(body) {
+        return Boolean(body) && !(typeof FormData !== "undefined" && body instanceof FormData);
+    }
+
+    async function fetchJson(url, options = {}, settings = {}) {
+        const method = String(options.method || "GET").toUpperCase();
+        const context = {
+            url: String(url),
+            method,
+            source: settings.source || "AmanajeUI.fetchJson",
+        };
+        const headers = {
+            ...(shouldSetJsonContentType(options.body) ? { "Content-Type": "application/json" } : {}),
+            ...(options.headers || {}),
+        };
+
+        try {
+            window.__amanajeFetchJsonDepth = (window.__amanajeFetchJsonDepth || 0) + 1;
+            let response;
+            try {
+                response = await window.fetch(url, { ...options, headers });
+            } finally {
+                window.__amanajeFetchJsonDepth = Math.max((window.__amanajeFetchJsonDepth || 1) - 1, 0);
+            }
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (parseError) {
+                payload = { detail: `Unable to parse response JSON: ${parseError.message}` };
+            }
+            if ((!response.ok || payload?.status === "error") && !settings.allowError) {
+                const error = decorateApiError(
+                    new Error(payload.detail || payload.error || `HTTP ${response.status}`),
+                    payload,
+                    { ...context, status: response.status, backend_debug: payload.debug || null }
+                );
+                if (isDebugModeEnabled()) {
+                    error.__amanajeCaptured = true;
+                    captureFrontendError(error, error.fetchContext);
+                }
+                throw error;
+            }
+            return payload;
+        } catch (error) {
+            if (isDebugModeEnabled() && !error.__amanajeCaptured) {
+                error.__amanajeCaptured = true;
+                captureFrontendError(error, context);
+            }
+            throw error;
+        }
+    }
+
+    function installFetchGuard() {
+        if (window.__amanajeFetchGuardInstalled || typeof window.fetch !== "function") return;
+        window.__amanajeFetchGuardInstalled = true;
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = async (...args) => {
+            const [resource, options = {}] = args;
+            const method = String(options?.method || "GET").toUpperCase();
+            const url = typeof resource === "string" ? resource : (resource?.url || String(resource));
+            try {
+                const response = await nativeFetch(...args);
+                if (isDebugModeEnabled() && !window.__amanajeFetchJsonDepth && response && response.ok === false) {
+                    let payload = {};
+                    try {
+                        payload = await response.clone().json();
+                    } catch (_error) {
+                        payload = {};
+                    }
+                    captureFrontendError(
+                        new Error(payload.detail || payload.error || `HTTP ${response.status}`),
+                        {
+                            url,
+                            method,
+                            status: response.status,
+                            source: "window.fetch",
+                            backend_debug: payload.debug || null,
+                        }
+                    );
+                }
+                return response;
+            } catch (error) {
+                if (isDebugModeEnabled()) {
+                    error.__amanajeCaptured = true;
+                    captureFrontendError(error, { url, method, source: "window.fetch" });
+                }
+                throw error;
+            }
+        };
+    }
+
     async function loadAssistantModelOptions(select, options = {}) {
         const element = typeof select === "string" ? document.getElementById(select) : select;
         if (!element) return [];
@@ -251,11 +394,7 @@
         const defaultLabel = options.defaultLabel || "Configured active provider";
         element.innerHTML = `<option value="">${escapeHtml(defaultLabel)}</option>`;
         try {
-            const response = await fetch("/assistant/models/list");
-            const payload = await response.json();
-            if (!response.ok || payload?.status === "error") {
-                throw new Error(payload?.detail || `HTTP ${response.status}`);
-            }
+            const payload = await fetchJson("/assistant/models/list", {}, { source: "loadAssistantModelOptions" });
             const models = Array.isArray(payload.models) ? payload.models : [];
             element.insertAdjacentHTML(
                 "beforeend",
@@ -282,8 +421,39 @@
         return selected ? { assistant_model_id: selected, provider: "auto" } : { provider: "auto" };
     }
 
+    function applyGlobalSettings(settings = window.AmanajeSettings || {}) {
+        const currentSettings = window.AmanajeSettings || {};
+        const currentFlags = currentSettings.feature_flags || {};
+        const nextFlags = {
+            ...currentFlags,
+            ...(settings.feature_flags || {}),
+        };
+        window.AmanajeSettings = {
+            ...currentSettings,
+            ...settings,
+            feature_flags: nextFlags,
+        };
+
+        const debugEnabled = Boolean(nextFlags.debug_mode);
+        const assistantVisible = nextFlags.assistant_visible !== false;
+        if (document.body) {
+            document.body.dataset.debugMode = debugEnabled ? "true" : "false";
+            document.body.dataset.assistantVisible = assistantVisible ? "true" : "false";
+        }
+        window.AmanajeDebug = debugEnabled;
+        if (debugEnabled) {
+            console.debug("[Amanaje] Debug mode enabled.", {
+                assistantVisible,
+                updatedAt: window.AmanajeSettings.updated_at || null,
+            });
+        }
+    }
+
     window.AmanajeUI = {
         escapeHtml,
+        isDebugModeEnabled,
+        captureFrontendError,
+        fetchJson,
         renderMetricCards,
         renderCollapsibleContent,
         renderCollapsibleJson,
@@ -292,12 +462,15 @@
         activateTabs,
         enhanceCollapsibles,
         initAssistantCollapsibles,
+        applyGlobalSettings,
         loadAssistantModelOptions,
         getAssistantModelRequest,
         setAssistantStatus,
     };
 
     document.addEventListener("DOMContentLoaded", () => {
+        installFetchGuard();
+        applyGlobalSettings(window.AmanajeSettings || {});
         activateTabs(document);
         enhanceCollapsibles(document);
         initAssistantCollapsibles(document);
@@ -312,5 +485,20 @@
             });
         });
         observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    window.addEventListener("error", (event) => {
+        if (!isDebugModeEnabled()) return;
+        captureFrontendError(event.error || event.message, {
+            source: "window.onerror",
+            file: event.filename,
+            line: event.lineno,
+            column: event.colno,
+        });
+    });
+
+    window.addEventListener("unhandledrejection", (event) => {
+        if (!isDebugModeEnabled()) return;
+        captureFrontendError(event.reason, { source: "unhandledrejection" });
     });
 })();

@@ -41,3 +41,7 @@ class ProductionPage(AmanajePage):
 
 class AssistantPage(AmanajePage):
     pass
+
+
+class SettingsPage(AmanajePage):
+    pass

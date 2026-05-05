@@ -26,6 +26,30 @@ function setUploadStatus(message, type) {
     container.innerHTML = `<div class="status-message ${type}" style="display:block;">${message}</div>`;
 }
 
+async function createFetchJson(url, options = {}) {
+    if (window.AmanajeUI?.fetchJson) {
+        return window.AmanajeUI.fetchJson(url, options, { source: 'create-page' });
+    }
+    const shouldSetJsonContentType = options.body && !(typeof FormData !== 'undefined' && options.body instanceof FormData);
+    const response = await fetch(url, {
+        headers: shouldSetJsonContentType ? { 'Content-Type': 'application/json', ...(options.headers || {}) } : (options.headers || {}),
+        ...options
+    });
+    const text = await response.text();
+    let payload = {};
+    if (text) {
+        try {
+            payload = JSON.parse(text);
+        } catch (_error) {
+            payload = { detail: text };
+        }
+    }
+    if (!response.ok || payload?.status === 'error') {
+        throw new Error(payload?.detail || payload?.error || `HTTP ${response.status}`);
+    }
+    return payload;
+}
+
 function appendIfPresent(formData, key, value) {
     if (value === undefined || value === null || value === '') return;
 
@@ -106,9 +130,7 @@ async function loadSupportMatrix() {
     if (!target) return;
 
     try {
-        const response = await fetch('/upload/support');
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.detail || `HTTP ${response.status}`);
+        const result = await createFetchJson('/upload/support');
 
         target.innerHTML = `
             ${renderSupportMatrixSection('Datasets', result.datasets || {})}
@@ -256,15 +278,10 @@ async function submitUpload(event) {
     try {
         setUploadStatus('Sending object to backend...', 'info');
 
-        const response = await fetch(`/upload/${operationId}`, {
+        const result = await createFetchJson(`/upload/${operationId}`, {
             method: 'POST',
             body: formData
         });
-
-        const result = await response.json();
-        if (!response.ok) {
-            throw new Error(result.detail || result.error || `HTTP ${response.status}`);
-        }
 
         const detailMessage = operationId === 'datasets'
             ? `Created dataset <code>${result.id || 'n/a'}</code> with ${escapeHtml(result.shape?.[1] ?? 0)} columns.`
@@ -301,10 +318,7 @@ async function refreshFeatures() {
     const featureList = document.getElementById('featureList');
 
     try {
-        const response = await fetch('/features');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const features = await response.json();
+        const features = await createFetchJson('/features');
         if (!Array.isArray(features) || features.length === 0) {
             featureList.innerHTML = '<div class="feature-item">No datasets uploaded yet.</div>';
             return;
@@ -331,10 +345,7 @@ async function refreshModels() {
     const modelList = document.getElementById('modelList');
 
     try {
-        const response = await fetch('/list/model');
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const models = await response.json();
+        const models = await createFetchJson('/list/model');
         if (!Array.isArray(models) || models.length === 0) {
             modelList.innerHTML = '<div class="model-item">No models uploaded yet.</div>';
             return;
@@ -369,10 +380,7 @@ async function analyzeData() {
     try {
         target.innerHTML = '<div class="status-message info" style="display:block;">Analyzing dataset...</div>';
 
-        const response = await fetch(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const results = await response.json();
+        const results = await createFetchJson(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
         target.innerHTML = renderDatasetAnalysis(results.summary || {});
     } catch (error) {
         console.error('Dataset analysis error:', error);
@@ -392,10 +400,7 @@ async function analyzeModel() {
     try {
         target.innerHTML = '<div class="status-message info" style="display:block;">Analyzing model...</div>';
 
-        const response = await fetch(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const results = await response.json();
+        const results = await createFetchJson(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
         target.innerHTML = renderModelAnalysis(results.summary || {});
     } catch (error) {
         console.error('Model analysis error:', error);
@@ -414,10 +419,7 @@ async function extractFeatures() {
 
     try {
         target.innerHTML = '<div class="status-message info" style="display:block;">Extracting feature candidates...</div>';
-        const response = await fetch(`/features/extract?dataset_id=${encodeURIComponent(datasetId)}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const result = await response.json();
+        const result = await createFetchJson(`/features/extract?dataset_id=${encodeURIComponent(datasetId)}`);
         const summary = result.summary || {};
         target.innerHTML = `
             ${renderDatasetAnalysis(result.manifest?.analysis || {})}
@@ -506,9 +508,8 @@ async function draftCreateAssistantScript() {
 
     try {
         showStatus('Drafting assistant script...', 'info');
-        const response = await fetch('/assistant/draft', {
+        const result = await createFetchJson('/assistant/draft', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 prompt,
                 target_type: getCreateAssistantTargetType(),
@@ -520,8 +521,6 @@ async function draftCreateAssistantScript() {
             })
         });
 
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         await window.editorReady;
 
         window.currentCreateAssistantDraft = result.draft || null;
@@ -553,15 +552,13 @@ async function reviewCreateAssistantScript() {
 
     try {
         showStatus('Reviewing assistant script...', 'info');
-        const response = await fetch('/execution/review', {
+        const result = await createFetchJson('/execution/review', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 code: window.editor.getValue(),
                 profile: getCreateAssistantProfile()
             })
         });
-        const result = await response.json();
         window.currentCreateAssistantReview = {
             status: result.status,
             approved: result.approved,
@@ -593,9 +590,8 @@ async function runCreateAssistantScript() {
 
     try {
         showStatus('Running assistant script with guarded execution...', 'info');
-        const response = await fetch('/execution/run', {
+        const result = await createFetchJson('/execution/run', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 code: window.editor.getValue(),
                 profile: getCreateAssistantProfile(),
@@ -604,8 +600,6 @@ async function runCreateAssistantScript() {
                 context: { operationId: document.getElementById('operationId').value }
             })
         });
-        const result = await response.json();
-        if (!response.ok || result.status === 'error') throw new Error(result.detail || result.error || `HTTP ${response.status}`);
 
         window.currentCreateAssistantExecution = result;
         window.executedVariables = result.variables || {};
@@ -689,8 +683,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     document.getElementById('btnExecuteScript')?.addEventListener('click', executeCode);
     document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
-        const assignments = parseVariableAssignmentsFromText();
-        const metadata = parseAndDisplayMetadata();
+        const result = parseAndDisplayEditorState();
+        const assignments = result?.assignments || [];
+        const metadata = result?.metadata || {};
 
         if (assignments.length > 0 || Object.keys(metadata).length > 0) {
             showStatus(

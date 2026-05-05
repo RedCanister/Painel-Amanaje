@@ -112,25 +112,33 @@
     #executionOutput { margin-top: 1rem; padding: 0.75rem; background: var(--amanaje-code-bg); color: var(--amanaje-code-fg); border: 1px solid var(--amanaje-code-border); border-radius: 14px; display: none; }
     #executionOutput.visible { display: block; }
     #outputContent { white-space: pre-wrap; }
-    #metadataPanel {
-        background: var(--amanaje-primary-softer);
-        border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 14px;
-        padding: 1rem;
-        margin: 1rem 0;
-        display: none;
+    #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; margin-top: 10px; }
+    #editor #variablePanel,
+    #editor #metadataPanel {
+        background: #faf5ff;
+        border: 1px solid #e9d5ff;
     }
-    #metadataPanel h4 {
-        margin-top: 0;
-        color: var(--amanaje-primary-strong);
-        border-bottom: 2px solid var(--amanaje-primary-border-soft);
-        padding-bottom: 0.5rem;
+    #editor .variable-item {
+        background: white;
+        border-left-color: #6d28d9;
     }
-    .metadata-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .metadata-table th { background: var(--amanaje-primary); color: #fff; padding: 0.5rem; text-align: left; }
-    .metadata-table td { padding: 0.5rem; border-bottom: 1px solid var(--amanaje-primary-soft); }
-    .metadata-key { font-weight: 600; color: var(--amanaje-primary-strong); width: 30%; }
-    .metadata-value { color: #374151; font-family: 'Courier New', monospace; word-break: break-word; }
+    #editor .variable-item .var-name {
+        color: #581c87;
+    }
+    #editor .variable-item .var-type {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+    #editor .variable-item .var-value {
+        color: #6b7280;
+    }
+    #editor .metadata-table th {
+        background: #6d28d9;
+        color: #fff;
+    }
+    #editor .metadata-key {
+        color: #581c87;
+    }
     .status-message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 14px; }
     .status-message.success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .status-message.error { background: #fef2f2; color: #991b1b; }
@@ -193,7 +201,14 @@
 
 {% block content %}
 <div class="data-operations">
+        <section class="workspace-intro data-hero">
+        <span class="workspace-eyebrow">Data domain</span>
+            <h2>Object creator with a simple editor, for the dynamic coder.</h2>
+            <p>Write and edit Python code to generate models or datasets, or use the Assistant to generate code for you with ease.</p>
+        </section>
+
     <section class="form-section" id="uploadSection">
+
         <h3>Data Creation</h3>
 
         <!-- TODO - Could instead of a selection list work as a button toggle for simplicity -->
@@ -252,24 +267,25 @@
             <div id="editor">
                 <h3>Write your creation script here.</h3>
                 <div id="editorContainer"></div>
+                <br>
+                <div id="output"></div>
 
-                <div id="statusMessage" class="status-message"></div>
-
-                <div id="metadataPanel">
-                    <h4>Object Metadata</h4>
-                    <p class="small-text" id="metadataHint">Click "Extract Variables" or "Execute" to populate this panel.</p>
-                    <div id="metadataContent"></div>
-                </div>
+                <div id="statusMessage" class="statusMessage status-message"></div>
 
                 <div id="executionOutput">
-                    <div style="color: #569cd6; margin-bottom: 8px;">Script Output</div>
+                    <div style="color: #569cd6; margin-bottom: 8px;">Execution Output</div>
                     <div id="outputContent"></div>
                 </div>
                 
-                <!-- TODO - Make Scripts Variables into a collapsable open JSON table -->
                 <div id="variablePanel" style="display:none;">
-                    <h3>Script Variables</h3>
+                    <h3>Extracted Variables</h3>
                     <div id="variableList"></div>
+                </div>
+
+                <div id="metadataPanel" style="display:none;">
+                    <h3>Parsed Metadata</h3>
+                    <p id="metadataHint" class="small-text">Run the script or parse the editor to build a save-ready document.</p>
+                    <div id="metadataContent"></div>
                 </div>
 
                 <!-- TODO - Saved Scripts should be scrollable after 5 items, and I would also like for it to be near the save and load buttons, for a UX improvement. -->

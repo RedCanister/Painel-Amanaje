@@ -45,8 +45,15 @@
     }
 
     async function fetchJson(url, options = {}, settings = {}) {
+        if (window.AmanajeUI?.fetchJson) {
+            return window.AmanajeUI.fetchJson(url, options, {
+                ...settings,
+                source: settings.source || "assistant-page",
+            });
+        }
+        const shouldSetJsonContentType = options.body && !(typeof FormData !== "undefined" && options.body instanceof FormData);
         const response = await fetch(url, {
-            headers: options.body ? { "Content-Type": "application/json", ...(options.headers || {}) } : (options.headers || {}),
+            headers: shouldSetJsonContentType ? { "Content-Type": "application/json", ...(options.headers || {}) } : (options.headers || {}),
             ...options,
         });
         let payload = {};

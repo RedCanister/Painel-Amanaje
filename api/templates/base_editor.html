@@ -1,157 +1,806 @@
 {% extends "base_template.html" %}
 
-{% block title %}MLOps - Painel Amanaje{% endblock %}
+{% block title %}Code Editor - Painel Amanaje{% endblock %}
 
 {% block extra_css %}
 <style>
-    .mlops-section { margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #ddd; border-radius: 4px; }
-    .mlops-section h3 { color: #0077b6; margin-top: 0; }
-    .monitoring-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-    .metric-card { background: #f8f9fa; padding: 1rem; border-radius: 4px; text-align: center; }
-    .metric-value { font-size: 1.5em; font-weight: bold; color: #0077b6; }
-    .log-display { max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #fff; padding: 1rem; font-family: monospace; }
-    .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
-    .status-active { background-color: #2ecc71; }
-    .status-warning { background-color: #f1c40f; }
-    .status-error { background-color: #e74c3c; }
-</style>
-{% endblock %}
+    .editor-page {
+        display: grid;
+        gap: 1rem;
+    }
 
+    .editor-shell {
+        display: grid;
+        gap: 1rem;
+        padding: 1.1rem;
+        border: 1px solid var(--amanaje-border);
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 242, 234, 0.88));
+        box-shadow: 0 22px 48px var(--amanaje-primary-shadow);
+    }
 
-{% block extra_script %}
+    .editor-header {
+        display: grid;
+        gap: 0.35rem;
+    }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+    .editor-header h2 {
+        margin: 0;
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.65rem, 2.4vw, 2.2rem);
+        color: var(--amanaje-text-strong);
+    }
 
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+    .editor-header p {
+        margin: 0;
+        color: var(--amanaje-muted);
+        max-width: 70ch;
+    }
 
-<style>
-    body { font-family: sans-serif; }
-    #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; margin-top: 10px; }
+    .editor-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        align-items: center;
+        padding: 0.85rem 0;
+        border-top: 1px solid var(--amanaje-border);
+        border-bottom: 1px solid var(--amanaje-border);
+    }
+
+    .editor-toolbar-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-items: center;
+    }
+
+    .editor-toolbar-spacer {
+        flex: 1 1 auto;
+    }
+
+    .toolbar-btn,
+    .toolbar-secondary,
+    .mini-btn,
+    .side-link,
+    .outline-item,
+    .problem-item,
+    .saved-file-item {
+        appearance: none;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--amanaje-text-strong);
+        font: inherit;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .toolbar-btn,
+    .toolbar-secondary {
+        padding: 0.72rem 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .toolbar-btn:hover,
+    .toolbar-secondary:hover,
+    .mini-btn:hover,
+    .side-link:hover,
+    .outline-item:hover,
+    .problem-item:hover,
+    .saved-file-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
+    }
+
+    .toolbar-btn.primary {
+        background: var(--amanaje-primary-gradient);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .toolbar-btn.danger {
+        background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .toolbar-secondary,
+    .mini-btn {
+        font-weight: 600;
+    }
+
+    .mini-btn,
+    .side-link {
+        padding: 0.45rem 0.7rem;
+        cursor: pointer;
+    }
+
+    .editor-stage {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .editor-center,
+    .panel-card,
+    .minimal-collapse {
+        border: 1px solid var(--amanaje-border);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.9);
+    }
+
+    .editor-utility-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.8rem;
+    }
+
+    .minimal-card,
+    .minimal-collapse {
+        padding: 0.9rem;
+    }
+
+    .minimal-card {
+        border: 1px solid var(--amanaje-border);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.82);
+    }
+
+    .minimal-card h3,
+    .minimal-collapse h3,
+    .panel-card h3,
+    .editor-status strong {
+        margin: 0;
+        color: var(--amanaje-text-strong);
+        font-size: 0.95rem;
+    }
+
+    .minimal-card p,
+    .minimal-collapse p,
+    .panel-card p {
+        margin: 0;
+        color: var(--amanaje-muted);
+        font-size: 0.88rem;
+    }
+
+    .side-list {
+        display: grid;
+        gap: 0.55rem;
+    }
+
+    .side-link {
+        text-align: left;
+    }
+
+    .minimal-collapse {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .collapse-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .collapse-toggle span {
+        color: var(--amanaje-muted);
+        font-size: 0.85rem;
+    }
+
+    .collapse-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--amanaje-primary-strong);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .collapse-body[hidden] {
+        display: none !important;
+    }
+
+    .editor-center {
+        overflow: hidden;
+        box-shadow: 0 24px 56px var(--amanaje-primary-shadow);
+    }
+
+    .editor-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.8rem 1rem;
+        background: #101827;
+        color: #e5eefb;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .editor-file {
+        display: grid;
+        gap: 0.2rem;
+    }
+
+    .editor-file strong {
+        font-size: 0.92rem;
+    }
+
+    .editor-file span {
+        color: #9fb3c8;
+        font-size: 0.82rem;
+    }
 
     #monacoEditorContainer {
         width: 100%;
-        height: 520px;
-        min-height: 200px;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
+        height: 700px;
+        min-height: 420px;
+    }
+
+    .editor-status {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.7rem 1rem;
+        background: #111827;
+        color: #cbd5e1;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.84rem;
+    }
+
+    .editor-status span {
+        color: #93c5fd;
+    }
+
+    .status-message {
+        display: none;
+        padding: 0.85rem 1rem;
+        border-radius: 16px;
+        font-weight: 700;
+    }
+
+    .status-message.success,
+    .status-message.info,
+    .status-message.warning,
+    .status-message.error {
+        display: block;
+    }
+
+    .status-message.success {
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+
+    .status-message.info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+    }
+
+    .status-message.warning {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        color: #92400e;
+    }
+
+    .status-message.error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+
+    .editor-panels {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .panel-card {
+        display: grid;
+        gap: 0.85rem;
+        padding: 1rem;
+    }
+
+    .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .panel-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        font-size: 0.74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .empty-state {
+        padding: 0.9rem;
+        border-radius: 14px;
+        border: 1px dashed var(--amanaje-primary-border);
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-muted);
+    }
+
+    .terminal-output {
+        min-height: 170px;
+        max-height: 340px;
+        overflow: auto;
+        padding: 1rem;
+        border-radius: 16px;
+        border: 1px solid var(--amanaje-code-border);
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        font-family: var(--amanaje-code-font);
+        font-size: 0.88rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .terminal-output.empty {
+        color: #94a3b8;
+        font-style: italic;
+    }
+
+    .output-line {
+        margin: 0 0 0.8rem;
+    }
+
+    .output-line:last-child {
+        margin-bottom: 0;
+    }
+
+    .output-title {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: #7dd3fc;
+        font-weight: 800;
+    }
+
+    .output-line.error .output-title {
+        color: #fca5a5;
+    }
+
+    .problems-list,
+    .outline-list,
+    .saved-files-list,
+    .variables-grid {
+        display: grid;
+        gap: 0.65rem;
+    }
+
+    .outline-item,
+    .problem-item,
+    .saved-file-item {
+        display: grid;
+        gap: 0.35rem;
+        width: 100%;
+        padding: 0.75rem 0.85rem;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .problem-item.error {
+        border-color: #fecaca;
+        background: #fef2f2;
+    }
+
+    .problem-item.warning {
+        border-color: #fde68a;
+        background: #fffbeb;
+    }
+
+    .problem-item.info {
+        border-color: #bfdbfe;
+        background: #eff6ff;
+    }
+
+    .saved-file-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .metadata-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .metadata-table th,
+    .metadata-table td {
+        padding: 0.7rem 0.8rem;
+        text-align: left;
+        border-bottom: 1px solid var(--amanaje-primary-border-soft);
+        vertical-align: top;
+    }
+
+    .metadata-table th {
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .metadata-table td:last-child {
+        font-family: var(--amanaje-code-font);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .variable-card {
+        display: grid;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    .variable-card strong {
+        color: var(--amanaje-text-strong);
+    }
+
+    .variable-meta {
+        color: var(--amanaje-muted);
+        font-size: 0.8rem;
+    }
+
+    .variable-preview {
+        margin: 0;
+        padding: 0.7rem;
+        border-radius: 12px;
+        background: var(--amanaje-surface-2);
+        color: var(--amanaje-muted);
+        font-family: var(--amanaje-code-font);
+        font-size: 0.83rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    @media (max-width: 900px) {
+        .editor-panels,
+        .editor-utility-row {
+            grid-template-columns: 1fr;
+        }
+
+        #monacoEditorContainer {
+            height: 560px;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .editor-toolbar,
+        .editor-topline,
+        .editor-status,
+        .panel-head {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .editor-toolbar-spacer {
+            display: none;
+        }
     }
 </style>
-
 {% endblock %}
 
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+{% endblock %}
 
 {% block content %}
-
-<div class="model-builder">
-    <div class="editor-controls">
-        <button id="btnExecuteCode" class="success">Execute Code</button>
-        <button id="btnExtractVariables">Extract Variables</button>
-        <button id="btnSaveVariables">Save Variables</button>
-        <button id="btnLoadVariables">Load Variables</button>
-        <button id="btnClearEditor" class="danger">Clear Editor</button>
-        <button id="btnExportJSON">Export as JSON</button>
-    </div>
-
-    <div id="editor">
-        <h3>Write your model code</h3>
-        <div id="monacoEditorContainer"></div>
-        <br>
-        <div id="output"></div>
-
-        <div id="statusMessage" class="statusMessage"></div>
-
-        <div id="executionOutput">
-            <div style="color: #569cd6; margin-bottom: 8px;">Execution Output</div>
-            <div id="outputContent"></div>
+<div class="editor-page">
+    <section class="editor-shell">
+        <div class="editor-header">
+            <span class="workspace-eyebrow">Code Editor</span>
+            <h2>Simple workspace for editing, running, and saving scripts.</h2>
+            <p>The editor stays at the center, commands stay up top, and supporting context stays quiet and out of the way.</p>
         </div>
 
-        <div id="variablePanel" style="display:none;">
-            <h3>Extracted Variables</h3>
-            <div id="variableList"></div>
+        <div id="statusMessage" class="status-message" aria-live="polite"></div>
+
+        <div class="editor-toolbar">
+            <div class="editor-toolbar-group">
+                <button type="button" id="btnExecuteCode" class="toolbar-btn primary">Run</button>
+                <button type="button" id="btnExtractVariables" class="toolbar-btn">Parse</button>
+                <button type="button" id="btnGenerateStarter" class="toolbar-btn">Generate</button>
+                <button type="button" id="btnSaveVariables" class="toolbar-btn">Save</button>
+                <button type="button" id="btnExportJSON" class="toolbar-btn">Export</button>
+            </div>
+            <div class="editor-toolbar-spacer"></div>
+            <div class="editor-toolbar-group">
+                <button type="button" id="btnCopyCode" class="toolbar-secondary">Copy</button>
+                <button type="button" id="btnDownloadScript" class="toolbar-secondary">Download</button>
+                <button type="button" id="btnToggleWordWrap" class="toolbar-secondary">Wrap</button>
+                <button type="button" id="btnToggleMinimap" class="toolbar-secondary">Minimap</button>
+                <button type="button" id="btnClearEditor" class="toolbar-btn danger">Clear</button>
+            </div>
         </div>
 
-        <div id="metadataPanel" style="display:none;">
-            <h3>Parsed Metadata</h3>
-            <p id="metadataHint" style="color: #777; margin-top: 0;">Run the script or parse the editor to build a save-ready document.</p>
-            <div id="metadataContent"></div>
+        <div class="editor-stage">
+            <div class="editor-utility-row">
+                <div class="minimal-card">
+                    <h3>Templates</h3>
+                    <p>Quick starting points.</p>
+                    <div class="side-list">
+                        <button type="button" class="side-link" data-template="python">Python</button>
+                        <button type="button" class="side-link" data-template="dataset">Dataset</button>
+                        <button type="button" class="side-link" data-template="model">Model</button>
+                    </div>
+                </div>
+
+                <div class="minimal-card">
+                    <h3>Shortcuts</h3>
+                    <p>Jump to the essential panels.</p>
+                    <div class="side-list">
+                        <button type="button" class="side-link" id="btnFocusOutput">Output</button>
+                        <button type="button" class="side-link" id="btnFocusVariables">Variables</button>
+                        <button type="button" class="side-link" id="btnFocusMetadata">Metadata</button>
+                    </div>
+                </div>
+
+                <div class="minimal-card">
+                    <h3>Workspace</h3>
+                    <p>Minimal controls around the editor.</p>
+                    <div class="side-list">
+                        <button type="button" class="side-link" id="btnCommandPaletteInline">Command Palette</button>
+                        <button type="button" class="side-link" id="btnRefreshFiles">Refresh Files</button>
+                        <button type="button" class="side-link" id="btnRefreshOutline">Refresh Outline</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-center">
+                <div class="editor-topline">
+                    <div class="editor-file">
+                        <strong id="editorFileLabel">workspace/current_script.py</strong>
+                        <span id="editorSubtitle">Ready for model and dataset scripts.</span>
+                    </div>
+                    <button type="button" id="btnCommandPalette" class="mini-btn">Command Palette</button>
+                </div>
+
+                <div id="monacoEditorContainer" aria-label="Monaco editor"></div>
+
+                <div class="editor-status">
+                    <div><strong>Cursor</strong> <span id="cursorPositionLabel">Ln 1, Col 1</span></div>
+                    <div><strong>Document</strong> <span id="documentStatsLabel">0 lines | 0 chars</span></div>
+                    <div><strong>Runtime</strong> <span id="runtimeStateLabel">Idle</span></div>
+                </div>
+            </div>
         </div>
 
-        <div id="filePanel" style="display:none;">
-            <h3>Saved Variables</h3>
-            <ul id="fileList" class="file-list"></ul>
+        <div class="editor-utility-row">
+            <section class="minimal-collapse">
+                <button type="button" class="collapse-toggle" data-collapse-target="outlineCollapseBody" aria-expanded="false">
+                    <div>
+                        <h3>Outline</h3>
+                        <span>Top-level structure, tucked away until needed.</span>
+                    </div>
+                    <span class="collapse-icon">+</span>
+                </button>
+                <div id="outlineCollapseBody" class="collapse-body" hidden>
+                    <div id="outlineList" class="outline-list">
+                        <div class="empty-state">Outline appears here.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="minimal-collapse">
+                <button type="button" class="collapse-toggle" data-collapse-target="savedFilesCollapseBody" aria-expanded="false">
+                    <div>
+                        <h3>Saved Files</h3>
+                        <span>Recent code models, kept minimal.</span>
+                    </div>
+                    <span class="collapse-icon">+</span>
+                </button>
+                <div id="savedFilesCollapseBody" class="collapse-body" hidden>
+                    <div id="savedFilesList" class="saved-files-list">
+                        <div class="empty-state">Saved files appear here.</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="minimal-card">
+                <h3>Notes</h3>
+                <p>The page now keeps all weight on the editor, with only small supporting elements around it.</p>
+            </div>
         </div>
-    </div>
+
+        <div class="editor-panels">
+            <section class="panel-card" id="outputPanel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-label">Output</span>
+                        <h3>Execution Console</h3>
+                    </div>
+                    <button type="button" id="btnClearOutput" class="mini-btn">Clear</button>
+                </div>
+                <div id="executionOutput" class="terminal-output empty">Run the current script to inspect standard output and backend execution errors.</div>
+            </section>
+
+            <section class="panel-card" id="problemsPanel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-label">Problems</span>
+                        <h3>Diagnostics</h3>
+                    </div>
+                    <button type="button" id="btnClearProblems" class="mini-btn">Clear</button>
+                </div>
+                <div id="problemsList" class="problems-list">
+                    <div class="empty-state">No diagnostics yet.</div>
+                </div>
+            </section>
+
+            <section class="panel-card" id="variablesPanel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-label">Variables</span>
+                        <h3>Workspace Values</h3>
+                    </div>
+                    <button type="button" id="btnSyncVariables" class="mini-btn">Refresh</button>
+                </div>
+                <div id="variableList" class="variables-grid">
+                    <div class="empty-state">Parse or run the script to collect variables.</div>
+                </div>
+            </section>
+
+            <section class="panel-card" id="metadataPanel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-label">Metadata</span>
+                        <h3>Registry Preview</h3>
+                    </div>
+                    <button type="button" id="btnSyncMetadata" class="mini-btn">Refresh</button>
+                </div>
+                <p id="metadataHint">Fields such as <code>name</code>, <code>description</code>, <code>object_type</code>, and <code>path</code> are collected here.</p>
+                <div id="metadataContent">
+                    <div class="empty-state">Define metadata variables in the script to preview a save-ready document.</div>
+                </div>
+            </section>
+        </div>
+    </section>
 </div>
-
 {% endblock %}
 
-
 {% block extra_js %}
-<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
-
 <script>
     window.editor = null;
     window.editorExecution = null;
     window.executedVariables = {};
     window.editorDocument = null;
     window.editorMetadata = {};
+
     let extractedVariables = {};
+    let markerState = [];
+    let editorWordWrap = "on";
+    let editorMinimapEnabled = true;
+
+    const templateCatalog = {
+        python: `# General Python script
+name = "workspace_script"
+description = "General-purpose script created in the editor"
+object_type = "code_model"
+path = "editor/workspace_script.py"
+version = 1
+
+def main():
+    print("Workspace ready")
+
+
+if __name__ == "__main__":
+    main()
+`,
+        dataset: `import pandas as pd
+
+df = pd.DataFrame({
+    "feature_a": [1.0, 2.0, 3.0],
+    "feature_b": [10.0, 20.0, 30.0],
+    "target": [0, 1, 0]
+})
+
+csv_text = df.to_csv(index=False)
+
+name = "generated_dataset"
+description = "Dataset created in the editor"
+object_type = "dataset"
+path = "generated/generated_dataset.csv"
+version = 1
+dataset_type = "dataset"
+connection_string = ""
+`,
+        model: `import base64
+import io
+import joblib
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier(n_estimators=50, random_state=42)
+buffer = io.BytesIO()
+joblib.dump(model, buffer)
+buffer.seek(0)
+
+name = "generated_model"
+description = "Portable model artifact created in the editor"
+object_type = "learning_model"
+path = "generated/generated_model.joblib"
+version = 1
+model_type = "classification_model"
+parameters = {"framework": "sklearn", "estimator_class": "RandomForestClassifier"}
+metrics = {"task": "classification"}
+reference_data = "sample_dataset.csv"
+input_features = ["feature_a", "feature_b"]
+output_features = ["target"]
+is_trained = False
+is_tested = False
+is_deployed = False
+joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
+`
+    };
 
     window.editorReady = new Promise(resolve => {
-        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+        require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs" } });
 
         require(["vs/editor/editor.main"], function () {
             window.editor = monaco.editor.create(document.getElementById("monacoEditorContainer"), {
-                value: `
-# Define your model here. Use any of the available libraries.
-# The more explicit your variables are, the easier it is to save them.
-
-import pandas as pd
-
-df = pd.DataFrame({"feature1": [1, 2], "feature2": [3, 4]})
-name = "example_code_model"
-description = "Example payload generated from the editor"
-object_type = "code_model"
-path = "editor/example_code_model.py"
-version = 1
-`,
+                value: templateCatalog.model,
                 language: "python",
                 theme: "vs-dark",
                 automaticLayout: true,
-                tabSize: 4,
-                minimap: { enabled: false },
+                glyphMargin: true,
+                folding: true,
                 lineNumbers: "on",
-                scrollBeyondLastLine: true,
-                wordWrap: "on"
+                scrollBeyondLastLine: false,
+                minimap: { enabled: editorMinimapEnabled },
+                tabSize: 4,
+                insertSpaces: true,
+                fontSize: 14,
+                fontLigatures: true,
+                smoothScrolling: true,
+                stickyScroll: { enabled: true },
+                wordWrap: editorWordWrap
             });
 
-            try { window.editor.layout(); } catch (error) { console.warn("editor.layout() failed", error); }
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => executeCode());
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => saveVariablesToFile());
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => parseAndDisplayEditorState());
+
+            window.editor.onDidChangeCursorPosition(updateCursorStatus);
+            window.editor.onDidChangeModelContent(() => refreshWorkspaceInsights());
+
+            updateCursorStatus();
             resolve(window.editor);
         });
     });
 
-    document.querySelectorAll(".tab").forEach(tab => {
-        tab.addEventListener("click", () => {
-            document.querySelectorAll(".tab").forEach(item => item.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(item => item.classList.remove("active"));
-            tab.classList.add("active");
-            document.getElementById(tab.dataset.tab).classList.add("active");
-            setTimeout(() => {
-                if (window.editor && typeof window.editor.layout === "function") {
-                    window.editor.layout();
-                }
-            }, 100);
-        });
-    });
-
-    function stringifyVariableValue(value) {
-        if (typeof value === "string") return value;
-
-        try {
-            return JSON.stringify(value);
-        } catch (error) {
-            return String(value);
-        }
+    function dom(id) {
+        return document.getElementById(id);
     }
 
     function escapeHtml(text) {
@@ -160,29 +809,27 @@ version = 1
         return div.innerHTML;
     }
 
+    function stringifyVariableValue(value) {
+        if (typeof value === "string") return value;
+        try {
+            return JSON.stringify(value, null, 2);
+        } catch (error) {
+            return String(value);
+        }
+    }
+
     function parsePythonLiteral(rawValue) {
         const value = (rawValue || "").trim();
         if (!value) return "";
-
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-            return value.slice(1, -1);
-        }
-
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) return value.slice(1, -1);
         if (value === "True") return true;
         if (value === "False") return false;
         if (value === "None") return null;
-
-        if (/^-?\d+(\.\d+)?$/.test(value)) {
-            return Number(value);
-        }
+        if (/^-?\d+(\.\d+)?$/.test(value)) return Number(value);
 
         if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
             try {
-                const normalized = value
-                    .replace(/\bTrue\b/g, "true")
-                    .replace(/\bFalse\b/g, "false")
-                    .replace(/\bNone\b/g, "null")
-                    .replace(/'/g, '"');
+                const normalized = value.replace(/\bTrue\b/g, "true").replace(/\bFalse\b/g, "false").replace(/\bNone\b/g, "null").replace(/'/g, '"');
                 return JSON.parse(normalized);
             } catch (error) {
                 return value;
@@ -210,7 +857,7 @@ version = 1
         if (typeof value === "string") return value;
         if (kind === "mapping" || kind === "sequence") {
             try {
-                return JSON.stringify(value);
+                return JSON.stringify(value, null, 2);
             } catch (error) {
                 return String(value);
             }
@@ -220,9 +867,7 @@ version = 1
 
     function isEscaped(text, index) {
         let backslashes = 0;
-        for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor -= 1) {
-            backslashes += 1;
-        }
+        for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor -= 1) backslashes += 1;
         return backslashes % 2 === 1;
     }
 
@@ -235,31 +880,25 @@ version = 1
             const nextThree = line.slice(index, index + 3);
 
             if (!quote && current === "#") break;
-
             if (!quote && (nextThree === '"""' || nextThree === "'''")) {
                 quote = nextThree;
                 index += 2;
                 continue;
             }
-
             if (quote && nextThree === quote) {
                 quote = null;
                 index += 2;
                 continue;
             }
-
             if (quote === '"' || quote === "'") {
                 if (current === quote && !isEscaped(line, index)) quote = null;
                 continue;
             }
-
             if (!quote && (current === '"' || current === "'")) {
                 quote = current;
                 continue;
             }
-
             if (quote) continue;
-
             if ("([{".includes(current)) delta += 1;
             if (")]}".includes(current)) delta -= 1;
         }
@@ -286,19 +925,11 @@ version = 1
                 const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+?)\s*$/);
                 if (!match) return;
 
-                currentAssignment = {
-                    name: match[1],
-                    expressionLines: [match[2]],
-                    line: index + 1
-                };
+                currentAssignment = { name: match[1], expressionLines: [match[2]], line: index + 1 };
                 bracketDepth = countBracketDelta(match[2]);
 
                 if (bracketDepth <= 0 && !match[2].trim().endsWith("\\")) {
-                    assignments.push({
-                        name: currentAssignment.name,
-                        expression: currentAssignment.expressionLines.join("\n").trim(),
-                        line: currentAssignment.line
-                    });
+                    assignments.push({ name: currentAssignment.name, expression: currentAssignment.expressionLines.join("\n").trim(), line: currentAssignment.line });
                     currentAssignment = null;
                     bracketDepth = 0;
                 }
@@ -309,22 +940,14 @@ version = 1
             bracketDepth += countBracketDelta(line);
 
             if (bracketDepth <= 0 && !trimmed.endsWith("\\")) {
-                assignments.push({
-                    name: currentAssignment.name,
-                    expression: currentAssignment.expressionLines.join("\n").trim(),
-                    line: currentAssignment.line
-                });
+                assignments.push({ name: currentAssignment.name, expression: currentAssignment.expressionLines.join("\n").trim(), line: currentAssignment.line });
                 currentAssignment = null;
                 bracketDepth = 0;
             }
         });
 
         if (currentAssignment) {
-            assignments.push({
-                name: currentAssignment.name,
-                expression: currentAssignment.expressionLines.join("\n").trim(),
-                line: currentAssignment.line
-            });
+            assignments.push({ name: currentAssignment.name, expression: currentAssignment.expressionLines.join("\n").trim(), line: currentAssignment.line });
         }
 
         return assignments;
@@ -334,67 +957,27 @@ version = 1
         const parsedValue = parsePythonLiteral(assignment.expression);
         const kind = inferVariableKind(parsedValue, assignment.expression);
         const preview = serializeVariableForDisplay(parsedValue, kind);
-        const payload = {
+        return {
             name: assignment.name,
-            type: kind === "number"
-                ? (Number.isInteger(parsedValue) ? "int" : "float")
-                : Array.isArray(parsedValue)
-                    ? "list"
-                    : parsedValue === null
-                        ? "NoneType"
-                        : typeof parsedValue,
+            type: kind === "number" ? (Number.isInteger(parsedValue) ? "int" : "float") : Array.isArray(parsedValue) ? "list" : parsedValue === null ? "NoneType" : typeof parsedValue,
             kind,
             value: preview,
             preview,
-            metadata: {
-                source: "editor",
-                line: assignment.line,
-                expression: assignment.expression
-            }
+            raw_value: parsedValue,
+            metadata: { source: "editor", line: assignment.line, expression: assignment.expression }
         };
-
-        if (
-            parsedValue === null ||
-            ["string", "number", "boolean"].includes(typeof parsedValue) ||
-            Array.isArray(parsedValue) ||
-            (parsedValue && typeof parsedValue === "object")
-        ) {
-            payload.raw_value = parsedValue;
-        }
-
-        return payload;
     }
 
     function extractMetadataFromEditor() {
         const metadataFields = new Set([
-            "name",
-            "description",
-            "object_type",
-            "path",
-            "date",
-            "version",
-            "history",
-            "dataset_type",
-            "connection_string",
-            "model_type",
-            "parameters",
-            "metrics",
-            "reference_data",
-            "input_features",
-            "output_features",
-            "is_trained",
-            "is_tested",
-            "is_deployed",
-            "csv_text",
-            "onnx_bytes"
+            "name", "description", "object_type", "path", "date", "version", "history", "dataset_type",
+            "connection_string", "model_type", "parameters", "metrics", "reference_data", "input_features",
+            "output_features", "is_trained", "is_tested", "is_deployed", "csv_text", "onnx_bytes",
+            "joblib_bytes", "pickle_bytes", "torch_bytes", "torchscript_bytes", "model_bytes"
         ]);
 
         return parseVariableAssignmentsFromText().reduce((metadata, assignment) => {
-            if (!metadataFields.has(assignment.name)) {
-                return metadata;
-            }
-
-            metadata[assignment.name] = parsePythonLiteral(assignment.expression);
+            if (metadataFields.has(assignment.name)) metadata[assignment.name] = parsePythonLiteral(assignment.expression);
             return metadata;
         }, {});
     }
@@ -415,10 +998,6 @@ version = 1
             version = Number.isFinite(parsedVersion) ? parsedVersion : 1;
         }
 
-        const history = Array.isArray(metadata.history)
-            ? metadata.history
-            : [{ operation: "editor_save", when: timestamp }];
-
         return {
             name: metadata.name || `code_model_${Date.now()}`,
             description: metadata.description || "Code created in the editor",
@@ -427,7 +1006,7 @@ version = 1
             path: metadata.path || "editor",
             date: metadata.date || timestamp,
             version,
-            history,
+            history: Array.isArray(metadata.history) ? metadata.history : [{ operation: "editor_save", when: timestamp }],
             variables: extractedVariables || {},
             metadata,
             code: {
@@ -438,6 +1017,206 @@ version = 1
         };
     }
 
+    function updateCursorStatus() {
+        if (!window.editor) return;
+        const position = window.editor.getPosition();
+        if (!position) return;
+        dom("cursorPositionLabel").textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+    }
+
+    function updateDocumentStats() {
+        const code = window.editor ? window.editor.getValue() : "";
+        const lineCount = code ? code.split("\n").length : 0;
+        dom("documentStatsLabel").textContent = `${lineCount} lines | ${code.length} chars`;
+    }
+
+    function updateHeaderMetadata() {
+        const metadata = extractMetadataFromEditor();
+        dom("editorFileLabel").textContent = metadata.path || "workspace/current_script.py";
+        dom("editorSubtitle").textContent = metadata.description || "Ready for model and dataset scripts.";
+    }
+
+    function buildOutlineEntries() {
+        if (!window.editor) return [];
+
+        const lines = window.editor.getValue().split("\n");
+        const outline = [];
+
+        lines.forEach((line, index) => {
+            const functionMatch = line.match(/^def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+            const classMatch = line.match(/^class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[:(]/);
+            const assignmentMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=/);
+
+            if (functionMatch) outline.push({ name: functionMatch[1], detail: "Function", line: index + 1 });
+            else if (classMatch) outline.push({ name: classMatch[1], detail: "Class", line: index + 1 });
+            else if (assignmentMatch && !/^\s/.test(line)) outline.push({ name: assignmentMatch[1], detail: "Assignment", line: index + 1 });
+        });
+
+        return outline.slice(0, 18);
+    }
+
+    function renderOutline() {
+        const outlineList = dom("outlineList");
+        const outline = buildOutlineEntries();
+
+        if (!outline.length) {
+            outlineList.innerHTML = '<div class="empty-state">Outline appears here.</div>';
+            return;
+        }
+
+        outlineList.innerHTML = outline.map(item => `
+            <button type="button" class="outline-item" data-line="${item.line}">
+                <strong>${escapeHtml(item.name)}</strong>
+                <span>${escapeHtml(item.detail)} • line ${item.line}</span>
+            </button>
+        `).join("");
+
+        outlineList.querySelectorAll("[data-line]").forEach(button => {
+            button.addEventListener("click", () => revealEditorLine(Number(button.getAttribute("data-line")) || 1));
+        });
+    }
+
+    function revealEditorLine(lineNumber) {
+        if (!window.editor) return;
+        window.editor.revealLineInCenter(lineNumber);
+        window.editor.setPosition({ lineNumber, column: 1 });
+        window.editor.focus();
+    }
+
+    function renderProblems(problemEntries) {
+        const problemsList = dom("problemsList");
+        const issues = Array.isArray(problemEntries) ? problemEntries : [];
+        markerState = issues;
+
+        if (!issues.length) {
+            problemsList.innerHTML = '<div class="empty-state">No diagnostics yet.</div>';
+            return;
+        }
+
+        problemsList.innerHTML = issues.map((issue, index) => `
+            <button type="button" class="problem-item ${escapeHtml(issue.level || "info")}" data-problem-index="${index}">
+                <strong>${escapeHtml(issue.title || "Issue")}</strong>
+                <span>${escapeHtml(issue.message || "")}</span>
+            </button>
+        `).join("");
+
+        problemsList.querySelectorAll("[data-problem-index]").forEach(button => {
+            button.addEventListener("click", () => {
+                const issue = markerState[Number(button.getAttribute("data-problem-index")) || 0];
+                if (issue) revealEditorLine(issue.line || 1);
+            });
+        });
+    }
+
+    function pushMonacoMarkers(problemEntries) {
+        if (!window.editor || !window.monaco) return;
+
+        const severityMap = { error: monaco.MarkerSeverity.Error, warning: monaco.MarkerSeverity.Warning, info: monaco.MarkerSeverity.Info };
+        const markers = (problemEntries || []).map(issue => ({
+            startLineNumber: issue.line || 1,
+            startColumn: issue.column || 1,
+            endLineNumber: issue.endLine || issue.line || 1,
+            endColumn: issue.endColumn || Math.max((issue.column || 1) + 1, 2),
+            message: issue.message || "Issue",
+            severity: severityMap[issue.level || "info"] || monaco.MarkerSeverity.Info
+        }));
+
+        monaco.editor.setModelMarkers(window.editor.getModel(), "amanaje-editor", markers);
+        renderProblems(problemEntries);
+    }
+
+    function extractProblemsFromExecution(result) {
+        const issues = [];
+        const traceback = result?.error || result?.stderr || "";
+        const lineMatch = traceback.match(/line (\d+)/);
+        const lineNumber = lineMatch ? Number(lineMatch[1]) : 1;
+
+        if (result?.error) {
+            issues.push({
+                level: "error",
+                title: "Execution error",
+                message: result.error.trim().split("\n").slice(-1)[0] || "Execution error",
+                line: lineNumber,
+                column: 1
+            });
+        }
+
+        return issues;
+    }
+
+    function displayExecutionOutput(stdout, stderr, infoMessage = "") {
+        const output = dom("executionOutput");
+        const chunks = [];
+
+        if (infoMessage) chunks.push(`<div class="output-line"><span class="output-title">Status</span>${escapeHtml(infoMessage)}</div>`);
+        if (stdout && stdout.trim()) chunks.push(`<div class="output-line"><span class="output-title">Stdout</span>${escapeHtml(stdout)}</div>`);
+        if (stderr && stderr.trim()) chunks.push(`<div class="output-line error"><span class="output-title">Stderr</span>${escapeHtml(stderr)}</div>`);
+
+        if (!chunks.length) {
+            output.classList.add("empty");
+            output.innerHTML = "Run the current script to inspect standard output and backend execution errors.";
+            return;
+        }
+
+        output.classList.remove("empty");
+        output.innerHTML = chunks.join("");
+    }
+
+    function clearExecutionOutput() {
+        const output = dom("executionOutput");
+        output.classList.add("empty");
+        output.textContent = "Run the current script to inspect standard output and backend execution errors.";
+    }
+
+    function displayExtractedVariables(variables) {
+        const variableList = dom("variableList");
+        extractedVariables = variables || {};
+
+        if (!variables || Object.keys(variables).length === 0) {
+            variableList.innerHTML = '<div class="empty-state">Parse or run the script to collect variables.</div>';
+            return;
+        }
+
+        variableList.innerHTML = Object.entries(variables).map(([name, info]) => `
+            <article class="variable-card">
+                <strong>${escapeHtml(name)}</strong>
+                <div class="variable-meta">${escapeHtml(info.kind || info.type || "value")} • line ${escapeHtml(String(info.metadata?.line || info.line || "-"))}</div>
+                <p class="variable-preview">${escapeHtml(stringifyVariableValue(info.preview ?? info.value ?? info.raw_value ?? ""))}</p>
+            </article>
+        `).join("");
+    }
+
+    function displayMetadataPanel(metadata) {
+        const content = dom("metadataContent");
+        const hint = dom("metadataHint");
+        window.editorMetadata = metadata || {};
+
+        if (!metadata || Object.keys(metadata).length === 0) {
+            if (hint) hint.style.display = "block";
+            content.innerHTML = '<div class="empty-state">Define metadata variables in the script to preview a save-ready document.</div>';
+            return;
+        }
+
+        if (hint) hint.style.display = "none";
+        const rows = Object.entries(metadata).map(([key, value]) => `
+            <tr>
+                <td>${escapeHtml(key)}</td>
+                <td>${escapeHtml(stringifyVariableValue(value))}</td>
+            </tr>
+        `).join("");
+
+        content.innerHTML = `
+            <table class="metadata-table">
+                <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    function setRuntimeState(label) {
+        dom("runtimeStateLabel").textContent = label;
+    }
+
     function setEditorStateFromExecution(result) {
         window.editorExecution = result || null;
         window.executedVariables = result?.variables || {};
@@ -446,116 +1225,16 @@ version = 1
         window.editorMetadata = result?.metadata || window.editorDocument.metadata || {};
     }
 
-    function displayExecutionOutput(stdout, stderr) {
-        const outputContainer = document.getElementById("executionOutput");
-        const outputContent = document.getElementById("outputContent");
-        if (!outputContainer || !outputContent) return;
-
-        outputContent.innerHTML = "";
-
-        if (stdout && stdout.trim()) {
-            const stdoutLine = document.createElement("div");
-            stdoutLine.className = "output-line success";
-            stdoutLine.textContent = `Output:\n${stdout}`;
-            outputContent.appendChild(stdoutLine);
-        }
-
-        if (stderr && stderr.trim()) {
-            const stderrLine = document.createElement("div");
-            stderrLine.className = "output-line error";
-            stderrLine.textContent = `Errors:\n${stderr}`;
-            outputContent.appendChild(stderrLine);
-        }
-
-        outputContainer.classList.add("visible");
-    }
-
-    function clearExecutionOutput() {
-        const outputContainer = document.getElementById("executionOutput");
-        const outputContent = document.getElementById("outputContent");
-        if (!outputContainer || !outputContent) return;
-
-        outputContent.innerHTML = "";
-        outputContainer.classList.remove("visible");
-    }
-
-    function displayExtractedVariables(variables) {
-        const panel = document.getElementById("variablePanel");
-        const list = document.getElementById("variableList");
-        if (!list || !panel) return;
-
-        list.innerHTML = "";
-        extractedVariables = variables || {};
-
-        if (!variables || Object.keys(variables).length === 0) {
-            list.innerHTML = '<p style="color: #777;">No variables extracted.</p>';
-            panel.style.display = "block";
-            return;
-        }
-
-        Object.entries(variables).forEach(([name, info]) => {
-            const preview = info.preview ?? info.value ?? info.raw_value ?? "";
-            const item = document.createElement("div");
-            item.className = "variable-item";
-            item.innerHTML = `
-                <span class="var-name">${escapeHtml(name)}</span>
-                <span class="var-type">${escapeHtml(info.kind || info.type || "")}</span>
-                <span class="var-value">${escapeHtml(stringifyVariableValue(preview))}</span>
-            `;
-            list.appendChild(item);
-        });
-
-        panel.style.display = "block";
-    }
-
-    function displayMetadataPanel(metadata) {
-        const panel = document.getElementById("metadataPanel");
-        const content = document.getElementById("metadataContent");
-        const hint = document.getElementById("metadataHint");
-        if (!panel || !content) return;
-
-        if (!metadata || Object.keys(metadata).length === 0) {
-            if (hint) hint.style.display = "block";
-            content.innerHTML = '<p style="color: #999;">No metadata variables defined in the editor.</p>';
-            panel.style.display = "block";
-            return;
-        }
-
-        if (hint) hint.style.display = "none";
-
-        const rows = Object.entries(metadata).map(([key, value]) => `
-            <tr>
-                <td class="metadata-key">${escapeHtml(key)}</td>
-                <td class="metadata-value">${escapeHtml(stringifyVariableValue(value))}</td>
-            </tr>
-        `).join("");
-
-        content.innerHTML = `
-            <table class="metadata-table">
-                <tr><th>Field</th><th>Value</th></tr>
-                ${rows}
-            </table>
-        `;
-
-        panel.style.display = "block";
-    }
-
     async function executeCode() {
         await window.editorReady;
 
-        if (!window.editor) {
-            showStatus("Please wait, Monaco Editor is initializing.", "error");
-            return;
-        }
-
+        if (!window.editor) return showStatus("Please wait, Monaco Editor is still initializing.", "error");
         const code = window.editor.getValue();
-        if (!code.trim()) {
-            showStatus("No code to execute.", "error");
-            return;
-        }
+        if (!code.trim()) return showStatus("There is no code to execute.", "warning");
 
         try {
-            showStatus("Executing code on backend...", "info");
+            setRuntimeState("Running");
+            showStatus("Executing code on the backend...", "info");
             clearExecutionOutput();
 
             const response = await fetch("/execute", {
@@ -571,24 +1250,25 @@ version = 1
 
             const result = await response.json();
             setEditorStateFromExecution(result);
-
-            if (result.stdout || result.stderr) {
-                displayExecutionOutput(result.stdout, result.stderr);
-            }
-
+            displayExecutionOutput(result.stdout, result.stderr, result.status === "success" ? "Execution finished." : "Execution completed with errors.");
             displayExtractedVariables(result.variables || {});
             displayMetadataPanel(window.editorMetadata);
+            pushMonacoMarkers(extractProblemsFromExecution(result));
 
             if (result.error) {
-                showStatus(`Execution error: ${result.error}`, "error");
+                setRuntimeState("Execution failed");
+                showStatus("Execution completed with an error. Check the Problems and Output panels.", "error");
             } else {
-                const count = result.summary?.variable_count ?? Object.keys(result.variables || {}).length;
-                showStatus(`Code executed. ${count} variables available.`, "success");
+                setRuntimeState("Last run succeeded");
+                showStatus(`Execution finished. ${Object.keys(result.variables || {}).length} variables are available.`, "success");
             }
 
             loadFileList();
+            refreshWorkspaceInsights();
         } catch (error) {
-            console.error("Execution error:", error);
+            setRuntimeState("Execution failed");
+            pushMonacoMarkers([{ level: "error", title: "Request failed", message: error.message || String(error), line: 1, column: 1 }]);
+            displayExecutionOutput("", String(error), "Backend request failed.");
             showStatus(`Execution failed: ${error.message}`, "error");
         }
     }
@@ -608,26 +1288,27 @@ version = 1
 
         displayExtractedVariables(parsedVariables);
         displayMetadataPanel(window.editorMetadata);
+        pushMonacoMarkers([]);
 
         if (assignments.length > 0) {
+            setRuntimeState("Parsed locally");
             showStatus(`Parsed ${assignments.length} assignments from the editor.`, "success");
         } else {
-            showStatus("No variable assignments found in the editor.", "info");
+            setRuntimeState("Idle");
+            showStatus("No top-level variable assignments were found in the editor.", "info");
         }
+
+        refreshWorkspaceInsights();
     }
 
     async function saveVariablesToFile() {
         if (!window.editor) await window.editorReady;
 
         const saveData = buildDocumentFromEditor();
-        if (!saveData.variables || Object.keys(saveData.variables).length === 0) {
-            showStatus("No variables to save. Execute or extract variables first.", "error");
-            return;
-        }
+        if (!saveData.variables || Object.keys(saveData.variables).length === 0) parseAndDisplayEditorState();
 
-        const filename = prompt("Enter filename to save variables:", saveData.name);
+        const filename = prompt("Enter a name for the saved code model:", saveData.name);
         if (!filename) return;
-
         saveData.name = filename;
 
         try {
@@ -644,95 +1325,68 @@ version = 1
 
             window.editorDocument = saveData;
             displayMetadataPanel(saveData.metadata || {});
-            showStatus(`Variables saved as ${filename}.`, "success");
+            showStatus(`Saved ${filename} as a reusable code model.`, "success");
             loadFileList();
+            refreshWorkspaceInsights();
         } catch (error) {
-            console.error("Save error:", error);
-            showStatus(`Save error: ${error.message || String(error)}`, "error");
+            showStatus(`Save failed: ${error.message || String(error)}`, "error");
         }
     }
 
     async function loadFileList() {
+        const savedFilesList = dom("savedFilesList");
+
         try {
             const response = await fetch("/codemodel/list");
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             const files = await response.json();
-            const fileList = document.getElementById("fileList");
-            const filePanel = document.getElementById("filePanel");
-            if (!fileList || !filePanel) return;
-
-            fileList.innerHTML = "";
 
             if (!files || files.length === 0) {
-                fileList.innerHTML = "<li>No saved files.</li>";
-                filePanel.style.display = "block";
+                savedFilesList.innerHTML = '<div class="empty-state">Saved files appear here.</div>';
                 return;
             }
 
-            files.forEach(file => {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                    <span>
-                        ${escapeHtml(file.name)}
-                        <small style="color: #999; margin-left: 10px;">${new Date(file.date).toLocaleString()}</small>
-                    </span>
-                    <div>
-                        <button class="load-btn" data-filename="${escapeHtml(file.name)}">Load</button>
-                        <button class="delete-btn" data-filename="${escapeHtml(file.name)}">Delete</button>
+            savedFilesList.innerHTML = files.map(file => `
+                <article class="saved-file-item">
+                    <strong>${escapeHtml(file.name)}</strong>
+                    <span>${escapeHtml(new Date(file.date).toLocaleString())}</span>
+                    <div class="saved-file-actions">
+                        <button type="button" class="mini-btn" data-load-file="${escapeHtml(file.name)}">Load</button>
+                        <button type="button" class="mini-btn" data-delete-file="${escapeHtml(file.name)}">Delete</button>
                     </div>
-                `;
-                fileList.appendChild(li);
-            });
+                </article>
+            `).join("");
 
-            filePanel.style.display = "block";
-
-            document.querySelectorAll(".load-btn").forEach(btn => {
-                btn.addEventListener("click", async event => {
-                    const filename = event.target.getAttribute("data-filename");
-                    await loadVariableFileFromList(filename);
+            savedFilesList.querySelectorAll("[data-load-file]").forEach(button => {
+                button.addEventListener("click", async event => {
+                    await loadVariableFileFromList(event.currentTarget.getAttribute("data-load-file"));
                 });
             });
 
-            document.querySelectorAll(".delete-btn").forEach(btn => {
-                btn.addEventListener("click", async event => {
-                    const filename = event.target.getAttribute("data-filename");
-                    await deleteVariableFile(filename);
+            savedFilesList.querySelectorAll("[data-delete-file]").forEach(button => {
+                button.addEventListener("click", async event => {
+                    await deleteVariableFile(event.currentTarget.getAttribute("data-delete-file"));
                 });
             });
         } catch (error) {
-            console.error("File list failed:", error);
+            savedFilesList.innerHTML = `<div class="empty-state">Unable to load saved files: ${escapeHtml(error.message || String(error))}</div>`;
         }
     }
 
     async function loadVariableFileFromList(filename) {
         try {
             await window.editorReady;
-
             const response = await fetch(`/codemodel/get/${encodeURIComponent(filename)}`);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
             const data = await response.json();
-            if (!window.editor) {
-                throw new Error("Monaco editor failed to initialize. Reload the page.");
-            }
-
             const codeCandidate = data?.script ?? data?.code ?? null;
             let codeText = "";
 
-            if (typeof codeCandidate === "string") {
-                codeText = codeCandidate;
-            } else if (codeCandidate && typeof codeCandidate === "object") {
-                codeText = codeCandidate.script ?? codeCandidate.text ?? "";
-            }
+            if (typeof codeCandidate === "string") codeText = codeCandidate;
+            else if (codeCandidate && typeof codeCandidate === "object") codeText = codeCandidate.script ?? codeCandidate.text ?? "";
 
-            if (codeText) {
-                window.editor.setValue(codeText);
-            }
+            if (codeText) window.editor.setValue(codeText);
 
             extractedVariables = data.variables || {};
             window.editorExecution = null;
@@ -741,16 +1395,15 @@ version = 1
             window.editorDocument = {
                 ...data,
                 metadata: data.metadata || {},
-                code: typeof data.code === "object" && data.code !== null
-                    ? data.code
-                    : { script: codeText, language: "python", line_count: codeText ? codeText.split("\n").length : 0 }
+                code: typeof data.code === "object" && data.code !== null ? data.code : { script: codeText, language: "python", line_count: codeText ? codeText.split("\n").length : 0 }
             };
 
             displayExtractedVariables(extractedVariables);
             displayMetadataPanel(window.editorDocument.metadata || {});
+            pushMonacoMarkers([]);
             showStatus(`Loaded ${filename}.`, "success");
+            refreshWorkspaceInsights();
         } catch (error) {
-            console.error("Load error details:", error);
             showStatus(`Load failed: ${error.message || String(error)}`, "error");
         }
     }
@@ -759,14 +1412,8 @@ version = 1
         if (!confirm(`Delete ${filename}?`)) return;
 
         try {
-            const response = await fetch(`/codemodel/delete/${encodeURIComponent(filename)}`, {
-                method: "DELETE"
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to delete file.");
-            }
-
+            const response = await fetch(`/codemodel/delete/${encodeURIComponent(filename)}`, { method: "DELETE" });
+            if (!response.ok) throw new Error("Failed to delete file.");
             showStatus(`Deleted ${filename}.`, "success");
             loadFileList();
         } catch (error) {
@@ -776,70 +1423,216 @@ version = 1
 
     function exportVariablesAsJSON() {
         const exportData = buildDocumentFromEditor();
-        if (!exportData.variables || Object.keys(exportData.variables).length === 0) {
-            showStatus("No variables to export. Execute or extract variables first.", "error");
-            return;
-        }
+        if (!exportData.variables || Object.keys(exportData.variables).length === 0) parseAndDisplayEditorState();
 
-        exportData.exportedAt = new Date().toISOString();
+        const refreshedData = buildDocumentFromEditor();
+        refreshedData.exportedAt = new Date().toISOString();
 
-        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify(refreshedData, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `${exportData.name || "code_model"}.json`;
+        anchor.download = `${refreshedData.name || "code_model"}.json`;
         document.body.appendChild(anchor);
         anchor.click();
         document.body.removeChild(anchor);
         URL.revokeObjectURL(url);
 
-        window.editorDocument = exportData;
-        displayMetadataPanel(exportData.metadata || {});
-        showStatus("Variables exported.", "success");
+        window.editorDocument = refreshedData;
+        displayMetadataPanel(refreshedData.metadata || {});
+        showStatus("Exported the current workspace as JSON.", "success");
+    }
+
+    function downloadScriptFile() {
+        if (!window.editor) return;
+        const metadata = extractMetadataFromEditor();
+        const suggestedName = (metadata.path || metadata.name || "workspace_script").split("/").pop() || "workspace_script.py";
+        const fileName = suggestedName.endsWith(".py") ? suggestedName : `${suggestedName}.py`;
+        const blob = new Blob([window.editor.getValue()], { type: "text/x-python" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+        showStatus(`Downloaded ${fileName}.`, "success");
+    }
+
+    async function copyCodeToClipboard() {
+        if (!window.editor) return;
+        try {
+            await navigator.clipboard.writeText(window.editor.getValue());
+            showStatus("Copied the current script to the clipboard.", "success");
+        } catch (error) {
+            showStatus("Clipboard copy failed in this browser session.", "warning");
+        }
     }
 
     function showStatus(message, type = "success") {
-        const statusEl = document.getElementById("statusMessage");
+        const statusEl = dom("statusMessage");
         if (!statusEl) return;
-
         statusEl.textContent = message;
         statusEl.className = `status-message ${type}`;
-        statusEl.style.display = "block";
     }
 
     function clearEditor() {
         if (!window.editor) return;
+        if (!confirm("Clear the editor content and reset workspace state?")) return;
 
-        if (confirm("Clear editor content?")) {
-            window.editor.setValue("");
-            window.editorExecution = null;
-            window.executedVariables = {};
-            window.editorDocument = null;
-            window.editorMetadata = {};
-            extractedVariables = {};
+        window.editor.setValue("");
+        window.editorExecution = null;
+        window.executedVariables = {};
+        window.editorDocument = null;
+        window.editorMetadata = {};
+        extractedVariables = {};
+        pushMonacoMarkers([]);
+        clearExecutionOutput();
+        displayExtractedVariables({});
+        displayMetadataPanel({});
+        setRuntimeState("Idle");
+        showStatus("Editor cleared.", "success");
+        refreshWorkspaceInsights();
+    }
 
-            const variablePanel = document.getElementById("variablePanel");
-            if (variablePanel) variablePanel.style.display = "none";
+    function loadTemplate(templateKey) {
+        if (!window.editor || !templateCatalog[templateKey]) return;
+        const proceed = !window.editor.getValue().trim() || confirm("Replace the current editor content with this template?");
+        if (!proceed) return;
 
-            const metadataPanel = document.getElementById("metadataPanel");
-            if (metadataPanel) metadataPanel.style.display = "none";
+        window.editor.setValue(templateCatalog[templateKey]);
+        pushMonacoMarkers([]);
+        clearExecutionOutput();
+        extractedVariables = {};
+        window.executedVariables = {};
+        window.editorExecution = null;
+        window.editorDocument = null;
+        window.editorMetadata = extractMetadataFromEditor();
+        displayExtractedVariables({});
+        displayMetadataPanel(window.editorMetadata);
+        setRuntimeState("Template loaded");
+        showStatus(`Loaded the ${templateKey} template.`, "success");
+        refreshWorkspaceInsights();
+    }
 
-            clearExecutionOutput();
-            showStatus("Editor cleared.", "success");
+    async function generateStarterFromPrompt() {
+        if (!window.editor) return;
+        const promptText = window.prompt("Describe the starter you want to generate:", "Create a sklearn classification model starter with metadata and export-ready fields.");
+        if (!promptText) return;
+
+        const operationId = confirm("Generate a model-oriented starter? Choose Cancel for a dataset-oriented starter.") ? "models" : "datasets";
+
+        try {
+            showStatus("Generating a starter script...", "info");
+            const response = await fetch("/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: promptText, operationId })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            if (!result.script) throw new Error("No script was returned by the generator endpoint.");
+
+            window.editor.setValue(result.script);
+            setRuntimeState("Starter generated");
+            showStatus("Generated a new starter script from the backend prompt helper.", "success");
+            refreshWorkspaceInsights();
+        } catch (error) {
+            showStatus(`Generation failed: ${error.message || String(error)}`, "error");
         }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("btnExecuteCode")?.addEventListener("click", executeCode);
-        document.getElementById("btnExtractVariables")?.addEventListener("click", parseAndDisplayEditorState);
-        document.getElementById("btnSaveVariables")?.addEventListener("click", saveVariablesToFile);
-        document.getElementById("btnLoadVariables")?.addEventListener("click", loadFileList);
-        document.getElementById("btnClearEditor")?.addEventListener("click", clearEditor);
-        document.getElementById("btnExportJSON")?.addEventListener("click", exportVariablesAsJSON);
+    function toggleWordWrap() {
+        if (!window.editor) return;
+        editorWordWrap = editorWordWrap === "on" ? "off" : "on";
+        window.editor.updateOptions({ wordWrap: editorWordWrap });
+        showStatus(`Word wrap ${editorWordWrap === "on" ? "enabled" : "disabled"}.`, "info");
+    }
+
+    function toggleMinimap() {
+        if (!window.editor) return;
+        editorMinimapEnabled = !editorMinimapEnabled;
+        window.editor.updateOptions({ minimap: { enabled: editorMinimapEnabled } });
+        showStatus(`Minimap ${editorMinimapEnabled ? "enabled" : "disabled"}.`, "info");
+    }
+
+    function openCommandPalette() {
+        if (!window.editor) return;
+        window.editor.focus();
+        window.editor.trigger("keyboard", "editor.action.quickCommand", {});
+    }
+
+    function toggleCollapse(targetId, toggleButton) {
+        const body = dom(targetId);
+        if (!body || !toggleButton) return;
+
+        const expanded = toggleButton.getAttribute("aria-expanded") === "true";
+        body.hidden = expanded;
+        toggleButton.setAttribute("aria-expanded", expanded ? "false" : "true");
+
+        const icon = toggleButton.querySelector(".collapse-icon");
+        if (icon) {
+            icon.textContent = expanded ? "+" : "-";
+        }
+    }
+
+    function refreshWorkspaceInsights() {
+        updateCursorStatus();
+        updateDocumentStats();
+        updateHeaderMetadata();
+        renderOutline();
+    }
+
+    function focusPanel(panelId) {
+        const panel = dom(panelId);
+        if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        await window.editorReady;
+
+        document.querySelectorAll("[data-template]").forEach(button => {
+            button.addEventListener("click", () => loadTemplate(button.getAttribute("data-template")));
+        });
+
+        dom("btnExecuteCode")?.addEventListener("click", executeCode);
+        dom("btnExtractVariables")?.addEventListener("click", parseAndDisplayEditorState);
+        dom("btnGenerateStarter")?.addEventListener("click", generateStarterFromPrompt);
+        dom("btnSaveVariables")?.addEventListener("click", saveVariablesToFile);
+        dom("btnExportJSON")?.addEventListener("click", exportVariablesAsJSON);
+        dom("btnCopyCode")?.addEventListener("click", copyCodeToClipboard);
+        dom("btnDownloadScript")?.addEventListener("click", downloadScriptFile);
+        dom("btnToggleWordWrap")?.addEventListener("click", toggleWordWrap);
+        dom("btnToggleMinimap")?.addEventListener("click", toggleMinimap);
+        dom("btnClearEditor")?.addEventListener("click", clearEditor);
+        dom("btnCommandPalette")?.addEventListener("click", openCommandPalette);
+        dom("btnCommandPaletteInline")?.addEventListener("click", openCommandPalette);
+        dom("btnRefreshFiles")?.addEventListener("click", loadFileList);
+        dom("btnRefreshOutline")?.addEventListener("click", renderOutline);
+        dom("btnSyncVariables")?.addEventListener("click", parseAndDisplayEditorState);
+        dom("btnSyncMetadata")?.addEventListener("click", () => displayMetadataPanel(extractMetadataFromEditor()));
+        dom("btnClearOutput")?.addEventListener("click", clearExecutionOutput);
+        dom("btnClearProblems")?.addEventListener("click", () => pushMonacoMarkers([]));
+        dom("btnFocusOutput")?.addEventListener("click", () => focusPanel("outputPanel"));
+        dom("btnFocusVariables")?.addEventListener("click", () => focusPanel("variablesPanel"));
+        dom("btnFocusMetadata")?.addEventListener("click", () => focusPanel("metadataPanel"));
+        document.querySelectorAll("[data-collapse-target]").forEach(button => {
+            button.addEventListener("click", () => toggleCollapse(button.getAttribute("data-collapse-target"), button));
+        });
 
         displayMetadataPanel(extractMetadataFromEditor());
+        displayExtractedVariables({});
+        clearExecutionOutput();
+        pushMonacoMarkers([]);
+        setRuntimeState("Idle");
+        refreshWorkspaceInsights();
         loadFileList();
     });
 </script>
-
 {% endblock %}

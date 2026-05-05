@@ -1,0 +1,283 @@
+{% extends "base_template.html" %}
+
+{% block title %}Global Settings - Painel Amanaje{% endblock %}
+
+{% block body_class %}purple-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-shell {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .settings-header,
+    .settings-panel {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        padding: 1.25rem;
+    }
+
+    .settings-header h2,
+    .settings-panel h3 {
+        margin: 0;
+        color: var(--amanaje-primary-strong);
+    }
+
+    .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1rem;
+    }
+
+    .settings-title-block {
+        display: grid;
+        gap: 0.35rem;
+    }
+
+    .settings-status {
+        min-height: 2.2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        color: var(--amanaje-muted);
+        font-weight: 700;
+    }
+
+    .settings-status.success { color: #065f46; }
+    .settings-status.error { color: #991b1b; }
+    .settings-status.warning { color: #9a3412; }
+
+    .settings-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(280px, 0.55fr) minmax(0, 1fr);
+    }
+
+    .settings-panel {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .settings-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .settings-button {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font-weight: 800;
+        padding: 0.75rem 1rem;
+    }
+
+    .settings-button.primary {
+        background: var(--amanaje-primary-gradient);
+        border-color: transparent;
+        color: white;
+    }
+
+    .settings-toggle-list {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .settings-toggle-row {
+        display: grid;
+        gap: 0.25rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        padding: 0.85rem;
+        background: var(--amanaje-primary-softer);
+    }
+
+    .settings-toggle-row span {
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+
+    .settings-toggle-row small {
+        color: var(--amanaje-muted);
+        line-height: 1.4;
+    }
+
+    .settings-switch {
+        inline-size: 3.2rem;
+        block-size: 1.7rem;
+        accent-color: var(--amanaje-primary);
+    }
+
+    .settings-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+    }
+
+    .settings-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .settings-table th,
+    .settings-table td {
+        padding: 0.7rem;
+        border-bottom: 1px solid var(--amanaje-primary-border-soft);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .settings-table th {
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-primary-strong);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .settings-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .settings-table input {
+        width: 100%;
+        min-width: 180px;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 10px;
+        padding: 0.6rem;
+        font: inherit;
+    }
+
+    .settings-key {
+        color: var(--amanaje-primary-strong);
+        font-family: var(--amanaje-code-font);
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .settings-badge {
+        display: inline-flex;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 999px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 0.22rem 0.55rem;
+        white-space: nowrap;
+    }
+
+    .settings-badge.success {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: #065f46;
+    }
+
+    .settings-warning-list {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .settings-warning {
+        border: 1px solid #fdba74;
+        border-radius: 12px;
+        background: #fff7ed;
+        color: #9a3412;
+        padding: 0.75rem;
+        font-weight: 700;
+    }
+
+    .settings-debug-state {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+    }
+
+    @media (max-width: 980px) {
+        .settings-grid,
+        .settings-header {
+            grid-template-columns: 1fr;
+            display: grid;
+        }
+
+        .settings-status,
+        .settings-actions {
+            justify-content: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-shell">
+    <section class="settings-header">
+        <div class="settings-title-block">
+            <span class="workspace-eyebrow">Management domain</span>
+            <h2>Global Settings</h2>
+            <p class="helper-text">Operate app-wide feature flags and safe environment overrides from one control surface.</p>
+            <div class="settings-debug-state">
+                <span id="settingsDebugState" class="settings-badge">Debug inactive</span>
+                <span class="helper-text">Debug mode controls backend error metadata and frontend stack capture.</span>
+            </div>
+        </div>
+        <div id="settingsStatus" class="settings-status">Loading settings</div>
+    </section>
+
+    <div id="settingsWarnings" class="settings-warning-list"></div>
+
+    <section class="settings-grid">
+        <article class="settings-panel">
+            <h3>Feature Toggles</h3>
+            <div class="settings-toggle-list">
+                <label class="settings-toggle-row" for="settingsDebugMode">
+                    <span>Debug mode</span>
+                    <input id="settingsDebugMode" class="settings-switch" type="checkbox">
+                    <small>Verbose diagnostics for operators and frontend console debugging.</small>
+                </label>
+
+                <label class="settings-toggle-row" for="settingsAssistantVisible">
+                    <span>Assistant on every page</span>
+                    <input id="settingsAssistantVisible" class="settings-switch" type="checkbox">
+                    <small>Shows or hides embedded assistant panels across workspaces.</small>
+                </label>
+            </div>
+
+            <div class="settings-actions">
+                <button type="button" class="settings-button" id="settingsReload">Reset Changes</button>
+                <button type="button" class="settings-button primary" id="settingsSave">Save Settings</button>
+            </div>
+        </article>
+
+        <article class="settings-panel">
+            <h3>Environment Overrides</h3>
+            <div id="settingsEnvironmentTable" class="helper-text">Loading environment variables</div>
+        </article>
+    </section>
+
+    <section class="settings-panel">
+        <h3>Runtime Snapshot</h3>
+        <div id="settingsRuntimeSnapshot" class="helper-text">Loading runtime configuration</div>
+    </section>
+
+    <section class="settings-panel">
+        <h3>Frontend Debug Capture</h3>
+        <div id="settingsFrontendDebug" class="helper-text">No frontend error captured in this browser session.</div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/settings-page.js') }}?v=20260505-1"></script>
+{% endblock %}

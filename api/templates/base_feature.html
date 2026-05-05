@@ -132,6 +132,11 @@
 
 {% block content %}
 <div class="feature-shell">
+    <section class="workspace-intro data-hero">
+        <span class="workspace-eyebrow">Data domain</span>
+        <h2>Transform, filter, drop and sort your dataset with a visual interface</h2>
+        <p>Use either a visual builer or JSON to transform the column features in your datasets to get them ready for training.</p>
+    </section>
     <section class="feature-panel">
         <h3>Feature Workspace</h3>
         <p class="helper-text">Use the visual transform builder for the common path, keep raw JSON as an advanced option, and inspect plots and column behavior on the same page before materializing the next dataset view.</p>
@@ -176,7 +181,7 @@
                     <div class="toolbar-row" style="margin-bottom:0.9rem;">
                         <div>
                             <h4 style="margin-bottom:0.2rem;">Visual Transform Builder</h4>
-                            <div class="helper-text">This is the spreadsheet-like path: add rename, cast, fill, drop, filter, sort, and limit operations without writing JSON.</div>
+                            <div class="helper-text">Add rename, cast, fill, drop, filter, sort, and limit operations without writing JSON.</div>
                         </div>
                         <button type="button" class="btn btn-ghost" id="btnAddTransform">Add Transform</button>
                     </div>

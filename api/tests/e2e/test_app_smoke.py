@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from .page_objects import AssistantPage, CreatePage, FeaturePage, ProductionPage, TrainingPage, UploadPage
+from .page_objects import AssistantPage, CreatePage, FeaturePage, ProductionPage, SettingsPage, TrainingPage, UploadPage
 
 
 pytestmark = pytest.mark.e2e
@@ -17,6 +17,7 @@ pytestmark = pytest.mark.e2e
         (TrainingPage, "/training", "Global Training Context"),
         (ProductionPage, "/production", "Global Production Watch"),
         (AssistantPage, "/assistant", "Assistant Management"),
+        (SettingsPage, "/settings", "Global Settings"),
     ],
 )
 def test_primary_routes_render_core_workspace_surfaces(page, page_cls, path, expected_text):
@@ -75,8 +76,10 @@ def test_training_and_production_global_context_controls_are_present(page):
     [
         ({"width": 1440, "height": 960}, "/upload"),
         ({"width": 980, "height": 960}, "/feature"),
+        ({"width": 390, "height": 860}, "/feature"),
         ({"width": 720, "height": 960}, "/training"),
         ({"width": 560, "height": 960}, "/production"),
+        ({"width": 560, "height": 960}, "/settings"),
     ],
 )
 def test_workspace_layout_stays_within_available_viewport_width(page, viewport, path):
@@ -95,3 +98,85 @@ def test_workspace_layout_stays_within_available_viewport_width(page, viewport, 
 
     assert sizing["documentWidth"] <= sizing["viewportWidth"] + 2
     assert sizing["bodyWidth"] <= sizing["viewportWidth"] + 2
+
+
+def test_assistant_toggle_expands_and_collapses_panel(page):
+    page.goto("/feature", wait_until="networkidle")
+    page.evaluate(
+        """
+        () => window.AmanajeUI.applyGlobalSettings({
+            feature_flags: { assistant_visible: true, debug_mode: false }
+        })
+        """
+    )
+    toggle = page.locator("[data-assistant-toggle='feature']")
+    panel = page.locator("[data-assistant-panel='feature']")
+    toggle.wait_for(state="visible")
+
+    assert toggle.get_attribute("aria-expanded") == "false"
+    assert toggle.get_attribute("aria-controls") == panel.get_attribute("id")
+    assert panel.is_hidden()
+
+    toggle.click()
+    assert toggle.get_attribute("aria-expanded") == "true"
+    assert panel.is_visible()
+
+    toggle.click()
+    assert toggle.get_attribute("aria-expanded") == "false"
+    assert panel.is_hidden()
+
+
+def test_assistant_visibility_setting_hides_assistant_controls(page):
+    page.goto("/feature", wait_until="networkidle")
+    page.evaluate(
+        """
+        () => window.AmanajeUI.applyGlobalSettings({
+            feature_flags: { assistant_visible: true, debug_mode: false }
+        })
+        """
+    )
+    container = page.locator("[data-assistant-collapsible='feature']")
+    container.wait_for(state="visible")
+
+    page.evaluate(
+        """
+        () => window.AmanajeUI.applyGlobalSettings({
+            feature_flags: { assistant_visible: false, debug_mode: false }
+        })
+        """
+    )
+    assert container.evaluate("element => getComputedStyle(element).display") == "none"
+
+    page.evaluate(
+        """
+        () => window.AmanajeUI.applyGlobalSettings({
+            feature_flags: { assistant_visible: true, debug_mode: false }
+        })
+        """
+    )
+    assert container.evaluate("element => getComputedStyle(element).display") != "none"
+
+
+def test_settings_debug_capture_exposes_stack_only_when_debug_mode_is_enabled(page):
+    page.goto("/settings", wait_until="networkidle")
+    debug_toggle = page.locator("#settingsDebugMode")
+
+    debug_toggle.set_checked(False)
+    quiet_payload = page.evaluate(
+        """
+        () => window.AmanajeUI.captureFrontendError(new Error('quiet capture'), { source: 'e2e' })
+        """
+    )
+    assert "stack" not in quiet_payload
+    assert "backend_debug" not in quiet_payload
+
+    debug_toggle.set_checked(True)
+    debug_payload = page.evaluate(
+        """
+        () => window.AmanajeUI.captureFrontendError(new Error('forced debug capture'), { source: 'e2e' })
+        """
+    )
+
+    assert page.evaluate("window.AmanajeDebug") is True
+    assert "Error: forced debug capture" in debug_payload["stack"]
+    assert "forced debug capture" in page.locator("#settingsFrontendDebug").inner_text()

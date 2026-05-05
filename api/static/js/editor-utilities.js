@@ -1,5 +1,29 @@
 let extractedVariables = {};
 
+async function editorFetchJson(url, options = {}) {
+    if (window.AmanajeUI?.fetchJson) {
+        return window.AmanajeUI.fetchJson(url, options, { source: 'editor-utilities' });
+    }
+    const shouldSetJsonContentType = options.body && !(typeof FormData !== 'undefined' && options.body instanceof FormData);
+    const response = await fetch(url, {
+        headers: shouldSetJsonContentType ? { 'Content-Type': 'application/json', ...(options.headers || {}) } : (options.headers || {}),
+        ...options
+    });
+    const text = await response.text();
+    let payload = {};
+    if (text) {
+        try {
+            payload = JSON.parse(text);
+        } catch (_error) {
+            payload = { detail: text };
+        }
+    }
+    if (!response.ok || payload?.status === 'error') {
+        throw new Error(payload?.detail || payload?.error || `HTTP ${response.status}`);
+    }
+    return payload;
+}
+
 function buildEditorDocumentPayload(filename) {
     const metadata = getUploadMetadata();
     const script = window.editor ? window.editor.getValue() : '';
@@ -40,18 +64,11 @@ async function executeCode() {
         showStatus('Executing code on backend...', 'info');
         clearExecutionOutput();
 
-        const response = await fetch('/execute', {
+        const result = await editorFetchJson('/execute', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code })
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-
-        const result = await response.json();
         window.executedVariables = result.variables || {};
 
         if (result.stdout || result.stderr) {
@@ -128,6 +145,41 @@ function parseVariableAssignmentsFromText() {
     return assignments;
 }
 
+function buildVariablePayloadFromAssignment(assignment) {
+    const parsedValue = parsePythonLiteral(assignment.expression);
+    const kind = inferVariableKind(parsedValue, assignment.expression);
+    const preview = serializeVariableForDisplay(parsedValue, kind);
+
+    return {
+        expression: assignment.expression,
+        kind,
+        type: kind,
+        line: assignment.line,
+        value: parsedValue,
+        raw_value: parsedValue,
+        preview
+    };
+}
+
+function parseAndDisplayEditorState() {
+    const assignments = parseVariableAssignmentsFromText();
+    const metadata = extractMetadataFromEditor();
+    const parsedVariables = assignments.reduce((collection, assignment) => {
+        collection[assignment.name] = buildVariablePayloadFromAssignment(assignment);
+        return collection;
+    }, {});
+
+    window.editorMetadata = metadata || {};
+    displayExtractedVariables(parsedVariables);
+    displayMetadataPanel(window.editorMetadata);
+
+    return {
+        assignments,
+        metadata,
+        parsedVariables
+    };
+}
+
 function displayExtractedVariables(variables) {
     const panel = document.getElementById('variablePanel');
     const list = document.getElementById('variableList');
@@ -147,8 +199,8 @@ function displayExtractedVariables(variables) {
         item.className = 'variable-item';
         item.innerHTML = `
             <span class="var-name">${escapeHtml(name)}</span>
-            <span class="var-type">${escapeHtml(info.type || '')}</span>
-            <span class="var-value">${escapeHtml(stringifyVariableValue(info.raw_value ?? info.value ?? ''))}</span>
+            <span class="var-type">${escapeHtml(info.kind || info.type || '')}</span>
+            <span class="var-value">${escapeHtml(stringifyVariableValue(info.preview ?? info.raw_value ?? info.value ?? ''))}</span>
         `;
         list.appendChild(item);
     });
@@ -188,15 +240,10 @@ async function saveVariablesToFile() {
     }
 
     try {
-        const response = await fetch('/codemodel/create', {
+        await editorFetchJson('/codemodel/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(buildEditorDocumentPayload(filename))
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
 
         showStatus(
             Object.keys(extractedVariables || {}).length
@@ -213,12 +260,7 @@ async function saveVariablesToFile() {
 
 async function loadFileList() {
     try {
-        const response = await fetch('/codemodel/list');
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const files = await response.json();
+        const files = await editorFetchJson('/codemodel/list');
         const fileList = document.getElementById('fileList');
         const filePanel = document.getElementById('filePanel');
         if (!fileList || !filePanel) return;
@@ -268,12 +310,7 @@ async function loadFileList() {
 
 async function loadVariableFileFromList(filename) {
     try {
-        const response = await fetch(`/codemodel/get/${encodeURIComponent(filename)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
+        const data = await editorFetchJson(`/codemodel/get/${encodeURIComponent(filename)}`);
         await window.editorReady;
 
         if (!window.editor) {
@@ -307,13 +344,9 @@ async function deleteVariableFile(filename) {
     if (!confirm(`Delete ${filename}?`)) return;
 
     try {
-        const response = await fetch(`/codemodel/delete/${encodeURIComponent(filename)}`, {
+        await editorFetchJson(`/codemodel/delete/${encodeURIComponent(filename)}`, {
             method: 'DELETE'
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to delete file.');
-        }
 
         showStatus(`Deleted ${filename}.`, 'success');
         loadFileList();
@@ -382,6 +415,32 @@ function parsePythonLiteral(rawValue) {
     }
 
     return value;
+}
+
+function inferVariableKind(value, expression = '') {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'sequence';
+    if (typeof value === 'boolean') return 'boolean';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'string') {
+        const trimmed = expression.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) return 'mapping';
+        return 'string';
+    }
+    if (typeof value === 'object') return 'mapping';
+    return 'object';
+}
+
+function serializeVariableForDisplay(value, kind) {
+    if (typeof value === 'string') return value;
+    if (kind === 'mapping' || kind === 'sequence') {
+        try {
+            return JSON.stringify(value);
+        } catch (error) {
+            return String(value);
+        }
+    }
+    return String(value);
 }
 
 function isMaterializedEditorField(fieldName) {

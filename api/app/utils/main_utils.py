@@ -78,6 +78,12 @@ from app.utils.plotting import plot_loss_curve, plot_metric_comparison, plot_pre
 from app.utils.retrain_utils import monitor_and_retrain, should_retrain
 from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
 from app.utils.serialization import to_json
+from app.utils.settings import (
+    apply_debug_logging,
+    apply_saved_env_overrides,
+    build_client_settings,
+    load_settings_state,
+)
 from app.utils.tabular_utils import (
     apply_feature_operations,
     build_dataset_analysis_summary,
@@ -166,6 +172,7 @@ TEMPLATES_DIR = PROJECT_ROOT / "templates"
 RUNTIME_DIR = ensure_dir(PROJECT_ROOT / "runtime_artifacts")
 
 CONFIG_SNAPSHOT_DIR = ensure_dir(RUNTIME_DIR / "config")
+SETTINGS_STATE_PATH = CONFIG_SNAPSHOT_DIR / "settings_state.json"
 TRAINING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "training")
 MONITORING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "monitoring")
 DEPLOYMENT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "deployment")
@@ -182,6 +189,7 @@ ASSISTANT_EVAL_DIR = ensure_dir(RUNTIME_DIR / "assistant_evals")
 LOG_DIR = ensure_dir(PROJECT_ROOT / "logs")
 MLRUNS_DIR = ensure_dir(PROJECT_ROOT / "mlruns")
 ACTIVITY_LOG_PATH = MONITORING_ARTIFACT_DIR / "activity_log.jsonl"
+apply_saved_env_overrides(SETTINGS_STATE_PATH)
 
 DATASET_OPERATION = "datasets"
 MODEL_OPERATION = "models"
@@ -222,6 +230,10 @@ CONTROL_PARAMETER_KEYS = {
 
 APP_LOGGER = init_global_logging(log_dir=str(LOG_DIR), logger_name="painel_amanaje")
 LOGGER = get_logger("main_app", log_file=str(LOG_DIR / "main_app.log"))
+apply_debug_logging(
+    bool(load_settings_state(SETTINGS_STATE_PATH).get("feature_flags", {}).get("debug_mode")),
+    (APP_LOGGER, LOGGER),
+)
 
 REGISTRY_MODEL_MAP: dict[str, dict[str, Any]] = {
     "datasetmodel": {"model": DatasetModel, "orm": DatasetORM, "label": "DatasetModel"},
@@ -404,7 +416,24 @@ PRODUCTION_STATE: dict[str, Any] = {
     "watchlist": {},
 }
 
+def apply_runtime_settings_state(state: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    resolved_state = dict(state or load_settings_state(SETTINGS_STATE_PATH))
+    feature_flags = resolved_state.get("feature_flags", {}) if isinstance(resolved_state, Mapping) else {}
+    apply_debug_logging(bool(feature_flags.get("debug_mode")), (APP_LOGGER, LOGGER))
+    return resolved_state
+
+
+def is_debug_mode_enabled() -> bool:
+    try:
+        state = load_settings_state(SETTINGS_STATE_PATH)
+    except Exception:
+        return False
+    flags = state.get("feature_flags", {}) if isinstance(state, Mapping) else {}
+    return bool(flags.get("debug_mode"))
+
+
 def _render_page(template_name: str, request_: Request, **context: Any) -> HTMLResponse:
+    context.setdefault("amanaje_settings", build_client_settings(load_settings_state(SETTINGS_STATE_PATH)))
     return templates.TemplateResponse(
             name = template_name, 
             request = request_,
@@ -470,8 +499,89 @@ def _json_response(payload: Any, status_code: int = 200) -> JSONResponse:
     return JSONResponse(_json_payload(payload), status_code=status_code)
 
 
-def _json_error(detail: str, status_code: int = 400, **extra: Any) -> JSONResponse:
-    return _json_response({"status": "error", "detail": detail, **extra}, status_code=status_code)
+def _request_debug_context(request_: Request | None) -> dict[str, Any] | None:
+    if request_ is None:
+        return None
+    try:
+        return {
+            "method": request_.method,
+            "path": request_.url.path,
+            "query": request_.url.query,
+        }
+    except Exception:
+        return None
+
+
+def _debug_type_payload(value: Any) -> dict[str, Any]:
+    try:
+        return debug_type(value)
+    except Exception as exc:
+        return {
+            "type": str(type(value)),
+            "debug_type_error": str(exc),
+        }
+
+
+def _build_debug_error_payload(
+    detail: str,
+    status_code: int,
+    *,
+    exc: BaseException | None = None,
+    request_: Request | None = None,
+    debug_subject: Any = None,
+) -> dict[str, Any] | None:
+    if not is_debug_mode_enabled():
+        return None
+
+    active_exception = exc
+    if active_exception is None:
+        exc_type, exc_value, _ = sys.exc_info()
+        if exc_type is not None and isinstance(exc_value, BaseException):
+            active_exception = exc_value
+
+    if active_exception is not None:
+        error_type = active_exception.__class__.__name__
+        traceback_text = "".join(
+            traceback.format_exception(
+                type(active_exception),
+                active_exception,
+                active_exception.__traceback__,
+            )
+        )
+        subject = active_exception if debug_subject is None else debug_subject
+    else:
+        error_type = "ErrorResponse"
+        traceback_text = "".join(traceback.format_stack(limit=12))
+        subject = debug_subject if debug_subject is not None else {"detail": detail, "status_code": status_code}
+
+    return {
+        "error_type": error_type,
+        "traceback": traceback_text,
+        "request": _request_debug_context(request_),
+        "debug_type": _debug_type_payload(subject),
+    }
+
+
+def _json_error(
+    detail: str,
+    status_code: int = 400,
+    *,
+    exc: BaseException | None = None,
+    request: Request | None = None,
+    debug_subject: Any = None,
+    **extra: Any,
+) -> JSONResponse:
+    payload = {"status": "error", "detail": detail, **extra}
+    debug_payload = _build_debug_error_payload(
+        detail,
+        status_code,
+        exc=exc,
+        request_=request,
+        debug_subject=debug_subject,
+    )
+    if debug_payload is not None:
+        payload["debug"] = debug_payload
+    return _json_response(payload, status_code=status_code)
 
 
 def _append_history(history: Any, entry: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -2961,18 +3071,24 @@ async def startup_event() -> None:
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
-    return _json_response({"status": "error", "detail": exc.detail}, status_code=exc.status_code)
+async def http_exception_handler(request_: Request, exc: HTTPException) -> JSONResponse:
+    return _json_error(
+        str(exc.detail),
+        status_code=exc.status_code,
+        exc=exc,
+        request=request_,
+        debug_subject=exc.detail,
+    )
 
 
 @app.exception_handler(ResponseValidationError)
-async def response_validation_exception_handler(_: Request, exc: ResponseValidationError) -> JSONResponse:
+async def response_validation_exception_handler(request_: Request, exc: ResponseValidationError) -> JSONResponse:
     LOGGER.exception("Response validation failed.", exc_info=exc)
-    return _json_response({"status": "error", "detail": str(exc)}, status_code=500)
+    return _json_error(str(exc), status_code=500, exc=exc, request=request_)
 
 
 @app.exception_handler(Exception)
-async def generic_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+async def generic_exception_handler(request_: Request, exc: Exception) -> JSONResponse:
     LOGGER.exception("Unhandled exception", exc_info=exc)
     error_detail = str(exc) or exc.__class__.__name__
-    return _json_response({"detail": error_detail}, status_code=500)
+    return _json_error(error_detail, status_code=500, exc=exc, request=request_)

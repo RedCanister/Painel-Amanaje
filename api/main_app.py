@@ -67,6 +67,7 @@ from app.utils.assistant_safety import SAFETY_PROFILES, review_code_safety, revi
 from app.utils.io import save_json
 from app.utils.logging import log_to_mlflow
 from app.utils.mlflow_utils import get_experiment_summary, list_experiments
+from app.utils.settings import SettingsValidationError, build_settings_response, update_settings_state
 from app.utils.utils import build_payload_data, build_payload_model, get_upload_dir, recover_model_params, save_file_to_disk
 from app.utils.validation import validate_input, validate_required_keys
 import app.utils.main_utils as _utils
@@ -213,6 +214,44 @@ async def page_registry(request: Request) -> HTMLResponse:
 @app.get("/assistant", response_class=HTMLResponse)
 async def page_assistant(request: Request) -> HTMLResponse:
     return _render_page("base_assistant.html", request, )
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def page_settings(request: Request) -> HTMLResponse:
+    return _render_page("base_settings.html", request, )
+
+
+def _settings_config_payload() -> dict[str, Any]:
+    state = _utils.apply_runtime_settings_state()
+    return build_settings_response(
+        _utils.RUNTIME_CONFIG,
+        state=state,
+        path=_utils.SETTINGS_STATE_PATH,
+    )
+
+
+@app.get("/settings/config", response_class=JSONResponse)
+async def settings_config() -> JSONResponse:
+    return _utils._json_response(_settings_config_payload())
+
+
+@app.post("/settings/config", response_class=JSONResponse)
+async def settings_update_config(
+    request: Request,
+    payload: dict[str, Any] | None = Body(default=None),
+) -> JSONResponse:
+    try:
+        state = update_settings_state(payload or {}, _utils.SETTINGS_STATE_PATH)
+        _utils.apply_runtime_settings_state(state)
+        return _utils._json_response(
+            build_settings_response(
+                _utils.RUNTIME_CONFIG,
+                state=state,
+                path=_utils.SETTINGS_STATE_PATH,
+            )
+        )
+    except SettingsValidationError as exc:
+        return _utils._json_error(str(exc), status_code=400, exc=exc, request=request, errors=exc.errors)
 
 
 @app.get("/upload/support", response_class=JSONResponse)

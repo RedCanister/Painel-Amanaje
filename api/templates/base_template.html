@@ -4,53 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Painel Amanajé{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
     {% block extra_css %}{% endblock %}
 
     {% block extra_script %}{% endblock %}
 </head>
-<body class="{% block body_class %}purple-theme{% endblock %}">
+{% set settings_flags = (amanaje_settings or {}).get('feature_flags', {}) %}
+<body
+    class="{% block body_class %}purple-theme{% endblock %}"
+    data-debug-mode="{{ 'true' if settings_flags.get('debug_mode') else 'false' }}"
+    data-assistant-visible="{{ 'false' if settings_flags.get('assistant_visible') is sameas false else 'true' }}"
+>
     <header class="main-header">
-        <div class="container">
-            <h1>Painel Amanajé</h1>
+        <div class="container shell-frame">
+            <div class="shell-topbar">
+                <div class="brand-lockup">,
+
+                    <!--
+                    <span class="brand-kicker">Operational Atlas</span>
+                    -->
+
+                    <h1>Painel Amanaje</h1>
+                    <p>AI/ML operations across data, training, production, and assistant workflows.</p>
+                </div>
+
+                <!--
+                <div class="shell-status">
+                    <span class="shell-badge">Unified domain workspace</span>
+                    <span class="shell-caption">Neutral shell, domain-accent navigation</span>
+                </div>
+                -->
+
+            </div>
             <nav class="main-nav">
-                <!-- Data Operations (Red) -->
                 <div class="nav-section">
                     <h3>Data</h3>
+                    <p>Ingest, create, inspect, and prepare datasets and models.</p>
                     <a href="/">Home</a>
                     <a href="/upload">Upload</a>
                     <a href="/create">Create</a>
                     <a href="/feature">Feature</a>
                 </div>
 
-                <!-- ML Operations (Green) -->
                 <div class="nav-section">
                     <h3>Models</h3>
+                    <p>Train, optimize, and prepare portable execution artifacts.</p>
                     <a href="/training">Training</a>
+
+                    <!-- TODO - Fine-tuning panel with optimization options of trained model, used for testing validation
                     <a href="/optimization">Optimization</a>
+                    -->
+
+                    <!-- TODO - ONNX suite made for visualizing and exporting or importing models for production
                     <a href="/training#onnxSection">ONNX</a>
+                    -->
+
                 </div>
 
-                <!-- MLOps (Blue) -->
                 <div class="nav-section">
                     <h3>MLOps</h3>
+                    <p>Watch runtime health, simulations, monitoring, and experiment flow.</p>
                     <a href="/production">Production</a>
+
+                    <!--
                     <a href="/production#monitoringSection">Monitoring</a>
                     <a href="/production#mlflowSection">MLflow</a>
+                    -->
                 </div>
 
-                <!-- Data Management (Purple) -->
                 <div class="nav-section">
                     <h3>Management</h3>
+                    <p>Operate registry records, assistants, and code-centric workflows.</p>
                     <a href="/registry">Model Registry</a>
                     <a href="/assistant">Assistant</a>
                     <a href="/editor">Code Editor</a>
+                    <a href="/settings">Settings</a>
                 </div>
             </nav>
         </div>
     </header>
 
-    <main class="container">
+    <main class="container app-main">
         {% block messages %}
             {% if messages %}
                 <div class="messages">
@@ -68,10 +105,14 @@
 
     <footer class="main-footer">
         <div class="container">
-            <p>© Painel Amanajé - AI/ML Operations Platform</p>
+            <p>Painel Amanajé</p>
+            <p class="footer-meta">Full suite for AI/ML operations.</p>
         </div>
     </footer>
 
+    <script>
+        window.AmanajeSettings = {{ amanaje_settings | default({"feature_flags": {"debug_mode": false, "assistant_visible": true}}, true) | tojson }};
+    </script>
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>
     <script src="{{ url_for('static', path='/js/ui-utilities.js') }}"></script>
     {% block extra_js %}{% endblock %}
