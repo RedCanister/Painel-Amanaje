@@ -19,9 +19,9 @@ It combines a FastAPI control plane, a multi-page HTML interface, registry-backe
 ### Main app
 
 - Active entrypoint: `api/main_app.py`
-- FastAPI app version: `0.3.0`
+- FastAPI app version: `0.7.0`
 - Core stack: FastAPI, PostgreSQL, Redis, Airflow, MLflow, SQLAlchemy, Jinja templates
-- Optional sidecars in the repo: Dash dashboard, Feast example, MkDocs docs, Kubernetes notes
+- Optional sidecars in the repo: Kubernetes 
 
 ### UI pages
 
@@ -32,21 +32,12 @@ It combines a FastAPI control plane, a multi-page HTML interface, registry-backe
 | `/create` | Metadata-first creation flow |
 | `/feature` | Feature analysis and extraction workspace |
 | `/training` | Training configuration and execution |
-| `/optimization` | Optimization and study flow |
-| `/editor` | Code editor and code generation |
 | `/production` | Deployment, monitoring, simulation, retraining |
 | `/registry` | CRUD and asset browsing |
+| `/assistant` | Code editor and code generation |
+| `/editor` | Code editor and code generation |
+| `/settings` | Code editor and code generation |
 
-### Key API flows
-
-- `POST /upload/{operation_id}` uploads datasets or models
-- `POST /execute` runs editor code and extracts variables plus metadata
-- `POST /generate` creates starter code for datasets or models
-- `POST /training/{model_id}` launches a training run and writes runtime artifacts
-- `POST /studies/{study_id}/optimize` runs Optuna-backed optimization
-- `POST /onnx/prepare` and `GET /onnx/validate/{model_id}` support ONNX preparation
-- `POST /production/start`, `POST /production/monitor`, `POST /production/retrain`, and `POST /production/simulate` drive production workflows
-- `GET /mlflow/experiments` and `GET /mlflow/experiments/{exp_id}` expose tracked experiments
 
 ### Registry resources
 
@@ -54,6 +45,7 @@ The current app mounts generated CRUD routes for:
 
 - `datasetmodel`
 - `learningmodel`
+- `assistantmodel`
 - `inferencemodel`
 - `studymodel`
 - `codemodel`
@@ -76,7 +68,7 @@ Open:
 - API docs: `http://localhost:8000/docs`
 - MLflow: `http://localhost:5000`
 - Airflow: `http://localhost:8080`
-- pgAdmin: `http://localhost:5050`
+- pgAdmin: `http://localhost:5050:80`
 
 ### Option 2: Run only the API
 
@@ -135,7 +127,6 @@ data/                      dataset storage
 models/                    model storage
 mlflow-server/             MLflow container assets
 airflow/                   Airflow dependencies
-painel-amanaje/            MkDocs site
 docker-compose.yaml        full local stack
 ```
 
@@ -168,7 +159,7 @@ model_type = "sklearn"
 
 ### 3. Train and optimize
 
-Use `/training` to run model training and `/optimization` for study-driven tuning. Current dependencies include:
+Use `/training` to run model training and the study tab for study-driven tuning. Current dependencies include:
 
 - `fastapi==0.135.1`
 - `uvicorn==0.41.0`
@@ -226,14 +217,30 @@ The repository also includes a human-run signoff package:
 
 ## Project notes
 
-- [ALIGNMENT_COMPLETION_REPORT.md](ALIGNMENT_COMPLETION_REPORT.md)
-- [PROJECT_UPDATE_SUMMARY.md](PROJECT_UPDATE_SUMMARY.md)
-- [CHANGES_SUMMARY.md](CHANGES_SUMMARY.md)
-- [CONSOLE_ERRORS_FIXED.md](CONSOLE_ERRORS_FIXED.md)
-- [METADATA_VARIABLES_GUIDE.md](METADATA_VARIABLES_GUIDE.md)
-- [features/README.md](features/README.md)
-- [painel-amanaje/docs/kubernetes-training-stack.md](painel-amanaje/docs/kubernetes-training-stack.md)
+- [ALIGNMENT_COMPLETION_REPORT.md](reports/ALIGNMENT_COMPLETION_REPORT.md)
+- [PROJECT_UPDATE_SUMMARY.md](reports/PROJECT_UPDATE_SUMMARY.md)
+- [CHANGES_SUMMARY.md](reports/CHANGES_SUMMARY.md)
+
 
 ## Current direction
 
+(2025-01)
 The repository has clearly moved beyond its original NVIDIA forecasting prototype into a broader ML operations workspace. The next visible themes in the codebase are stronger registry validation, deeper orchestration, cleaner frontend consistency, and more production-ready deployment paths.
+
+(2026-05)
+Considering a slow start to the development of Painel Amanajé, due to a long planning phase, the project is now ready to be shared, but it still needs work in the areas of front-end efficiency and paralellism, but also on the implementation of the Assistant SLM, that still needs a proper model to work on instead of standard placeholder answers to everything. 
+
+## Future Plans
+
+Next up on the development is:
+1. Finish building up the Assistant SLM to it can attend any possible user.
+2. Introduce parallelism, GPU use and multithreading
+3. Improving the logging system that can capture all system actions
+4. Implement a JSON to DataFrame Plot generator that can bring life to all the data in the project.
+5. Integratea and upgrade the postgresql instance to a live instance that can capture real-time data.
+6. Introduce the use of Airflow DAGs that can configure entire automatic pipelines.
+7. Implement ONNX in the project to facilitate the use of ML models.
+8. Build up the Simulation and Prediction system so it can attend to needs of high-level users.
+9. Refine the UI and UX elements with the help of testers.
+10. Make a public server of painel-amanaje that can be shared with non-developers, with hosting and multi-worker options.
+11. Add support to more file types, ML libraries, frameworks, algorithms, workflows, etc...

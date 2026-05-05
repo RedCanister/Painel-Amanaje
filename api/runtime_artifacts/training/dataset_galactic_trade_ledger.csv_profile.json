@@ -1,0 +1,499 @@
+{
+    "rows": 50,
+    "columns": 8,
+    "column_names": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total",
+        "is_smuggled"
+    ],
+    "dtypes": {
+        "transaction_id": "object",
+        "timestamp": "object",
+        "trader_species": "object",
+        "cargo_type": "object",
+        "origin_system": "object",
+        "quantity_units": "int64",
+        "credits_total": "float64",
+        "is_smuggled": "bool"
+    },
+    "missing_values": 0,
+    "stats": {
+        "transaction_id": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 50,
+            "sample_values": [
+                "TXN-1012",
+                "TXN-1033",
+                "TXN-1001",
+                "TXN-1028",
+                "TXN-1017"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "TXN-1000"
+        },
+        "timestamp": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 50,
+            "sample_values": [
+                "2264-01-01 04:00:00",
+                "2264-01-05 03:00:00",
+                "2264-01-07 04:00:00",
+                "2264-01-12 11:00:00",
+                "2264-01-12 21:00:00"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "2264-01-01 04:00:00"
+        },
+        "trader_species": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 5,
+            "sample_values": [
+                "Void-Dweller",
+                "Cyber-Corgi",
+                "Mars-Colonist",
+                "Cyber-Corgi",
+                "Sentient Nebula"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "Void-Dweller"
+        },
+        "cargo_type": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 5,
+            "sample_values": [
+                "Oxygen Tanks",
+                "Ancient Earth Memes",
+                "Unstable Isotopes",
+                "Oxygen Tanks",
+                "Oxygen Tanks"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "Oxygen Tanks"
+        },
+        "origin_system": {
+            "type": "categorical",
+            "null_count": 0,
+            "unique_values": 5,
+            "sample_values": [
+                "Kepler-186f",
+                "Neo-Tokyo Orbit",
+                "Kepler-186f",
+                "Kepler-186f",
+                "Alpha Centauri"
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mode": "Kepler-186f"
+        },
+        "quantity_units": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 19,
+            "sample_values": [
+                15,
+                10,
+                15,
+                6,
+                2
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 10.84,
+            "std": 5.6001457706975115,
+            "min": 1.0,
+            "max": 20.0
+        },
+        "credits_total": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 50,
+            "sample_values": [
+                1033.69,
+                477.32,
+                1123.32,
+                394.95,
+                110.06
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 3325.3758,
+            "std": 6407.522462067723,
+            "min": 42.2,
+            "max": 27370.73
+        },
+        "is_smuggled": {
+            "type": "numeric",
+            "null_count": 0,
+            "unique_values": 2,
+            "sample_values": [
+                false,
+                false,
+                false,
+                false,
+                false
+            ],
+            "mixed_type": false,
+            "datetime_confidence": 0.0,
+            "mean": 0.1,
+            "std": 0.30304576336566325,
+            "min": 0.0,
+            "max": 1.0
+        }
+    },
+    "path": "/data/datasets/galactic_trade_ledger.csv",
+    "profile": {
+        "numeric_columns": [
+            "credits_total",
+            "quantity_units",
+            "is_smuggled"
+        ],
+        "categorical_columns": [
+            "transaction_id",
+            "timestamp",
+            "trader_species",
+            "cargo_type",
+            "origin_system"
+        ],
+        "datetime_columns": [],
+        "recommended_target": "is_smuggled",
+        "recommended_inputs": [
+            "transaction_id",
+            "timestamp",
+            "trader_species",
+            "cargo_type",
+            "origin_system",
+            "quantity_units",
+            "credits_total"
+        ]
+    },
+    "parser_report": {
+        "file_name": "galactic_trade_ledger.csv",
+        "file_type": ".csv",
+        "supported_file_types": [
+            ".csv",
+            ".json",
+            ".jsonl",
+            ".parquet",
+            ".tsv",
+            ".txt",
+            ".xls",
+            ".xlsx"
+        ],
+        "capability_matrix": {
+            ".csv": {
+                "label": "CSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                ]
+            },
+            ".tsv": {
+                "label": "TSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                ]
+            },
+            ".txt": {
+                "label": "Delimited Text",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                ]
+            },
+            ".json": {
+                "label": "JSON",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                ]
+            },
+            ".jsonl": {
+                "label": "JSON Lines",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Each non-empty line must contain one JSON object."
+                ]
+            },
+            ".parquet": {
+                "label": "Parquet",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                ]
+            },
+            ".xlsx": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                ]
+            },
+            ".xls": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                ]
+            }
+        },
+        "warnings": [],
+        "encoding": "utf-8-sig",
+        "loader": "csv",
+        "delimiter": ",",
+        "rows": 50,
+        "columns": 8,
+        "mixed_type_columns": []
+    },
+    "column_explorer": [
+        {
+            "name": "transaction_id",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 50,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "TXN-1012",
+                "TXN-1033",
+                "TXN-1001",
+                "TXN-1028",
+                "TXN-1017"
+            ]
+        },
+        {
+            "name": "timestamp",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 50,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "2264-01-01 04:00:00",
+                "2264-01-05 03:00:00",
+                "2264-01-07 04:00:00",
+                "2264-01-12 11:00:00",
+                "2264-01-12 21:00:00"
+            ]
+        },
+        {
+            "name": "credits_total",
+            "dtype": "float64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 50,
+            "unique_ratio": 1.0,
+            "mixed_type": false,
+            "sample_types": [
+                "float"
+            ],
+            "high_cardinality": true,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                1033.69,
+                477.32,
+                1123.32,
+                394.95,
+                110.06
+            ]
+        },
+        {
+            "name": "quantity_units",
+            "dtype": "int64",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 19,
+            "unique_ratio": 0.38,
+            "mixed_type": false,
+            "sample_types": [
+                "int"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                15,
+                10,
+                15,
+                6,
+                2
+            ]
+        },
+        {
+            "name": "trader_species",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 5,
+            "unique_ratio": 0.1,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "Void-Dweller",
+                "Cyber-Corgi",
+                "Mars-Colonist",
+                "Cyber-Corgi",
+                "Sentient Nebula"
+            ]
+        },
+        {
+            "name": "cargo_type",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 5,
+            "unique_ratio": 0.1,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "Oxygen Tanks",
+                "Ancient Earth Memes",
+                "Unstable Isotopes",
+                "Oxygen Tanks",
+                "Oxygen Tanks"
+            ]
+        },
+        {
+            "name": "origin_system",
+            "dtype": "object",
+            "family": "categorical",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 5,
+            "unique_ratio": 0.1,
+            "mixed_type": false,
+            "sample_types": [
+                "str"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                "Kepler-186f",
+                "Neo-Tokyo Orbit",
+                "Kepler-186f",
+                "Kepler-186f",
+                "Alpha Centauri"
+            ]
+        },
+        {
+            "name": "is_smuggled",
+            "dtype": "bool",
+            "family": "numeric",
+            "null_count": 0,
+            "null_ratio": 0.0,
+            "unique_count": 2,
+            "unique_ratio": 0.04,
+            "mixed_type": false,
+            "sample_types": [
+                "bool"
+            ],
+            "high_cardinality": false,
+            "datetime_confidence": 0.0,
+            "sample_values": [
+                false,
+                false,
+                false,
+                false,
+                false
+            ]
+        }
+    ],
+    "type_groups": {
+        "numeric": [
+            "credits_total",
+            "quantity_units",
+            "is_smuggled"
+        ],
+        "categorical": [
+            "transaction_id",
+            "timestamp",
+            "trader_species",
+            "cargo_type",
+            "origin_system"
+        ],
+        "datetime": []
+    },
+    "top_warnings": [
+        "Column 'transaction_id' has high cardinality and may need filtering or encoding.",
+        "Column 'timestamp' has high cardinality and may need filtering or encoding.",
+        "Column 'credits_total' has high cardinality and may need filtering or encoding."
+    ]
+}
