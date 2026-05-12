@@ -134,8 +134,8 @@ airflow/                   Airflow dependencies
 docker-compose.yaml        full local stack
 ```
 
-<img width="1447" height="1432" alt="painel-amanaje-training" src="https://github.com/user-attachments/assets/87f0dac8-52a1-447f-8f94-ad3fa82bb547" />
 
+<img width="1478" height="928" alt="painel-amanaje-creator" src="https://github.com/user-attachments/assets/ba8c4a98-9477-4755-9244-5234188c987c" />
 
 ## Main workflows
 
@@ -175,7 +175,7 @@ Use `/training` to run model training and the study tab for study-driven tuning.
 - `scikit-learn==1.7.2`
 - `torch==2.9.0`
 
-<img width="1478" height="928" alt="painel-amanaje-creator" src="https://github.com/user-attachments/assets/ba8c4a98-9477-4755-9244-5234188c987c" />
+<img width="1447" height="1432" alt="painel-amanaje-training" src="https://github.com/user-attachments/assets/87f0dac8-52a1-447f-8f94-ad3fa82bb547" />
 
 
 ### 4. Operate in production
