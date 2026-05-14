@@ -1,0 +1,732 @@
+{% extends "base_template.html" %}
+
+{% block title %}ONNX Framework Workspace - Painel Amanaje{% endblock %}
+
+{% block body_class %}green-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .onnx-shell { display: grid; gap: 1.25rem; }
+    .onnx-panel {
+        display: none;
+    }
+    .onnx-panel.active { display: block; }
+    .layout-grid, .summary-grid, .readiness-grid, .run-grid { display: grid; gap: 1rem; }
+    .layout-grid { grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); }
+    .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .readiness-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .surface-card, .snapshot-card, .status-card, .run-card {
+        background: var(--amanaje-surface-2);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    .surface-card h4, .snapshot-card h4, .status-card h4, .run-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .form-group textarea { min-height: 150px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--amanaje-primary); }
+    .helper-text { color: #6b7280; font-size: 0.92rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
+    .status-pill {
+        font-size: 0.82rem;
+    }
+    .status-pill.guarded { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .snapshot-body {
+        max-height: 320px;
+        overflow: auto;
+        padding-right: 0.3rem;
+    }
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
+    .summary-table td:first-child { font-weight: 700; color: var(--amanaje-primary-strong); width: 38%; }
+    .summary-table code { white-space: pre-wrap; word-break: break-word; }
+    @media (max-width: 980px) {
+        .layout-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="onnx-shell">
+    <section class="onnx-context-panel">
+        <span class="workspace-eyebrow">Models domain</span>
+        <h3>ONNX Framework Workspace</h3>
+        <p class="panel-subtitle">Prepare, validate, and hand off portable ONNX execution artifacts while staying aligned with the green training domain.</p>
+
+        <div class="inline-grid">
+            <div class="form-group">
+                <label for="onnxInferencePairId">Inference Pair</label>
+                <select id="onnxInferencePairId">
+                    <option value="">Select an inference pair</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="onnxModelId">Learning Model</label>
+                <select id="onnxModelId">
+                    <option value="">Select a model</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="onnxDatasetId">Dataset</label>
+                <select id="onnxDatasetId">
+                    <option value="">Select a dataset</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="onnxStudyId">Study</label>
+                <select id="onnxStudyId">
+                    <option value="">Optional study</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="onnxBackendFramework">Backend Framework</label>
+                <select id="onnxBackendFramework">
+                    <option value="sklearn">scikit-learn</option>
+                    <option value="pytorch">PyTorch</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="onnxRuntimeParameters">Runtime Parameters JSON</label>
+            <textarea id="onnxRuntimeParameters" spellcheck="false">{
+  "export_target": "onnx",
+  "framework": "onnx",
+  "base_framework": "sklearn",
+  "dynamic_axes": true
+}</textarea>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btnGlobalPrepareOnnx">Prepare ONNX Payload</button>
+            <button type="button" class="btn btn-secondary" id="btnGlobalValidateOnnx">Validate Artifact</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalTrainOnnx">Train For ONNX</button>
+            <button type="button" class="btn btn-ghost" id="btnRefreshOnnxData">Refresh Registry</button>
+        </div>
+        <div id="onnxStatus"></div>
+    </section>
+
+    <div class="workspace-tabs">
+        <button class="workspace-tab active" type="button" data-tab="control">ONNX Control</button>
+        <button class="workspace-tab" type="button" data-tab="artifact">Artifact Readiness</button>
+        <button class="workspace-tab" type="button" data-tab="training">Training Handoff</button>
+        <button class="workspace-tab" type="button" data-tab="runs">Validation and Runs</button>
+    </div>
+
+    <section class="onnx-panel active" id="panel-control">
+        <h3 class="panel-title">ONNX Control</h3>
+        <p class="panel-subtitle">Use the selected model, dataset, study, and backend framework to prepare export metadata and validate registered artifacts.</p>
+
+        <div class="layout-grid">
+            <div class="surface-card">
+                <h4>Selected Context</h4>
+                <div id="onnxContextSummary">Select a model and dataset to prepare an ONNX payload.</div>
+                <div class="actions-row" style="margin-top:1rem;">
+                    <button type="button" class="btn btn-primary" id="btnPrepareOnnx">Prepare Payload</button>
+                    <button type="button" class="btn btn-secondary" id="btnValidateOnnx">Validate Artifact</button>
+                </div>
+            </div>
+
+            <div class="surface-card">
+                <h4>Prepared Payload</h4>
+                <div id="onnxPrepareResults" class="snapshot-body">No ONNX payload has been prepared yet.</div>
+            </div>
+        </div>
+
+        <div class="surface-card" style="margin-top:1rem;">
+            <h4>Validation Result</h4>
+            <div id="onnxValidationResults">Run validation to inspect the selected model artifact.</div>
+        </div>
+    </section>
+
+    <section class="onnx-panel" id="panel-artifact">
+        <h3 class="panel-title">Artifact Readiness</h3>
+        <p class="panel-subtitle">Inspect the current registered artifact, capability matrix, model summary, and dataset shape before handing the context to training.</p>
+
+        <div id="onnxCapabilityDeck" class="summary-grid" style="margin-bottom:1rem;"></div>
+        <div class="readiness-grid">
+            <div class="snapshot-card">
+                <h4>Artifact Manifest</h4>
+                <div id="onnxArtifactReadiness" class="snapshot-body">Select a model to inspect artifact readiness.</div>
+            </div>
+            <div class="snapshot-card">
+                <h4>Model Snapshot</h4>
+                <div id="onnxModelSnapshot" class="snapshot-body">Select a model to load its current registry summary.</div>
+            </div>
+            <div class="snapshot-card">
+                <h4>Dataset Snapshot</h4>
+                <div id="onnxDatasetSnapshot" class="snapshot-body">Select a dataset to load its current dataset summary.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="onnx-panel" id="panel-training">
+        <h3 class="panel-title">Training Handoff</h3>
+        <p class="panel-subtitle">Submit a training run through the existing training endpoint with ONNX as the requested export target and the selected backend framework as the actual trainer.</p>
+
+        <div class="layout-grid">
+            <div class="surface-card">
+                <h4>Handoff Summary</h4>
+                <div id="onnxTrainingSummary">Select a model and dataset before submitting training.</div>
+                <div class="actions-row" style="margin-top:1rem;">
+                    <button type="button" class="btn btn-primary" id="btnSubmitOnnxTraining">Submit ONNX Training</button>
+                    <button type="button" class="btn btn-ghost" id="btnRefreshOnnxRuns">Refresh Runs</button>
+                </div>
+            </div>
+            <div class="surface-card">
+                <h4>Training Result</h4>
+                <div id="onnxTrainingResult">No ONNX handoff run has been submitted from this page.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="onnx-panel" id="panel-runs">
+        <h3 class="panel-title">Validation and Runs</h3>
+        <p class="panel-subtitle">Track recent training and study runs for the selected ONNX context, including jobs submitted from the handoff panel.</p>
+        <div id="onnxRunLedgerResults" class="run-grid">No runs loaded yet.</div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const el = (id) => document.getElementById(id);
+    const inferencePairSelect = el('onnxInferencePairId');
+    const modelSelect = el('onnxModelId');
+    const datasetSelect = el('onnxDatasetId');
+    const studySelect = el('onnxStudyId');
+    const backendFrameworkSelect = el('onnxBackendFramework');
+    const runtimeParameters = el('onnxRuntimeParameters');
+
+    let modelCache = [];
+    let datasetCache = [];
+    let studyCache = [];
+    let inferenceCache = [];
+    let latestModelSummary = {};
+    let latestDatasetSummary = {};
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    async function fetchJson(url, options = {}) {
+        if (window.AmanajeUI?.fetchJson) {
+            return window.AmanajeUI.fetchJson(url, options, { source: 'onnx-page' });
+        }
+        const response = await fetch(url, options);
+        const payload = await response.json();
+        if (!response.ok || payload.status === 'error') {
+            throw new Error(payload.detail || `HTTP ${response.status}`);
+        }
+        return payload;
+    }
+
+    function normalizeList(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.items)) return payload.items;
+        if (Array.isArray(payload?.data)) return payload.data;
+        if (Array.isArray(payload?.results)) return payload.results;
+        if (Array.isArray(payload?.models)) return payload.models;
+        if (Array.isArray(payload?.datasets)) return payload.datasets;
+        if (Array.isArray(payload?.studies)) return payload.studies;
+        if (Array.isArray(payload?.inference_models)) return payload.inference_models;
+        return [];
+    }
+
+    function optionLabel(item, fallback) {
+        return item?.name || item?.legacy_name || item?.title || `${fallback} #${item?.id ?? '-'}`;
+    }
+
+    function populateSelect(select, rows, placeholder, fallbackLabel) {
+        const currentValue = select.value;
+        select.innerHTML = `<option value="">${escapeHtml(placeholder)}</option>`;
+        rows.forEach((item) => {
+            const option = document.createElement('option');
+            option.value = item.id ?? '';
+            option.textContent = optionLabel(item, fallbackLabel);
+            select.appendChild(option);
+        });
+        if ([...select.options].some((option) => option.value === currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+    function renderAlert(targetId, type, message) {
+        const target = el(targetId);
+        if (!target) return;
+        target.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    }
+
+    function readParameters() {
+        const raw = runtimeParameters.value.trim();
+        return raw ? JSON.parse(raw) : {};
+    }
+
+    function writeParameters(payload) {
+        runtimeParameters.value = JSON.stringify(payload, null, 2);
+    }
+
+    function patchParameters(patch) {
+        try {
+            writeParameters({ ...readParameters(), ...patch });
+        } catch (error) {
+            renderAlert('onnxStatus', 'warning', `Runtime parameters are not valid JSON yet: ${escapeHtml(error.message)}`);
+        }
+    }
+
+    function selectedInference() {
+        return inferenceCache.find((item) => String(item.id) === String(inferencePairSelect.value)) || null;
+    }
+
+    function selectedModel() {
+        return modelCache.find((item) => String(item.id) === String(modelSelect.value)) || null;
+    }
+
+    function selectedDataset() {
+        return datasetCache.find((item) => String(item.id) === String(datasetSelect.value)) || null;
+    }
+
+    function selectedStudy() {
+        return studyCache.find((item) => String(item.id) === String(studySelect.value)) || null;
+    }
+
+    function findInferenceByPair(modelId, datasetId) {
+        if (!modelId || !datasetId) return null;
+        return inferenceCache.find((item) =>
+            String(item.learning_model_id) === String(modelId)
+            && String(item.dataset_id) === String(datasetId)
+        ) || null;
+    }
+
+    function findStudyByPair(modelId, datasetId) {
+        if (!modelId || !datasetId) return null;
+        return studyCache.find((item) =>
+            String(item.learning_model_id) === String(modelId)
+            && String(item.dataset_id) === String(datasetId)
+        ) || null;
+    }
+
+    function inferBackendFromModel(model) {
+        const parameters = model?.parameters && typeof model.parameters === 'object' ? model.parameters : {};
+        const manifest = model?.artifact_manifest || model?.artifact_metadata || parameters.artifact_manifest || {};
+        const candidates = [
+            parameters.base_framework,
+            parameters.training_backend,
+            parameters.framework,
+            manifest.framework,
+            model?.model_type
+        ].map((value) => String(value || '').toLowerCase());
+        if (candidates.some((value) => value.includes('torch') || value.includes('deep'))) return 'pytorch';
+        return 'sklearn';
+    }
+
+    function buildOnnxParameters() {
+        const backend = backendFrameworkSelect.value || 'sklearn';
+        return {
+            ...readParameters(),
+            framework: 'onnx',
+            export_target: 'onnx',
+            base_framework: backend,
+            training_backend: backend
+        };
+    }
+
+    function summaryRows(rows) {
+        return `
+            <table class="summary-table">
+                <tbody>
+                    ${rows.map(([label, value]) => `
+                        <tr>
+                            <td>${escapeHtml(label)}</td>
+                            <td><code>${escapeHtml(value ?? '-')}</code></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function renderContextSummary() {
+        const model = selectedModel();
+        const dataset = selectedDataset();
+        const study = selectedStudy();
+        const inference = selectedInference();
+        const rows = [
+            ['Inference Pair', inference ? optionLabel(inference, 'Inference') : '-'],
+            ['Learning Model', model ? optionLabel(model, 'Model') : '-'],
+            ['Dataset', dataset ? optionLabel(dataset, 'Dataset') : '-'],
+            ['Study', study ? optionLabel(study, 'Study') : '-'],
+            ['Backend Framework', backendFrameworkSelect.value || 'sklearn'],
+            ['Export Target', 'onnx']
+        ];
+        const markup = summaryRows(rows);
+        el('onnxContextSummary').innerHTML = markup;
+        el('onnxTrainingSummary').innerHTML = markup;
+    }
+
+    function renderStatusPill(value) {
+        const normalized = String(value).toLowerCase();
+        if (value === true || normalized === 'true') {
+            return '<span class="status-pill active">active</span>';
+        }
+        if (normalized === 'guarded') {
+            return '<span class="status-pill guarded">guarded</span>';
+        }
+        return '<span class="status-pill inactive">unavailable</span>';
+    }
+
+    function renderCapabilityDeck(summary = {}) {
+        const manifest = summary.artifact_manifest || summary.artifact_metadata || summary.parameters?.artifact_manifest || {};
+        const runtime = manifest.runtime_capabilities || {};
+        const capabilities = [
+            ['Register', true, 'Registry upload accepts .onnx artifacts.'],
+            ['Inspect', true, 'Artifact metadata can be loaded from the registry analysis flow.'],
+            ['Prepare', true, 'Export controls are prepared with /onnx/prepare.'],
+            ['Validate', true, 'Registered artifacts are checked with /onnx/validate/{model_id}.'],
+            ['Predict', runtime.predict || false, 'Direct ONNX prediction is only shown active when the manifest says it is available.'],
+            ['Simulate', runtime.simulate || false, 'Simulation remains unavailable for ONNX unless runtime support is added later.'],
+            ['Monitor', runtime.monitor || false, 'Monitoring remains unavailable for ONNX unless runtime support is added later.']
+        ];
+        el('onnxCapabilityDeck').innerHTML = capabilities.map(([label, value, detail]) => `
+            <div class="status-card">
+                <h4>${escapeHtml(label)}</h4>
+                <div>${renderStatusPill(value)}</div>
+                <div class="helper-text" style="margin-top:0.65rem;">${escapeHtml(detail)}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderSnapshot(title, payload = {}) {
+        const compactRows = Object.entries(payload || {})
+            .filter(([, value]) => value === null || typeof value !== 'object')
+            .slice(0, 8);
+        const table = compactRows.length
+            ? summaryRows(compactRows.map(([key, value]) => [key, value]))
+            : '<div class="helper-text">No compact summary values are available.</div>';
+        const jsonMarkup = window.AmanajeUI?.renderCollapsibleJson
+            ? window.AmanajeUI.renderCollapsibleJson(payload || {}, { title: `${title} JSON`, collapsed: true })
+            : `<pre class="json-block">${escapeHtml(JSON.stringify(payload || {}, null, 2))}</pre>`;
+        return `${table}<div style="margin-top:1rem;">${jsonMarkup}</div>`;
+    }
+
+    function renderArtifactReadiness(summary = {}) {
+        const manifest = summary.artifact_manifest || summary.artifact_metadata || summary.parameters?.artifact_manifest || {};
+        const parameters = summary.parameters || {};
+        const inputFeatures = Array.isArray(summary.input_features) ? summary.input_features : [];
+        const outputFeatures = Array.isArray(summary.output_features) ? summary.output_features : [];
+        const warnings = Array.isArray(manifest.warnings) ? manifest.warnings : [];
+        el('onnxArtifactReadiness').innerHTML = `
+            ${summaryRows([
+                ['Artifact Format', manifest.artifact_format || '-'],
+                ['Framework', manifest.framework || parameters.framework || '-'],
+                ['Loader', manifest.loader || '-'],
+                ['Input Features', inputFeatures.length],
+                ['Output Features', outputFeatures.length],
+                ['Registered Path', summary.path || '-']
+            ])}
+            <div class="pill-row">
+                ${inputFeatures.slice(0, 8).map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join('')}
+                ${outputFeatures.slice(0, 4).map((item) => `<span class="pill">${escapeHtml(item)}</span>`).join('')}
+            </div>
+            ${warnings.length ? `<div class="alert alert-warning">${escapeHtml(warnings.join(' '))}</div>` : ''}
+            <div style="margin-top:1rem;">
+                ${(window.AmanajeUI?.renderCollapsibleJson
+                    ? window.AmanajeUI.renderCollapsibleJson(manifest, { title: 'Full Artifact Manifest', collapsed: true })
+                    : `<pre class="json-block">${escapeHtml(JSON.stringify(manifest, null, 2))}</pre>`)}
+            </div>
+        `;
+        renderCapabilityDeck(summary);
+        window.AmanajeUI?.enhanceCollapsibles?.(el('onnxArtifactReadiness'));
+    }
+
+    async function loadModelSnapshot() {
+        if (!modelSelect.value) {
+            latestModelSummary = {};
+            el('onnxModelSnapshot').innerHTML = 'Select a model to load its current registry summary.';
+            el('onnxArtifactReadiness').innerHTML = 'Select a model to inspect artifact readiness.';
+            renderCapabilityDeck({});
+            return;
+        }
+        try {
+            const result = await fetchJson(`/analysis/model?model_id=${encodeURIComponent(modelSelect.value)}`);
+            latestModelSummary = result.summary || {};
+            el('onnxModelSnapshot').innerHTML = renderSnapshot('Model Snapshot', latestModelSummary);
+            renderArtifactReadiness(latestModelSummary);
+            window.AmanajeUI?.enhanceCollapsibles?.(el('onnxModelSnapshot'));
+        } catch (error) {
+            renderAlert('onnxModelSnapshot', 'error', escapeHtml(error.message));
+            renderCapabilityDeck({});
+        }
+    }
+
+    async function loadDatasetSnapshot() {
+        if (!datasetSelect.value) {
+            latestDatasetSummary = {};
+            el('onnxDatasetSnapshot').innerHTML = 'Select a dataset to load its current dataset summary.';
+            return;
+        }
+        try {
+            const result = await fetchJson(`/analysis/data?dataset_id=${encodeURIComponent(datasetSelect.value)}`);
+            latestDatasetSummary = result.summary || {};
+            el('onnxDatasetSnapshot').innerHTML = renderSnapshot('Dataset Snapshot', latestDatasetSummary);
+            window.AmanajeUI?.enhanceCollapsibles?.(el('onnxDatasetSnapshot'));
+        } catch (error) {
+            renderAlert('onnxDatasetSnapshot', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function prepareOnnx() {
+        let parameters;
+        try {
+            parameters = buildOnnxParameters();
+        } catch (error) {
+            renderAlert('onnxPrepareResults', 'error', `Runtime parameters must be valid JSON: ${escapeHtml(error.message)}`);
+            return;
+        }
+        renderAlert('onnxStatus', 'info', 'Preparing ONNX export payload...');
+        try {
+            const result = await fetchJson('/onnx/prepare', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model_id: modelSelect.value ? Number(modelSelect.value) : null,
+                    dataset_id: datasetSelect.value ? Number(datasetSelect.value) : null,
+                    study_id: studySelect.value || null,
+                    framework: backendFrameworkSelect.value,
+                    export_target: 'onnx',
+                    parameters
+                })
+            });
+            el('onnxPrepareResults').innerHTML = `
+                <div class="alert alert-success">ONNX payload prepared.</div>
+                ${renderSnapshot('Preparation Payload', result.payload || {})}
+                ${renderSnapshot('Export Controls', result.controls || {})}
+            `;
+            renderAlert('onnxStatus', 'success', 'ONNX payload is ready for review.');
+            window.AmanajeUI?.enhanceCollapsibles?.(el('onnxPrepareResults'));
+        } catch (error) {
+            renderAlert('onnxPrepareResults', 'error', escapeHtml(error.message));
+            renderAlert('onnxStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function validateOnnx() {
+        if (!modelSelect.value) {
+            renderAlert('onnxValidationResults', 'error', 'Select a model before validating an ONNX artifact.');
+            return;
+        }
+        renderAlert('onnxStatus', 'info', 'Validating selected ONNX artifact...');
+        try {
+            const result = await fetchJson(`/onnx/validate/${encodeURIComponent(modelSelect.value)}`);
+            el('onnxValidationResults').innerHTML = `
+                <div class="alert alert-success">ONNX artifact validated.</div>
+                ${renderSnapshot('ONNX Validation', result)}
+            `;
+            renderAlert('onnxStatus', 'success', 'ONNX validation completed.');
+            window.AmanajeUI?.enhanceCollapsibles?.(el('onnxValidationResults'));
+        } catch (error) {
+            renderAlert('onnxValidationResults', 'error', escapeHtml(error.message));
+            renderAlert('onnxStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function submitOnnxTraining() {
+        if (!modelSelect.value) {
+            renderAlert('onnxTrainingResult', 'error', 'Select a model before submitting ONNX training.');
+            return;
+        }
+        if (!datasetSelect.value) {
+            renderAlert('onnxTrainingResult', 'error', 'Select a dataset before submitting ONNX training.');
+            return;
+        }
+        let parameters;
+        try {
+            parameters = buildOnnxParameters();
+        } catch (error) {
+            renderAlert('onnxTrainingResult', 'error', `Runtime parameters must be valid JSON: ${escapeHtml(error.message)}`);
+            return;
+        }
+        renderAlert('onnxTrainingResult', 'info', 'Submitting ONNX training handoff...');
+        try {
+            const result = await fetchJson(`/training/${encodeURIComponent(modelSelect.value)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    datasetId: Number(datasetSelect.value),
+                    inferenceId: inferencePairSelect.value ? Number(inferencePairSelect.value) : null,
+                    inputType: studySelect.value ? 'Study' : 'Manual',
+                    studyId: studySelect.value || null,
+                    parameters
+                })
+            });
+            window.AmanajeUI?.watchRun?.(result.run_id, { source: 'onnx-training' });
+            renderAlert('onnxTrainingResult', 'success', `ONNX training run queued: <code>${escapeHtml(result.run_id || '-')}</code>`);
+            await loadRuns();
+        } catch (error) {
+            renderAlert('onnxTrainingResult', 'error', escapeHtml(error.message));
+        }
+    }
+
+    function renderRuns(runs = []) {
+        if (!runs.length) {
+            el('onnxRunLedgerResults').innerHTML = '<div class="helper-text">No runs matched the selected ONNX context yet.</div>';
+            return;
+        }
+        el('onnxRunLedgerResults').innerHTML = runs.slice(0, 12).map((run) => {
+            const metrics = run.metrics || run.result?.metrics || {};
+            const params = run.parameters || run.result?.parameters || {};
+            return `
+                <div class="run-card">
+                    <h4>${escapeHtml(run.run_id || run.id || 'run')}</h4>
+                    <div class="pill-row">
+                        <span class="pill">${escapeHtml(run.status || 'unknown')}</span>
+                        <span class="pill">${escapeHtml(run.stage || run.run_type || 'stage:n/a')}</span>
+                        <span class="pill">${escapeHtml(`${Object.keys(metrics).length} metrics`)}</span>
+                        <span class="pill">${escapeHtml(`${Object.keys(params).length} params`)}</span>
+                    </div>
+                    <div style="margin-top:0.9rem;">
+                        ${(window.AmanajeUI?.renderCollapsibleJson
+                            ? window.AmanajeUI.renderCollapsibleJson(run, { title: 'Run Details', collapsed: true })
+                            : `<pre class="json-block">${escapeHtml(JSON.stringify(run, null, 2))}</pre>`)}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        window.AmanajeUI?.enhanceCollapsibles?.(el('onnxRunLedgerResults'));
+    }
+
+    async function loadRuns() {
+        try {
+            const query = new URLSearchParams();
+            if (inferencePairSelect.value) query.set('inference_id', inferencePairSelect.value);
+            if (modelSelect.value) query.set('model_id', modelSelect.value);
+            if (datasetSelect.value) query.set('dataset_id', datasetSelect.value);
+            const suffix = query.toString() ? `?${query.toString()}` : '';
+            const result = await fetchJson(`/runs/list${suffix}`);
+            renderRuns(result.runs || []);
+        } catch (error) {
+            renderAlert('onnxRunLedgerResults', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function loadRegistryOptions() {
+        const [models, datasets, studies, inferences] = await Promise.all([
+            fetchJson('/learningmodel/list').then(normalizeList),
+            fetchJson('/datasetmodel/list').then(normalizeList),
+            fetchJson('/studymodel/list').then(normalizeList),
+            fetchJson('/inferencemodel/list').then(normalizeList)
+        ]);
+        modelCache = models;
+        datasetCache = datasets;
+        studyCache = studies;
+        inferenceCache = inferences;
+        populateSelect(modelSelect, modelCache, 'Select a model', 'Model');
+        populateSelect(datasetSelect, datasetCache, 'Select a dataset', 'Dataset');
+        populateSelect(studySelect, studyCache, 'Optional study', 'Study');
+        populateSelect(inferencePairSelect, inferenceCache, 'Select an inference pair', 'Inference');
+    }
+
+    async function syncFromInference() {
+        const inference = selectedInference();
+        if (inference) {
+            modelSelect.value = inference.learning_model_id || '';
+            datasetSelect.value = inference.dataset_id || '';
+            const matchingStudy = findStudyByPair(inference.learning_model_id, inference.dataset_id);
+            if (matchingStudy && !studySelect.value) studySelect.value = matchingStudy.id;
+        }
+        await syncContext();
+    }
+
+    async function syncFromModelDataset() {
+        const matchingInference = findInferenceByPair(modelSelect.value, datasetSelect.value);
+        inferencePairSelect.value = matchingInference ? String(matchingInference.id) : '';
+        const matchingStudy = findStudyByPair(modelSelect.value, datasetSelect.value);
+        if (matchingStudy && !studySelect.value) studySelect.value = String(matchingStudy.id);
+        await syncContext();
+    }
+
+    async function syncContext() {
+        const model = selectedModel();
+        if (model) {
+            backendFrameworkSelect.value = inferBackendFromModel(model);
+        }
+        patchParameters({
+            framework: 'onnx',
+            export_target: 'onnx',
+            base_framework: backendFrameworkSelect.value,
+            training_backend: backendFrameworkSelect.value
+        });
+        renderContextSummary();
+        await Promise.all([loadModelSnapshot(), loadDatasetSnapshot(), loadRuns()]);
+    }
+
+    function setPanel(tabName) {
+        document.querySelectorAll('.workspace-tab').forEach((button) => {
+            button.classList.toggle('active', button.dataset.tab === tabName);
+        });
+        document.querySelectorAll('.onnx-panel').forEach((panel) => {
+            panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+        });
+    }
+
+    async function refreshAll() {
+        try {
+            await loadRegistryOptions();
+            await syncContext();
+            renderAlert('onnxStatus', 'success', 'ONNX registry context refreshed.');
+        } catch (error) {
+            renderAlert('onnxStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
+    document.querySelectorAll('.workspace-tab').forEach((button) => {
+        button.addEventListener('click', () => setPanel(button.dataset.tab));
+    });
+    inferencePairSelect.addEventListener('change', syncFromInference);
+    modelSelect.addEventListener('change', syncFromModelDataset);
+    datasetSelect.addEventListener('change', syncFromModelDataset);
+    studySelect.addEventListener('change', syncContext);
+    backendFrameworkSelect.addEventListener('change', () => {
+        patchParameters({
+            framework: 'onnx',
+            export_target: 'onnx',
+            base_framework: backendFrameworkSelect.value,
+            training_backend: backendFrameworkSelect.value
+        });
+        renderContextSummary();
+    });
+    runtimeParameters.addEventListener('input', renderContextSummary);
+    el('btnGlobalPrepareOnnx').addEventListener('click', prepareOnnx);
+    el('btnPrepareOnnx').addEventListener('click', prepareOnnx);
+    el('btnGlobalValidateOnnx').addEventListener('click', validateOnnx);
+    el('btnValidateOnnx').addEventListener('click', validateOnnx);
+    el('btnGlobalTrainOnnx').addEventListener('click', () => {
+        setPanel('training');
+        submitOnnxTraining();
+    });
+    el('btnSubmitOnnxTraining').addEventListener('click', submitOnnxTraining);
+    el('btnRefreshOnnxData').addEventListener('click', refreshAll);
+    el('btnRefreshOnnxRuns').addEventListener('click', loadRuns);
+
+    async function init() {
+        renderCapabilityDeck({});
+        renderContextSummary();
+        await refreshAll();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+{% endblock %}

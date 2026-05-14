@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Painel Amanajé{% endblock %}</title>
+    <title>{% block title %}Painel Amanaje{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=20260513-red-domain-2">
     {% block extra_css %}{% endblock %}
 
     {% block extra_script %}{% endblock %}
@@ -21,23 +21,11 @@
     <header class="main-header">
         <div class="container shell-frame">
             <div class="shell-topbar">
-                <div class="brand-lockup">,
-
-                    <!--
+                <div class="brand-lockup">
                     <span class="brand-kicker">Operational Atlas</span>
-                    -->
-
                     <h1>Painel Amanaje</h1>
                     <p>AI/ML operations across data, training, production, and assistant workflows.</p>
                 </div>
-
-                <!--
-                <div class="shell-status">
-                    <span class="shell-badge">Unified domain workspace</span>
-                    <span class="shell-caption">Neutral shell, domain-accent navigation</span>
-                </div>
-                -->
-
             </div>
             <nav class="main-nav">
                 <div class="nav-section">
@@ -53,26 +41,15 @@
                     <h3>Models</h3>
                     <p>Train, optimize, and prepare portable execution artifacts.</p>
                     <a href="/training">Training</a>
-
-                    <!-- TODO - Fine-tuning panel with optimization options of trained model, used for testing validation
                     <a href="/optimization">Optimization</a>
-                    -->
-
-                    <!-- TODO - ONNX suite made for visualizing and exporting or importing models for production
-                    <a href="/training#onnxSection">ONNX</a>
-                    -->
-
+                    <a href="/onnx">ONNX</a>
                 </div>
 
                 <div class="nav-section">
                     <h3>MLOps</h3>
                     <p>Watch runtime health, simulations, monitoring, and experiment flow.</p>
                     <a href="/production">Production</a>
-
-                    <!--
-                    <a href="/production#monitoringSection">Monitoring</a>
-                    <a href="/production#mlflowSection">MLflow</a>
-                    -->
+                    <a href="/visualization">Visualization</a>
                 </div>
 
                 <div class="nav-section">
@@ -105,7 +82,7 @@
 
     <footer class="main-footer">
         <div class="container">
-            <p>Painel Amanajé</p>
+            <p>Painel Amanaje</p>
             <p class="footer-meta">Full suite for AI/ML operations.</p>
         </div>
     </footer>

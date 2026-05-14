@@ -348,12 +348,16 @@ def assistant_model_to_provider_config(
         or f"registry-assistant-model-{_model_mapping_value(model_record, 'id', 'unversioned')}"
     )
     temperature = merged.get("temperature", behavior_profile.get("temperature", 0.2))
+    runtime_kind = str(merged.get("runtime_kind") or runtime_config.get("runtime_kind") or "").strip()
+    base_url = merged.get("base_url") or os.getenv("AMANAJE_SLM_BASE_URL") or "http://assistant-server:8080/v1"
+    if runtime_kind == "pytorch_hf_server" and str(base_url).rstrip("/") == "http://localhost:8080/v1":
+        base_url = os.getenv("AMANAJE_SLM_BASE_URL") or "http://assistant-server:8080/v1"
     config = {
         **merged,
         "type": provider_type,
         "provider_type": provider_type,
         "enabled": _coerce_provider_bool(merged.get("enabled"), True),
-        "base_url": merged.get("base_url") or "http://localhost:8080/v1",
+        "base_url": base_url,
         "chat_endpoint": merged.get("chat_endpoint"),
         "health_url": merged.get("health_url"),
         "model_name": str(model_name),

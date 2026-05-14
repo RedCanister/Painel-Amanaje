@@ -8,38 +8,90 @@
 <style>
     .feature-shell { display: grid; gap: 1.25rem; }
     .feature-panel {
+        display: grid;
+        gap: 1rem;
         background: white;
-        border: 1px solid #fecdd3;
-        border-radius: 18px;
-        padding: 1.5rem;
-        box-shadow: 0 12px 28px rgba(230, 57, 70, 0.08);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        padding: 1.25rem;
     }
-    .feature-panel h3, .feature-panel h4 { margin-top: 0; color: #b91c1c; }
+    .feature-panel h3, .feature-panel h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
     .inline-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .feature-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: #7f1d1d; }
-    .form-group select, .form-group textarea, .form-group input {
+    .feature-shell .form-group {
+        display: grid;
+        gap: 0.45rem;
+        margin: 0;
+    }
+    .feature-shell .form-group label {
+        display: block;
+        margin: 0;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .feature-shell .form-group input,
+    .feature-shell .form-group select,
+    .feature-shell .form-group textarea,
+    .feature-shell .column-toolbar input,
+    .feature-shell .column-toolbar select {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #fda4af;
+        padding: 0.72rem 0.78rem;
+        border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: white;
+        background: var(--amanaje-surface-3);
+        color: var(--amanaje-text-strong);
+        font: inherit;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .feature-shell .form-group input:focus,
+    .feature-shell .form-group select:focus,
+    .feature-shell .form-group textarea:focus,
+    .feature-shell .column-toolbar input:focus,
+    .feature-shell .column-toolbar select:focus {
+        outline: none;
+        border-color: var(--amanaje-primary-accent);
+        box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.14);
     }
     .form-group textarea { min-height: 220px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
     .toolbar-row { justify-content: space-between; align-items: center; }
     .btn {
-        padding: 0.8rem 1rem;
-        border: none;
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.65rem;
+        padding: 0.72rem 0.95rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 12px;
+        background: white;
+        color: var(--amanaje-primary-strong);
         cursor: pointer;
-        font-weight: 700;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
     }
-    .btn-primary { background: #e63946; color: white; }
-    .btn-secondary { background: #fecdd3; color: #7f1d1d; }
-    .btn-ghost { background: #fff1f2; color: #991b1b; border: 1px solid #fda4af; }
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
+    }
+    .btn-primary {
+        background: var(--amanaje-primary-gradient);
+        border-color: transparent;
+        color: white;
+    }
+    .btn-secondary {
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+    }
+    .btn-ghost {
+        background: white;
+        color: var(--amanaje-primary-strong);
+    }
     .mode-strip { display: flex; flex-wrap: wrap; gap: 0.65rem; }
     .mode-btn {
         border: 1px solid #fda4af;
@@ -58,7 +110,8 @@
         border: 1px solid #fecdd3;
         border-radius: 14px;
         padding: 0.85rem;
-        background: #fff5f5;
+        background: white;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
     }
     .builder-row-header {
         display: flex;
@@ -70,17 +123,56 @@
     .builder-row-title { font-weight: 700; color: #7f1d1d; }
     .builder-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
     .summary-surface {
-        background: #fff5f5;
+        background: white;
         border: 1px solid #fecdd3;
         border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
     }
+    .sql-builder-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); }
+    .sql-preview {
+        min-height: 320px;
+        background: #2f0d12;
+        color: #ffe4e6;
+        border: 1px solid #7f1d1d;
+        border-radius: 14px;
+        padding: 1rem;
+        font-family: Consolas, "Courier New", monospace;
+        white-space: pre-wrap;
+    }
+    .sql-note-list { display: grid; gap: 0.75rem; }
+    .sql-note-item {
+        background: #fffaf2;
+        border: 1px solid #fed7aa;
+        border-radius: 12px;
+        padding: 0.75rem 0.85rem;
+        color: #9a3412;
+    }
     .column-toolbar { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr) 220px; margin-bottom: 1rem; }
-    .column-explorer { display: grid; gap: 0.85rem; }
+    .column-explorer {
+        display: grid;
+        gap: 0.85rem;
+        max-height: clamp(26rem, 68vh, 40rem);
+        overflow: auto;
+        padding-right: 0.35rem;
+        scrollbar-color: #fb7185 #ffe4e6;
+        scrollbar-width: thin;
+    }
+    .column-explorer::-webkit-scrollbar { width: 0.8rem; }
+    .column-explorer::-webkit-scrollbar-track {
+        background: #ffe4e6;
+        border-radius: 999px;
+    }
+    .column-explorer::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #fb7185, #e63946);
+        border-radius: 999px;
+        border: 2px solid #ffe4e6;
+    }
     .column-card {
         border: 1px solid #fecdd3;
         border-radius: 14px;
-        background: #fffafa;
+        background: white;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.05);
         padding: 0.9rem;
     }
     .column-card-header {
@@ -103,13 +195,22 @@
         color: #991b1b;
         border: 1px solid #fecdd3;
     }
+    .column-sample {
+        margin-top: 0.45rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 12px;
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #7f1d1d;
+    }
     .column-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
     .preview-grid-wrap { display: grid; gap: 1rem; }
     .assistant-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr); }
     .assistant-output {
-        background: #fff5f5;
+        background: white;
         border: 1px solid #fecdd3;
         border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
         min-height: 160px;
     }
@@ -124,6 +225,7 @@
 
     @media (max-width: 980px) {
         .feature-layout { grid-template-columns: 1fr; }
+        .sql-builder-grid { grid-template-columns: 1fr; }
         .column-toolbar { grid-template-columns: 1fr; }
         .assistant-grid { grid-template-columns: 1fr; }
     }
@@ -134,8 +236,8 @@
 <div class="feature-shell">
     <section class="workspace-intro data-hero">
         <span class="workspace-eyebrow">Data domain</span>
-        <h2>Transform, filter, drop and sort your dataset with a visual interface</h2>
-        <p>Use either a visual builer or JSON to transform the column features in your datasets to get them ready for training.</p>
+        <h2>Shape datasets with a guided feature workspace</h2>
+        <p>Use a visual builder, JSON, or SQL-style transformations to prepare cleaner feature views before training and downstream runtime use.</p>
     </section>
     <section class="feature-panel">
         <h3>Feature Workspace</h3>
@@ -153,7 +255,7 @@
                 <input id="featureViewName" type="text" placeholder="customer_churn_feature_view">
             </div>
             <div class="form-group">
-                <label for="featureLimitRows">Resulting Row Limit</label>
+                <label for="featureLimitRows">Preview Row Limit</label>
                 <input id="featureLimitRows" type="number" min="1" max="5000" value="200">
             </div>
         </div>
@@ -162,6 +264,7 @@
             <div class="mode-strip">
                 <button type="button" class="mode-btn active" data-mode="visual">Visual Builder</button>
                 <button type="button" class="mode-btn" data-mode="json">Advanced JSON</button>
+                <button type="button" class="mode-btn" data-mode="sql">SQL Builder</button>
             </div>
             <div class="actions-row">
                 <button type="button" class="btn btn-ghost" id="btnReloadFeatureProfile">Reload Profile</button>
@@ -172,16 +275,13 @@
 
         <div id="featureWorkspaceStatus" class="status"></div>
 
-        <!-- TODO - Implementing a SQL builder (probably aligned with postgres) would also help build up painel-amanaje's robustness and usability. As an option to either the JSON or visual builder. -->
-        <!-- TODO - Add mathematical operations to the dataset possible transformations. -->
-
         <div class="mode-panel active" data-mode-panel="visual">
             <div class="feature-layout">
                 <div class="summary-surface">
                     <div class="toolbar-row" style="margin-bottom:0.9rem;">
                         <div>
                             <h4 style="margin-bottom:0.2rem;">Visual Transform Builder</h4>
-                            <div class="helper-text">Add rename, cast, fill, drop, filter, sort, and limit operations without writing JSON.</div>
+                            <div class="helper-text">Add rename, cast, fill, drop, filter, sort, limit, and mathematical operations without writing JSON.</div>
                         </div>
                         <button type="button" class="btn btn-ghost" id="btnAddTransform">Add Transform</button>
                     </div>
@@ -202,15 +302,40 @@
         <div class="mode-panel" data-mode-panel="json">
             <div class="form-group">
                 <label for="featureOperations">Operations JSON</label>
-                <textarea id="featureOperations" spellcheck="false">{
+<textarea id="featureOperations" spellcheck="false">{
   "rename_columns": {},
   "cast_types": {},
   "fill_missing_values": {},
   "drop_columns": [],
   "filters": [],
-  "sort_by": {},
-  "limit_rows": 200
+  "sort_by": {}
 }</textarea>
+            </div>
+        </div>
+
+        <div class="mode-panel" data-mode-panel="sql">
+            <div class="sql-builder-grid">
+                <div class="summary-surface">
+                    <div class="toolbar-row">
+                        <div>
+                            <h4 style="margin:0;">PostgreSQL Builder</h4>
+                            <div class="helper-text">Write a SELECT or WITH query against source_dataset to preview or materialize a derived dataset.</div>
+                        </div>
+                        <div class="actions-row">
+                            <button type="button" class="btn btn-ghost" id="btnSyncSqlBuilder">Regenerate SQL</button>
+                            <button type="button" class="btn btn-secondary" id="btnCopySqlBuilder">Copy SQL</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="featureSqlQuery">SQL Query</label>
+                        <textarea id="featureSqlQuery" class="sql-preview" spellcheck="false"></textarea>
+                    </div>
+                </div>
+                <div class="summary-surface">
+                    <h4>Builder Notes</h4>
+                    <div class="helper-text">SQL mode is scoped to the selected dataset and must reference source_dataset.</div>
+                    <div id="featureSqlNotes" class="sql-note-list" style="margin-top:0.9rem;"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -252,7 +377,6 @@
 
     <section class="feature-panel">
 
-        <!-- TODO - The column explorer should be a scrollable after 5 items.-->
         <div class="toolbar-row">
             <div>
                 <h3 style="margin-bottom:0.2rem;">Column Explorer</h3>
@@ -260,8 +384,6 @@
             </div>
         </div>
 
-        <!-- TODO - The scroll bar should be stylized after the painel-amanaje's theme.
-                    Also, the sample should stand out more from the background, light gray is not ideal. -->
         <div class="column-toolbar">
             <input id="columnSearch" type="search" placeholder="Search columns, families, or sample values">
             <select id="columnSort">
@@ -288,6 +410,7 @@ const featureDatasetId = document.getElementById('featureDatasetId');
 const featureOperations = document.getElementById('featureOperations');
 const featureViewName = document.getElementById('featureViewName');
 const featureLimitRows = document.getElementById('featureLimitRows');
+const featureSqlQuery = document.getElementById('featureSqlQuery');
 const visualTransformList = document.getElementById('visualTransformList');
 
 let currentFeatureProfile = null;
@@ -295,6 +418,7 @@ let currentColumns = [];
 let currentAssistantDraft = null;
 let currentAssistantRunId = null;
 let currentAssistantApproval = null;
+let sqlQueryTouched = false;
 
 function setFeatureWorkspaceStatus(message, isError = false) {
     document.getElementById('featureWorkspaceStatus').innerHTML = `<span class="${isError ? 'error' : 'ok'}">${AmanajeUI.escapeHtml(message)}</span>`;
@@ -307,6 +431,9 @@ function setMode(mode) {
     document.querySelectorAll('[data-mode-panel]').forEach((panel) => {
         panel.classList.toggle('active', panel.dataset.modePanel === mode);
     });
+    if (mode === 'sql') {
+        syncSqlBuilder();
+    }
 }
 
 function currentMode() {
@@ -323,12 +450,147 @@ function normalizeOperationValue(type, rawValue) {
     return rawValue;
 }
 
+function mapFilterOperator(operator) {
+    return {
+        '==': 'eq',
+        '!=': 'neq',
+        '>': 'gt',
+        '>=': 'gte',
+        '<': 'lt',
+        '<=': 'lte',
+        contains: 'contains'
+    }[operator] || operator || 'eq';
+}
+
+function escapeSqlIdentifier(value) {
+    return `"${String(value || '').replace(/"/g, '""')}"`;
+}
+
+function escapeSqlLiteral(value) {
+    if (value === null || value === undefined || value === '') return 'NULL';
+    if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'NULL';
+    if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+    return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+function buildSqlBuilderNotes(operations = {}) {
+    const notes = [];
+    if (Object.keys(operations.rename_columns || {}).length) {
+        notes.push('Column aliases are mapped in the SQL plan so Postgres materializations stay readable.');
+    }
+    if (Object.keys(operations.cast_types || {}).length) {
+        notes.push('Casts are emitted as explicit PostgreSQL type coercions before downstream filtering and sorting.');
+    }
+    if (Array.isArray(operations.math_operations) && operations.math_operations.length) {
+        notes.push('Mathematical operations are emitted as computed expressions and can overwrite a source column or materialize into a new target column.');
+    }
+    if (Array.isArray(operations.filters) && operations.filters.length) {
+        notes.push('Filters are appended after derived columns so database-side sampling matches the preview path.');
+    }
+    if (operations.limit_rows) {
+        notes.push('Row limits are expressed as a final LIMIT clause for consistent materialization previews.');
+    }
+    return notes.length ? notes : ['Load a dataset or add transforms to generate a PostgreSQL plan.'];
+}
+
+function buildSqlPreview(operations = {}) {
+    const comments = [
+        '-- Generated from the Painel Amanaje feature workspace structured transform plan.',
+        '-- source_dataset is the selected dataset staged in PostgreSQL for this preview.'
+    ];
+    Object.entries(operations.rename_columns || {}).forEach(([source, target]) => comments.push(`-- rename ${source} -> ${target}`));
+    Object.entries(operations.cast_types || {}).forEach(([source, target]) => comments.push(`-- cast ${source} as ${target}`));
+    Object.entries(operations.fill_missing_values || {}).forEach(([source, target]) => comments.push(`-- fill missing ${source} with ${JSON.stringify(target)}`));
+    (operations.drop_columns || []).forEach((column) => comments.push(`-- drop column ${column}`));
+
+    const computedColumns = (operations.math_operations || []).map((step) => {
+        const column = escapeSqlIdentifier(step.column || 'column_name');
+        const target = escapeSqlIdentifier(step.target || step.column || 'derived_column');
+        const operand = escapeSqlLiteral(step.value);
+        const operator = step.operator || 'add';
+        const expression = {
+            add: `${column} + ${operand}`,
+            subtract: `${column} - ${operand}`,
+            multiply: `${column} * ${operand}`,
+            divide: `${column} / NULLIF(${operand}, 0)`,
+            power: `POWER(${column}, ${operand})`,
+            round: `ROUND(${column}, ${operand})`,
+            clip_min: `GREATEST(${column}, ${operand})`,
+            clip_max: `LEAST(${column}, ${operand})`,
+            abs: `ABS(${column})`,
+            log1p: `LN(1 + GREATEST(${column}, 0))`
+        }[operator] || `${column}`;
+        return `    ${expression} AS ${target}`;
+    });
+
+    const whereClause = (operations.filters || []).map((condition) => {
+        const column = escapeSqlIdentifier(condition.column || 'column_name');
+        const value = escapeSqlLiteral(condition.value);
+        const operator = {
+            eq: '=',
+            neq: '!=',
+            gt: '>',
+            gte: '>=',
+            lt: '<',
+            lte: '<=',
+            contains: 'ILIKE'
+        }[condition.operator] || '=';
+        const operand = condition.operator === 'contains' ? `'%' || ${value} || '%'` : value;
+        return `    ${column} ${operator} ${operand}`;
+    });
+
+    const orderClause = operations.sort_by?.column
+        ? `ORDER BY ${escapeSqlIdentifier(operations.sort_by.column)} ${operations.sort_by.ascending === false ? 'DESC' : 'ASC'}`
+        : '';
+    const limitClause = operations.limit_rows ? `LIMIT ${Number(operations.limit_rows)}` : '';
+
+    return [
+        ...comments,
+        '',
+        'WITH transformed AS (',
+        computedColumns.length
+            ? `    SELECT\n        *,\n${computedColumns.join(',\n')}\n    FROM source_dataset`
+            : '    SELECT *\n    FROM source_dataset',
+        whereClause.length ? `    WHERE\n${whereClause.join('\n    AND\n')}` : '',
+        ')',
+        'SELECT *',
+        'FROM transformed',
+        orderClause,
+        limitClause ? `${limitClause};` : ';'
+    ].filter(Boolean).join('\n');
+}
+
+function syncSqlBuilder(operations = null, options = {}) {
+    const nextOperations = operations || (() => {
+        try {
+            return JSON.parse(featureOperations.value || '{}');
+        } catch (_error) {
+            return buildOperationsFromVisual();
+        }
+    })();
+    if (featureSqlQuery) {
+        const shouldReplaceSql = options.force || !sqlQueryTouched || currentMode() !== 'sql';
+        if (shouldReplaceSql) {
+            featureSqlQuery.value = nextOperations.mode === 'sql' && nextOperations.sql_query
+                ? nextOperations.sql_query
+                : buildSqlPreview(nextOperations);
+        }
+    }
+    const notesTarget = document.getElementById('featureSqlNotes');
+    if (notesTarget) {
+        notesTarget.innerHTML = buildSqlBuilderNotes(nextOperations).map((note) => `
+            <div class="sql-note-item">${AmanajeUI.escapeHtml(note)}</div>
+        `).join('');
+    }
+}
+
 function serializeVisualTransforms() {
     const transforms = [];
     document.querySelectorAll('.builder-row').forEach((row) => {
         const type = row.querySelector('[data-field="type"]')?.value || '';
         const column = row.querySelector('[data-field="column"]')?.value || '';
         const value = row.querySelector('[data-field="value"]')?.value || '';
+        const target = row.querySelector('[data-field="target"]')?.value || '';
         const operator = row.querySelector('[data-field="operator"]')?.value || '==';
         const ascending = row.querySelector('[data-field="ascending"]')?.checked !== false;
         if (!type) return;
@@ -337,12 +599,10 @@ function serializeVisualTransforms() {
             column,
             operator,
             value: normalizeOperationValue(type, value),
-            ascending
+            ascending,
+            target
         });
     });
-    if (featureLimitRows.value) {
-        transforms.push({ type: 'limit', value: Number(featureLimitRows.value) });
-    }
     return transforms;
 }
 
@@ -353,9 +613,9 @@ function buildOperationsFromVisual() {
         fill_missing_values: {},
         drop_columns: [],
         filters: [],
-        sort_by: {},
-        limit_rows: Number(featureLimitRows.value || 200)
+        sort_by: {}
     };
+    const mathOperations = [];
     serializeVisualTransforms().forEach((transform) => {
         if (transform.type === 'rename' && transform.column && transform.value) {
             operations.rename_columns[transform.column] = String(transform.value);
@@ -370,7 +630,15 @@ function buildOperationsFromVisual() {
             operations.drop_columns.push(transform.column);
         }
         if (transform.type === 'filter' && transform.column) {
-            operations.filters.push({ column: transform.column, operator: transform.operator, value: transform.value });
+            operations.filters.push({ column: transform.column, operator: mapFilterOperator(transform.operator), value: transform.value });
+        }
+        if (transform.type === 'math' && transform.column && transform.operator) {
+            mathOperations.push({
+                column: transform.column,
+                operator: transform.operator,
+                value: transform.value,
+                target: transform.target || transform.column
+            });
         }
         if (transform.type === 'sort' && transform.column) {
             operations.sort_by = { column: transform.column, ascending: Boolean(transform.ascending) };
@@ -379,22 +647,45 @@ function buildOperationsFromVisual() {
             operations.limit_rows = Number(transform.value || featureLimitRows.value || 200);
         }
     });
+    if (mathOperations.length) {
+        operations.math_operations = mathOperations;
+    }
     return operations;
 }
 
 function syncOperationsJson() {
-    if (currentMode() !== 'visual') return;
-    featureOperations.value = JSON.stringify(buildOperationsFromVisual(), null, 2);
+    if (currentMode() === 'json') {
+        syncSqlBuilder();
+        return;
+    }
+    if (currentMode() === 'sql') {
+        return;
+    }
+    const operations = buildOperationsFromVisual();
+    featureOperations.value = JSON.stringify(operations, null, 2);
+    syncSqlBuilder(operations);
 }
 
-function parseOperationsPayload() {
+function parseOperationsPayload({ materialize = false } = {}) {
+    const previewRows = Number(featureLimitRows.value || 200);
     if (currentMode() === 'json') {
-        return { operations: JSON.parse(featureOperations.value || '{}') };
+        const operations = JSON.parse(featureOperations.value || '{}');
+        syncSqlBuilder(operations);
+        return materialize ? { operations } : { operations, previewRows };
+    }
+    if (currentMode() === 'sql') {
+        const payload = {
+            mode: 'sql',
+            sqlQuery: featureSqlQuery.value || ''
+        };
+        if (!materialize) payload.previewRows = previewRows;
+        return payload;
     }
     const transforms = serializeVisualTransforms();
     const operations = buildOperationsFromVisual();
     featureOperations.value = JSON.stringify(operations, null, 2);
-    return { transforms, operations };
+    syncSqlBuilder(operations);
+    return materialize ? { transforms, operations } : { transforms, operations, previewRows };
 }
 
 function replaceVisualTransforms(transforms = []) {
@@ -402,6 +693,7 @@ function replaceVisualTransforms(transforms = []) {
     const normalized = Array.isArray(transforms) && transforms.length ? transforms : [{ type: 'rename' }];
     normalized.forEach((transform) => addTransform(transform));
     syncOperationsJson();
+    syncSqlBuilder();
 }
 
 function renderAssistantOutput(payload = {}) {
@@ -455,6 +747,7 @@ function buildTransformRow(initial = {}) {
                     <option value="filter" ${initial.type === 'filter' ? 'selected' : ''}>Filter Rows</option>
                     <option value="sort" ${initial.type === 'sort' ? 'selected' : ''}>Sort Rows</option>
                     <option value="limit" ${initial.type === 'limit' ? 'selected' : ''}>Limit Rows</option>
+                    <option value="math" ${initial.type === 'math' ? 'selected' : ''}>Math Operation</option>
                 </select>
             </div>
             <div class="form-group">
@@ -463,7 +756,11 @@ function buildTransformRow(initial = {}) {
             </div>
             <div class="form-group">
                 <label>Value</label>
-                <input data-field="value" type="text" value="${AmanajeUI.escapeHtml(initial.value ?? '')}" placeholder="new_name, float64, 0, vip">
+                <input data-field="value" type="text" value="${AmanajeUI.escapeHtml(initial.value ?? '')}" placeholder="new_name, float64, 0, 1.15">
+            </div>
+            <div class="form-group">
+                <label>Target Column</label>
+                <input data-field="target" type="text" value="${AmanajeUI.escapeHtml(initial.target ?? '')}" placeholder="optional derived column name">
             </div>
             <div class="form-group">
                 <label>Operator</label>
@@ -471,8 +768,20 @@ function buildTransformRow(initial = {}) {
                     <option value="==" ${initial.operator === '==' ? 'selected' : ''}>equals</option>
                     <option value="!=" ${initial.operator === '!=' ? 'selected' : ''}>not equal</option>
                     <option value=">" ${initial.operator === '>' ? 'selected' : ''}>greater than</option>
+                    <option value=">=" ${initial.operator === '>=' ? 'selected' : ''}>greater or equal</option>
                     <option value="<" ${initial.operator === '<' ? 'selected' : ''}>less than</option>
+                    <option value="<=" ${initial.operator === '<=' ? 'selected' : ''}>less or equal</option>
                     <option value="contains" ${initial.operator === 'contains' ? 'selected' : ''}>contains</option>
+                    <option value="add" ${initial.operator === 'add' ? 'selected' : ''}>add</option>
+                    <option value="subtract" ${initial.operator === 'subtract' ? 'selected' : ''}>subtract</option>
+                    <option value="multiply" ${initial.operator === 'multiply' ? 'selected' : ''}>multiply</option>
+                    <option value="divide" ${initial.operator === 'divide' ? 'selected' : ''}>divide</option>
+                    <option value="power" ${initial.operator === 'power' ? 'selected' : ''}>power</option>
+                    <option value="round" ${initial.operator === 'round' ? 'selected' : ''}>round</option>
+                    <option value="clip_min" ${initial.operator === 'clip_min' ? 'selected' : ''}>clip min</option>
+                    <option value="clip_max" ${initial.operator === 'clip_max' ? 'selected' : ''}>clip max</option>
+                    <option value="abs" ${initial.operator === 'abs' ? 'selected' : ''}>absolute value</option>
+                    <option value="log1p" ${initial.operator === 'log1p' ? 'selected' : ''}>log1p</option>
                 </select>
             </div>
             <div class="form-group">
@@ -535,7 +844,7 @@ function renderColumnExplorer(columns = []) {
             <div class="column-card-header">
                 <div>
                     <h5>${AmanajeUI.escapeHtml(column.name || 'column')}</h5>
-                    <div class="helper-text">Sample: ${AmanajeUI.escapeHtml((column.sample_values || []).join(', ') || 'n/a')}</div>
+                    <div class="column-sample">Sample: ${AmanajeUI.escapeHtml((column.sample_values || []).join(', ') || 'n/a')}</div>
                 </div>
                 <div class="chip">${AmanajeUI.escapeHtml(column.family || 'unknown')}</div>
             </div>
@@ -550,6 +859,7 @@ function renderColumnExplorer(columns = []) {
                 <button type="button" class="btn btn-ghost" data-quick-transform="cast" data-column="${AmanajeUI.escapeHtml(column.name)}">Cast</button>
                 <button type="button" class="btn btn-ghost" data-quick-transform="fill" data-column="${AmanajeUI.escapeHtml(column.name)}">Fill Missing</button>
                 <button type="button" class="btn btn-ghost" data-quick-transform="filter" data-column="${AmanajeUI.escapeHtml(column.name)}">Filter</button>
+                <button type="button" class="btn btn-ghost" data-quick-transform="math" data-column="${AmanajeUI.escapeHtml(column.name)}">Math</button>
             </div>
         </article>
     `).join('');
@@ -567,6 +877,14 @@ function renderPreviewTable(rows = []) {
         return '<div class="helper-text">No preview rows are available yet.</div>';
     }
     const columns = Object.keys(rows[0] || {});
+    const renderCell = (value, column) => {
+        if (value && typeof value === 'object') {
+            return AmanajeUI.renderJsonExplorer
+                ? AmanajeUI.renderJsonExplorer(value, { title: column, maxPlotlyRows: 20, maxPlotlyColumns: 10 })
+                : `<code>${AmanajeUI.escapeHtml(JSON.stringify(value))}</code>`;
+        }
+        return AmanajeUI.escapeHtml(value);
+    };
     return `
         <div class="table-scroll">
             <table class="full-width-table">
@@ -576,7 +894,7 @@ function renderPreviewTable(rows = []) {
                 <tbody>
                     ${rows.map((row) => `
                         <tr>
-                            ${columns.map((column) => `<td>${AmanajeUI.escapeHtml(typeof row[column] === 'object' ? JSON.stringify(row[column]) : row[column])}</td>`).join('')}
+                            ${columns.map((column) => `<td>${renderCell(row[column], column)}</td>`).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -614,16 +932,14 @@ function renderFeatureResults(result = {}) {
     document.getElementById('featureWorkspaceResults').innerHTML = AmanajeUI.renderResultTabs(
         [
             { key: 'summary', label: 'Summary', content: previewSummary },
-
-            // TODO - Be sure to extend the plotly implementation to this function if able
-            { key: 'plots', label: 'Plots', content: AmanajeUI.renderPlotDeck(result.plots || []) },
-            
+            { key: 'plots', label: 'Plots', content: AmanajeUI.renderPlotDeck(result.plots || []) || '<div class="helper-text">No plots were generated for the current transform plan.</div>' },
             { key: 'details', label: 'Details', content: details }
         ],
         { idPrefix: 'feature_result_tabs' }
     );
     AmanajeUI.activateTabs(document.getElementById('featureWorkspaceResults'));
     AmanajeUI.enhanceCollapsibles(document.getElementById('featureWorkspaceResults'));
+    syncSqlBuilder(result.operations || buildOperationsFromVisual());
 }
 
 async function loadFeatureProfile() {
@@ -644,6 +960,9 @@ async function loadFeatureProfile() {
         currentFeatureProfile = result;
         currentColumns = (result.column_explorer || result.manifest?.columns || []).map((column) => column.name).filter(Boolean);
         if (!visualTransformList.children.length) addTransform({ type: 'rename' });
+        if (!featureViewName.value.trim()) {
+            featureViewName.value = `${(result.dataset_name || 'dataset').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase()}_feature_view`;
+        }
         document.querySelectorAll('[data-field="column"]').forEach((select) => {
             const currentValue = select.value;
             select.innerHTML = createColumnOptions(currentValue);
@@ -669,7 +988,7 @@ async function previewFeatureView() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 datasetId: Number(featureDatasetId.value),
-                ...parseOperationsPayload()
+                ...parseOperationsPayload({ materialize: false })
             })
         });
         const result = await response.json();
@@ -695,8 +1014,7 @@ async function materializeFeatureView() {
             body: JSON.stringify({
                 datasetId: Number(featureDatasetId.value),
                 name: featureViewName.value || undefined,
-                limitRows: Number(featureLimitRows.value || 200),
-                ...parseOperationsPayload()
+                ...parseOperationsPayload({ materialize: true })
             })
         });
         const result = await response.json();
@@ -827,6 +1145,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         valueField: 'id',
         placeholderText: 'Select a dataset'
     });
+    const requestedDatasetId = new URLSearchParams(window.location.search).get('datasetId')
+        || new URLSearchParams(window.location.search).get('dataset_id');
+    if (requestedDatasetId && Array.from(featureDatasetId.options).some((option) => option.value === requestedDatasetId)) {
+        featureDatasetId.value = requestedDatasetId;
+        await loadFeatureProfile();
+    }
 
     document.querySelectorAll('.mode-btn').forEach((button) => {
         button.addEventListener('click', () => setMode(button.dataset.mode));
@@ -835,6 +1159,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnReloadFeatureProfile').addEventListener('click', loadFeatureProfile);
     document.getElementById('btnPreviewFeatureView').addEventListener('click', previewFeatureView);
     document.getElementById('btnMaterializeFeatureView').addEventListener('click', materializeFeatureView);
+    document.getElementById('btnSyncSqlBuilder').addEventListener('click', () => {
+        sqlQueryTouched = false;
+        syncSqlBuilder(null, { force: true });
+    });
+    document.getElementById('btnCopySqlBuilder').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(featureSqlQuery.value || '');
+            setFeatureWorkspaceStatus('SQL plan copied to the clipboard.');
+        } catch (_error) {
+            setFeatureWorkspaceStatus('Unable to copy the SQL plan from this browser context.', true);
+        }
+    });
     document.getElementById('btnAssistantDraft').addEventListener('click', draftAssistantFeaturePlan);
     document.getElementById('btnAssistantApprove').addEventListener('click', approveAssistantFeaturePlan);
     document.getElementById('btnAssistantPreview').addEventListener('click', previewAssistantFeaturePlan);
@@ -842,8 +1178,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('columnSort').addEventListener('change', () => renderColumnExplorer(currentFeatureProfile?.column_explorer || []));
     featureDatasetId.addEventListener('change', loadFeatureProfile);
     featureLimitRows.addEventListener('input', syncOperationsJson);
+    featureOperations.addEventListener('input', () => {
+        if (currentMode() === 'json') {
+            syncSqlBuilder();
+        }
+    });
+    featureSqlQuery.addEventListener('input', () => {
+        sqlQueryTouched = true;
+    });
     AmanajeUI.loadAssistantModelOptions('assistantFeatureModel');
     addTransform({ type: 'rename' });
+    syncSqlBuilder();
 });
 </script>
 {% endblock %}

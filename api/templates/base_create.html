@@ -6,59 +6,88 @@
 
 {% block extra_css %}
 <style>
-    :root {
-        --amanaje-primary: #e63946;
-        --amanaje-primary-strong: #991b1b;
-        --amanaje-primary-soft: #ffe4e6;
-        --amanaje-primary-softer: #fff5f5;
-        --amanaje-primary-mid: #fecdd3;
-        --amanaje-primary-border: #fda4af;
-        --amanaje-primary-border-soft: #fecdd3;
-        --amanaje-primary-accent: #fb7185;
-        --amanaje-primary-gradient: #e63946;
-        --amanaje-primary-bar-gradient: #e63946;
-        --amanaje-primary-shadow: rgba(230, 57, 70, 0.08);
-        --amanaje-primary-shadow-strong: rgba(230, 57, 70, 0.2);
-        --amanaje-code-bg: #3f0d12;
-        --amanaje-code-fg: #ffe4e6;
-        --amanaje-code-border: #7f1d1d;
-        --amanaje-body-bg: #fffafa;
-    }
-
     .data-operations { display: grid; gap: 1.25rem; }
-    .form-section {
+    .data-operations .form-section {
+        display: grid;
+        gap: 1rem;
         background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 18px;
+        border-radius: 14px;
         box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
-        margin-bottom: 0;
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
-    .form-section h3 { color: var(--amanaje-primary); margin-top: 0; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
-    .form-group select,
-    .analysis-controls select {
+    .data-operations .form-section h3 { color: var(--amanaje-primary-strong); margin: 0; }
+    .data-operations #uploadForm {
+        display: grid;
+        gap: 1rem;
+    }
+    .data-operations .form-group {
+        display: grid;
+        gap: 0.45rem;
+        margin: 0;
+    }
+    .data-operations .form-group label {
+        display: block;
+        margin: 0;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .data-operations .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .data-operations .form-group select,
+    .data-operations .form-group textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.72rem 0.78rem;
         border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: white;
+        background: var(--amanaje-surface-3);
+        color: var(--amanaje-text-strong);
+        font: inherit;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .data-operations .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+    .data-operations .form-group select:focus,
+    .data-operations .form-group textarea:focus {
+        outline: none;
+        border-color: var(--amanaje-primary-accent);
+        box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.14);
+    }
+    .data-operations .form-group input[type="file"] {
+        width: 100%;
+        padding: 0.68rem 0.78rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        background: var(--amanaje-surface-3);
+        box-sizing: border-box;
+        color: var(--amanaje-text-strong);
+        font: inherit;
+    }
+    .data-operations .form-group input[type="file"]::file-selector-button {
+        margin-right: 0.85rem;
+        padding: 0.55rem 0.8rem;
+        border: 0;
+        border-radius: 10px;
+        background: var(--amanaje-primary-gradient);
+        color: #fff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
     }
     .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
     .feature-item, .model-item {
-        background: var(--amanaje-primary-softer);
+        background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
-        padding: 0.9rem;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
+        padding: 1rem;
     }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
     .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; }
     .support-card {
-        background: var(--amanaje-primary-softer);
+        background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 0.95rem;
     }
     .support-card h4 { margin: 0 0 0.35rem; color: var(--amanaje-primary-strong); }
@@ -100,6 +129,33 @@
     }
     .editor-controls, .feature-controls, .model-controls, .analysis-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
     .analysis-controls select { max-width: 320px; }
+    .operation-switch { display: inline-flex; flex-wrap: wrap; gap: 0.6rem; }
+    .operation-chip {
+        border: 1px solid var(--amanaje-primary-border);
+        background: white;
+        color: var(--amanaje-primary-strong);
+        border-radius: 999px;
+        padding: 0.75rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .operation-chip.active {
+        background: var(--amanaje-primary-gradient);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
+    }
+    .sr-only-select {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
     #editorContainer {
         width: 100%;
         height: 520px;
@@ -152,7 +208,7 @@
         margin: 1rem 0;
     }
     .assistant-output {
-        background: var(--amanaje-primary-softer);
+        background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 1rem;
@@ -170,20 +226,63 @@
         color: var(--amanaje-primary-strong);
         font-weight: 700;
     }
-    .btn,
-    .editor-controls button {
-        padding: 0.8rem 1rem;
-        border: none;
+    .editor-controls button,
+    #btnCreateObject,
+    .file-list button {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.65rem;
+        padding: 0.72rem 0.95rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-        background: var(--amanaje-primary-mid);
+        background: white;
         color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 800;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+    .editor-controls button:hover,
+    #btnCreateObject:hover,
+    .file-list button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
     }
     .editor-controls button.success,
     #btnCreateObject {
         background: var(--amanaje-primary-gradient);
+        border-color: transparent;
         color: white;
+    }
+    .file-panel-inline {
+        margin: 1rem 0 0;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
+        padding: 0.9rem 1rem;
+    }
+    .file-panel-inline h3 { margin: 0 0 0.55rem; color: var(--amanaje-primary-strong); }
+    .file-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.65rem;
+        max-height: 320px;
+        overflow: auto;
+    }
+    .workspace-subsection {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--amanaje-primary-soft);
+    }
+    .workspace-subsection h4 {
+        margin: 0 0 0.5rem;
+        color: var(--amanaje-primary-strong);
     }
     @media (max-width: 900px) {
         .assistant-create-grid { grid-template-columns: 1fr; }
@@ -192,33 +291,43 @@
 {% endblock %}
 
 {% block extra_script %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}?v=20260403-1"></script>
 <script src="{{ url_for('static', path='/js/editor-utilities.js') }}?v=20260403-1"></script>
 <script src="{{ url_for('static', path='/js/create-page.js') }}?v=20260403-1"></script>
-<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="data-operations">
         <section class="workspace-intro data-hero">
         <span class="workspace-eyebrow">Data domain</span>
-            <h2>Object creator with a simple editor, for the dynamic coder.</h2>
-            <p>Write and edit Python code to generate models or datasets, or use the Assistant to generate code for you with ease.</p>
+            <h2>Create registered objects with code and assisted workflows</h2>
+            <p>Build datasets and models through a cleaner coding workspace, then promote the result into the registry with extracted metadata and guided execution.</p>
         </section>
 
     <section class="form-section" id="uploadSection">
 
         <h3>Data Creation</h3>
 
-        <!-- TODO - Could instead of a selection list work as a button toggle for simplicity -->
         <form id="uploadForm" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="operationId">Operation Type:</label>
-                <select id="operationId" name="operationId">
+                <div class="operation-switch" id="operationSwitch" role="tablist" aria-label="Create object type">
+                    <button type="button" class="operation-chip active" data-operation-choice="datasets">Dataset</button>
+                    <button type="button" class="operation-chip" data-operation-choice="models">Model</button>
+                    <button type="button" class="operation-chip" data-operation-choice="assistant-models">Assistant Model</button>
+                </div>
+                <div class="small-text">Use the toggle to keep the editor, saved scripts, and registry history aligned with the object you are creating.</div>
+                <select id="operationId" name="operationId" class="sr-only-select" aria-hidden="true" tabindex="-1">
                     <option value="datasets">Datasets</option>
                     <option value="models">Models</option>
+                    <option value="assistant-models">Assistant Models</option>
                 </select>
+            </div>
+
+            <div class="form-group" id="artifactFileGroup">
+                <label for="artifactFile">Artifact File</label>
+                <input type="file" id="artifactFile" name="file" accept=".csv,.tsv,.json,.jsonl,.joblib,.pkl,.pt,.pth,.onnx,.zip">
+                <div class="small-text">Optional for generated datasets/models. Required for AssistantModel bundles unless the editor provides base64 zip bytes.</div>
             </div>
 
             <div class="editor-controls">
@@ -227,12 +336,16 @@
                 <button type="button" id="btnSaveScript" class="success">Save</button>
                 <button type="button" id="btnLoadScript" class="success">Load</button>
                 <button type="button" id="btnLoadTemplate" class="success">Load Template</button>
-
-                <!-- TODO - This button could generate a random sample of all the available  references in the SLM -->
                 <button type="button" id="btnGenerateScript" class="success">Generate</button>
 
                 <button type="button" id="btnExportJSON" class="success">Export JSON</button>
                 <button type="button" id="btnResetScript" class="success">Reset</button>
+            </div>
+
+            <!-- TODO - This saved scripts should be collapsable, and colored just like the theme.-->
+            <div id="filePanel" class="file-panel-inline" style="display:none;">
+                <h3>Saved Scripts</h3>
+                <ul id="fileList" class="file-list"></ul>
             </div>
 
             <!-- This assistant button needs to fit the same styling of every other element in the interface-->
@@ -287,12 +400,6 @@
                     <p id="metadataHint" class="small-text">Run the script or parse the editor to build a save-ready document.</p>
                     <div id="metadataContent"></div>
                 </div>
-
-                <!-- TODO - Saved Scripts should be scrollable after 5 items, and I would also like for it to be near the save and load buttons, for a UX improvement. -->
-                <div id="filePanel" style="display:none;">
-                    <h3>Saved Scripts</h3>
-                    <ul id="fileList" class="file-list"></ul>
-                </div>
             </div>
         </form>
 
@@ -311,31 +418,18 @@
         </details>
     </section>
 
-    <!-- TODO - We should merge the Analysis and History section into one, for simplicity. In the UX sense, picking below the selection for the function that is showed above can break the usage flow.
-     For both the datasets and models equally. Is it possible to use MultiObjectSelector here?-->
+
+    <!-- TODO - Adapt this section to be like the analysis section in base_red.html-->
     <section class="form-section" id="featuresSection">
-        <h3>Dataset History</h3>
+        <h3>Dataset Workspace</h3>
+        <p class="small-text">Refresh, inspect, extract, and analyze datasets without leaving the same surface.</p>
         <div class="feature-controls">
             <button type="button" id="btnRefreshFeatures" class="btn">Refresh Datasets</button>
             <button type="button" id="btnExtractFeatures" class="btn">Extract Features</button>
         </div>
         <div class="feature-list" id="featureList"></div>
-    </section>
-
-    <section class="form-section" id="modelsSection">
-        <h3>Model History</h3>
-        <div class="model-controls">
-            <button type="button" id="btnRefreshModels" class="btn">Refresh Models</button>
-            <button type="button" id="btnOptimizeModels" class="btn">Optimize Models</button>
-        </div>
-        <div class="model-list" id="modelList"></div>
-    </section>
-
-    <!-- TODO - We should merge the Analysis and History section into one, for simplicity. In the UX sense, picking below the selection for the function that is showed above can break the usage flow.
-     For both the datasets and models equally. Is it possible to use MultiObjectSelector here? -->
-    <section class="form-section" id="analysisSection">
-        <div id="datasetAnalysis">
-            <h3>Data Analysis</h3>
+        <div id="datasetAnalysis" class="workspace-subsection">
+            <h4>Dataset Analysis</h4>
             <div class="analysis-controls">
                 <select id="datasetSelect">
                     <option value="">Select Dataset</option>
@@ -344,10 +438,18 @@
             </div>
             <div id="datasetAnalysisResults" class="data-grid"></div>
         </div>
+    </section>
 
-        <!-- TODO - The model analysis should show the parameters, input and output features-->
-        <div id="modelAnalysis">
-            <h3>Model Analysis</h3>
+    <section class="form-section" id="modelsSection">
+        <h3>Model Workspace</h3>
+        <p class="small-text">Refresh, optimize, and inspect models with parameters, features, and runtime metadata in one flow.</p>
+        <div class="model-controls">
+            <button type="button" id="btnRefreshModels" class="btn">Refresh Models</button>
+            <button type="button" id="btnOptimizeModels" class="btn">Optimize Models</button>
+        </div>
+        <div class="model-list" id="modelList"></div>
+        <div id="modelAnalysis" class="workspace-subsection">
+            <h4>Model Analysis</h4>
             <div class="analysis-controls">
                 <select id="modelSelect">
                     <option value="">Select Model</option>
@@ -357,8 +459,6 @@
             <div id="modelAnalysisResults" class="data-grid"></div>
         </div>
     </section>
-
-
 </div>
 {% endblock %}
 

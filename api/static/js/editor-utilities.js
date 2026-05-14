@@ -61,13 +61,15 @@ async function executeCode() {
     }
 
     try {
-        showStatus('Executing code on backend...', 'info');
+        showStatus('Queueing code execution...', 'info');
         clearExecutionOutput();
 
-        const result = await editorFetchJson('/execute', {
+        const accepted = await editorFetchJson('/execute/jobs', {
             method: 'POST',
             body: JSON.stringify({ code })
         });
+        window.AmanajeUI?.watchRun?.(accepted.run_id, { source: 'editor-utilities' });
+        const result = await waitForEditorExecutionRun(accepted.run_id);
 
         window.executedVariables = result.variables || {};
 
@@ -91,6 +93,26 @@ async function executeCode() {
         console.error('Execution error:', error);
         showStatus(`Execution failed: ${error.message}`, 'error');
     }
+}
+
+async function waitForEditorExecutionRun(runId) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < 30 * 60 * 1000) {
+        const run = await editorFetchJson(`/runs/get/${encodeURIComponent(runId)}`);
+        const latestEvent = run.progress?.latest_event || run.stage || run.status;
+        showStatus(`Execution ${run.status || 'queued'}: ${latestEvent || runId}`, 'info');
+        if (run.status === 'completed') {
+            return run.result || {};
+        }
+        if (run.status === 'failed') {
+            if (run.result && Object.keys(run.result).length) {
+                return run.result;
+            }
+            throw new Error(run.error || 'The background execution failed.');
+        }
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    throw new Error('The background execution did not finish within the polling window.');
 }
 
 function displayExecutionOutput(stdout, stderr) {
@@ -452,7 +474,11 @@ function isMaterializedEditorField(fieldName) {
         'torchscript_bytes',
         'joblib_bytes',
         'pickle_bytes',
-        'onnx_bytes'
+        'onnx_bytes',
+        'assistant_bundle_bytes',
+        'bundle_bytes',
+        'zip_bytes',
+        'assistant_manifest'
     ].includes(fieldName);
 }
 
@@ -491,6 +517,10 @@ function extractMetadataFromEditor(allowedFields = null) {
         'joblib_bytes',
         'pickle_bytes',
         'onnx_bytes',
+        'assistant_bundle_bytes',
+        'bundle_bytes',
+        'zip_bytes',
+        'assistant_manifest',
         'parameters',
         'metrics',
         'reference_data',
@@ -645,12 +675,43 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
 # torchscript_bytes = base64.b64encode(torch_buffer.read()).decode("utf-8")
 `;
 
+    const assistantModelTemplate = `# AssistantModel upload template
+# Use the Artifact File selector to choose a .zip bundle.
+# The bundle must include assistant_model_manifest.json, tokenizer assets,
+# PyTorch/Hugging Face weights, and a chat/prompt template.
+
+name = "sample_assistant_model"
+description = "PyTorch/Hugging Face assistant runtime served outside FastAPI"
+object_type = "learning_model"
+path = "runtime_artifacts/assistant_models/uploads/sample_assistant_model.zip"
+version = 1
+model_type = "assistant_model"
+parameters = {
+    "assistant": {
+        "provider_type": "openai_compatible",
+        "runtime_kind": "pytorch_hf_server",
+        "base_url": "http://localhost:8080/v1",
+        "model_name": "sample-assistant",
+        "model_version": "0.1.0",
+        "supported_draft_types": ["dataset_generation", "model_generation", "registry_object"],
+        "max_context_tokens": 4096
+    }
+}
+metrics = {"bundle_valid": False, "server_health": "not_checked"}
+reference_data = "runtime_artifacts/assistant_datasets/interactions.jsonl"
+input_features = ["prompt", "context_pack", "target_type"]
+output_features = ["workflow_draft"]
+is_trained = False
+is_tested = False
+is_deployed = False
+`;
+
     if (!window.editor) {
         alert('Editor not initialized. Please refresh the page.');
         return;
     }
 
-    window.editor.setValue(operationId === 'models' ? modelTemplate : dataTemplate);
+    window.editor.setValue(operationId === 'assistant-models' ? assistantModelTemplate : (operationId === 'models' ? modelTemplate : dataTemplate));
     window.executedVariables = {};
     displayMetadataPanel(getUploadMetadata());
     showStatus('Template loaded. Update the metadata values before creating the object.', 'success');

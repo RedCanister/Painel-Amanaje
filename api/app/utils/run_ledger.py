@@ -4,7 +4,7 @@ import json
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional
 
 
 def ensure_run_ledger_dir(path: str | Path) -> Path:
@@ -160,13 +160,24 @@ def list_run_entries(
     base_dir: str | Path,
     *,
     run_type: Optional[str] = None,
+    status: Optional[str] = None,
+    active_only: bool = False,
+    run_ids: Optional[Iterable[str]] = None,
     model_id: Optional[int] = None,
     dataset_id: Optional[int] = None,
     study_id: Optional[int] = None,
     inference_id: Optional[int] = None,
+    limit: Optional[int] = None,
 ) -> list[dict[str, Any]]:
     directory = ensure_run_ledger_dir(base_dir)
     items: list[dict[str, Any]] = []
+    requested_statuses = {
+        item.strip()
+        for item in str(status or "").split(",")
+        if item.strip()
+    }
+    requested_ids = {str(item) for item in run_ids or [] if str(item).strip()}
+    active_statuses = {"queued", "running"}
     for path in directory.glob("*.json"):
         try:
             with path.open("r", encoding="utf-8") as handle:
@@ -174,7 +185,15 @@ def list_run_entries(
         except Exception:
             continue
         context = dict(payload.get("context", {}) or {})
+        payload_status = str(payload.get("status") or "")
+        payload_run_id = str(payload.get("run_id") or "")
         if run_type and str(payload.get("run_type")) != str(run_type):
+            continue
+        if requested_ids and payload_run_id not in requested_ids:
+            continue
+        if requested_statuses and payload_status not in requested_statuses:
+            continue
+        if active_only and payload_status not in active_statuses:
             continue
         if model_id is not None and int(context.get("model_id", 0) or 0) != int(model_id):
             continue
@@ -186,4 +205,6 @@ def list_run_entries(
             continue
         items.append(payload)
     items.sort(key=lambda item: item.get("updated_at") or item.get("created_at") or "", reverse=True)
+    if limit is not None and limit > 0:
+        return items[:limit]
     return items

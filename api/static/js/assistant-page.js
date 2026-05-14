@@ -5,6 +5,7 @@
         currentRunId: null,
         currentReview: null,
         executionApproved: false,
+        examples: null,
     };
 
     function escapeHtml(value) {
@@ -66,6 +67,61 @@
             throw new Error(payload.detail || payload.error || `HTTP ${response.status}`);
         }
         return payload;
+    }
+
+    function wait(ms) {
+        return new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    async function hydrateAssistantJob(runId, options = {}) {
+        const { outputId, onComplete } = options;
+        for (let attempt = 0; attempt < 720; attempt += 1) {
+            await wait(attempt < 2 ? 800 : 1600);
+            const run = await fetchJson(`/runs/get/${encodeURIComponent(runId)}`, {}, {
+                allowError: true,
+                source: "assistant-job",
+            });
+            if (outputId) {
+                setOutput(outputId, run);
+            }
+            const status = String(run.status || "");
+            if (status === "completed") {
+                const result = run.result || {};
+                if (outputId) {
+                    setOutput(outputId, result);
+                }
+                if (typeof onComplete === "function") {
+                    await onComplete(result, run);
+                }
+                return result;
+            }
+            if (status === "failed" || status === "cancelled") {
+                throw new Error(run.error || `Assistant job ${status}.`);
+            }
+        }
+        throw new Error("Assistant job did not finish before the local poll timeout.");
+    }
+
+    async function submitAssistantJob(operation, payload, outputId, onComplete) {
+        const accepted = await fetchJson(`/assistant/jobs/${encodeURIComponent(operation)}`, {
+            method: "POST",
+            body: JSON.stringify(payload || {}),
+        });
+        window.AmanajeUI?.watchRun?.(accepted.run_id, { source: "assistant-page" });
+        if (outputId) {
+            setOutput(outputId, {
+                status: "queued",
+                operation,
+                run_id: accepted.run_id,
+                queue: accepted.queue,
+            });
+        }
+        showAlert(`Assistant operation queued: ${operation}.`);
+        void hydrateAssistantJob(accepted.run_id, { outputId, onComplete }).catch((error) => {
+            console.error(error);
+            showAlert(error.message || String(error), "error");
+        });
+        return accepted;
     }
 
     function selectedModelId(selectId = "assistantModelSelect") {
@@ -132,12 +188,16 @@
         const activeProvider = provider.providers?.[active] || provider[active] || {};
         const dataset = overview?.assistant_dataset?.latest_dataset || {};
         const references = overview?.references?.repository || {};
+        const runtime = overview?.runtime || {};
+        const defaultModel = overview?.assistant_defaults?.global_default_model_id || "";
         const target = document.getElementById("assistantHeaderPills");
         if (!target) return;
         target.innerHTML = `
             <span class="assistant-pill">Provider: ${escapeHtml(active)}</span>
             <span class="assistant-pill">Fallback: ${escapeHtml(activeProvider.fallback_active ?? activeProvider.fallback_provider ?? "n/a")}</span>
             <span class="assistant-pill">Model: ${escapeHtml(activeProvider.model_version || provider.model_version || "unversioned")}</span>
+            <span class="assistant-pill">Runtime: ${escapeHtml(runtime.status || "unknown")}</span>
+            <span class="assistant-pill">Default: ${escapeHtml(defaultModel || "none")}</span>
             <span class="assistant-pill">AssistantModels: ${escapeHtml(overview?.assistant_models?.count ?? 0)}</span>
             <span class="assistant-pill">Dataset: ${escapeHtml(dataset.dataset_hash ? "ready" : overview?.assistant_dataset?.status || "missing")}</span>
             <span class="assistant-pill">References: ${escapeHtml(references.stored_reference_count ?? 0)}</span>
@@ -157,6 +217,9 @@
             metric("Active Provider", active),
             metric("Provider Count", Object.keys(provider.providers || {}).length),
             metric("Assistant Models", overview.assistant_models?.count ?? 0),
+            metric("Ready Bundles", overview.assistant_models?.bundle_ready_count ?? 0),
+            metric("Runtime", overview.runtime?.status || "unknown"),
+            metric("Global Default", overview.assistant_defaults?.global_default_model_id || "none"),
             metric("Dataset Records", dataset.record_count ?? 0),
             metric("Reference Count", refs.stored_reference_count ?? 0),
             metric("MLflow Status", mlflow.status || "unknown"),
@@ -198,6 +261,7 @@
                 { label: "Name", value: "name" },
                 { label: "Version", value: (row) => row.model_version || row.version || row.assistant_config?.model_version },
                 { label: "Provider", value: (row) => row.provider_config?.type || row.assistant_config?.runtime_type || row.provider },
+                { label: "Bundle", value: (row) => row.bundle_status?.status || row.assistant_config?.runtime_kind || "-" },
                 { label: "Dataset Hash", value: (row) => row.assistant_config?.training_dataset_hash || row.training_dataset_hash },
                 { label: "Reference Data", value: "reference_data" },
             ],
@@ -227,11 +291,58 @@
         ]);
     }
 
+    function renderExampleCatalog(catalog) {
+        state.examples = catalog;
+        const metrics = document.getElementById("assistantExampleMetrics");
+        if (metrics) {
+            const summary = catalog?.summary || {};
+            const apiProof = catalog?.api_proof || {};
+            metrics.innerHTML = [
+                metric("Objects", summary.object_count ?? 0),
+                metric("Samples", summary.sample_count ?? 0),
+                metric("Samples Per Object", summary.samples_per_object ?? 0),
+                metric("API Routes", apiProof.route_count ?? 0),
+                metric("Frontend Routes", apiProof.frontend_route_count ?? 0),
+                metric("Validation Errors", summary.validation_error_count ?? 0),
+            ].join("");
+        }
+
+        const target = document.getElementById("assistantExampleCatalog");
+        if (target) {
+            target.innerHTML = renderTable(
+                catalog?.objects || [],
+                [
+                    { label: "Object", value: "object_name" },
+                    { label: "Family", value: "family" },
+                    { label: "Samples", value: "sample_count" },
+                    { label: "Scale MB", value: (row) => (row.samples || []).map((sample) => sample.declared_size_mb).join(", ") },
+                    { label: "Module", value: "module" },
+                ],
+                "No example catalog entries available."
+            );
+        }
+
+        setOutput("assistantExampleOutput", {
+            status: catalog?.status,
+            version: catalog?.version,
+            summary: catalog?.summary,
+            workflow_chains: catalog?.api_proof?.workflow_chains,
+            validation_errors: catalog?.validation_errors,
+        });
+    }
+
+    async function loadExampleCatalog() {
+        const catalog = await fetchJson("/examples/catalog?include_payloads=false");
+        renderExampleCatalog(catalog);
+        return catalog;
+    }
+
     async function refreshOverview() {
         clearAlert();
         const overview = await fetchJson("/assistant/management/overview");
         renderOverview(overview);
         await refreshAssistantSelectors();
+        await loadExampleCatalog();
         showAlert("Assistant management overview refreshed.");
         return overview;
     }
@@ -260,25 +371,142 @@
         const endpoints = {
             test: { url: `/assistant/models/${encodeURIComponent(id)}/test`, method: "POST" },
             status: { url: `/assistant/models/${encodeURIComponent(id)}/status`, method: "GET" },
+            bundle: { url: `/assistant/models/${encodeURIComponent(id)}/bundle/status`, method: "GET" },
+            runtimeLoad: { url: `/assistant/models/${encodeURIComponent(id)}/runtime/load`, method: "POST" },
+            runtimeStatus: { url: `/assistant/models/${encodeURIComponent(id)}/runtime/status`, method: "GET" },
+            runtimeUnload: { url: `/assistant/models/${encodeURIComponent(id)}/runtime/unload`, method: "POST" },
+            activate: { url: `/assistant/models/${encodeURIComponent(id)}/activate`, method: "POST" },
             attach: { url: `/assistant/models/${encodeURIComponent(id)}/training/dataset/attach`, method: "POST" },
+            tokenize: { url: `/assistant/models/${encodeURIComponent(id)}/training/tokenize`, method: "POST" },
             curate: { url: `/assistant/models/${encodeURIComponent(id)}/training/curate`, method: "POST" },
         };
+        const backgroundOperations = {
+            runtimeLoad: "model_runtime_load",
+            activate: "model_activate",
+            attach: "model_training_attach",
+            tokenize: "model_training_tokenize",
+            curate: "model_training_curate",
+        };
+        if (backgroundOperations[action]) {
+            setOutput("assistantModelActionOutput", `Queueing ${action}...`);
+            await submitAssistantJob(
+                backgroundOperations[action],
+                { assistant_model_id: id },
+                "assistantModelActionOutput",
+                async (result) => {
+                    setOutput("assistantModelActionOutput", result);
+                    await refreshOverview();
+                    showAlert(`AssistantModel ${action} completed.`);
+                },
+            );
+            return;
+        }
         const endpoint = endpoints[action];
         setOutput("assistantModelActionOutput", `Running ${action}...`);
         const result = await fetchJson(endpoint.url, { method: endpoint.method });
         setOutput("assistantModelActionOutput", result);
-        if (action === "attach") {
+        if (["attach", "tokenize", "activate", "runtimeLoad", "runtimeUnload"].includes(action)) {
             await refreshOverview();
         }
         showAlert(`AssistantModel ${action} completed.`);
     }
 
+    async function useModelForSession() {
+        const id = selectedModelId();
+        if (!id) {
+            showAlert("Select an AssistantModel first.", "error");
+            return;
+        }
+        window.localStorage?.setItem("amanajeAssistantModelId", id);
+        const draftSelect = document.getElementById("assistantDraftModelSelect");
+        if (draftSelect && Array.from(draftSelect.options).some((option) => option.value === id)) {
+            draftSelect.value = id;
+        }
+        setOutput("assistantModelActionOutput", {
+            status: "session_selected",
+            assistant_model_id: id,
+            storage_key: "amanajeAssistantModelId",
+        });
+        showAlert("AssistantModel selected for this browser session.");
+    }
+
+    async function importHuggingFaceModel() {
+        const repoId = document.getElementById("assistantHfRepoId")?.value.trim();
+        if (!repoId) {
+            showAlert("Enter a Hugging Face repository ID first.", "error");
+            return;
+        }
+        const draftTypes = (document.getElementById("assistantHfDraftTypes")?.value || "")
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+        const payload = {
+            repo_id: repoId,
+            revision: document.getElementById("assistantHfRevision")?.value.trim() || null,
+            display_name: document.getElementById("assistantHfDisplayName")?.value.trim() || null,
+            base_model_name: document.getElementById("assistantHfBaseModelName")?.value.trim() || repoId,
+            supported_draft_types: draftTypes.length ? draftTypes : undefined,
+            max_context_tokens: Number(document.getElementById("assistantHfMaxContextTokens")?.value || 4096),
+        };
+        setOutput("assistantModelActionOutput", "Importing Hugging Face AssistantModel...");
+        const result = await fetchJson("/assistant/models/import/huggingface", {
+            method: "POST",
+            body: JSON.stringify(payload),
+        });
+        setOutput("assistantModelActionOutput", result);
+        await refreshOverview();
+        showAlert("Hugging Face AssistantModel imported.");
+    }
+
+    async function importPyTorchModel() {
+        const fileInput = document.getElementById("assistantPtBundleFile");
+        const bundlePath = document.getElementById("assistantPtBundlePath")?.value.trim() || "";
+        const file = fileInput?.files?.[0] || null;
+        if (!file && !bundlePath) {
+            showAlert("Choose a PyTorch assistant .zip bundle or enter a server-visible bundle directory/path.", "error");
+            return;
+        }
+        const formData = new FormData();
+        if (file) {
+            formData.append("file", file);
+        }
+        if (bundlePath) {
+            formData.append("bundle_path", bundlePath);
+        }
+        const fields = {
+            display_name: "assistantPtDisplayName",
+            model_name: "assistantPtModelName",
+            model_version: "assistantPtModelVersion",
+            base_model_name: "assistantPtBaseModelName",
+            supported_draft_types: "assistantPtDraftTypes",
+            max_context_tokens: "assistantPtMaxContextTokens",
+            temperature: "assistantPtTemperature",
+            max_tokens: "assistantPtMaxTokens",
+            description: "assistantPtDescription",
+        };
+        Object.entries(fields).forEach(([key, id]) => {
+            const value = document.getElementById(id)?.value;
+            if (value !== undefined && String(value).trim() !== "") {
+                formData.append(key, String(value).trim());
+            }
+        });
+        setOutput("assistantModelActionOutput", "Importing PyTorch AssistantModel...");
+        const result = await fetchJson("/assistant/models/import/pytorch", {
+            method: "POST",
+            body: formData,
+        });
+        setOutput("assistantModelActionOutput", result);
+        await refreshOverview();
+        showAlert("PyTorch AssistantModel imported.");
+    }
+
     async function rebuildDataset() {
         setOutput("assistantDatasetOutput", "Rebuilding assistant training dataset...");
-        const result = await fetchJson("/assistant/datasets/rebuild", { method: "POST" });
-        setOutput("assistantDatasetOutput", result);
-        await refreshOverview();
-        showAlert("Assistant training dataset rebuilt.");
+        await submitAssistantJob("datasets_rebuild", {}, "assistantDatasetOutput", async (result) => {
+            setOutput("assistantDatasetOutput", result);
+            await refreshOverview();
+            showAlert("Assistant training dataset rebuilt.");
+        });
     }
 
     async function loadLatestDataset() {
@@ -290,10 +518,16 @@
     async function syncReferences() {
         const maxFiles = Number(document.getElementById("assistantReferenceMaxFiles")?.value || 100);
         setOutput("assistantReferenceOutput", "Syncing internal reference repository...");
-        const result = await fetchJson(`/assistant/references/sync?max_files=${encodeURIComponent(Math.max(1, Math.min(maxFiles, 1000)))}`, { method: "POST" });
-        setOutput("assistantReferenceOutput", result);
-        await refreshOverview();
-        showAlert("Internal reference repository sync completed.");
+        await submitAssistantJob(
+            "references_sync",
+            { max_files: Math.max(1, Math.min(maxFiles, 1000)) },
+            "assistantReferenceOutput",
+            async (result) => {
+                setOutput("assistantReferenceOutput", result);
+                await refreshOverview();
+                showAlert("Internal reference repository sync completed.");
+            },
+        );
     }
 
     async function searchReferences() {
@@ -314,9 +548,9 @@
         }
         const targetType = document.getElementById("assistantDraftTarget")?.value || "dataset_generation";
         setOutput("assistantDraftOutput", "Drafting workflow...");
-        const result = await fetchJson("/assistant/draft", {
-            method: "POST",
-            body: JSON.stringify({
+        await submitAssistantJob(
+            "draft",
+            {
                 prompt,
                 target_type: targetType,
                 ...assistantModelRequest("assistantDraftModelSelect"),
@@ -327,18 +561,24 @@
                 constraints: {
                     max_references: 8,
                 },
-            }),
-        });
-        state.currentDraft = result.draft || null;
-        state.currentRunId = result.run_id || null;
-        state.currentReview = result.review || null;
-        setOutput("assistantDraftOutput", result);
-        if (result.draft?.code) {
-            document.getElementById("assistantExecutionCode").value = result.draft.code;
-            document.getElementById("assistantExecutionProfile").value = result.draft.execution_profile || targetType;
-            state.executionApproved = false;
-        }
-        showAlert("Assistant draft created and reviewed.");
+            },
+            "assistantDraftOutput",
+            async (result) => {
+                state.currentDraft = result.draft || null;
+                state.currentRunId = result.run_id || null;
+                state.currentReview = result.review || null;
+                setOutput("assistantDraftOutput", result);
+                if (result.run_id) {
+                    window.AmanajeUI?.watchRun?.(result.run_id, { source: "assistant-draft" });
+                }
+                if (result.draft?.code) {
+                    document.getElementById("assistantExecutionCode").value = result.draft.code;
+                    document.getElementById("assistantExecutionProfile").value = result.draft.execution_profile || targetType;
+                    state.executionApproved = false;
+                }
+                showAlert("Assistant draft created and reviewed.");
+            },
+        );
     }
 
     async function reviewWorkflow() {
@@ -451,16 +691,18 @@
     async function runEvals() {
         const provider = document.getElementById("assistantEvalProvider")?.value || "amanaje_slm";
         setOutput("assistantEvalOutput", `Running golden evals for ${provider}...`);
-        const result = await fetchJson(`/assistant/evals/run?provider=${encodeURIComponent(provider)}`, { method: "POST" });
-        setOutput("assistantEvalOutput", result);
-        showAlert("Golden eval run completed.");
+        await submitAssistantJob("evals_run", { provider }, "assistantEvalOutput", (result) => {
+            setOutput("assistantEvalOutput", result);
+            showAlert("Golden eval run completed.");
+        });
     }
 
     async function curateGlobalTraining() {
         setOutput("assistantEvalOutput", "Curating global assistant training examples...");
-        const result = await fetchJson("/assistant/training/curate", { method: "POST" });
-        setOutput("assistantEvalOutput", result);
-        showAlert("Assistant training curation completed.");
+        await submitAssistantJob("training_curate", {}, "assistantEvalOutput", (result) => {
+            setOutput("assistantEvalOutput", result);
+            showAlert("Assistant training curation completed.");
+        });
     }
 
     function bindTabs() {
@@ -482,7 +724,15 @@
         document.getElementById("btnAssistantProviderTest")?.addEventListener("click", () => runAction(testProvider));
         document.getElementById("btnAssistantModelTest")?.addEventListener("click", () => runAction(() => modelAction("test")));
         document.getElementById("btnAssistantModelStatus")?.addEventListener("click", () => runAction(() => modelAction("status")));
+        document.getElementById("btnAssistantBundleStatus")?.addEventListener("click", () => runAction(() => modelAction("bundle")));
+        document.getElementById("btnAssistantRuntimeLoad")?.addEventListener("click", () => runAction(() => modelAction("runtimeLoad")));
+        document.getElementById("btnAssistantRuntimeStatus")?.addEventListener("click", () => runAction(() => modelAction("runtimeStatus")));
+        document.getElementById("btnAssistantUseSession")?.addEventListener("click", () => runAction(useModelForSession));
+        document.getElementById("btnAssistantActivateModel")?.addEventListener("click", () => runAction(() => modelAction("activate")));
+        document.getElementById("btnAssistantImportHf")?.addEventListener("click", () => runAction(importHuggingFaceModel));
+        document.getElementById("btnAssistantImportPyTorch")?.addEventListener("click", () => runAction(importPyTorchModel));
         document.getElementById("btnAssistantAttachDataset")?.addEventListener("click", () => runAction(() => modelAction("attach")));
+        document.getElementById("btnAssistantTokenizeModel")?.addEventListener("click", () => runAction(() => modelAction("tokenize")));
         document.getElementById("btnAssistantCurateModel")?.addEventListener("click", () => runAction(() => modelAction("curate")));
         document.getElementById("btnAssistantDatasetRebuild")?.addEventListener("click", () => runAction(rebuildDataset));
         document.getElementById("btnAssistantDatasetLatest")?.addEventListener("click", () => runAction(loadLatestDataset));

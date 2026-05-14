@@ -1,8 +1,57 @@
 function initializeEditor(template, elementId) {
     return new Promise(resolve => {
+        const container = document.getElementById(elementId);
+        const createFallbackEditor = () => {
+            if (!container) {
+                const memoryEditor = {
+                    value: template || '',
+                    getValue() { return this.value; },
+                    setValue(value) { this.value = value || ''; },
+                    focus() {}
+                };
+                window.editor = memoryEditor;
+                resolve(memoryEditor);
+                return;
+            }
+            container.innerHTML = '';
+            const textarea = document.createElement('textarea');
+            textarea.className = 'amanaje-editor-fallback';
+            textarea.value = template || '';
+            textarea.spellcheck = false;
+            textarea.style.width = '100%';
+            textarea.style.height = '100%';
+            textarea.style.minHeight = '520px';
+            textarea.style.border = '0';
+            textarea.style.padding = '1rem';
+            textarea.style.boxSizing = 'border-box';
+            textarea.style.resize = 'vertical';
+            textarea.style.background = '#111827';
+            textarea.style.color = '#e5e7eb';
+            textarea.style.fontFamily = 'Consolas, Monaco, monospace';
+            textarea.style.fontSize = '0.95rem';
+            textarea.style.lineHeight = '1.5';
+            container.appendChild(textarea);
+            const fallbackEditor = {
+                getValue() { return textarea.value; },
+                setValue(value) { textarea.value = value || ''; },
+                focus() { textarea.focus(); },
+                layout() {}
+            };
+            window.editor = fallbackEditor;
+            resolve(fallbackEditor);
+        };
+
+        if (typeof require !== 'function') {
+            createFallbackEditor();
+            return;
+        }
         require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
         require(['vs/editor/editor.main'], function () {
-            window.editor = monaco.editor.create(document.getElementById(elementId), {
+            if (!window.monaco || !container) {
+                createFallbackEditor();
+                return;
+            }
+            window.editor = monaco.editor.create(container, {
                 value: template || '',
                 language: 'python',
                 theme: 'vs-dark',
@@ -15,7 +64,7 @@ function initializeEditor(template, elementId) {
             });
 
             resolve(window.editor);
-        });
+        }, createFallbackEditor);
     });
 }
 
@@ -50,6 +99,15 @@ async function createFetchJson(url, options = {}) {
     return payload;
 }
 
+function renderJsonCell(value, title = 'JSON') {
+    if (value && typeof value === 'object') {
+        return window.AmanajeUI?.renderJsonExplorer
+            ? window.AmanajeUI.renderJsonExplorer(value, { title, maxPlotlyRows: 40, maxPlotlyColumns: 12 })
+            : `<code data-auto-json="true">${escapeHtml(JSON.stringify(value))}</code>`;
+    }
+    return escapeHtml(String(value ?? ''));
+}
+
 function appendIfPresent(formData, key, value) {
     if (value === undefined || value === null || value === '') return;
 
@@ -59,6 +117,33 @@ function appendIfPresent(formData, key, value) {
     }
 
     formData.append(key, String(value));
+}
+
+let datasetRegistryCache = [];
+let modelRegistryCache = [];
+
+function updateOperationToggleUI(operationId) {
+    document.querySelectorAll('[data-operation-choice]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.operationChoice === operationId);
+        button.setAttribute('aria-pressed', button.dataset.operationChoice === operationId ? 'true' : 'false');
+    });
+}
+
+function setOperationChoice(operationId) {
+    const select = document.getElementById('operationId');
+    if (!select) return;
+    if (select.value !== operationId) {
+        select.value = operationId;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    updateOperationToggleUI(operationId);
+}
+
+function bindOperationToggle() {
+    document.querySelectorAll('[data-operation-choice]').forEach((button) => {
+        button.addEventListener('click', () => setOperationChoice(button.dataset.operationChoice));
+    });
+    updateOperationToggleUI(document.getElementById('operationId')?.value || 'datasets');
 }
 
 function decodeBase64Bytes(payload) {
@@ -104,6 +189,21 @@ function buildModelFile(metadata) {
     return new File([bytes], fileName, { type: artifact.mime });
 }
 
+function buildAssistantModelFile(metadata) {
+    const supportedPayloads = [
+        { key: 'assistant_bundle_bytes', extension: '.zip', mime: 'application/zip' },
+        { key: 'bundle_bytes', extension: '.zip', mime: 'application/zip' },
+        { key: 'zip_bytes', extension: '.zip', mime: 'application/zip' }
+    ];
+    const artifact = supportedPayloads.find(({ key }) => typeof metadata[key] === 'string' && metadata[key].trim() !== '');
+    if (!artifact) {
+        throw new Error("Assistant Models require a .zip bundle file with assistant_model_manifest.json, tokenizer assets, model weights, and prompt template metadata.");
+    }
+    const bytes = decodeBase64Bytes(metadata[artifact.key]);
+    const fileName = inferFilenameFromMetadata(metadata, 'assistant_model_bundle', artifact.extension);
+    return new File([bytes], fileName, { type: artifact.mime });
+}
+
 function renderSupportMatrixSection(title, entries) {
     const cards = Object.entries(entries || {}).map(([extension, details]) => `
         <div class="support-card">
@@ -135,6 +235,7 @@ async function loadSupportMatrix() {
         target.innerHTML = `
             ${renderSupportMatrixSection('Datasets', result.datasets || {})}
             ${renderSupportMatrixSection('Models', result.models || {})}
+            ${renderSupportMatrixSection('Assistant Models', result.assistant_models || {})}
         `;
     } catch (error) {
         target.innerHTML = `<div class="status-message error" style="display:block;">Failed to load support matrix: ${escapeHtml(error.message)}</div>`;
@@ -148,7 +249,7 @@ function renderWarnings(warnings = []) {
     `).join('');
 }
 
-function renderDatasetAnalysis(summary = {}) {
+function renderDatasetAnalysis(summary = {}, plots = []) {
     const explorer = Array.isArray(summary.column_explorer) ? summary.column_explorer.slice(0, 12) : [];
     return `
         <div class="analysis-card" style="grid-column: 1 / -1;">
@@ -188,13 +289,17 @@ function renderDatasetAnalysis(summary = {}) {
                     `).join('')}
                 </tbody>
             </table>
+            ${window.AmanajeUI?.renderPlotDeck ? AmanajeUI.renderPlotDeck(plots || []) : ''}
         </div>
     `;
 }
 
-function renderModelAnalysis(summary = {}) {
+function renderModelAnalysis(summary = {}, plots = []) {
     const manifest = summary.artifact_manifest || summary.artifact_metadata || {};
     const metrics = summary.metrics || {};
+    const parameters = summary.parameters || {};
+    const inputFeatures = Array.isArray(summary.input_features) ? summary.input_features : [];
+    const outputFeatures = Array.isArray(summary.output_features) ? summary.output_features : [];
     return `
         <div class="analysis-card" style="grid-column: 1 / -1;">
             <h4>Artifact Manifest</h4>
@@ -205,6 +310,23 @@ function renderModelAnalysis(summary = {}) {
                 <div class="analysis-kpi"><span>Metrics</span><strong>${escapeHtml(Object.keys(metrics).length)}</strong></div>
             </div>
             ${renderWarnings(manifest.warnings || [])}
+            <div class="analysis-kpis" style="margin-top:0.9rem;">
+                <div class="analysis-kpi">
+                    <span>Input Features</span>
+                    <strong>${escapeHtml(inputFeatures.length || 0)}</strong>
+                    <div class="small-text">${escapeHtml(inputFeatures.join(', ') || 'No input features registered')}</div>
+                </div>
+                <div class="analysis-kpi">
+                    <span>Output Features</span>
+                    <strong>${escapeHtml(outputFeatures.length || 0)}</strong>
+                    <div class="small-text">${escapeHtml(outputFeatures.join(', ') || 'No output features registered')}</div>
+                </div>
+                <div class="analysis-kpi">
+                    <span>Saved Parameters</span>
+                    <strong>${escapeHtml(Object.keys(parameters).length || 0)}</strong>
+                    <div class="small-text">${escapeHtml(summary.path || 'No artifact path registered')}</div>
+                </div>
+            </div>
             <table class="analysis-table">
                 <thead>
                     <tr>
@@ -221,6 +343,25 @@ function renderModelAnalysis(summary = {}) {
                     `).join('')}
                 </tbody>
             </table>
+            ${Object.keys(parameters).length ? `
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(parameters).map(([key, value]) => `
+                            <tr>
+                                <td>${escapeHtml(key)}</td>
+                                <td>${renderJsonCell(value, key)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : ''}
+            ${window.AmanajeUI?.renderPlotDeck ? AmanajeUI.renderPlotDeck(plots || []) : ''}
         </div>
     `;
 }
@@ -230,21 +371,31 @@ async function submitUpload(event) {
 
     const operationId = document.getElementById('operationId').value;
     const metadata = getUploadMetadata();
-    const name = metadata.name || metadata.objectName || metadata.object_name;
+    const selectedFile = document.getElementById('artifactFile')?.files?.[0] || null;
+    const selectedFileStem = selectedFile?.name ? selectedFile.name.replace(/\.[^.]+$/, '') : '';
+    const name = metadata.name || metadata.objectName || metadata.object_name || selectedFileStem;
 
     if (!name) {
-        setUploadStatus("Define 'name' in the editor before creating the object.", 'error');
+        setUploadStatus("Define 'name' in the editor or choose an artifact file before creating the object.", 'error');
         return;
     }
 
-    if (!window.editor || !window.editor.getValue().trim()) {
-        setUploadStatus('Write a script in the editor before creating the object.', 'error');
+    if ((!window.editor || !window.editor.getValue().trim()) && !selectedFile) {
+        setUploadStatus('Write a script in the editor or choose an artifact file before creating the object.', 'error');
         return;
     }
 
     let file;
     try {
-        file = operationId === 'models' ? buildModelFile(metadata) : buildDatasetFile(metadata);
+        if (selectedFile) {
+            file = selectedFile;
+        } else if (operationId === 'models') {
+            file = buildModelFile(metadata);
+        } else if (operationId === 'assistant-models') {
+            file = buildAssistantModelFile(metadata);
+        } else {
+            file = buildDatasetFile(metadata);
+        }
     } catch (error) {
         setUploadStatus(error.message, 'error');
         return;
@@ -264,7 +415,7 @@ async function submitUpload(event) {
         appendIfPresent(formData, 'datasetType', metadata.dataset_type || metadata.type);
         appendIfPresent(formData, 'connectionString', metadata.connection_string);
     } else {
-        appendIfPresent(formData, 'modelType', metadata.model_type || metadata.type);
+        appendIfPresent(formData, 'modelType', operationId === 'assistant-models' ? 'assistant_model' : (metadata.model_type || metadata.type));
         appendIfPresent(formData, 'parameters', metadata.parameters || {});
         appendIfPresent(formData, 'metrics', metadata.metrics || {});
         appendIfPresent(formData, 'referenceData', metadata.reference_data || metadata.referenceData);
@@ -285,7 +436,9 @@ async function submitUpload(event) {
 
         const detailMessage = operationId === 'datasets'
             ? `Created dataset <code>${result.id || 'n/a'}</code> with ${escapeHtml(result.shape?.[1] ?? 0)} columns.`
-            : `Created model <code>${result.id || 'n/a'}</code> with runtime support: <code>${escapeHtml(JSON.stringify(result.runtime_capabilities || {}))}</code>.`;
+            : operationId === 'assistant-models'
+                ? `Registered AssistantModel <code>${result.id || 'n/a'}</code> with bundle status: <code>${escapeHtml(result.bundle_status || 'unknown')}</code>.`
+                : `Created model <code>${result.id || 'n/a'}</code> with runtime support: ${renderJsonCell(result.runtime_capabilities || {}, 'Runtime Support')}.`;
         setUploadStatus(detailMessage, 'success');
         await refreshSelectors();
         await refreshFeatures();
@@ -319,12 +472,13 @@ async function refreshFeatures() {
 
     try {
         const features = await createFetchJson('/features');
-        if (!Array.isArray(features) || features.length === 0) {
+        datasetRegistryCache = Array.isArray(features) ? features : [];
+        if (!datasetRegistryCache.length) {
             featureList.innerHTML = '<div class="feature-item">No datasets uploaded yet.</div>';
             return;
         }
 
-        featureList.innerHTML = features.map(feature => `
+        featureList.innerHTML = datasetRegistryCache.map(feature => `
             <div class="feature-item">
                 <h4 style="margin:0.25rem 0;">${feature.name || 'Unnamed dataset'}</h4>
                 <p style="margin:0.5rem 0; font-size:0.9em; color:#666;">${feature.description || 'No description provided.'}</p>
@@ -333,8 +487,19 @@ async function refreshFeatures() {
                     <small>Size: <b>${Number(feature.size || 0).toFixed(2)} MB</b></small>
                     <small>ID: <b>${feature.id}</b></small>
                 </div>
+                <div class="editor-controls" style="margin:0.85rem 0 0;">
+                    <button type="button" class="btn" data-dataset-analyze="${feature.id}">Analyze</button>
+                    <button type="button" class="btn" data-dataset-extract="${feature.id}">Extract Features</button>
+                </div>
             </div>
         `).join('');
+
+        featureList.querySelectorAll('[data-dataset-analyze]').forEach((button) => {
+            button.addEventListener('click', () => analyzeData(button.dataset.datasetAnalyze));
+        });
+        featureList.querySelectorAll('[data-dataset-extract]').forEach((button) => {
+            button.addEventListener('click', () => extractFeatures(button.dataset.datasetExtract));
+        });
     } catch (error) {
         console.error('Error fetching datasets:', error);
         featureList.innerHTML = '<div class="status-message error" style="display:block;">Failed to load dataset history.</div>';
@@ -346,12 +511,13 @@ async function refreshModels() {
 
     try {
         const models = await createFetchJson('/list/model');
-        if (!Array.isArray(models) || models.length === 0) {
+        modelRegistryCache = Array.isArray(models) ? models : [];
+        if (!modelRegistryCache.length) {
             modelList.innerHTML = '<div class="model-item">No models uploaded yet.</div>';
             return;
         }
 
-        modelList.innerHTML = models.map(model => `
+        modelList.innerHTML = modelRegistryCache.map(model => `
             <div class="model-item">
                 <h4 style="margin:0.25rem 0;">${model.name || 'Unnamed model'}</h4>
                 <p style="margin:0.5rem 0; font-size:0.9em; color:#666;">${model.description || 'No description provided.'}</p>
@@ -360,16 +526,28 @@ async function refreshModels() {
                     <small>Size: <b>${Number(model.size || 0).toFixed(2)} MB</b></small>
                     <small>ID: <b>${model.id}</b></small>
                 </div>
+                <div style="display:flex; gap:1rem; font-size:0.9em; color:#666; margin-top:6px;">
+                    <small>Inputs: <b>${Array.isArray(model.input_features) ? model.input_features.length : 0}</b></small>
+                    <small>Outputs: <b>${Array.isArray(model.output_features) ? model.output_features.length : 0}</b></small>
+                    <small>Trained: <b>${model.is_trained ? 'yes' : 'no'}</b></small>
+                </div>
+                <div class="editor-controls" style="margin:0.85rem 0 0;">
+                    <button type="button" class="btn" data-model-analyze="${model.id}">Analyze</button>
+                </div>
             </div>
         `).join('');
+
+        modelList.querySelectorAll('[data-model-analyze]').forEach((button) => {
+            button.addEventListener('click', () => analyzeModel(button.dataset.modelAnalyze));
+        });
     } catch (error) {
         console.error('Error fetching models:', error);
         modelList.innerHTML = '<div class="status-message error" style="display:block;">Failed to load model history.</div>';
     }
 }
 
-async function analyzeData() {
-    const datasetId = document.getElementById('datasetSelect').value;
+async function analyzeData(datasetIdOverride = null) {
+    const datasetId = datasetIdOverride || document.getElementById('datasetSelect').value;
     const target = document.getElementById('datasetAnalysisResults');
 
     if (!datasetId) {
@@ -379,17 +557,17 @@ async function analyzeData() {
 
     try {
         target.innerHTML = '<div class="status-message info" style="display:block;">Analyzing dataset...</div>';
-
-        const results = await createFetchJson(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
-        target.innerHTML = renderDatasetAnalysis(results.summary || {});
+        document.getElementById('datasetSelect').value = String(datasetId);
+        const results = await createFetchJson(`/analysis/object?registry_type=datasetmodel&item_id=${encodeURIComponent(datasetId)}`);
+        target.innerHTML = renderDatasetAnalysis(results.summary || {}, results.plots || []);
     } catch (error) {
         console.error('Dataset analysis error:', error);
         target.innerHTML = `<div class="status-message error" style="display:block;">Analysis failed: ${error.message}</div>`;
     }
 }
 
-async function analyzeModel() {
-    const modelId = document.getElementById('modelSelect').value;
+async function analyzeModel(modelIdOverride = null) {
+    const modelId = modelIdOverride || document.getElementById('modelSelect').value;
     const target = document.getElementById('modelAnalysisResults');
 
     if (!modelId) {
@@ -399,17 +577,17 @@ async function analyzeModel() {
 
     try {
         target.innerHTML = '<div class="status-message info" style="display:block;">Analyzing model...</div>';
-
-        const results = await createFetchJson(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
-        target.innerHTML = renderModelAnalysis(results.summary || {});
+        document.getElementById('modelSelect').value = String(modelId);
+        const results = await createFetchJson(`/analysis/object?registry_type=learningmodel&item_id=${encodeURIComponent(modelId)}`);
+        target.innerHTML = renderModelAnalysis(results.summary || {}, results.plots || []);
     } catch (error) {
         console.error('Model analysis error:', error);
         target.innerHTML = `<div class="status-message error" style="display:block;">Analysis failed: ${error.message}</div>`;
     }
 }
 
-async function extractFeatures() {
-    const datasetId = document.getElementById('datasetSelect').value;
+async function extractFeatures(datasetIdOverride = null) {
+    const datasetId = datasetIdOverride || document.getElementById('datasetSelect').value;
     const target = document.getElementById('datasetAnalysisResults');
 
     if (!datasetId) {
@@ -430,7 +608,7 @@ async function extractFeatures() {
                         ${Object.entries(summary).map(([key, value]) => `
                             <tr>
                                 <th>${escapeHtml(key.replace(/_/g, ' '))}</th>
-                                <td>${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</td>
+                                <td>${renderJsonCell(value, key.replace(/_/g, ' '))}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -443,29 +621,62 @@ async function extractFeatures() {
     }
 }
 
+function pickRandomReferences(references, count = 3) {
+    const pool = [...references];
+    const picks = [];
+    while (pool.length && picks.length < count) {
+        const index = Math.floor(Math.random() * pool.length);
+        picks.push(pool.splice(index, 1)[0]);
+    }
+    return picks;
+}
+
+function buildReferenceSeedPrompt(references, operationId) {
+    const modeLabel = operationId === 'assistant-models' ? 'assistant model bundle' : (operationId === 'models' ? 'model' : 'dataset');
+    const lines = references.map((reference) => `- ${reference.name || reference.reference_id} [${reference.source_type}] ${reference.summary || ''}`.trim());
+    return `Create a ${modeLabel} generation script inspired by this random project reference sample:\n${lines.join('\n')}\n\nKeep the output aligned with Painel Amanaje registry metadata.`;
+}
+
 async function generateScript() {
-    const userPrompt = window.prompt(
-        'Describe the script you want to generate:',
-        'Example: Load a CSV file and calculate summary statistics.'
-    );
+    const promptField = document.getElementById('assistantCreatePrompt');
+    let userPrompt = (promptField?.value || '').trim();
+    if (!userPrompt) {
+        try {
+            const referencesPayload = await createFetchJson('/assistant/references?limit=24');
+            const sampledReferences = pickRandomReferences(referencesPayload.references || [], 3);
+            if (sampledReferences.length) {
+                userPrompt = buildReferenceSeedPrompt(sampledReferences, document.getElementById('operationId').value);
+                showStatus('Seeded the prompt from a random assistant reference sample.', 'info');
+            }
+        } catch (error) {
+            console.warn('Unable to seed create prompt from assistant references:', error);
+        }
+    }
+
+    if (!userPrompt) {
+        userPrompt = window.prompt(
+            'Describe the script you want to generate:',
+            'Example: Load a CSV file and calculate summary statistics.'
+        );
+    }
 
     if (!userPrompt || !userPrompt.trim()) {
         showStatus('No description provided.', 'info');
         return;
     }
 
-    document.getElementById('assistantCreatePrompt').value = userPrompt.trim();
+    promptField.value = userPrompt.trim();
     await draftCreateAssistantScript();
 }
 
 function getCreateAssistantProfile() {
-    return document.getElementById('operationId').value === 'models'
+    return ['models', 'assistant-models'].includes(document.getElementById('operationId').value)
         ? 'model_generation'
         : 'dataset_generation';
 }
 
 function getCreateAssistantTargetType() {
-    return document.getElementById('operationId').value === 'models'
+    return ['models', 'assistant-models'].includes(document.getElementById('operationId').value)
         ? 'model_generation'
         : 'dataset_generation';
 }
@@ -668,13 +879,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     })();
     await window.editorReady;
 
+    bindOperationToggle();
     ToggleFormOptions({
         triggerElement: '#operationId',
         mapping: {
-            datasets: ['featuresSection', 'datasetAnalysis'],
-            models: ['modelsSection', 'modelAnalysis']
+            datasets: ['featuresSection'],
+            models: ['modelsSection'],
+            'assistant-models': ['modelsSection']
         },
-        allFields: ['featuresSection', 'modelsSection', 'datasetAnalysis', 'modelAnalysis']
+        allFields: ['featuresSection', 'modelsSection']
     });
 
     document.getElementById('uploadForm')?.addEventListener('submit', submitUpload);
@@ -717,13 +930,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnAnalyzeDataset')?.addEventListener('click', analyzeData);
     document.getElementById('btnAnalyzeModel')?.addEventListener('click', analyzeModel);
     document.getElementById('operationId')?.addEventListener('change', () => {
+        updateOperationToggleUI(document.getElementById('operationId').value);
         displayMetadataPanel(getUploadMetadata());
     });
 
     await window.AmanajeUI?.loadAssistantModelOptions?.('assistantCreateModel');
-    await refreshSelectors();
-    await refreshFeatures();
-    await refreshModels();
+    document.getElementById('datasetSelect')?.addEventListener('focus', refreshSelectors, { once: true });
+    document.getElementById('modelSelect')?.addEventListener('focus', refreshSelectors, { once: true });
     await loadSupportMatrix();
     loadFileList();
     displayMetadataPanel(getUploadMetadata());

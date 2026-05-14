@@ -6,68 +6,11 @@
 
 {% block extra_css %}
 <style>
-    :root {
-        --amanaje-primary: #0077b6;
-        --amanaje-primary-strong: #0c4a6e;
-        --amanaje-primary-soft: #e0f2fe;
-        --amanaje-primary-softer: #f0f9ff;
-        --amanaje-primary-mid: #bae6fd;
-        --amanaje-primary-border: #7dd3fc;
-        --amanaje-primary-border-soft: #bae6fd;
-        --amanaje-primary-accent: #0ea5e9;
-        --amanaje-primary-gradient: #0077b6;
-        --amanaje-primary-bar-gradient: #0077b6;
-        --amanaje-primary-shadow: rgba(0, 119, 182, 0.08);
-        --amanaje-primary-shadow-strong: rgba(0, 119, 182, 0.2);
-        --amanaje-code-bg: #082f49;
-        --amanaje-code-fg: #e0f2fe;
-        --amanaje-code-border: #075985;
-        --amanaje-body-bg: #f6fbff;
-    }
-
     .production-shell { display: grid; gap: 1.25rem; }
-    .global-watch-panel {
-        background:
-            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
-            var(--amanaje-shell-panel);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 24px;
-        padding: 1.45rem;
-        box-shadow: 0 20px 42px var(--amanaje-primary-shadow);
-    }
-    .global-watch-panel h3 {
-        margin-top: 0;
-        margin-bottom: 0.45rem;
-        color: var(--amanaje-text-strong);
-        font-family: var(--amanaje-heading-font);
-        font-size: clamp(1.8rem, 2.4vw, 2.45rem);
-    }
-    .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .workspace-tab {
-        border: 1px solid var(--amanaje-primary-border);
-        background: rgba(255,255,255,0.76);
-        color: var(--amanaje-primary-strong);
-        padding: 0.8rem 1rem;
-        border-radius: 999px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .workspace-tab.active { background: var(--amanaje-primary-gradient); color: white; border-color: transparent; }
     .panel {
         display: none;
-        background: var(--amanaje-surface);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 22px;
-        padding: 1.5rem;
-        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
     }
     .panel.active { display: block; }
-    .panel-title {
-        margin: 0 0 0.45rem;
-        color: var(--amanaje-text-strong);
-        font-family: var(--amanaje-heading-font);
-    }
-    .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
     .layout-grid, .metric-grid, .history-grid, .plot-grid { display: grid; gap: 1rem; }
     .layout-grid { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); }
     .metric-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -80,43 +23,10 @@
     }
     .surface h4, .metric-card h4, .plot-card h4, .history-card h4, .log-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
     .metric-value { font-size: 1.45rem; font-weight: 800; color: var(--amanaje-primary); }
-    .status-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.35rem 0.8rem;
-        border-radius: 999px;
-        font-weight: 800;
-        letter-spacing: 0.02em;
-    }
-    .status-pill.active { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); }
-    .status-pill.inactive { background: #e5e7eb; color: #4b5563; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
-    .form-group select,
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--amanaje-primary-border);
-        border-radius: 12px;
-        box-sizing: border-box;
-        background: var(--amanaje-surface-3);
-    }
     .form-group textarea { min-height: 150px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
     .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .btn {
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
-    .btn-danger { background: #dc2626; color: white; }
-    .btn-secondary { background: var(--amanaje-surface-3); color: #374151; }
-    .btn-ghost { background: rgba(255,255,255,0.8); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .helper-text { color: #6b7280; font-size: 0.9rem; }
     .summary-table { width: 100%; border-collapse: collapse; }
     .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
@@ -127,17 +37,6 @@
     .plot-meta { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.84rem; color: var(--amanaje-primary-strong); }
     .plot-track { height: 0.65rem; background: var(--amanaje-primary-mid); border-radius: 999px; overflow: hidden; }
     .plot-fill { height: 100%; background: var(--amanaje-primary-bar-gradient); }
-    .json-block, .log-block {
-        background: var(--amanaje-code-bg);
-        color: var(--amanaje-code-fg);
-        padding: 1rem;
-        border-radius: 14px;
-        overflow: auto;
-        white-space: pre-wrap;
-        font-family: Consolas, "Courier New", monospace;
-        font-size: 0.9rem;
-        max-height: 320px;
-    }
     .history-card .pill-row, .surface .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
     .watch-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1rem; }
     .watch-card {
@@ -147,25 +46,139 @@
         padding: 0.95rem;
     }
     .watch-card h4 { margin: 0 0 0.35rem; color: var(--amanaje-primary-strong); }
-    .pill {
-        display: inline-flex;
+    .run-scroll { max-height: 480px; overflow: auto; display: grid; gap: 1rem; }
+    .plot-service-frame {
+        width: 100%;
+        min-height: 420px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        background: white;
+    }
+    .simulation-workbench { display: grid; gap: 1rem; }
+    .simulation-context-strip {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        margin-bottom: 1rem;
+    }
+    .simulation-context-item {
+        min-height: 78px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
+        padding: 0.85rem;
+    }
+    .simulation-context-item span {
+        display: block;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .simulation-context-item strong {
+        display: block;
+        margin-top: 0.3rem;
+        color: var(--amanaje-primary-strong);
+        word-break: break-word;
+    }
+    .simulation-family-strip {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+        align-items: stretch;
+        margin-bottom: 1rem;
+    }
+    .simulation-family-card {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.78);
+        padding: 0.85rem;
+    }
+    .simulation-family-card strong {
+        display: block;
+        color: var(--amanaje-primary-strong);
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    .simulation-mode-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+    }
+    .simulation-readiness-list {
+        margin: 0.5rem 0 0;
+        padding-left: 1rem;
+        color: #7f1d1d;
+    }
+    .simulation-family-controls {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        margin-top: 0.75rem;
+    }
+    .simulation-family-controls textarea {
+        min-height: 84px;
+    }
+    .feature-control-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    }
+    .feature-control-card {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.72);
+        padding: 0.75rem;
+    }
+    .feature-control-card label {
+        display: flex;
         align-items: center;
-        padding: 0.3rem 0.65rem;
-        border-radius: 999px;
-        background: var(--amanaje-primary-soft);
-        color: var(--amanaje-primary);
-        border: 1px solid var(--amanaje-primary-border);
-        font-size: 0.82rem;
+        justify-content: space-between;
+        gap: 0.5rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+    }
+    .feature-control-card input { margin-bottom: 0.35rem; }
+    .simulation-status-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+    }
+    .simulation-comparison-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr);
+    }
+    .simulation-changed-list {
+        display: grid;
+        gap: 0.45rem;
+        margin-top: 0.75rem;
+    }
+    .simulation-change-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--amanaje-primary-soft);
+        color: var(--amanaje-text-strong);
+    }
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--amanaje-primary-strong);
         font-weight: 700;
     }
-    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
-    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
-    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .run-scroll { max-height: 480px; overflow: auto; display: grid; gap: 1rem; }
+    .checkbox-row input { width: auto; }
 
     @media (max-width: 980px) {
         .layout-grid { grid-template-columns: 1fr; }
+        .simulation-family-strip { grid-template-columns: 1fr; }
+        .simulation-comparison-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -209,6 +222,7 @@
         <button class="workspace-tab active" type="button" data-tab="monitor">Inference Monitor</button>
         <button class="workspace-tab" type="button" data-tab="simulation">Simulation</button>
         <button class="workspace-tab" type="button" data-tab="history">Run History</button>
+        <button class="workspace-tab" type="button" data-tab="plots">Visualization</button>
         <button class="workspace-tab" type="button" data-tab="mlflow">MLflow</button>
         <button class="workspace-tab" type="button" data-tab="activity">Activity Log</button>
     </div>
@@ -277,59 +291,142 @@
             </div>
         </div>
         
-        <!-- TODO - The monitoring Summary needs an indication that the app is running the retraining procedure as feedback, or
-         the user won't know this is working.-->
         <div id="monitoringSummary" style="margin-top:1rem;"></div>
 
     </section>
 
     <section class="panel" id="panel-simulation">
-        <h3 class="panel-title">Simulation</h3>
-        <p class="panel-subtitle">Run future-step predictions from the currently selected production pair and inspect the generated input drift alongside the prediction path.</p>
+        <h3 class="panel-title">Simulation Workbench</h3>
+        <p class="panel-subtitle">Explore trained models through controlled what-if inference, scenario comparison, feature overrides, and sensitivity checks.</p>
 
-        <!-- TODO - The entire simulation needs work and attention. Whenever running a simulation, the output must have emphasis on the
-         output target of each LearningModel being run alongside the details. Be sure to come back here when considering the
-         implementation of a table system that can replace the JSONS in this visualization.-->
-        <div class="layout-grid">
-            <div class="surface">
-                <h4>Simulation Controls</h4>
-                <div class="inline-grid">
-                    <div class="form-group">
-                        <label for="simulationSteps">Steps</label>
-                        <input id="simulationSteps" type="number" min="1" max="120" value="12">
-                    </div>
-                    <div class="form-group">
-                        <label for="simulationAmplitude">Amplitude</label>
-                        <input id="simulationAmplitude" type="number" step="0.01" min="0" value="0.05">
-                    </div>
-                    <div class="form-group">
-                        <label for="simulationTrend">Trend</label>
-                        <select id="simulationTrend">
-                            <option value="up">Upward</option>
-                            <option value="down">Downward</option>
-                        </select>
-                    </div>
+        <div class="simulation-workbench">
+            <div id="simulationContextStrip" class="simulation-context-strip">
+                <div class="simulation-context-item"><span>Inference</span><strong>Not loaded</strong></div>
+                <div class="simulation-context-item"><span>Model</span><strong>Select a model</strong></div>
+                <div class="simulation-context-item"><span>Dataset</span><strong>Select a dataset</strong></div>
+                <div class="simulation-context-item"><span>Target</span><strong>Prediction</strong></div>
+            </div>
+            <div id="simulationFamilyStrip" class="simulation-family-strip">
+                <div class="simulation-family-card">
+                    <strong>Model Family</strong>
+                    <span class="helper-text">Load context to resolve available simulation modes.</span>
                 </div>
-                <div class="form-group">
-                    <label for="simulationScenario">Scenario Overrides (JSON)</label>
-                    <textarea id="simulationScenario" spellcheck="false">{
-  "feature_1": 1.0
-}</textarea>
-                    <div class="helper-text">Optional overrides replace the baseline feature values before the drift curve is applied.</div>
-                </div>
-                <div class="actions-row">
-                    <button type="button" class="btn btn-primary" id="btnRunSimulation">Run Simulation</button>
+                <div class="simulation-family-card">
+                    <label for="simulationMode">Mode</label>
+                    <select id="simulationMode">
+                        <option value="tabular_what_if">What-if Analysis</option>
+                    </select>
+                    <div id="simulationModeDescription" class="helper-text" style="margin-top:0.5rem;">The workbench will adapt controls to the selected model.</div>
+                    <div id="simulationReadiness" class="helper-text"></div>
                 </div>
             </div>
 
-            <div class="surface">
-                <h4>Simulation Results</h4>
-                <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
+            <div class="layout-grid">
+                <div class="surface">
+                    <div class="toolbar-row">
+                        <h4 style="margin:0;">What-if Controls</h4>
+                        <button type="button" class="btn btn-ghost" id="btnRefreshSimulationContext">Refresh Context</button>
+                    </div>
+                    <div class="inline-grid">
+                        <div class="form-group">
+                            <label for="simulationBaselineSource">Baseline</label>
+                            <select id="simulationBaselineSource">
+                                <option value="last">Last Row</option>
+                                <option value="first">First Row</option>
+                                <option value="mean">Mean Row</option>
+                                <option value="median">Median Row</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="simulationSteps">Steps</label>
+                            <input id="simulationSteps" type="number" min="1" max="120" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label for="simulationAmplitude">Amplitude</label>
+                            <input id="simulationAmplitude" type="number" step="0.01" min="0" value="0.05">
+                        </div>
+                        <div class="form-group">
+                            <label for="simulationTrend">Trend</label>
+                            <select id="simulationTrend">
+                                <option value="up">Upward</option>
+                                <option value="down">Downward</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4>Key Feature Overrides</h4>
+                    <div id="simulationFeatureControls" class="feature-control-grid">
+                        <div class="helper-text">Load a simulation context to expose editable feature controls.</div>
+                    </div>
+
+                    <h4>Family Options</h4>
+                    <div id="simulationFamilyControls" class="simulation-family-controls">
+                        <div class="helper-text">Family-specific inference controls will appear after context is loaded.</div>
+                    </div>
+
+                    <div class="inline-grid" style="margin-top:1rem;">
+                        <div class="form-group">
+                            <label for="simulationScenarioName">Scenario Name</label>
+                            <input id="simulationScenarioName" type="text" value="Scenario">
+                        </div>
+                        <div class="form-group">
+                            <label for="simulationSensitivityFeatures">Sensitivity Features</label>
+                            <input id="simulationSensitivityFeatures" type="text" placeholder="comma-separated features">
+                        </div>
+                    </div>
+                    <label class="checkbox-row" for="simulationSensitivityEnabled">
+                        <input id="simulationSensitivityEnabled" type="checkbox">
+                        Run sensitivity check
+                    </label>
+
+                    <div class="form-group" style="margin-top:1rem;">
+                        <label for="simulationScenario">Scenario Overrides (JSON)</label>
+                        <textarea id="simulationScenario" spellcheck="false">{}</textarea>
+                    </div>
+
+                    <div class="amanaje-collapsible simulation-advanced" data-collapsible-wrapper="true">
+                        <div class="amanaje-collapse-header">
+                            <span class="amanaje-collapse-title">Advanced Simulation Payload</span>
+                            <button type="button" class="amanaje-collapse-toggle" data-collapsible-toggle="true" aria-expanded="false">Expand</button>
+                        </div>
+                        <div class="amanaje-collapse-body" hidden>
+                            <div class="form-group">
+                                <label for="simulationScenarios">Named Scenarios (JSON Array)</label>
+                                <textarea id="simulationScenarios" spellcheck="false">[]</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="simulationStepPlan">Step Plan (JSON)</label>
+                                <textarea id="simulationStepPlan" spellcheck="false">{}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="simulationPayload">Raw Payload Merge (JSON)</label>
+                                <textarea id="simulationPayload" spellcheck="false">{}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="simulationFamilyPayload">Family Payload Merge (JSON)</label>
+                                <textarea id="simulationFamilyPayload" spellcheck="false">{}</textarea>
+                            </div>
+                            <label class="checkbox-row" for="simulationSaveDefaults">
+                                <input id="simulationSaveDefaults" type="checkbox">
+                                Save controls as inference defaults
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="actions-row" style="margin-top:1rem;">
+                        <button type="button" class="btn btn-primary" id="btnRunSimulation">Run Simulation</button>
+                    </div>
+                </div>
+
+                <div class="surface">
+                    <h4>Inference Results</h4>
+                    <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
+                </div>
             </div>
-        </div>
-        <div class="surface" style="margin-top:1rem;">
-            <h4>Predicted Steps</h4>
-            <div id="simulationStepTable">The full simulation step table will appear here after a run.</div>
+            <div class="surface">
+                <h4>Scenario Comparison</h4>
+                <div id="simulationStepTable">The full simulation step table will appear here after a run.</div>
+            </div>
         </div>
     </section>
 
@@ -340,6 +437,24 @@
             <button type="button" class="btn btn-ghost" id="btnRefreshHistory">Refresh Run History</button>
         </div>
         <div id="historyResults" class="history-grid"></div>
+    </section>
+
+    <section class="panel" id="panel-plots">
+        <h3 class="panel-title">Visualization</h3>
+        <p class="panel-subtitle">Production keeps a compact plot doorway here, while the full blue visualization suite lives in the dedicated workspace.</p>
+        <div class="surface">
+            <h4>Current Production Plot Deck</h4>
+            <div class="helper-text">Uses the selected inference pair, model, and dataset to combine production plot specs with runtime artifacts.</div>
+            <div class="actions-row" style="margin-top:1rem;">
+                <button type="button" class="btn btn-primary" id="btnRefreshProductionPlots">Refresh Plots</button>
+                <button type="button" class="btn btn-secondary" id="btnOpenPlotCentral">Open Visualization</button>
+            </div>
+            <div id="productionPlotStatus" class="helper-text" style="margin-top:1rem;">No production plots loaded yet.</div>
+        </div>
+        <div class="surface" style="margin-top:1rem;">
+            <h4>Plot Deck</h4>
+            <div id="productionPlotDeck"></div>
+        </div>
     </section>
 
     <section class="panel" id="panel-mlflow">
@@ -386,6 +501,7 @@ let modelCache = [];
 let datasetCache = [];
 let inferenceCache = [];
 let productionHistoryCache = [];
+let simulationContextCache = null;
 let activeWatchContextId = '';
 let experimentRunState = { experimentId: '', offset: 0, limit: 20, hasMore: false };
 
@@ -405,49 +521,31 @@ function setPanel(tabName) {
     document.querySelectorAll('.panel').forEach((panel) => {
         panel.classList.toggle('active', panel.id === `panel-${tabName}`);
     });
+    if (tabName === 'simulation') {
+        loadSimulationContext({ silent: true });
+    }
 }
 
 function renderPlotDeck(plots = []) {
-    const usablePlots = Array.isArray(plots) ? plots.filter((plot) => Array.isArray(plot.series) && plot.series.length) : [];
-    if (!usablePlots.length) return '';
+    return window.AmanajeUI?.renderPlotDeck
+        ? AmanajeUI.renderPlotDeck(plots)
+        : '';
+}
 
-    return `
-        <div class="plot-grid">
-            ${usablePlots.map((plot) => {
-                const maxValue = Math.max(...plot.series.map((item) => Number(item.value) || 0), 1);
-                return `
-                    <div class="plot-card">
-                        <h4>${escapeHtml(plot.title || 'Generated Plot')}</h4>
-                        <div class="helper-text" style="margin-bottom:0.8rem;">${escapeHtml(plot.description || 'Automatic summary plot')}</div>
-                        <div class="plot-bars">
-                            ${plot.series.map((item) => {
-                                const value = Number(item.value) || 0;
-                                const width = Math.max((value / maxValue) * 100, value > 0 ? 6 : 0);
-                                return `
-                                    <div class="plot-row">
-                                        <div class="plot-meta">
-                                            <span>${escapeHtml(item.label)}</span>
-                                            <span>${escapeHtml(value.toFixed(3).replace(/\.000$/, ''))}</span>
-                                        </div>
-                                        <div class="plot-track">
-                                            <div class="plot-fill" style="width:${width}%;"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `;
+function renderJsonValue(value, title = 'JSON') {
+    if (value && typeof value === 'object') {
+        return window.AmanajeUI?.renderJsonExplorer
+            ? AmanajeUI.renderJsonExplorer(value, { title, maxPlotlyRows: 40, maxPlotlyColumns: 14 })
+            : `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`;
+    }
+    return escapeHtml(value);
 }
 
 function buildSummaryMarkup(summary = {}) {
     const rows = Object.entries(summary).map(([key, value]) => `
         <tr>
             <td>${escapeHtml(key.replace(/_/g, ' '))}</td>
-            <td>${typeof value === 'object' ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>` : escapeHtml(value)}</td>
+            <td>${renderJsonValue(value, key.replace(/_/g, ' '))}</td>
         </tr>
     `).join('');
     return `<table class="summary-table">${rows}</table>`;
@@ -639,48 +737,556 @@ function renderProductionStatus(status = {}) {
     renderWatchlist(status.watchlist || {});
 }
 
+function hasSimulationSelection() {
+    return Boolean(inferencePairId.value || globalInferencePairId.value || ((productionModelId.value || globalProductionModelId.value) && (productionDatasetId.value || globalProductionDatasetId.value)));
+}
+
+function simulationContextQuery() {
+    const params = new URLSearchParams();
+    const selectedInferenceId = inferencePairId.value || globalInferencePairId.value;
+    const selectedModelId = productionModelId.value || globalProductionModelId.value;
+    const selectedDatasetId = productionDatasetId.value || globalProductionDatasetId.value;
+    const baselineSource = document.getElementById('simulationBaselineSource')?.value || 'last';
+    if (selectedInferenceId) params.set('inferenceId', selectedInferenceId);
+    if (selectedModelId) params.set('modelId', selectedModelId);
+    if (selectedDatasetId) params.set('datasetId', selectedDatasetId);
+    if (activeWatchContextId) params.set('watchContextId', activeWatchContextId);
+    params.set('baselineSource', baselineSource);
+    return params;
+}
+
+function renderSimulationContext(context = {}) {
+    simulationContextCache = context;
+    const outputFeature = (context.output_features || [])[0] || 'prediction';
+    const profile = context.simulation_profile || {};
+    document.getElementById('simulationContextStrip').innerHTML = [
+        ['Inference', context.inference?.name || (context.inference_id ? `#${context.inference_id}` : 'Unpaired')],
+        ['Model', context.model?.name || (context.model_id ? `#${context.model_id}` : 'Select a model')],
+        ['Dataset', context.dataset?.name || (context.dataset_id ? `#${context.dataset_id}` : 'Select a dataset')],
+        ['Target', outputFeature],
+        ['Family', profile.label || profile.family || context.task_type || 'Model'],
+        ['Runtime', context.runtime_ready ? `${context.runtime_framework || 'runtime'} ready` : 'Unavailable']
+    ].map(([label, value]) => `
+        <div class="simulation-context-item">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value)}</strong>
+        </div>
+    `).join('');
+    renderSimulationFamilyStrip(profile);
+    renderSimulationFamilyControls(profile);
+    renderSimulationFeatureControls(context.feature_stats || []);
+    const defaults = context.simulation_defaults || {};
+    if (defaults.steps && document.getElementById('simulationSteps')) document.getElementById('simulationSteps').value = defaults.steps;
+    if (defaults.amplitude && document.getElementById('simulationAmplitude')) document.getElementById('simulationAmplitude').value = defaults.amplitude;
+    if (defaults.trend && document.getElementById('simulationTrend')) document.getElementById('simulationTrend').value = defaults.trend;
+    if (defaults.mode && document.getElementById('simulationMode')) document.getElementById('simulationMode').value = defaults.mode;
+    const numericFeatures = (context.feature_stats || []).filter((feature) => feature.family === 'numeric').map((feature) => feature.name);
+    const sensitivityInput = document.getElementById('simulationSensitivityFeatures');
+    if (sensitivityInput && numericFeatures.length) {
+        sensitivityInput.placeholder = numericFeatures.slice(0, 4).join(', ');
+    }
+}
+
+function renderSimulationFamilyStrip(profile = {}) {
+    const target = document.getElementById('simulationFamilyStrip');
+    const modes = Array.isArray(profile.supported_modes) ? profile.supported_modes : [];
+    const modeSelect = document.getElementById('simulationMode');
+    if (modeSelect) {
+        modeSelect.innerHTML = modes.length
+            ? modes.map((mode) => `<option value="${escapeHtml(mode.id)}">${escapeHtml(mode.label || mode.id)}</option>`).join('')
+            : '<option value="runtime_readiness">Runtime Readiness</option>';
+        modeSelect.value = profile.default_mode || (modes[0]?.id) || 'runtime_readiness';
+    }
+    const disabledReasons = Array.isArray(profile.disabled_reasons) ? profile.disabled_reasons : [];
+    const activeMode = modes.find((mode) => mode.id === (modeSelect?.value || profile.default_mode)) || modes[0] || {};
+    document.getElementById('simulationModeDescription').textContent = activeMode.description || 'The workbench will adapt controls to the selected model.';
+    document.getElementById('simulationReadiness').innerHTML = disabledReasons.length
+        ? `<ul class="simulation-readiness-list">${disabledReasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>`
+        : '<span class="pill">Ready for selected mode</span>';
+    target.querySelector('.simulation-family-card:first-child').innerHTML = `
+        <strong>${escapeHtml(profile.label || 'Model Family')}</strong>
+        <div class="pill-row">
+            <span class="pill">${escapeHtml(profile.family || 'unknown')}</span>
+            <span class="pill">${escapeHtml(profile.output_kind || 'output')}</span>
+        </div>
+        <div class="simulation-mode-options">
+            ${modes.map((mode) => `<span class="pill">${escapeHtml(mode.label || mode.id)}${mode.enabled === false ? ' · setup needed' : ''}</span>`).join('')}
+        </div>
+    `;
+}
+
+function renderSimulationFamilyControls(profile = {}) {
+    const target = document.getElementById('simulationFamilyControls');
+    const sections = profile.controls_schema?.sections || [];
+    const familySection = sections.find((section) => section.id === 'family') || {};
+    const fields = Array.isArray(familySection.fields) ? familySection.fields : [];
+    if (!fields.length) {
+        target.innerHTML = '<div class="helper-text">No family-specific controls are available for this context.</div>';
+        return;
+    }
+    target.innerHTML = fields.map((field) => {
+        const type = field.type || 'text';
+        const value = field.default ?? '';
+        const options = Array.isArray(field.options) ? field.options : [];
+        if (type === 'select') {
+            return `
+                <div class="form-group">
+                    <label for="simulationFamilyField_${escapeHtml(field.name)}">${escapeHtml(field.label || field.name)}</label>
+                    <select id="simulationFamilyField_${escapeHtml(field.name)}" data-simulation-family-field="${escapeHtml(field.name)}" data-simulation-family-type="select">
+                        ${options.length ? options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('') : '<option value="">Auto</option>'}
+                    </select>
+                </div>
+            `;
+        }
+        if (type === 'checkbox') {
+            return `
+                <label class="checkbox-row" for="simulationFamilyField_${escapeHtml(field.name)}">
+                    <input id="simulationFamilyField_${escapeHtml(field.name)}" type="checkbox" ${value ? 'checked' : ''} data-simulation-family-field="${escapeHtml(field.name)}" data-simulation-family-type="checkbox">
+                    ${escapeHtml(field.label || field.name)}
+                </label>
+            `;
+        }
+        if (type === 'textarea') {
+            return `
+                <div class="form-group">
+                    <label for="simulationFamilyField_${escapeHtml(field.name)}">${escapeHtml(field.label || field.name)}</label>
+                    <textarea id="simulationFamilyField_${escapeHtml(field.name)}" data-simulation-family-field="${escapeHtml(field.name)}" data-simulation-family-type="textarea">${escapeHtml(value)}</textarea>
+                </div>
+            `;
+        }
+        return `
+            <div class="form-group">
+                <label for="simulationFamilyField_${escapeHtml(field.name)}">${escapeHtml(field.label || field.name)}</label>
+                <input id="simulationFamilyField_${escapeHtml(field.name)}"
+                    type="${type === 'number' ? 'number' : 'text'}"
+                    ${field.min !== undefined ? `min="${escapeHtml(field.min)}"` : ''}
+                    ${field.max !== undefined ? `max="${escapeHtml(field.max)}"` : ''}
+                    ${field.step !== undefined ? `step="${escapeHtml(field.step)}"` : ''}
+                    value="${escapeHtml(value)}"
+                    data-simulation-family-field="${escapeHtml(field.name)}"
+                    data-simulation-family-type="${escapeHtml(type)}">
+            </div>
+        `;
+    }).join('');
+}
+
+function renderSimulationFeatureControls(featureStats = []) {
+    const target = document.getElementById('simulationFeatureControls');
+    const visibleFeatures = featureStats.slice(0, 8);
+    if (!visibleFeatures.length) {
+        target.innerHTML = '<div class="helper-text">No runtime feature metadata is available for the selected context.</div>';
+        return;
+    }
+    target.innerHTML = visibleFeatures.map((feature) => {
+        const isNumeric = feature.family === 'numeric';
+        const range = isNumeric && feature.min != null && feature.max != null
+            ? `${feature.min} to ${feature.max}`
+            : (feature.mode !== undefined ? `mode ${feature.mode ?? 'n/a'}` : 'observed feature');
+        return `
+            <div class="feature-control-card">
+                <label>
+                    <span>${escapeHtml(feature.name)}</span>
+                    <small>${escapeHtml(feature.family || 'feature')}</small>
+                </label>
+                <input
+                    data-simulation-feature="${escapeHtml(feature.name)}"
+                    data-simulation-feature-family="${escapeHtml(feature.family || '')}"
+                    type="${isNumeric ? 'number' : 'text'}"
+                    ${isNumeric ? 'step="any"' : ''}
+                    placeholder="${escapeHtml(feature.baseline ?? '')}"
+                >
+                <div class="helper-text">${escapeHtml(range)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function loadSimulationContext({ silent = false } = {}) {
+    if (!hasSimulationSelection()) {
+        if (!silent) {
+            document.getElementById('simulationResults').innerHTML = '<div class="alert alert-info">Select an inference pair or model and dataset first.</div>';
+        }
+        return;
+    }
+    try {
+        const payload = await fetchJson(`/production/simulation/context?${simulationContextQuery().toString()}`);
+        renderSimulationContext(payload.context || {});
+        if (payload.context?.latest_simulation?.series?.length) {
+            renderSimulationResults(payload.context.latest_simulation);
+        }
+    } catch (error) {
+        if (!silent) {
+            document.getElementById('simulationResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+}
+
+function parseJsonField(elementId, fallback, label) {
+    const value = document.getElementById(elementId)?.value || '';
+    if (!value.trim()) return fallback;
+    try {
+        return JSON.parse(value);
+    } catch (error) {
+        throw new Error(`${label} must be valid JSON: ${error.message}`);
+    }
+}
+
+function collectFeatureOverrides() {
+    const overrides = {};
+    document.querySelectorAll('[data-simulation-feature]').forEach((input) => {
+        if (input.value === '') return;
+        const featureName = input.getAttribute('data-simulation-feature');
+        const family = input.getAttribute('data-simulation-feature-family');
+        const numericValue = Number(input.value);
+        overrides[featureName] = family === 'numeric' && Number.isFinite(numericValue) ? numericValue : input.value;
+    });
+    return overrides;
+}
+
+function collectSimulationFamilyPayload() {
+    const payload = {};
+    document.querySelectorAll('[data-simulation-family-field]').forEach((input) => {
+        const name = input.getAttribute('data-simulation-family-field');
+        const type = input.getAttribute('data-simulation-family-type');
+        if (!name) return;
+        if (type === 'checkbox') {
+            payload[name] = input.checked;
+            return;
+        }
+        if (input.value === '') return;
+        if (type === 'number') {
+            const numericValue = Number(input.value);
+            payload[name] = Number.isFinite(numericValue) ? numericValue : input.value;
+            return;
+        }
+        payload[name] = input.value;
+    });
+    return payload;
+}
+
+function buildSimulationRequestPayload() {
+    const jsonOverrides = parseJsonField('simulationScenario', {}, 'Scenario overrides');
+    const featureOverrides = collectFeatureOverrides();
+    const primaryOverrides = { ...(jsonOverrides || {}), ...featureOverrides };
+    const namedScenarios = parseJsonField('simulationScenarios', [], 'Named scenarios');
+    const stepPlan = parseJsonField('simulationStepPlan', {}, 'Step plan');
+    const rawPayload = parseJsonField('simulationPayload', {}, 'Raw payload merge');
+    const familyPayloadMerge = parseJsonField('simulationFamilyPayload', {}, 'Family payload merge');
+    const sensitivityFeatures = (document.getElementById('simulationSensitivityFeatures').value || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+    const profile = simulationContextCache?.simulation_profile || {};
+    const selectedMode = document.getElementById('simulationMode')?.value || profile.default_mode || 'tabular_what_if';
+    const payload = buildProductionPayload({
+        mode: selectedMode,
+        family: profile.family,
+        simulationProfile: {
+            family: profile.family,
+            default_mode: selectedMode
+        },
+        baselineSource: document.getElementById('simulationBaselineSource').value,
+        steps: Number(document.getElementById('simulationSteps').value || 12),
+        amplitude: Number(document.getElementById('simulationAmplitude').value || 0.05),
+        trend: document.getElementById('simulationTrend').value,
+        scenarioName: document.getElementById('simulationScenarioName').value || 'Scenario',
+        scenario: primaryOverrides,
+        scenarios: Array.isArray(namedScenarios) && namedScenarios.length ? namedScenarios : undefined,
+        stepPlan,
+        sensitivity: {
+            enabled: document.getElementById('simulationSensitivityEnabled').checked,
+            features: sensitivityFeatures
+        },
+        familyPayload: {
+            ...collectSimulationFamilyPayload(),
+            ...(familyPayloadMerge || {})
+        },
+        saveDefaults: document.getElementById('simulationSaveDefaults').checked
+    });
+    return { ...payload, ...(rawPayload || {}) };
+}
+
+function renderChangedFeatures(changes = []) {
+    if (!changes.length) return '<div class="helper-text">No direct feature overrides were applied.</div>';
+    return `
+        <div class="simulation-changed-list">
+            ${changes.slice(0, 12).map((change) => `
+                <div class="simulation-change-row">
+                    <strong>${escapeHtml(change.feature)}</strong>
+                    <span>${escapeHtml(change.baseline)} -> ${escapeHtml(change.scenario)}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderSensitivitySummary(sensitivity = {}) {
+    const features = Array.isArray(sensitivity.features) ? sensitivity.features : [];
+    if (!sensitivity.enabled) return '<div class="helper-text">Sensitivity check was not requested.</div>';
+    if (!features.length) return '<div class="helper-text">No numeric sensitivity results were generated.</div>';
+    return `
+        <div class="table-scroll">
+            <table class="full-width-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Lower</th>
+                        <th>Upper</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${features.map((feature) => `
+                        <tr>
+                            <td>${escapeHtml(feature.feature)}</td>
+                            <td>${escapeHtml(feature.lower ?? '-')}</td>
+                            <td>${escapeHtml(feature.upper ?? '-')}</td>
+                            <td>${escapeHtml(feature.impact ?? '-')}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderScenarioComparisonTable(simulation = {}) {
+    const scenarios = Array.isArray(simulation.scenarios) ? simulation.scenarios : [];
+    if (!scenarios.length) return '<div class="helper-text">No scenario comparison rows are available.</div>';
+    return `
+        <div class="table-scroll">
+            <table class="full-width-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Steps</th>
+                        <th>First</th>
+                        <th>Final</th>
+                        <th>Delta</th>
+                        <th>Changed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${scenarios.map((scenario) => {
+                        const summary = scenario.prediction_summary || {};
+                        return `
+                            <tr>
+                                <td>${escapeHtml(scenario.name)}</td>
+                                <td>${escapeHtml(summary.step_count ?? scenario.steps ?? '-')}</td>
+                                <td>${escapeHtml(summary.first_prediction ?? '-')}</td>
+                                <td>${escapeHtml(summary.final_prediction ?? '-')}</td>
+                                <td>${escapeHtml(summary.prediction_delta ?? '-')}</td>
+                                <td>${escapeHtml((scenario.changed_features || []).length)}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderGenericSimulationTableRows(rows = []) {
+    if (!Array.isArray(rows) || !rows.length) return '';
+    const normalizedRows = rows.map((row) => (row && typeof row === 'object' && !Array.isArray(row)) ? row : { value: row });
+    const columns = Array.from(new Set(normalizedRows.flatMap((row) => Object.keys(row)))).slice(0, 8);
+    return `
+        <div class="table-scroll" style="margin-top:1rem;">
+            <table class="full-width-table">
+                <thead>
+                    <tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+                    ${normalizedRows.slice(0, 120).map((row) => `
+                        <tr>
+                            ${columns.map((column) => `<td>${escapeHtml(typeof row[column] === 'object' ? JSON.stringify(row[column]) : row[column] ?? '-')}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        ${normalizedRows.length > 120 ? `<div class="helper-text">Showing 120 of ${escapeHtml(normalizedRows.length)} rows.</div>` : ''}
+    `;
+}
+
+function renderSimulationStepRows(simulation = {}, outputFeature = 'prediction') {
+    const scenarios = Array.isArray(simulation.scenarios) ? simulation.scenarios : [];
+    const rows = scenarios.length
+        ? scenarios.flatMap((scenario) => (scenario.series || []).map((row) => ({ ...row, scenario: row.scenario || scenario.name })))
+        : (Array.isArray(simulation.series) ? simulation.series : []);
+    if (!rows.length) return renderGenericSimulationTableRows(simulation.table_rows || []);
+    return `
+        <div class="table-scroll" style="margin-top:1rem;">
+            <table class="full-width-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Step</th>
+                        <th>${escapeHtml(outputFeature)}</th>
+                        <th>Inputs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.slice(0, 120).map((row) => `
+                        <tr>
+                            <td>${escapeHtml(row.scenario || 'Scenario')}</td>
+                            <td>${escapeHtml(row.step)}</td>
+                            <td>${escapeHtml(typeof row.prediction === 'object' ? JSON.stringify(row.prediction) : row.prediction)}</td>
+                            <td><code>${escapeHtml(JSON.stringify(row.inputs || {}))}</code></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        ${rows.length > 120 ? `<div class="helper-text">Showing 120 of ${escapeHtml(rows.length)} generated rows.</div>` : ''}
+    `;
+}
+
+function renderSimulationReadiness(readiness = {}) {
+    const reasons = Array.isArray(readiness.disabled_reasons) ? readiness.disabled_reasons : [];
+    if (readiness.ready !== false && !reasons.length) return '';
+    return `
+        <div class="alert alert-info">
+            <strong>Runtime readiness</strong>
+            ${reasons.length
+                ? `<ul class="simulation-readiness-list">${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join('')}</ul>`
+                : '<div class="helper-text">This mode is waiting for runtime capability metadata.</div>'}
+        </div>
+    `;
+}
+
+function renderFamilySpecificResults(simulation = {}) {
+    if (simulation.classification?.top_classes?.length) {
+        return `
+            <h4>Class Probabilities</h4>
+            <div class="table-scroll">
+                <table class="full-width-table">
+                    <thead><tr><th>Class</th><th>Probability</th></tr></thead>
+                    <tbody>
+                        ${simulation.classification.top_classes.map((item) => `
+                            <tr><td>${escapeHtml(item.class)}</td><td>${escapeHtml(item.probability)}</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    if (simulation.recommendation?.items?.length) {
+        return `
+            <h4>Recommendations</h4>
+            ${renderGenericSimulationTableRows(simulation.recommendation.items)}
+        `;
+    }
+    if (simulation.unsupervised) {
+        return `
+            <h4>Unsupervised Probe</h4>
+            <div class="json-block">${escapeHtml(JSON.stringify(simulation.unsupervised, null, 2))}</div>
+        `;
+    }
+    if (simulation.geojson) {
+        const count = Array.isArray(simulation.geojson.features) ? simulation.geojson.features.length : 0;
+        return `
+            <h4>Map Output</h4>
+            <div class="helper-text">${escapeHtml(count)} GeoJSON point${count === 1 ? '' : 's'} generated for downstream map views.</div>
+        `;
+    }
+    if (simulation.llm_slm) {
+        return `
+            <h4>LLM/SLM Response</h4>
+            <div class="json-block">${escapeHtml(JSON.stringify(simulation.llm_slm, null, 2))}</div>
+        `;
+    }
+    return '';
+}
+
 function renderSimulationResults(simulation = {}) {
-    const series = Array.isArray(simulation.series) ? simulation.series : [];
-    if (!series.length) {
+    const scenarios = Array.isArray(simulation.scenarios) ? simulation.scenarios : [];
+    const series = Array.isArray(simulation.series) && simulation.series.length
+        ? simulation.series
+        : (scenarios[0]?.series || []);
+    const primaryResult = simulation.primary_result || {};
+    const hasPrimaryValue = primaryResult.value !== undefined && primaryResult.value !== null && primaryResult.value !== '';
+    if (!series.length && !hasPrimaryValue && !simulation.readiness && !simulation.recommendation && !simulation.unsupervised) {
         document.getElementById('simulationResults').innerHTML = 'Run a simulation to inspect predicted future values.';
         document.getElementById('simulationStepTable').innerHTML = 'The full simulation step table will appear here after a run.';
         return;
     }
 
-    const fullRows = series.map((row) => `
-        <tr>
-            <td>${escapeHtml(row.step)}</td>
-            <td>${escapeHtml(typeof row.prediction === 'object' ? JSON.stringify(row.prediction) : row.prediction)}</td>
-            <td><code>${escapeHtml(JSON.stringify(row.inputs || {}))}</code></td>
-        </tr>
-    `).join('');
-
+    const outputFeature = simulation.output_feature || series[0]?.output_feature || primaryResult.label || 'prediction';
+    const predictionSummary = simulation.prediction_summary || scenarios[0]?.prediction_summary || {};
+    const primaryScenario = scenarios[0] || {};
+    const primaryValue = predictionSummary.final_prediction ?? series[series.length - 1]?.prediction ?? primaryResult.value ?? '-';
     document.getElementById('simulationResults').innerHTML = `
+        <div class="simulation-status-line">
+            <span class="pill">${escapeHtml(simulation.family || simulation.task_type || 'model')}</span>
+            <span class="pill">${escapeHtml(simulation.mode || 'mode')}</span>
+            ${simulation.status ? `<span class="pill">${escapeHtml(simulation.status)}</span>` : ''}
+            <span class="pill">${escapeHtml(`${scenarios.length || 1} scenario${(scenarios.length || 1) === 1 ? '' : 's'}`)}</span>
+            <span class="pill">${escapeHtml(`Baseline: ${simulation.baseline_source || 'last'}`)}</span>
+        </div>
+        ${renderSimulationReadiness(simulation.readiness || {})}
+        ${AmanajeUI.renderMetricCards([
+            {
+                label: outputFeature,
+                value: primaryValue,
+                unit: simulation.family === 'recommendation' ? 'items' : 'prediction',
+                reference: 'final simulated step',
+                expected_range: simulation.family || simulation.task_type || 'model output',
+                direction: simulation.trend || 'scenario dependent',
+                explanation: `Primary output target emphasized for this simulation: ${outputFeature}.`
+            },
+            {
+                label: 'Delta',
+                value: predictionSummary.prediction_delta ?? primaryResult.delta ?? '-',
+                unit: 'change',
+                reference: 'first to final step',
+                expected_range: 'scenario dependent',
+                direction: simulation.trend || 'mixed',
+                explanation: 'Difference between the first and final prediction in the primary scenario.'
+            },
+            {
+                label: 'Steps',
+                value: predictionSummary.step_count ?? simulation.steps ?? series.length,
+                unit: 'rows',
+                reference: 'simulation controls',
+                expected_range: '1 to 120',
+                direction: simulation.trend || 'up',
+                explanation: 'Generated inference rows for the primary scenario.'
+            }
+        ])}
+        ${renderFamilySpecificResults(simulation)}
         ${buildSummaryMarkup({
             model_id: simulation.model_id,
             dataset_id: simulation.dataset_id,
             inference_id: simulation.inference_id,
+            output_feature: outputFeature,
+            output_features: simulation.output_features || [],
+            family: simulation.family,
+            mode: simulation.mode,
             task_type: simulation.task_type,
-            steps: simulation.steps,
-            trend: simulation.trend,
-            amplitude: simulation.amplitude
+            scenarios: scenarios.map((scenario) => scenario.name),
+            baseline: simulation.baseline || {}
         })}
+        <div class="simulation-comparison-grid" style="margin-top:1rem;">
+            <div>
+                <h4>Changed Features</h4>
+                ${renderChangedFeatures(primaryScenario.changed_features || [])}
+            </div>
+            <div>
+                <h4>Sensitivity</h4>
+                ${renderSensitivitySummary(simulation.sensitivity || {})}
+            </div>
+        </div>
         ${renderPlotDeck(simulation.plots || [])}
+        ${AmanajeUI.renderCollapsibleJson
+            ? AmanajeUI.renderCollapsibleJson(simulation, { title: 'Raw Simulation Response', collapsed: true })
+            : `<div class="json-block">${escapeHtml(JSON.stringify(simulation, null, 2))}</div>`}
     `;
     document.getElementById('simulationStepTable').innerHTML = `
-        <div class="table-scroll">
-            <table class="full-width-table">
-                <thead>
-                    <tr>
-                        <th>Step</th>
-                        <th>Prediction</th>
-                        <th>Inputs</th>
-                    </tr>
-                </thead>
-                <tbody>${fullRows}</tbody>
-            </table>
-        </div>
+        ${renderScenarioComparisonTable(simulation)}
+        ${renderSimulationStepRows(simulation, outputFeature)}
     `;
+    AmanajeUI.enhanceCollapsibles(document.getElementById('simulationResults'));
     AmanajeUI.enhanceCollapsibles(document.getElementById('simulationStepTable'));
 }
 
@@ -736,11 +1342,42 @@ function renderHistory(runs = []) {
                 ${renderPlotDeck(run.plots || [])}
                 <div class="log-card" style="margin-top:1rem;">
                     <h4 style="margin-bottom:0.6rem;">Recent Events</h4>
-                    <div class="log-block">${escapeHtml(JSON.stringify(recentHistory, null, 2))}</div>
+                    ${AmanajeUI.renderCollapsibleJson(recentHistory, { title: 'Recent Events', collapsed: true })}
                 </div>
             </div>
         `;
     }).join('');
+}
+
+async function loadProductionPlots() {
+    const statusTarget = document.getElementById('productionPlotStatus');
+    const deckTarget = document.getElementById('productionPlotDeck');
+    if (!statusTarget || !deckTarget) return;
+    statusTarget.textContent = 'Loading production plot deck...';
+    try {
+        const selectedInferenceId = inferencePairId.value || globalInferencePairId.value;
+        const selectedModelId = productionModelId.value || globalProductionModelId.value;
+        const selectedDatasetId = productionDatasetId.value || globalProductionDatasetId.value;
+        const selectedInference = productionHistoryCache.find((run) => String(run.id) === String(selectedInferenceId));
+        const params = new URLSearchParams();
+        if (selectedModelId) params.set('model_id', selectedModelId);
+        if (selectedDatasetId) params.set('dataset_id', selectedDatasetId);
+        const artifactPayload = await fetchJson(`/plots/artifacts${params.toString() ? `?${params}` : ''}`);
+        const plots = [...(selectedInference?.plots || [])];
+        const seen = new Set(plots.map((plot) => plot.id).filter(Boolean));
+        (artifactPayload.plots || []).forEach((plot) => {
+            if (plot.id && seen.has(plot.id)) return;
+            if (plot.id) seen.add(plot.id);
+            plots.push(plot);
+        });
+        statusTarget.textContent = plots.length
+            ? `${plots.length} production plot items loaded.`
+            : 'No production plots matched the selected context yet.';
+        deckTarget.innerHTML = renderPlotDeck(plots);
+        AmanajeUI.enhanceCollapsibles(deckTarget);
+    } catch (error) {
+        statusTarget.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
 }
 
 function renderActivityLog(entries = []) {
@@ -754,7 +1391,7 @@ function renderActivityLog(entries = []) {
             <h4>${escapeHtml(entry.event_type || 'event')}</h4>
             <div class="helper-text">${escapeHtml(entry.timestamp || '')}</div>
             <div style="margin:0.7rem 0;">${escapeHtml(entry.message || '')}</div>
-            <div class="json-block">${escapeHtml(JSON.stringify(entry.details || {}, null, 2))}</div>
+            ${AmanajeUI.renderCollapsibleJson(entry.details || {}, { title: 'Event Details', collapsed: true })}
         </div>
     `).join('');
 }
@@ -841,7 +1478,19 @@ async function refreshMonitoring() {
 }
 
 async function triggerRetraining() {
+    const button = document.getElementById('btnTriggerRetrain');
+    const originalLabel = button?.textContent || 'Trigger Retraining';
     try {
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Retraining...';
+        }
+        document.getElementById('retrainFlag').textContent = 'Running';
+        document.getElementById('monitoringSummary').innerHTML = `
+            <div class="alert alert-info">
+                Retraining is running for the selected production pair. This may take a moment; the watch context and activity log will refresh when it finishes.
+            </div>
+        `;
         const result = await fetchJson('/production/retrain', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -849,35 +1498,39 @@ async function triggerRetraining() {
         });
         document.getElementById('monitoringSummary').innerHTML = `
             <div class="alert alert-success">Retraining flow completed.</div>
-            <div class="json-block">${escapeHtml(JSON.stringify(result.retraining || {}, null, 2))}</div>
+            ${AmanajeUI.renderCollapsibleJson
+                ? AmanajeUI.renderCollapsibleJson(result.retraining || {}, { title: 'Retraining Details', collapsed: true })
+                : `<div class="json-block">${escapeHtml(JSON.stringify(result.retraining || {}, null, 2))}</div>`}
         `;
+        AmanajeUI.enhanceCollapsibles(document.getElementById('monitoringSummary'));
         renderProductionStatus(result.production || {});
         renderActivityLog(result.production?.activity_log || []);
         await loadProductionHistory();
     } catch (error) {
         document.getElementById('monitoringSummary').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalLabel;
+        }
     }
 }
 
 async function runSimulation() {
-    let scenario = {};
+    let payload = {};
     try {
-        scenario = JSON.parse(document.getElementById('simulationScenario').value || '{}');
+        payload = buildSimulationRequestPayload();
     } catch (error) {
-        document.getElementById('simulationResults').innerHTML = `<div class="alert alert-error">Scenario overrides must be valid JSON: ${escapeHtml(error.message)}</div>`;
+        document.getElementById('simulationResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
         return;
     }
 
     try {
+        document.getElementById('simulationResults').innerHTML = '<div class="alert alert-info">Running simulation...</div>';
         const result = await fetchJson('/production/simulate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(buildProductionPayload({
-                steps: Number(document.getElementById('simulationSteps').value || 12),
-                amplitude: Number(document.getElementById('simulationAmplitude').value || 0.05),
-                trend: document.getElementById('simulationTrend').value,
-                scenario
-            }))
+            body: JSON.stringify(payload)
         });
         renderSimulationResults(result.simulation || {});
         renderProductionStatus(result.production || {});
@@ -968,33 +1621,46 @@ globalInferencePairId.addEventListener('change', () => {
     activeWatchContextId = '';
     syncLocalProductionContextFromGlobal();
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
 });
 globalProductionModelId.addEventListener('change', () => {
     activeWatchContextId = '';
     if (globalInferencePairId.value) globalInferencePairId.value = '';
     syncLocalProductionContextFromGlobal();
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
 });
 globalProductionDatasetId.addEventListener('change', () => {
     activeWatchContextId = '';
     if (globalInferencePairId.value) globalInferencePairId.value = '';
     syncLocalProductionContextFromGlobal();
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
 });
 inferencePairId.addEventListener('change', () => {
     activeWatchContextId = '';
     syncSelectorsFromInference();
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
 });
 productionModelId.addEventListener('change', () => {
     activeWatchContextId = '';
     if (inferencePairId.value) inferencePairId.value = '';
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
 });
 productionDatasetId.addEventListener('change', () => {
     activeWatchContextId = '';
     if (inferencePairId.value) inferencePairId.value = '';
     syncGlobalProductionContextFromLocal();
+    loadSimulationContext({ silent: true });
+});
+document.getElementById('simulationBaselineSource').addEventListener('change', () => loadSimulationContext({ silent: true }));
+document.getElementById('simulationMode').addEventListener('change', () => {
+    const profile = simulationContextCache?.simulation_profile || {};
+    const modes = Array.isArray(profile.supported_modes) ? profile.supported_modes : [];
+    const activeMode = modes.find((mode) => mode.id === document.getElementById('simulationMode').value) || {};
+    document.getElementById('simulationModeDescription').textContent = activeMode.description || 'The workbench will adapt controls to the selected model.';
 });
 document.getElementById('btnGlobalStartProduction').addEventListener('click', startProduction);
 document.getElementById('btnGlobalRefreshMonitoring').addEventListener('click', refreshMonitoring);
@@ -1007,8 +1673,13 @@ document.getElementById('btnStopProduction').addEventListener('click', stopProdu
 document.getElementById('btnRestartProduction').addEventListener('click', restartProduction);
 document.getElementById('btnRefreshMonitoring').addEventListener('click', refreshMonitoring);
 document.getElementById('btnTriggerRetrain').addEventListener('click', triggerRetraining);
+document.getElementById('btnRefreshSimulationContext').addEventListener('click', () => loadSimulationContext({ silent: false }));
 document.getElementById('btnRunSimulation').addEventListener('click', runSimulation);
 document.getElementById('btnRefreshHistory').addEventListener('click', loadProductionHistory);
+document.getElementById('btnRefreshProductionPlots').addEventListener('click', loadProductionPlots);
+document.getElementById('btnOpenPlotCentral').addEventListener('click', () => {
+    window.location.href = '/visualization';
+});
 document.getElementById('btnRefreshActivity').addEventListener('click', async () => {
     const status = await fetchJson('/production/status');
     renderActivityLog(status.activity_log || []);
@@ -1020,7 +1691,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await populateProductionOptions();
     await syncProductionStatus();
     await loadProductionHistory();
+    await loadProductionPlots();
     await loadExperiments();
+    await loadSimulationContext({ silent: true });
     syncGlobalProductionContextFromLocal();
 });
 </script>

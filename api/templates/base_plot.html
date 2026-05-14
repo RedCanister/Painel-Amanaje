@@ -1,0 +1,728 @@
+{% extends "base_template.html" %}
+
+{% block title %}Visualization - Painel Amanaje{% endblock %}
+
+{% block body_class %}blue-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plot-central-shell { display: grid; gap: 1.25rem; }
+    .plot-panel {
+        display: none;
+    }
+    .plot-panel.active { display: block; }
+    .inline-grid, .builder-grid, .summary-grid, .source-grid, .artifact-grid { display: grid; gap: 0.9rem; }
+    .inline-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+    .builder-grid { grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr); }
+    .source-grid { grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1.18fr); }
+    .artifact-grid { grid-template-columns: minmax(0, 0.72fr) minmax(320px, 1.28fr); }
+    .summary-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    .surface-card, .status-card {
+        background: var(--amanaje-surface-2);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        padding: 1rem;
+    }
+    .surface-card h4, .status-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .status-card small { color: #64748b; font-weight: 700; }
+    .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--amanaje-primary); }
+    .form-group textarea {
+        min-height: 220px;
+        resize: vertical;
+        font-family: Consolas, "Courier New", monospace;
+        line-height: 1.45;
+    }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .helper-text, .muted-text { color: #6b7280; }
+    .helper-text { font-size: 0.9rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
+    .plot-service-frame {
+        width: 100%;
+        min-height: min(760px, 72vh);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        background: white;
+    }
+    .spec-output {
+        min-height: 220px;
+        max-height: 460px;
+    }
+    .plot-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        margin-top: 1rem;
+    }
+    @media (max-width: 980px) {
+        .builder-grid, .source-grid, .artifact-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="plot-central-shell">
+    <section class="global-context">
+        <span class="workspace-eyebrow">MLOps domain</span>
+        <h3>Visualization</h3>
+        <p class="panel-subtitle">Use the blue operations layer as the visualization nerve center: browse registered plot specs, preview legacy artifacts, and generate new Plotly figure JSON inside Painel Amanaje.</p>
+        <div class="inline-grid">
+            <div class="form-group">
+                <label for="plotSourceType">Plot Source</label>
+                <select id="plotSourceType">
+                    <option value="artifacts">Runtime artifacts</option>
+                    <option value="dataset">Dataset analysis</option>
+                    <option value="feature">Feature profile</option>
+                    <option value="model">Model analysis</option>
+                    <option value="inference">Production inference</option>
+                    <option value="run">Run ledger artifacts</option>
+                    <option value="manual">Generator preview</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="globalPlotDatasetId">Dataset</label>
+                <select id="globalPlotDatasetId"><option value="">Select a dataset</option></select>
+            </div>
+            <div class="form-group">
+                <label for="globalPlotModelId">Learning Model</label>
+                <select id="globalPlotModelId"><option value="">Select a model</option></select>
+            </div>
+            <div class="form-group">
+                <label for="globalPlotInferenceId">Inference Pair</label>
+                <select id="globalPlotInferenceId"><option value="">Select an inference pair</option></select>
+            </div>
+            <div class="form-group">
+                <label for="globalPlotRunId">Run</label>
+                <select id="globalPlotRunId"><option value="">Select a run</option></select>
+            </div>
+            <div class="form-group">
+                <label for="globalPlotKind">Artifact Kind</label>
+                <select id="globalPlotKind">
+                    <option value="">Any kind</option>
+                    <option value="loss_curve">Loss curves</option>
+                    <option value="metric_comparison">Metric comparisons</option>
+                    <option value="predictions_vs_actuals">Predictions vs actuals</option>
+                    <option value="legacy_image">Legacy images</option>
+                </select>
+            </div>
+        </div>
+        <div class="actions-row">
+            <button type="button" class="btn btn-primary" id="btnRefreshPlotCentral">Refresh Visualization</button>
+            <button type="button" class="btn btn-secondary" id="btnUseGeneratorPreview">Use Generator Preview</button>
+        </div>
+        <div id="plotCentralMetrics" class="summary-grid" style="margin-top:1rem;"></div>
+    </section>
+
+    <div class="workspace-tabs">
+        <button class="workspace-tab active" type="button" data-tab="gallery">Visualization Gallery</button>
+        <button class="workspace-tab" type="button" data-tab="generator">Generator</button>
+        <button class="workspace-tab" type="button" data-tab="objects">Object Explorer</button>
+        <button class="workspace-tab" type="button" data-tab="artifacts">Artifact Browser</button>
+    </div>
+
+    <section class="plot-panel active" id="panel-gallery">
+        <div class="toolbar-row">
+            <div>
+                <h3 class="panel-title">Visualization Gallery</h3>
+                <p class="panel-subtitle">A single deck for dataset profiles, model QA, production curves, saved PNGs, and generated Plotly specs.</p>
+            </div>
+            <button type="button" class="btn btn-ghost" id="btnRefreshGallery">Refresh Gallery</button>
+        </div>
+        <div id="galleryStatus" class="helper-text">Choose a source and refresh the gallery.</div>
+        <div id="galleryDeck"></div>
+        <div id="galleryDetails" style="margin-top:1rem;"></div>
+    </section>
+
+    <section class="plot-panel" id="panel-generator">
+        <h3 class="panel-title">Plot Generator</h3>
+        <p class="panel-subtitle">Turn numeric sequences, scalar dictionaries, JSON rows, matrix JSON, or CSV snippets into Plotly-compatible specs that the rest of Painel Amanaje can render.</p>
+        <div class="builder-grid">
+            <div class="surface-card">
+                <h4>Input and Mapping</h4>
+                <div class="inline-grid">
+                    <div class="form-group">
+                        <label for="generatorInputType">Input Type</label>
+                        <select id="generatorInputType">
+                            <option value="sequence">Numeric sequence</option>
+                            <option value="scalar_object">Scalar JSON object</option>
+                            <option value="rows_json">JSON rows</option>
+                            <option value="matrix_json">Matrix JSON</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="generatorChartType">Chart Type</label>
+                        <select id="generatorChartType">
+                            <option value="line">Line</option>
+                            <option value="bar">Bar</option>
+                            <option value="scatter">Scatter</option>
+                            <option value="area">Area</option>
+                            <option value="histogram">Histogram</option>
+                            <option value="box">Box</option>
+                            <option value="pie">Pie</option>
+                            <option value="heatmap">Heatmap</option>
+                            <option value="table">Table</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="inline-grid">
+                    <div class="form-group">
+                        <label for="generatorTitle">Title</label>
+                        <input id="generatorTitle" value="Generated Plot">
+                    </div>
+                    <div class="form-group">
+                        <label for="generatorXField">X / Label Field</label>
+                        <input id="generatorXField" placeholder="auto">
+                    </div>
+                    <div class="form-group">
+                        <label for="generatorYField">Y / Value Field</label>
+                        <input id="generatorYField" placeholder="auto">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="generatorInput">Input Payload</label>
+                    <textarea id="generatorInput" spellcheck="false">0.92, 0.84, 0.77, 0.71, 0.66, 0.61</textarea>
+                    <div class="helper-text">For JSON rows, use an array of objects. For heatmaps, matrix JSON can be an array of numeric arrays.</div>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" id="btnGeneratePlotSpec">Generate Plot</button>
+                    <button type="button" class="btn btn-secondary" id="btnLoadGeneratorExample">Load Example</button>
+                    <button type="button" class="btn btn-ghost" id="btnCopyGeneratedSpec">Copy Spec JSON</button>
+                </div>
+                <div id="generatorStatus"></div>
+            </div>
+            <div class="surface-card">
+                <h4>Preview</h4>
+                <div id="generatorPreview"></div>
+                <h4 style="margin-top:1rem;">PlotSpec JSON</h4>
+                <pre class="json-block spec-output" id="generatedSpecOutput">{}</pre>
+            </div>
+        </div>
+    </section>
+
+    <section class="plot-panel" id="panel-objects">
+        <h3 class="panel-title">Object Explorer</h3>
+        <p class="panel-subtitle">Pull plots and dependency context directly from registry objects, then promote useful output into the generator or gallery.</p>
+        <div class="source-grid">
+            <div class="surface-card">
+                <h4>Object Source</h4>
+                <div class="form-group">
+                    <label for="objectRegistryType">Registry Type</label>
+                    <select id="objectRegistryType">
+                        <option value="datasetmodel">DatasetModel</option>
+                        <option value="learningmodel">LearningModel</option>
+                        <option value="inferencemodel">InferenceModel</option>
+                        <option value="studymodel">StudyModel</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="objectItemId">Object ID</label>
+                    <input id="objectItemId" type="number" min="1" placeholder="Use selected global object when empty">
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" id="btnAnalyzeObjectPlots">Analyze Object</button>
+                    <button type="button" class="btn btn-ghost" id="btnAdoptObjectPlots">Use In Gallery</button>
+                </div>
+                <div id="objectExplorerStatus"></div>
+            </div>
+            <div class="surface-card">
+                <h4>Object Plot Deck</h4>
+                <div id="objectPlotDeck"></div>
+                <div id="objectDetails" style="margin-top:1rem;"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="plot-panel" id="panel-artifacts">
+        <h3 class="panel-title">Artifact Browser</h3>
+        <p class="panel-subtitle">Surface saved PNG/WebP/SVG plot artifacts from the active runtime plot registry and give them a visible place in the application.</p>
+        <div class="artifact-grid">
+            <div class="surface-card">
+                <h4>Filters</h4>
+                <div class="form-group">
+                    <label for="artifactJobId">Job ID</label>
+                    <input id="artifactJobId" placeholder="train_2_1_...">
+                </div>
+                <div class="inline-grid">
+                    <div class="form-group">
+                        <label for="artifactModelId">Model ID</label>
+                        <input id="artifactModelId" type="number" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="artifactDatasetId">Dataset ID</label>
+                        <input id="artifactDatasetId" type="number" min="1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="artifactKind">Kind</label>
+                    <select id="artifactKind">
+                        <option value="">Any kind</option>
+                        <option value="loss_curve">Loss curves</option>
+                        <option value="metric_comparison">Metric comparisons</option>
+                        <option value="predictions_vs_actuals">Predictions vs actuals</option>
+                        <option value="legacy_image">Legacy images</option>
+                    </select>
+                </div>
+                <div class="actions-row">
+                    <button type="button" class="btn btn-primary" id="btnLoadArtifacts">Load Artifacts</button>
+                    <button type="button" class="btn btn-ghost" id="btnSyncArtifactFilters">Sync Global Filters</button>
+                </div>
+            </div>
+            <div class="surface-card">
+                <h4>Artifact Deck</h4>
+                <div id="artifactStatus" class="helper-text">No artifacts loaded yet.</div>
+                <div id="artifactDeck"></div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const plotState = {
+    datasets: [],
+    models: [],
+    inferences: [],
+    runs: [],
+    latestGalleryPlots: [],
+    latestGeneratedSpec: null,
+    latestObjectPayload: null
+};
+
+const plotSourceType = document.getElementById('plotSourceType');
+const globalPlotDatasetId = document.getElementById('globalPlotDatasetId');
+const globalPlotModelId = document.getElementById('globalPlotModelId');
+const globalPlotInferenceId = document.getElementById('globalPlotInferenceId');
+const globalPlotRunId = document.getElementById('globalPlotRunId');
+const globalPlotKind = document.getElementById('globalPlotKind');
+
+function escapeHtml(value) {
+    return window.AmanajeUI?.escapeHtml
+        ? AmanajeUI.escapeHtml(value)
+        : String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+}
+
+async function fetchJson(url, options = {}, source = 'visualization') {
+    if (window.AmanajeUI?.fetchJson) {
+        return AmanajeUI.fetchJson(url, options, { source });
+    }
+    const response = await fetch(url, options);
+    const payload = await response.json();
+    if (!response.ok || payload.status === 'error') throw new Error(payload.detail || `HTTP ${response.status}`);
+    return payload;
+}
+
+function setPlotTab(tabName) {
+    document.querySelectorAll('.workspace-tab').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.plot-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+    });
+}
+
+function optionMarkup(rows, placeholder, labelBuilder = (row) => row.name || row.id) {
+    return `
+        <option value="">${escapeHtml(placeholder)}</option>
+        ${(rows || []).map((row) => {
+            const id = row.id ?? row.run_id;
+            if (id === undefined || id === null || id === '') return '';
+            return `<option value="${escapeHtml(id)}">${escapeHtml(labelBuilder(row))}</option>`;
+        }).join('')}
+    `;
+}
+
+function renderCentralMetrics(plots = [], payload = {}) {
+    const kinds = plots.reduce((acc, plot) => {
+        const kind = plot.kind || plot.plot_type || 'plot';
+        acc[kind] = (acc[kind] || 0) + 1;
+        return acc;
+    }, {});
+    document.getElementById('plotCentralMetrics').innerHTML = `
+        <div class="status-card">
+            <small>Visible Plots</small>
+            <div class="metric-value">${escapeHtml(plots.length)}</div>
+        </div>
+        <div class="status-card">
+            <small>Plotly Figures</small>
+            <div class="metric-value">${escapeHtml(kinds.plotly_figure || 0)}</div>
+        </div>
+        <div class="status-card">
+            <small>Legacy Images</small>
+            <div class="metric-value">${escapeHtml(kinds.legacy_image || 0)}</div>
+        </div>
+        <div class="status-card">
+            <small>Tables</small>
+            <div class="metric-value">${escapeHtml(kinds.table || 0)}</div>
+        </div>
+    `;
+    if (payload.status === 'error') {
+        document.getElementById('galleryStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(payload.detail || 'Unable to load plots.')}</div>`;
+    }
+}
+
+function renderDeck(targetId, plots = []) {
+    const target = document.getElementById(targetId);
+    target.innerHTML = window.AmanajeUI?.renderPlotDeck
+        ? AmanajeUI.renderPlotDeck(plots)
+        : '<div class="helper-text">Plot renderer is unavailable.</div>';
+    window.AmanajeUI?.enhanceCollapsibles?.(target);
+}
+
+function renderDetails(targetId, payload = {}, title = 'Source Payload') {
+    const target = document.getElementById(targetId);
+    const summary = payload.summary || payload.dependency_report || payload;
+    target.innerHTML = window.AmanajeUI?.renderCollapsibleJson
+        ? AmanajeUI.renderCollapsibleJson(summary, { title, collapsed: true })
+        : `<pre class="json-block">${escapeHtml(JSON.stringify(summary, null, 2))}</pre>`;
+    window.AmanajeUI?.enhanceCollapsibles?.(target);
+}
+
+async function populatePlotOptions() {
+    const [datasets, models, inferences, runs] = await Promise.all([
+        fetchJson('/datasetmodel/list', {}, 'plot-options-datasets').catch(() => []),
+        fetchJson('/learningmodel/list', {}, 'plot-options-models').catch(() => []),
+        fetchJson('/production/history', {}, 'plot-options-inferences').catch(() => ({ runs: [] })),
+        fetchJson('/runs/list?limit=80', {}, 'plot-options-runs').catch(() => ({ runs: [] }))
+    ]);
+
+    plotState.datasets = Array.isArray(datasets) ? datasets : [];
+    plotState.models = Array.isArray(models) ? models : [];
+    plotState.inferences = Array.isArray(inferences.runs) ? inferences.runs : [];
+    plotState.runs = Array.isArray(runs.runs) ? runs.runs : [];
+
+    globalPlotDatasetId.innerHTML = optionMarkup(plotState.datasets, 'Select a dataset');
+    globalPlotModelId.innerHTML = optionMarkup(plotState.models, 'Select a model', (row) => `${row.name || row.id}${row.model_type ? ` (${row.model_type})` : ''}`);
+    globalPlotInferenceId.innerHTML = optionMarkup(plotState.inferences, 'Select an inference pair', (row) => row.name || `Inference #${row.id}`);
+    globalPlotRunId.innerHTML = optionMarkup(plotState.runs, 'Select a run', (row) => `${row.run_type || 'run'} | ${row.run_id}`);
+}
+
+function requireSelection(element, label) {
+    if (!element.value) {
+        document.getElementById('galleryStatus').innerHTML = `<div class="alert alert-info">Select ${escapeHtml(label)} first.</div>`;
+        return false;
+    }
+    return true;
+}
+
+async function loadCentralGallery() {
+    let payload = {};
+    let plots = [];
+    document.getElementById('galleryStatus').textContent = 'Loading plot source...';
+    try {
+        if (plotSourceType.value === 'dataset') {
+            if (!requireSelection(globalPlotDatasetId, 'a dataset')) return;
+            payload = await fetchJson(`/analysis/data?dataset_id=${encodeURIComponent(globalPlotDatasetId.value)}`, {}, 'plot-gallery-dataset');
+            plots = payload.plots || [];
+        } else if (plotSourceType.value === 'feature') {
+            if (!requireSelection(globalPlotDatasetId, 'a dataset')) return;
+            payload = await fetchJson(`/features/extract?dataset_id=${encodeURIComponent(globalPlotDatasetId.value)}`, {}, 'plot-gallery-feature');
+            plots = payload.plots || [];
+        } else if (plotSourceType.value === 'model') {
+            if (!requireSelection(globalPlotModelId, 'a model')) return;
+            payload = await fetchJson(`/analysis/model?model_id=${encodeURIComponent(globalPlotModelId.value)}`, {}, 'plot-gallery-model');
+            plots = payload.plots || [];
+        } else if (plotSourceType.value === 'inference') {
+            if (!requireSelection(globalPlotInferenceId, 'an inference pair')) return;
+            const selected = plotState.inferences.find((row) => String(row.id) === String(globalPlotInferenceId.value));
+            payload = selected || {};
+            plots = selected?.plots || [];
+        } else if (plotSourceType.value === 'run') {
+            if (!requireSelection(globalPlotRunId, 'a run')) return;
+            payload = await fetchJson(`/plots/artifacts?job_id=${encodeURIComponent(globalPlotRunId.value)}`, {}, 'plot-gallery-run');
+            plots = payload.plots || [];
+        } else if (plotSourceType.value === 'manual') {
+            plots = plotState.latestGeneratedSpec ? [plotState.latestGeneratedSpec] : [];
+            payload = { source: 'generator', plots };
+        } else {
+            const params = new URLSearchParams();
+            if (globalPlotKind.value) params.set('kind', globalPlotKind.value);
+            payload = await fetchJson(`/plots/artifacts${params.toString() ? `?${params}` : ''}`, {}, 'plot-gallery-artifacts');
+            plots = payload.plots || [];
+        }
+        plotState.latestGalleryPlots = plots;
+        document.getElementById('galleryStatus').textContent = plots.length ? `${plots.length} plot items loaded.` : 'No plot items matched this source yet.';
+        renderCentralMetrics(plots, payload);
+        renderDeck('galleryDeck', plots);
+        renderDetails('galleryDetails', payload, 'Gallery Source Details');
+    } catch (error) {
+        document.getElementById('galleryStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+        renderCentralMetrics([], { status: 'error', detail: error.message });
+    }
+}
+
+function parseCsv(text) {
+    const lines = String(text || '').trim().split(/\r?\n/).filter(Boolean);
+    if (!lines.length) return [];
+    const splitLine = (line) => {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (const char of line) {
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        values.push(current.trim());
+        return values;
+    };
+    const headers = splitLine(lines[0]).map((header, index) => header || `column_${index + 1}`);
+    return lines.slice(1).map((line) => {
+        const cells = splitLine(line);
+        return headers.reduce((row, header, index) => {
+            const raw = cells[index] ?? '';
+            const numeric = Number(raw);
+            row[header] = raw !== '' && Number.isFinite(numeric) ? numeric : raw;
+            return row;
+        }, {});
+    });
+}
+
+function parseGeneratorInput() {
+    const type = document.getElementById('generatorInputType').value;
+    const text = document.getElementById('generatorInput').value.trim();
+    if (type === 'sequence') {
+        const values = text.split(/[\s,;]+/).map(Number).filter(Number.isFinite);
+        return values.map((value, index) => ({ step: index + 1, value }));
+    }
+    if (type === 'scalar_object') {
+        const parsed = JSON.parse(text || '{}');
+        return Object.entries(parsed).map(([label, value]) => ({ label, value: Number(value) }));
+    }
+    if (type === 'rows_json') {
+        const parsed = JSON.parse(text || '[]');
+        if (!Array.isArray(parsed)) throw new Error('JSON rows input must be an array.');
+        return parsed;
+    }
+    if (type === 'matrix_json') {
+        const parsed = JSON.parse(text || '[]');
+        if (!Array.isArray(parsed)) throw new Error('Matrix input must be an array.');
+        return parsed;
+    }
+    if (type === 'csv') {
+        return parseCsv(text);
+    }
+    return [];
+}
+
+function numericValue(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+}
+
+function inferColumns(rows) {
+    if (!Array.isArray(rows) || !rows.length || Array.isArray(rows[0])) return [];
+    return Object.keys(rows[0] || {});
+}
+
+function inferField(rows, preferred, fallbackIndex = 0, numericOnly = false) {
+    if (preferred) return preferred;
+    const columns = inferColumns(rows);
+    if (!numericOnly) return columns[fallbackIndex] || 'label';
+    return columns.find((column) => rows.some((row) => numericValue(row?.[column]) !== null)) || columns[fallbackIndex] || 'value';
+}
+
+function buildGeneratedSpec() {
+    const chartType = document.getElementById('generatorChartType').value;
+    const title = document.getElementById('generatorTitle').value.trim() || 'Generated Plot';
+    const payload = parseGeneratorInput();
+    const sourceType = document.getElementById('generatorInputType').value;
+    const id = `generated_${Date.now()}`;
+
+    if (chartType === 'table') {
+        const rows = Array.isArray(payload[0]) ? payload.map((row, index) => ({ row: index + 1, values: row })) : payload;
+        const columns = inferColumns(rows);
+        const source = { domain: 'plot_generator', registry_type: sourceType };
+        return {
+            id,
+            kind: 'table',
+            title,
+            description: `Generated table from ${sourceType}.`,
+            columns,
+            rows,
+            row_count: rows.length,
+            source,
+            metadata: { display_id: id, kind: 'table', plot_type: 'table', ...source }
+        };
+    }
+
+    const layout = {
+        title: { text: title },
+        template: 'plotly_white',
+        margin: { l: 50, r: 24, t: 56, b: 58 },
+        xaxis: { automargin: true },
+        yaxis: { automargin: true }
+    };
+    let data = [];
+    let series = [];
+
+    if (chartType === 'heatmap') {
+        const matrix = Array.isArray(payload[0])
+            ? payload.map((row) => row.map((value) => numericValue(value) ?? 0))
+            : payload.map((row) => inferColumns(payload).filter((column) => numericValue(row?.[column]) !== null).map((column) => numericValue(row?.[column]) ?? 0));
+        data = [{ type: 'heatmap', z: matrix, colorscale: 'Blues' }];
+    } else {
+        const xField = inferField(payload, document.getElementById('generatorXField').value.trim(), 0, false);
+        const yField = inferField(payload, document.getElementById('generatorYField').value.trim(), 1, true);
+        const x = payload.map((row, index) => row?.[xField] ?? row?.label ?? row?.step ?? index + 1);
+        const y = payload.map((row) => numericValue(row?.[yField] ?? row?.value) ?? 0);
+        series = x.map((label, index) => ({ label: String(label), value: y[index] ?? 0 }));
+
+        if (chartType === 'bar') data = [{ type: 'bar', x, y }];
+        if (chartType === 'line') data = [{ type: 'scatter', mode: 'lines+markers', x, y, line: { width: 3 } }];
+        if (chartType === 'scatter') data = [{ type: 'scatter', mode: 'markers', x, y, marker: { size: 9 } }];
+        if (chartType === 'area') data = [{ type: 'scatter', mode: 'lines', fill: 'tozeroy', x, y, line: { width: 3 } }];
+        if (chartType === 'histogram') data = [{ type: 'histogram', x: y }];
+        if (chartType === 'box') data = [{ type: 'box', y }];
+        if (chartType === 'pie') data = [{ type: 'pie', labels: x, values: y, hole: 0.32 }];
+    }
+
+    return {
+        id,
+        kind: 'plotly_figure',
+        plot_type: chartType,
+        title,
+        description: `Generated ${chartType} Plotly figure from ${sourceType}.`,
+        figure: { data, layout, config: { displaylogo: false, responsive: true } },
+        series,
+        source: { domain: 'plot_generator', registry_type: sourceType },
+        metadata: { display_id: id, kind: 'plotly_figure', plot_type: chartType, domain: 'plot_generator', registry_type: sourceType }
+    };
+}
+
+function generatePlotSpec() {
+    try {
+        const spec = buildGeneratedSpec();
+        plotState.latestGeneratedSpec = spec;
+        document.getElementById('generatedSpecOutput').textContent = JSON.stringify(spec, null, 2);
+        renderDeck('generatorPreview', [spec]);
+        document.getElementById('generatorStatus').innerHTML = '<div class="alert alert-success">PlotSpec generated and previewed.</div>';
+    } catch (error) {
+        document.getElementById('generatorStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function loadGeneratorExample() {
+    const examples = {
+        sequence: '0.92, 0.84, 0.77, 0.71, 0.66, 0.61',
+        scalar_object: '{\n  "accuracy": 0.91,\n  "precision": 0.88,\n  "recall": 0.83,\n  "f1": 0.85\n}',
+        rows_json: '[\n  {"epoch": 1, "loss": 0.92, "val_loss": 1.02},\n  {"epoch": 2, "loss": 0.71, "val_loss": 0.84},\n  {"epoch": 3, "loss": 0.54, "val_loss": 0.65}\n]',
+        matrix_json: '[\n  [0.1, 0.4, 0.2],\n  [0.3, 0.8, 0.5],\n  [0.2, 0.6, 0.9]\n]',
+        csv: 'step,prediction,drift\n1,0.42,0.01\n2,0.47,0.04\n3,0.51,0.07\n4,0.58,0.1'
+    };
+    const type = document.getElementById('generatorInputType').value;
+    document.getElementById('generatorInput').value = examples[type] || examples.sequence;
+    if (type === 'rows_json' || type === 'csv') {
+        document.getElementById('generatorXField').value = 'step';
+        document.getElementById('generatorYField').value = type === 'csv' ? 'prediction' : 'loss';
+    } else {
+        document.getElementById('generatorXField').value = '';
+        document.getElementById('generatorYField').value = '';
+    }
+}
+
+async function copyGeneratedSpec() {
+    const text = document.getElementById('generatedSpecOutput').textContent || '{}';
+    await navigator.clipboard.writeText(text);
+    document.getElementById('generatorStatus').innerHTML = '<div class="alert alert-success">PlotSpec copied.</div>';
+}
+
+function syncArtifactFilters() {
+    document.getElementById('artifactJobId').value = globalPlotRunId.value || '';
+    document.getElementById('artifactModelId').value = globalPlotModelId.value || '';
+    document.getElementById('artifactDatasetId').value = globalPlotDatasetId.value || '';
+    document.getElementById('artifactKind').value = globalPlotKind.value || '';
+}
+
+async function loadArtifacts() {
+    const params = new URLSearchParams();
+    const jobId = document.getElementById('artifactJobId').value.trim();
+    const modelId = document.getElementById('artifactModelId').value.trim();
+    const datasetId = document.getElementById('artifactDatasetId').value.trim();
+    const kind = document.getElementById('artifactKind').value.trim();
+    if (jobId) params.set('job_id', jobId);
+    if (modelId) params.set('model_id', modelId);
+    if (datasetId) params.set('dataset_id', datasetId);
+    if (kind) params.set('kind', kind);
+
+    document.getElementById('artifactStatus').textContent = 'Loading artifact registry...';
+    try {
+        const payload = await fetchJson(`/plots/artifacts${params.toString() ? `?${params}` : ''}`, {}, 'plot-artifacts');
+        const plots = payload.plots || [];
+        document.getElementById('artifactStatus').textContent = `${plots.length} artifacts loaded.`;
+        renderDeck('artifactDeck', plots);
+    } catch (error) {
+        document.getElementById('artifactStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function resolveObjectId() {
+    const explicit = document.getElementById('objectItemId').value.trim();
+    if (explicit) return explicit;
+    const registryType = document.getElementById('objectRegistryType').value;
+    if (registryType === 'datasetmodel') return globalPlotDatasetId.value;
+    if (registryType === 'learningmodel') return globalPlotModelId.value;
+    if (registryType === 'inferencemodel') return globalPlotInferenceId.value;
+    return '';
+}
+
+async function analyzeObjectPlots() {
+    const registryType = document.getElementById('objectRegistryType').value;
+    const itemId = resolveObjectId();
+    if (!itemId) {
+        document.getElementById('objectExplorerStatus').innerHTML = '<div class="alert alert-info">Select or type an object id first.</div>';
+        return;
+    }
+    try {
+        const [analysis, dependencies] = await Promise.all([
+            fetchJson(`/analysis/object?registry_type=${encodeURIComponent(registryType)}&item_id=${encodeURIComponent(itemId)}`, {}, 'plot-object-analysis'),
+            fetchJson(`/registry/dependencies/${encodeURIComponent(registryType)}/${encodeURIComponent(itemId)}`, {}, 'plot-object-dependencies').catch((error) => ({ status: 'error', detail: error.message }))
+        ]);
+        plotState.latestObjectPayload = { analysis, dependencies };
+        document.getElementById('objectExplorerStatus').innerHTML = '<div class="alert alert-success">Object plots loaded.</div>';
+        renderDeck('objectPlotDeck', analysis.plots || []);
+        renderDetails('objectDetails', { analysis, dependencies }, 'Object Analysis and Dependencies');
+    } catch (error) {
+        document.getElementById('objectExplorerStatus').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function adoptObjectPlots() {
+    const plots = plotState.latestObjectPayload?.analysis?.plots || [];
+    plotState.latestGalleryPlots = plots;
+    renderDeck('galleryDeck', plots);
+    renderCentralMetrics(plots, plotState.latestObjectPayload?.analysis || {});
+    setPlotTab('gallery');
+}
+
+document.querySelectorAll('.workspace-tab').forEach((button) => {
+    button.addEventListener('click', () => setPlotTab(button.dataset.tab));
+});
+document.getElementById('btnRefreshPlotCentral').addEventListener('click', loadCentralGallery);
+document.getElementById('btnRefreshGallery').addEventListener('click', loadCentralGallery);
+document.getElementById('btnUseGeneratorPreview').addEventListener('click', () => {
+    plotSourceType.value = 'manual';
+    generatePlotSpec();
+    loadCentralGallery();
+});
+document.getElementById('btnGeneratePlotSpec').addEventListener('click', generatePlotSpec);
+document.getElementById('btnLoadGeneratorExample').addEventListener('click', loadGeneratorExample);
+document.getElementById('btnCopyGeneratedSpec').addEventListener('click', copyGeneratedSpec);
+document.getElementById('btnSyncArtifactFilters').addEventListener('click', syncArtifactFilters);
+document.getElementById('btnLoadArtifacts').addEventListener('click', loadArtifacts);
+document.getElementById('btnAnalyzeObjectPlots').addEventListener('click', analyzeObjectPlots);
+document.getElementById('btnAdoptObjectPlots').addEventListener('click', adoptObjectPlots);
+document.getElementById('generatorInputType').addEventListener('change', loadGeneratorExample);
+
+document.addEventListener('DOMContentLoaded', async () => {
+    loadGeneratorExample();
+    generatePlotSpec();
+    await populatePlotOptions();
+    await loadCentralGallery();
+});
+</script>
+{% endblock %}

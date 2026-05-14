@@ -46,6 +46,14 @@ def page(browser: Browser, e2e_base_url: str) -> Page:
         base_url=e2e_base_url,
         viewport={"width": 1440, "height": 960},
     )
+    context.route(
+        "https://fonts.googleapis.com/*",
+        lambda route: route.fulfill(status=200, content_type="text/css", body=""),
+    )
+    context.route(
+        "https://fonts.gstatic.com/*",
+        lambda route: route.fulfill(status=200, body=b"", headers={"content-type": "font/woff2"}),
+    )
     console_errors: list[str] = []
     network_failures: list[str] = []
 
@@ -60,6 +68,9 @@ def page(browser: Browser, e2e_base_url: str) -> Page:
         "requestfailed",
         lambda request: network_failures.append(f"{request.method} {request.url}: {request.failure}")
         if "/favicon.ico" not in request.url
+        and "fonts.googleapis.com" not in request.url
+        and "fonts.gstatic.com" not in request.url
+        and "ERR_ABORTED" not in str(request.failure or "")
         else None,
     )
 

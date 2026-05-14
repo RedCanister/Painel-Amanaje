@@ -257,6 +257,7 @@ def _legacy_slm_runtime_config() -> dict[str, Any]:
         "api_key_env": "AMANAJE_SLM_API_KEY",
         "api_key_configured": bool(os.getenv("AMANAJE_SLM_API_KEY")),
         "model_version": SLM_MODEL_VERSION,
+        "runtime_kind": os.getenv("AMANAJE_SLM_RUNTIME_KIND", "pytorch_hf_server"),
         "base_model_name": os.getenv("AMANAJE_SLM_BASE_MODEL", "local-workflow-template"),
         "adapter_path": os.getenv("AMANAJE_SLM_ADAPTER_PATH", "runtime_artifacts/assistant_models/amanaje_slm"),
         "supports_json_mode": True,
@@ -312,6 +313,7 @@ def _normalize_provider_config(name: str, config: Mapping[str, Any], *, default_
         "api_key_env": api_key_env,
         "api_key_configured": api_key_configured,
         "model_version": str(config.get("model_version") or f"{name}-unversioned"),
+        "runtime_kind": str(config.get("runtime_kind") or "external_openai_compatible_server"),
         "base_model_name": config.get("base_model_name"),
         "adapter_path": config.get("adapter_path"),
         "supports_json_mode": _coerce_bool(config.get("supports_json_mode"), True),
@@ -1207,6 +1209,9 @@ def build_assistant_reference_snapshot(
 def curate_assistant_training_examples(
     dataset_dir: str | Path,
     output_dir: str | Path | None = None,
+    *,
+    project_examples: Mapping[str, Any] | None = None,
+    reference_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     dataset_path = ensure_dir(dataset_dir)
     curated_dir = ensure_dir(output_dir or dataset_path / "curated")
@@ -1218,6 +1223,9 @@ def curate_assistant_training_examples(
     workflow_types: dict[str, int] = {}
     kept_records = 0
     rejected_records = 0
+    interaction_records = 0
+    project_example_records = 0
+    reference_records = 0
 
     with curated_path.open("w", encoding="utf-8") as handle:
         if interactions_path.exists():
@@ -1235,21 +1243,122 @@ def curate_assistant_training_examples(
                 workflow_types[workflow_type] = workflow_types.get(workflow_type, 0) + 1
                 handle.write(json.dumps(_redact_sensitive_values(record), ensure_ascii=False, default=str) + "\n")
                 kept_records += 1
+                interaction_records += 1
+        for record in _project_example_training_records(project_examples):
+            label = str(record.get("label") or "positive")
+            workflow_type = str(record.get("workflow_type") or "project_example")
+            labels[label] = labels.get(label, 0) + 1
+            workflow_types[workflow_type] = workflow_types.get(workflow_type, 0) + 1
+            handle.write(json.dumps(_redact_sensitive_values(record), ensure_ascii=False, default=str) + "\n")
+            kept_records += 1
+            project_example_records += 1
+        if reference_dir is not None:
+            reference_path = Path(reference_dir)
+            if reference_path.exists():
+                for reference in list_assistant_references(reference_path, limit=2_000):
+                    record = _reference_training_record(reference, reference_path)
+                    label = str(record.get("label") or "reference_asset")
+                    workflow_type = str(record.get("workflow_type") or "reference")
+                    labels[label] = labels.get(label, 0) + 1
+                    workflow_types[workflow_type] = workflow_types.get(workflow_type, 0) + 1
+                    handle.write(json.dumps(_redact_sensitive_values(record), ensure_ascii=False, default=str) + "\n")
+                    kept_records += 1
+                    reference_records += 1
 
     manifest = {
         "recorded_at": datetime.now().isoformat(),
         "source_path": str(interactions_path),
+        "project_examples_version": project_examples.get("version") if isinstance(project_examples, Mapping) else None,
         "curated_path": str(curated_path),
         "manifest_path": str(manifest_path),
         "record_count": kept_records,
+        "interaction_records": interaction_records,
+        "project_example_records": project_example_records,
+        "reference_records": reference_records,
         "rejected_records": rejected_records,
         "labels": labels,
         "workflow_types": workflow_types,
+        "reference_dir": str(reference_dir) if reference_dir is not None else None,
         "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted.",
         "ready_for_fine_tuning": kept_records > 0 and labels.get("positive", 0) > 0,
     }
     save_json(manifest, manifest_path, indent=2)
     return manifest
+
+
+def _project_example_training_records(project_examples: Mapping[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(project_examples, Mapping):
+        return []
+    objects = project_examples.get("objects")
+    if not isinstance(objects, list):
+        return []
+    records: list[dict[str, Any]] = []
+    catalog_version = project_examples.get("version")
+    generated_at = project_examples.get("generated_at")
+    for entry in objects:
+        if not isinstance(entry, Mapping):
+            continue
+        object_name = str(entry.get("object_name") or entry.get("object_key") or "ProjectExample")
+        family = str(entry.get("family") or "project_examples")
+        samples = entry.get("samples")
+        if not isinstance(samples, list):
+            continue
+        for sample in samples:
+            if not isinstance(sample, Mapping):
+                continue
+            payload = sample.get("payload")
+            if payload is None:
+                continue
+            tier = str(sample.get("tier") or "sample")
+            source_hash = _hash_text(
+                json.dumps(
+                    {
+                        "catalog_version": catalog_version,
+                        "object_name": object_name,
+                        "tier": tier,
+                        "payload": _redact_sensitive_values(payload),
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    default=str,
+                )
+            )
+            records.append(
+                {
+                    "source_type": "project_example_catalog",
+                    "label": "positive",
+                    "workflow_type": "project_example",
+                    "prompt": (
+                        f"Use this validated Painel Amanaje {object_name} {tier} example as a schema, "
+                        "metadata, and workflow reference for AssistantModel training."
+                    ),
+                    "context_pack_hash": "",
+                    "asset_summary": f"{family}.{object_name} {tier} validated project example.",
+                    "content": _compact_training_text(payload),
+                    "registry_metadata": {
+                        "catalog_version": catalog_version,
+                        "generated_at": generated_at,
+                        "object_key": entry.get("object_key"),
+                        "object_name": object_name,
+                        "family": family,
+                        "module": entry.get("module"),
+                        "tier": tier,
+                        "declared_size_mb": sample.get("declared_size_mb"),
+                        "rows": sample.get("rows"),
+                        "columns": sample.get("columns"),
+                        "complexity": sample.get("complexity"),
+                    },
+                    "source_path": "/examples/catalog",
+                    "source_hash": source_hash,
+                    "quality_signals": {
+                        "validated_catalog_payload": True,
+                        "training_use": "assistant_schema_and_workflow_reference",
+                    },
+                    "assistant_success": True,
+                    "assistant_quality_label": 1,
+                }
+            )
+    return records
 
 
 ASSISTANT_TRAINING_DATASET_FEATURES = [

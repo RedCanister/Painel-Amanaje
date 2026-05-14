@@ -39,6 +39,10 @@ class ProductionPage(AmanajePage):
     pass
 
 
+class VisualizationPage(AmanajePage):
+    pass
+
+
 class AssistantPage(AmanajePage):
     pass
 

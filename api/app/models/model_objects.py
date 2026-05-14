@@ -133,12 +133,30 @@ class LearningModel(ObjectModel):
 
 _ASSISTANT_MODEL_PARAMETER_FIELDS = (
     "provider_type",
+    "runtime_kind",
     "base_url",
     "chat_endpoint",
+    "health_url",
     "model_name",
     "model_version",
+    "base_model_name",
     "api_key_env",
+    "bundle_path",
+    "bundle_sha256",
+    "bundle_manifest_member",
+    "bundle_manifest_path",
+    "extracted_dir",
+    "model_artifact_path",
+    "tokenizer_path",
+    "tokenizer_assets",
+    "chat_template_path",
+    "chat_template",
     "adapter_path",
+    "device",
+    "dtype",
+    "quantization",
+    "generation_config",
+    "max_context_tokens",
     "prompt_template_version",
     "context_pack_version",
     "safety_profile_version",
@@ -166,12 +184,30 @@ class AssistantModel(LearningModel):
     input_features: Optional[List[str]] = Field(default_factory=lambda: ["prompt", "context_pack", "target_type"])
     output_features: Optional[List[str]] = Field(default_factory=lambda: ["workflow_draft"])
     provider_type: Optional[str] = "openai_compatible"
+    runtime_kind: Optional[str] = None
     base_url: Optional[str] = None
     chat_endpoint: Optional[str] = None
+    health_url: Optional[str] = None
     model_name: Optional[str] = None
     model_version: Optional[str] = None
+    base_model_name: Optional[str] = None
     api_key_env: Optional[str] = None
+    bundle_path: Optional[str] = None
+    bundle_sha256: Optional[str] = None
+    bundle_manifest_member: Optional[str] = None
+    bundle_manifest_path: Optional[str] = None
+    extracted_dir: Optional[str] = None
+    model_artifact_path: Optional[str] = None
+    tokenizer_path: Optional[str] = None
+    tokenizer_assets: Optional[List[str]] = None
+    chat_template_path: Optional[str] = None
+    chat_template: Optional[str] = None
     adapter_path: Optional[str] = None
+    device: Optional[str] = None
+    dtype: Optional[str] = None
+    quantization: Optional[Any] = None
+    generation_config: Optional[Dict[str, Any]] = None
+    max_context_tokens: Optional[int] = None
     prompt_template_version: Optional[str] = None
     context_pack_version: Optional[str] = None
     safety_profile_version: Optional[str] = None

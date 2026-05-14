@@ -1,0 +1,385 @@
+{
+  "run_id": "editor_execution_f5b456eec094",
+  "run_type": "editor_execution",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-14T19:01:43.662078",
+  "updated_at": "2026-05-14T19:01:54.460428",
+  "started_at": "2026-05-14T19:01:54.293290",
+  "completed_at": "2026-05-14T19:01:54.460428",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false
+  },
+  "parameters": {
+    "code_length": 357
+  },
+  "metrics": {
+    "variable_count": 9
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "df": {
+        "name": "df",
+        "type": "DataFrame",
+        "python_type": "pandas.core.frame.DataFrame",
+        "kind": "dataframe",
+        "value": "DataFrame rows=3",
+        "preview": "DataFrame rows=3",
+        "metadata": {
+          "rows": 3,
+          "columns": [
+            "value",
+            "category"
+          ],
+          "shape": [
+            3,
+            2
+          ],
+          "dtypes": {
+            "value": "int64",
+            "category": "object"
+          }
+        },
+        "raw_value": [
+          {
+            "value": 10,
+            "category": "a"
+          },
+          {
+            "value": 20,
+            "category": "b"
+          },
+          {
+            "value": 30,
+            "category": "c"
+          }
+        ]
+      },
+      "csv_text": {
+        "name": "csv_text",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "value,category\n10,a\n20,b\n30,c\n",
+        "preview": "value,category\n10,a\n20,b\n30,c\n",
+        "metadata": null,
+        "raw_value": "value,category\n10,a\n20,b\n30,c\n"
+      },
+      "name": {
+        "name": "name",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "sample_dataset",
+        "preview": "sample_dataset",
+        "metadata": null,
+        "raw_value": "sample_dataset"
+      },
+      "description": {
+        "name": "description",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "Dataset created from the editor",
+        "preview": "Dataset created from the editor",
+        "metadata": null,
+        "raw_value": "Dataset created from the editor"
+      },
+      "object_type": {
+        "name": "object_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "dataset",
+        "preview": "dataset",
+        "metadata": null,
+        "raw_value": "dataset"
+      },
+      "path": {
+        "name": "path",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "generated/sample_dataset.csv",
+        "preview": "generated/sample_dataset.csv",
+        "metadata": null,
+        "raw_value": "generated/sample_dataset.csv"
+      },
+      "version": {
+        "name": "version",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "1",
+        "preview": "1",
+        "metadata": null,
+        "raw_value": 1
+      },
+      "dataset_type": {
+        "name": "dataset_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "dataset",
+        "preview": "dataset",
+        "metadata": null,
+        "raw_value": "dataset"
+      },
+      "connection_string": {
+        "name": "connection_string",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "",
+        "preview": "",
+        "metadata": null,
+        "raw_value": ""
+      }
+    },
+    "metadata": {
+      "csv_text": "value,category\n10,a\n20,b\n30,c\n",
+      "path": "generated/sample_dataset.csv",
+      "description": "Dataset created from the editor",
+      "dataset_type": "dataset",
+      "name": "sample_dataset",
+      "version": 1,
+      "connection_string": "",
+      "object_type": "dataset"
+    },
+    "document": {
+      "name": "sample_dataset",
+      "description": "Dataset created from the editor",
+      "object_type": "dataset",
+      "size": 0.0,
+      "path": "generated/sample_dataset.csv",
+      "date": "2026-05-14T19:01:54.452958",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-14T19:01:54.452958"
+        }
+      ],
+      "variables": {
+        "df": {
+          "name": "df",
+          "type": "DataFrame",
+          "python_type": "pandas.core.frame.DataFrame",
+          "kind": "dataframe",
+          "value": "DataFrame rows=3",
+          "preview": "DataFrame rows=3",
+          "metadata": {
+            "rows": 3,
+            "columns": [
+              "value",
+              "category"
+            ],
+            "shape": [
+              3,
+              2
+            ],
+            "dtypes": {
+              "value": "int64",
+              "category": "object"
+            }
+          },
+          "raw_value": [
+            {
+              "value": 10,
+              "category": "a"
+            },
+            {
+              "value": 20,
+              "category": "b"
+            },
+            {
+              "value": 30,
+              "category": "c"
+            }
+          ]
+        },
+        "csv_text": {
+          "name": "csv_text",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "value,category\n10,a\n20,b\n30,c\n",
+          "preview": "value,category\n10,a\n20,b\n30,c\n",
+          "metadata": null,
+          "raw_value": "value,category\n10,a\n20,b\n30,c\n"
+        },
+        "name": {
+          "name": "name",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "sample_dataset",
+          "preview": "sample_dataset",
+          "metadata": null,
+          "raw_value": "sample_dataset"
+        },
+        "description": {
+          "name": "description",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "Dataset created from the editor",
+          "preview": "Dataset created from the editor",
+          "metadata": null,
+          "raw_value": "Dataset created from the editor"
+        },
+        "object_type": {
+          "name": "object_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "dataset",
+          "preview": "dataset",
+          "metadata": null,
+          "raw_value": "dataset"
+        },
+        "path": {
+          "name": "path",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "generated/sample_dataset.csv",
+          "preview": "generated/sample_dataset.csv",
+          "metadata": null,
+          "raw_value": "generated/sample_dataset.csv"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "1",
+          "preview": "1",
+          "metadata": null,
+          "raw_value": 1
+        },
+        "dataset_type": {
+          "name": "dataset_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "dataset",
+          "preview": "dataset",
+          "metadata": null,
+          "raw_value": "dataset"
+        },
+        "connection_string": {
+          "name": "connection_string",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "",
+          "preview": "",
+          "metadata": null,
+          "raw_value": ""
+        }
+      },
+      "metadata": {
+        "csv_text": "value,category\n10,a\n20,b\n30,c\n",
+        "path": "generated/sample_dataset.csv",
+        "description": "Dataset created from the editor",
+        "dataset_type": "dataset",
+        "name": "sample_dataset",
+        "version": 1,
+        "connection_string": "",
+        "object_type": "dataset"
+      },
+      "code": {
+        "script": "# Data creation template\nimport pandas as pd\n\ndf = pd.DataFrame({\n    \"value\": [10, 20, 30],\n    \"category\": [\"a\", \"b\", \"c\"]\n})\n\ncsv_text = df.to_csv(index=False)\n\nname = \"sample_dataset\"\ndescription = \"Dataset created from the editor\"\nobject_type = \"dataset\"\npath = \"generated/sample_dataset.csv\"\nversion = 1\ndataset_type = \"dataset\"\nconnection_string = \"\"",
+        "language": "python",
+        "line_count": 17
+      }
+    },
+    "summary": {
+      "variable_count": 9,
+      "defined_name_count": 9,
+      "defined_names": [
+        "df",
+        "csv_text",
+        "name",
+        "description",
+        "object_type",
+        "path",
+        "version",
+        "dataset_type",
+        "connection_string"
+      ],
+      "has_error": false
+    },
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-14T19:01:54.460428",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T19:01:43.662078",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T19:01:43.789181",
+        "message": "Editor execution enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-14T19:01:54.293290",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-14T19:01:54.460428",
+        "message": "Editor execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T19:01:43.662078",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T19:01:43.789181",
+      "message": "Editor execution enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-14T19:01:54.293290",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-14T19:01:54.460428",
+      "message": "Editor execution completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "editor_execution_f5b456eec094"
+  }
+}

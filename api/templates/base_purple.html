@@ -6,96 +6,83 @@
 <style>
     .registry-container { max-width: 1400px; margin: 0 auto; padding: 1.4rem 0 2rem; }
     .registry-header {
-        background:
-            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
-            var(--amanaje-shell-panel);
+        background: white;
         color: var(--amanaje-text-strong);
-        padding: 1.75rem;
-        border: 1px solid var(--amanaje-border);
-        border-radius: 26px;
+        padding: 1.25rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
         margin-bottom: 1.5rem;
-        box-shadow: 0 22px 44px rgba(109, 40, 217, 0.14);
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
     }
     .registry-header h2 {
-        margin: 0 0 0.5rem;
+        margin: 0 0 0.35rem;
         font-family: var(--amanaje-heading-font);
-        font-size: clamp(1.95rem, 2.7vw, 2.7rem);
+        font-size: clamp(1.72rem, 2.35vw, 2.3rem);
     }
     .registry-header p { margin: 0; color: var(--amanaje-muted); max-width: 68ch; }
     .tabs-container, .mode-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-    .tab-button, .mode-button {
-        padding: 0.85rem 1.1rem;
-        border: none;
-        border-radius: 999px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .tab-button { background: rgba(255,255,255,0.8); color: #5b21b6; border: 1px solid var(--amanaje-primary-border-soft); }
-    .tab-button.active { background: var(--amanaje-primary-gradient); color: white; }
-    .mode-button { background: var(--amanaje-surface-3); color: #5b21b6; border: 1px solid var(--amanaje-primary-border-soft); }
-    .mode-button.active { background: #9333ea; color: white; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .form-section, .detail-section, .table-wrapper, .item-card, .modal-content {
-        background: var(--amanaje-surface);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 22px;
-        box-shadow: 0 18px 38px rgba(109, 40, 217, 0.08);
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
     }
-    .form-section, .detail-section, .modal-content { padding: 1.5rem; }
+    .form-section, .detail-section, .modal-content { padding: 1.25rem; }
     .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: #581c87; }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.45rem;
+        font-weight: 800;
+        color: var(--amanaje-primary-strong);
+    }
     .form-group input,
     .form-group select,
     .form-group textarea {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #d8b4fe;
+        padding: 0.72rem 0.78rem;
+        border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: white;
+        background: var(--amanaje-surface-3);
+        color: var(--amanaje-text-strong);
+        font: inherit;
     }
     .form-group textarea { min-height: 110px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
-    .helper-text { color: #6b7280; font-size: 0.9rem; margin-top: 0.35rem; }
+    .helper-text {
+        color: var(--amanaje-muted);
+        font-size: 0.9rem;
+        margin-top: 0.35rem;
+    }
     .form-row, .reference-grid, .status-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .checkbox-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .checkbox-card {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        border: 1px solid #e9d5ff;
+        border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 0.85rem 1rem;
         background: var(--amanaje-surface-2);
     }
     .checkbox-card input[type="checkbox"] { width: auto; margin: 0; accent-color: #7c3aed; }
     .button-group, .actions-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
-    .btn {
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .btn-primary { background: #7c3aed; color: white; }
-    .btn-secondary { background: #f3f4f6; color: #374151; }
-    .btn-danger { background: #dc2626; color: white; }
     .btn-edit { background: #2563eb; color: white; }
-    .btn-link { background: #ede9fe; color: #5b21b6; }
     .upload-panel {
         display: none;
         padding: 1rem;
-        border: 1px dashed #c4b5fd;
-        border-radius: 16px;
-        background: #faf5ff;
+        border: 1px dashed var(--amanaje-primary-border);
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
         margin-bottom: 1rem;
     }
     .upload-panel.active { display: block; }
     .assistant-registry-panel {
         padding: 1rem;
-        border: 1px solid #e9d5ff;
-        border-radius: 16px;
-        background: #faf5ff;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
         margin-bottom: 1rem;
     }
     .assistant-registry-grid {
@@ -104,20 +91,21 @@
         grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
     }
     .assistant-registry-output {
-        background: var(--amanaje-surface);
-        border: 1px solid var(--amanaje-border);
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 1rem;
         min-height: 150px;
     }
-    .upload-badge {
+    .upload-badge,
+    .pill {
         display: inline-flex;
         align-items: center;
         padding: 0.3rem 0.7rem;
         border-radius: 999px;
-        background: #ede9fe;
-        color: #6d28d9;
-        border: 1px solid #d8b4fe;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        border: 1px solid var(--amanaje-primary-border-soft);
         font-size: 0.82rem;
         font-weight: 700;
     }
@@ -127,11 +115,11 @@
     .item-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
     .table-wrapper { overflow-x: auto; padding: 0; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #f3e8ff; }
-    thead { background: #faf5ff; }
-    .detail-row { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid #f3e8ff; }
+    th, td { padding: 0.9rem 1rem; text-align: left; border-bottom: 1px solid var(--amanaje-primary-border-soft); }
+    thead { background: var(--amanaje-primary-softer); }
+    .detail-row { display: grid; grid-template-columns: 220px 1fr; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--amanaje-primary-border-soft); }
     .detail-row:last-child { border-bottom: none; }
-    .detail-label { font-weight: 700; color: #581c87; }
+    .detail-label { font-weight: 700; color: var(--amanaje-primary-strong); }
     .detail-value code, .json-view {
         display: block;
         white-space: pre-wrap;
@@ -143,24 +131,30 @@
         font-family: Consolas, "Courier New", monospace;
         font-size: 0.88rem;
     }
-    .alert { padding: 1rem; border-radius: 14px; margin-bottom: 1rem; }
-    .alert-success { background: #ede9fe; color: #5b21b6; border: 1px solid #d8b4fe; }
-    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .alert {
+        padding: 0.85rem 1rem;
+        border-radius: 14px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+    }
+    .alert-success {
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        border-color: var(--amanaje-primary-border);
+    }
+    .alert-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+    .alert-info {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #bfdbfe;
+    }
     .loading { text-align: center; padding: 2rem; color: #7c3aed; font-weight: 700; }
     .empty-state { text-align: center; padding: 2rem; color: #9ca3af; }
     .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
-    .pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.3rem 0.7rem;
-        border-radius: 999px;
-        background: #f3e8ff;
-        color: #6d28d9;
-        border: 1px solid #d8b4fe;
-        font-size: 0.82rem;
-        font-weight: 700;
-    }
     .modal {
         display: none;
         position: fixed;
@@ -1631,6 +1625,12 @@
         setCreateMode('manual');
         await AmanajeUI.loadAssistantModelOptions('registryAssistantModel');
         await populateReferenceSelects();
+        const params = new URLSearchParams(window.location.search);
+        const requestedType = params.get('registryType');
+        const requestedId = params.get('itemId');
+        if (requestedType && requestedId) {
+            await viewDetail(requestedId, requestedType);
+        }
     });
 </script>
 {% endblock %}

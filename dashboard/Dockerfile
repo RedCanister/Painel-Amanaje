@@ -15,4 +15,4 @@ RUN useradd --uid 1000 --create-home dashuser || true
 USER dashuser
 
 EXPOSE 8050
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app:server", "--bind", "0.0.0.0:8050", "--workers", "2"]
+CMD ["gunicorn", "app:server", "--bind", "0.0.0.0:8050", "--workers", "2"]

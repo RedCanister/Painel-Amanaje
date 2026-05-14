@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "epochs": "1",
+        "dropout": "0.1",
+        "framework": "pytorch",
+        "batch_size": "2",
+        "hidden_dim": "64",
+        "input_size": "1",
+        "hidden_size": "1",
+        "output_size": "1",
+        "hidden_layers": "2",
+        "learning_rate": "0.001",
+        "input_features": "[\"value\"]",
+        "output_features": "[\"category\"]",
+        "training_mode": "transfer",
+        "transfer_strategy": "auto",
+        "base_model_id": "2",
+        "base_artifact_path": "/models/sample_model.pt",
+        "base_run_id": "",
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": "false"
+    },
+    "skipped_conflicts": {}
+}

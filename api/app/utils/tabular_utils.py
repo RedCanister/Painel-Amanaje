@@ -513,6 +513,64 @@ def apply_feature_operations(
             frame[column_name] = frame[column_name].fillna(value)
             applied_steps.append({"operation": "fill_missing", "column": column_name})
 
+    math_operations = operations.get("math_operations") or []
+    if isinstance(math_operations, list):
+        for operation in math_operations:
+            if not isinstance(operation, Mapping):
+                continue
+            column_name = str(operation.get("column") or "").strip()
+            target_column = str(operation.get("target") or column_name).strip() or column_name
+            operator = str(operation.get("operator") or "").strip().lower()
+            if column_name not in frame.columns or not operator:
+                continue
+
+            series = pd.to_numeric(frame[column_name], errors="coerce")
+            raw_value = operation.get("value")
+            numeric_value = None
+            try:
+                numeric_value = float(raw_value)
+            except (TypeError, ValueError):
+                numeric_value = None
+
+            result_series = None
+            if operator == "add" and numeric_value is not None:
+                result_series = series + numeric_value
+            elif operator == "subtract" and numeric_value is not None:
+                result_series = series - numeric_value
+            elif operator == "multiply" and numeric_value is not None:
+                result_series = series * numeric_value
+            elif operator == "divide" and numeric_value not in (None, 0):
+                result_series = series / numeric_value
+            elif operator == "power" and numeric_value is not None:
+                result_series = series.pow(numeric_value)
+            elif operator == "round":
+                decimals = int(numeric_value) if numeric_value is not None else 0
+                result_series = series.round(decimals)
+            elif operator == "clip_min" and numeric_value is not None:
+                result_series = series.clip(lower=numeric_value)
+            elif operator == "clip_max" and numeric_value is not None:
+                result_series = series.clip(upper=numeric_value)
+            elif operator == "abs":
+                result_series = series.abs()
+            elif operator == "log1p":
+                result_series = np.log1p(series.clip(lower=0))
+
+            if result_series is None:
+                continue
+
+            if isinstance(result_series, pd.Series):
+                result_series = result_series.replace([np.inf, -np.inf], np.nan)
+            frame[target_column] = result_series
+            applied_steps.append(
+                {
+                    "operation": "math_operation",
+                    "column": column_name,
+                    "target": target_column,
+                    "operator": operator,
+                    "value": raw_value,
+                }
+            )
+
     filters = operations.get("filters") or operations.get("filter_rows") or []
     if isinstance(filters, list):
         for condition in filters:

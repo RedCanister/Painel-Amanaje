@@ -23,7 +23,7 @@
 <!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
 
-<link rel="stylesheet" href="api\static\style.css">
+<link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
 
 <style>
     body { font-family: sans-serif; }
@@ -66,7 +66,6 @@
         <div id="output"></div>
 
         <!-- Status message for operation feedback -->
-         // TODO - This function is causing trouble within the app and needs to be revised
         <div id="statusMessage" class="statusMessage"></div>
 
         <div id="executionOutput">
@@ -94,9 +93,25 @@
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 
 <script>
-    // TODO - Revise the functioning of the code editor. The function loadVariableFileFromList
-    // is not properly loading the code value of the retrieved object. Help me debug it
     window.editor = null;
+    const editorActionSelectors = [
+        '#btnExecuteCode',
+        '#btnExtractVariables',
+        '#btnSaveVariables',
+        '#btnLoadVariables',
+        '#btnExportJSON',
+        '#btnClearEditor'
+    ];
+
+    function setEditorActionAvailability(enabled) {
+        editorActionSelectors.forEach((selector) => {
+            const element = document.querySelector(selector);
+            if (!element) return;
+            element.disabled = !enabled;
+        });
+    }
+
+    setEditorActionAvailability(false);
 
     window.editorReady = new Promise(resolve => {
         require.config({ paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'} });
@@ -123,6 +138,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
 
             try { window.editor.layout(); } catch (e) { console.warn('editor.layout() failed', e); }
             console.log("Monaco Editor initialized");
+            setEditorActionAvailability(true);
             resolve(window.editor);
         });
     });
@@ -415,8 +431,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         }
     }
 
-    // TODO - Whenever I click the buttton of this function, I get an error
-    // where the editor is not initialized.
     async function loadVariableFileFromList(filename) {
         try {
             
@@ -440,9 +454,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
             if (!window.editor) {
                 throw new Error('Monaco editor failed to initialize. Reload the page.');
             }
-
-            console.log(data.script)
-
             // Accept either `script` (legacy) or `code` (newer) payload shapes
             const codeCandidate = (data && (data.script ?? data.code)) || null;
             let codeText = null;
@@ -461,16 +472,6 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
                 console.warn('No code field in loaded file');
             }
 
-            // TODO - This is where the error.stack finds the error.
-            /*
-            if (new_editor) {
-                new_editor.setValue(data.code);
-            }
-            else {
-                console.log("Can't retrieve code. Show: ", new_editor)
-            }
-            */
-            
             console.log("Showed data.")
 
             displayExtractedVariables(data.variables || {});
@@ -550,6 +551,7 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        showStatus('Loading Monaco editor...', 'info');
         document.getElementById('btnExecuteCode')?.addEventListener('click', executeCode);
         document.getElementById('btnExtractVariables')?.addEventListener('click', () => {
             const assignments = parseVariableAssignmentsFromText();
@@ -568,7 +570,10 @@ df = pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4]})
         document.getElementById('btnClearEditor')?.addEventListener('click', clearEditor);
         document.getElementById('btnExportJSON')?.addEventListener('click', exportVariablesAsJSON);
 
-        loadFileList();
+        window.editorReady.then(() => {
+            showStatus('Editor ready. Saved scripts and load actions are synchronized.', 'success');
+            loadFileList();
+        });
 
         console.log("✅ Model Builder initialized");
     });

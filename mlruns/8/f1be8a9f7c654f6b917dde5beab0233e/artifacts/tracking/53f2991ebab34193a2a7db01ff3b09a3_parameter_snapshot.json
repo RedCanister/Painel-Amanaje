@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "hidden_dim": "80",
+        "hidden_layers": "2",
+        "dropout": "0.2",
+        "learning_rate": "0.00137415283726",
+        "batch_size": "32",
+        "epochs": "1",
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": "false",
+        "device_fallback_applied": "false"
+    },
+    "skipped_conflicts": {}
+}

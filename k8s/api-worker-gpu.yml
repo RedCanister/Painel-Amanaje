@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-worker-gpu
+  namespace: painel-amanaje
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-worker-gpu
+  template:
+    metadata:
+      labels:
+        app: api-worker-gpu
+    spec:
+      containers:
+      - name: api-worker-gpu
+        image: ghcr.io/<your-username>/painel-amanaje/api:latest
+        command: ["python", "-m", "app.workers.operation_worker", "amanaje:gpu"]
+        env:
+        - name: AMANAJE_REDIS_URL
+          value: redis://redis:6379/0
+        - name: AMANAJE_WORKER_QUEUE
+          value: amanaje:gpu
+        - name: CUDA_VISIBLE_DEVICES
+          value: all
+        envFrom:
+        - configMapRef:
+            name: painel-amanaje-config
+        - secretRef:
+            name: painel-amanaje-secrets
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: models
+          mountPath: /models
+        - name: mlruns
+          mountPath: /mlruns
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: data-pvc
+      - name: models
+        persistentVolumeClaim:
+          claimName: models-pvc
+      - name: mlruns
+        persistentVolumeClaim:
+          claimName: mlruns-pvc

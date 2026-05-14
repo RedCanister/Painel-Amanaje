@@ -1,0 +1,222 @@
+{
+  "context_pack_id": "ctx_082be8838d98",
+  "version": "assistant-context-pack-v1",
+  "prompt": "make the dataset half the size with all positive values",
+  "workflow_goal": null,
+  "target_type": "feature_operations",
+  "provider": "assistant_model_28",
+  "registry_type": null,
+  "form_values": {
+    "datasetId": 31
+  },
+  "constraints": {},
+  "safety_profile": "feature_operations",
+  "allowed_imports": [],
+  "allowed_dependencies": [],
+  "content_references": [
+    {
+      "reference_id": "ref_system_project_schema_feature_operations",
+      "source_type": "project_schema",
+      "name": "assistant_workflow_draft",
+      "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "target_type": "feature_operations"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129471"
+    },
+    {
+      "reference_id": "ref_system_safety_feature_operations",
+      "source_type": "safety_profile",
+      "name": "feature_operations",
+      "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "allowed_imports": [],
+        "allowed_dependencies": [],
+        "required_outputs": []
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129492"
+    },
+    {
+      "reference_id": "ref_system_alignment_contracts",
+      "source_type": "alignment_contracts",
+      "name": "assistant_alignment_contracts",
+      "summary": "The five alignment contracts that every private assistant draft is evaluated against.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129507"
+    },
+    {
+      "reference_id": "ref_system_prompt_feature_operations",
+      "source_type": "prompt_template",
+      "name": "amanaje-assistant-template-v1",
+      "summary": "Draft visual feature operations that match the selected dataset context and can be previewed before materialization.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "prompt_template_version": "amanaje-assistant-template-v1"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129523"
+    },
+    {
+      "reference_id": "ref_system_writing_guide",
+      "source_type": "draft_writing_guide",
+      "name": "amanaje_assistant_writing_guide",
+      "summary": "Project writing guidance for draft titles, summaries, metadata, risks, assumptions, and next actions.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "voice": "Concrete, project-aware, concise, and operational.",
+        "titles": "Name the artifact or workflow outcome, not the assistant action.",
+        "summaries": "State what the draft creates, how it fits Painel Amanaje, and what remains for user approval.",
+        "metadata": "Prefer registry-compatible names, versions, paths, feature names, and dependency declarations.",
+        "risks": "Name practical limitations such as synthetic distribution mismatch, missing IDs, or untrained artifacts.",
+        "next_actions": "Use short workflow actions that match reviewed draft, guarded run, upload, or registry submit steps.",
+        "references": "Use internal reference summaries and cite their reference IDs in metadata when they shape the draft.",
+        "originality": "Generate project-specific assets from the request and internal references; do not copy raw reference text."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129538"
+    },
+    {
+      "reference_id": "ref_system_quality_rubric",
+      "source_type": "draft_quality_rubric",
+      "name": "amanaje_assistant_quality_rubric",
+      "summary": "Quality checks used to evaluate generated draft text and metadata.",
+      "trust_level": "system",
+      "uri": null,
+      "metadata": {
+        "title_quality": "Title is specific to the requested artifact or workflow.",
+        "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+        "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+        "risk_quality": "Risks and assumptions are concrete enough for user review.",
+        "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129553"
+    },
+    {
+      "reference_id": "ref_system_mlflow_tracking",
+      "source_type": "mlflow_tracking",
+      "name": "assistant/amanaje_slm",
+      "summary": "Assistant model versions, evals, training examples, and promotion reports are tracked in MLflow.",
+      "trust_level": "system",
+      "uri": "assistant/amanaje_slm",
+      "metadata": {
+        "experiment_name": "assistant/amanaje_slm",
+        "evaluation_profile": "assistant-golden-v1",
+        "context_pack_version": "assistant-context-pack-v1"
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129569"
+    },
+    {
+      "reference_id": "ref_runtime_assistant_reference_snapshot",
+      "source_type": "runtime_context",
+      "name": "assistant_reference_snapshot",
+      "summary": "keys: eval_dir, interactions_path, recent_evals, recent_examples, source_type",
+      "trust_level": "runtime",
+      "uri": null,
+      "metadata": {
+        "source_type": "assistant_reference_snapshot",
+        "interactions_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+        "eval_dir": "/app/runtime_artifacts/assistant_evals",
+        "recent_examples": [
+          {
+            "label": "positive",
+            "workflow_type": "model_generation",
+            "provider": "assistant_model_28",
+            "model_version": "registry-assistant-draft-0.1",
+            "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+            "review_status": "approved"
+          },
+          {
+            "label": "corrected",
+            "workflow_type": "model_generation",
+            "provider": "assistant_model_28",
+            "model_version": "registry-assistant-draft-0.1",
+            "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+            "review_status": "approved"
+          },
+          {
+            "label": "negative",
+            "workflow_type": "registry_object",
+            "provider": "assistant_model_28",
+            "model_version": "registry-assistant-draft-0.1",
+            "context_pack_hash": "f3817d549536a989c8e7cbc6873783e980359c0bf7fd3750d74c768b8d90cbad",
+            "review_status": "needs_revision"
+          }
+        ],
+        "recent_evals": [
+          {
+            "file": "draft_db9c0b40ce86_eval.json",
+            "draft_type": "dataset_generation",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          },
+          {
+            "file": "draft_fdd67650f779_eval.json",
+            "draft_type": "dataset_generation",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          },
+          {
+            "file": "draft_f15deb5c5aa4_eval.json",
+            "draft_type": "dataset_generation",
+            "passed": true,
+            "evaluation_profile": "assistant-golden-v1"
+          }
+        ]
+      },
+      "content_hash": null,
+      "tags": [],
+      "created_at": "2026-05-11T01:15:04.129651"
+    }
+  ],
+  "reference_pack_id": "refpack_1dbd574c2b64",
+  "reference_pack_hash": "063c06516b4ca108154d116a2044645e30e5b84b7ae2acc0d03cd49eefe6c0ba",
+  "selected_reference_ids": [
+    "ref_system_project_schema_feature_operations",
+    "ref_system_safety_feature_operations",
+    "ref_system_alignment_contracts",
+    "ref_system_prompt_feature_operations",
+    "ref_system_writing_guide",
+    "ref_system_quality_rubric",
+    "ref_system_mlflow_tracking",
+    "ref_runtime_assistant_reference_snapshot"
+  ],
+  "reference_trust_levels": {
+    "ref_system_project_schema_feature_operations": "system",
+    "ref_system_safety_feature_operations": "system",
+    "ref_system_alignment_contracts": "system",
+    "ref_system_prompt_feature_operations": "system",
+    "ref_system_writing_guide": "system",
+    "ref_system_quality_rubric": "system",
+    "ref_system_mlflow_tracking": "system",
+    "ref_runtime_assistant_reference_snapshot": "runtime"
+  },
+  "compact_summary": "target=feature_operations; form_keys=datasetId; references=8",
+  "pack_hash": "481d8e71230d8569d8f2f2b09045f326b7cd3a704338fb36028daa6df485ab10",
+  "created_at": "2026-05-11T01:15:04.130555"
+}

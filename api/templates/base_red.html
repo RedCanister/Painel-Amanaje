@@ -1,69 +1,107 @@
 {% extends "base_template.html" %}
 
-{% block title %}Data Operations - Painel Amanajé{% endblock %}
+{% block title %}Data Operations - Painel Amanaje{% endblock %}
 
 {% block body_class %}red-theme{% endblock %}
 
 {% block extra_css %}
 <style>
-    :root {
-        --amanaje-primary: #e63946;
-        --amanaje-primary-strong: #991b1b;
-        --amanaje-primary-soft: #ffe4e6;
-        --amanaje-primary-softer: #fff5f5;
-        --amanaje-primary-mid: #fecdd3;
-        --amanaje-primary-border: #fda4af;
-        --amanaje-primary-border-soft: #fecdd3;
-        --amanaje-primary-accent: #fb7185;
-        --amanaje-primary-gradient: #e63946;
-        --amanaje-primary-bar-gradient: #e63946;
-        --amanaje-primary-shadow: rgba(230, 57, 70, 0.08);
-        --amanaje-primary-shadow-strong: rgba(230, 57, 70, 0.2);
-        --amanaje-code-bg: #3f0d12;
-        --amanaje-code-fg: #ffe4e6;
-        --amanaje-code-border: #7f1d1d;
-        --amanaje-body-bg: #fffafa;
-    }
-
     .data-operations { display: grid; gap: 1.25rem; }
     .data-hero { margin-bottom: 0.2rem; }
     .form-section {
-        background: var(--amanaje-surface);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 22px;
-        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
-        margin-bottom: 0;
-        padding: 1.55rem;
+        display: grid;
+        gap: 1rem;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        padding: 1.25rem;
     }
-    .form-section h3 {
-        color: var(--amanaje-text-strong);
-        font-family: var(--amanaje-heading-font);
-        margin-top: 0;
-        margin-bottom: 0.45rem;
+    .form-section > h3 {
+        margin: 0;
+        color: var(--amanaje-primary-strong);
     }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
-    .form-group input,
+    #uploadForm,
+    #datasetFields,
+    #modelFields {
+        display: grid;
+        gap: 1rem;
+    }
+    .form-group {
+        display: grid;
+        gap: 0.45rem;
+        margin: 0;
+    }
+    .form-group label {
+        display: block;
+        margin: 0;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
     .form-group select,
     .form-group textarea,
+    .analysis-controls input,
     .analysis-controls select {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.72rem 0.78rem;
         border: 1px solid var(--amanaje-primary-border);
         border-radius: 12px;
         box-sizing: border-box;
-        background: var(--amanaje-surface-2);
+        background: var(--amanaje-surface-3);
+        color: var(--amanaje-text-strong);
+        font: inherit;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .form-group input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+    .form-group select:focus,
+    .form-group textarea:focus,
+    .analysis-controls input:focus,
+    .analysis-controls select:focus {
+        outline: none;
+        border-color: var(--amanaje-primary-accent);
+        box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.14);
     }
     .form-group textarea { min-height: 110px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
+    .btn {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.65rem;
+        padding: 0.72rem 0.95rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
+    }
+    .btn-primary {
+        background: var(--amanaje-primary-gradient);
+        border-color: transparent;
+        color: white;
+    }
     .upload-area {
         border: 1px dashed var(--amanaje-primary-border);
-        border-radius: 20px;
+        border-radius: 16px;
         padding: 2rem;
         text-align: center;
         margin: 1rem 0;
         background: linear-gradient(135deg, var(--amanaje-primary-softer), rgba(255,255,255,0.7));
         color: var(--amanaje-primary-strong);
         cursor: pointer;
+        min-height: 6.5rem;
+        display: grid;
+        place-items: center;
     }
     .upload-area.dragover { border-color: var(--amanaje-primary); background: var(--amanaje-primary-soft); }
     .feature-controls, .model-controls, .analysis-controls {
@@ -71,58 +109,103 @@
         flex-wrap: wrap;
         gap: 0.75rem;
         margin: 1rem 0;
+        align-items: flex-end;
     }
-    .analysis-controls select { max-width: 320px; }
+    .analysis-controls select { max-width: 320px; min-width: min(100%, 240px); }
     .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
     .feature-item, .model-item, .analysis-result {
-        background: var(--amanaje-surface-2);
+        background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
-        padding: 0.9rem;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
+        padding: 1rem;
     }
     .feature-item h4, .model-item h4, .analysis-result h4 { color: var(--amanaje-primary); }
     .feature-item p, .model-item p { color: #6b7280 !important; }
-    .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .btn {
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-        background: var(--amanaje-surface-3);
-        color: var(--amanaje-primary-strong);
-        border: 1px solid var(--amanaje-primary-border-soft);
-    }
-    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
-    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
-    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
-    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; align-items: start; }
     .analysis-result table { background: white; border-radius: 14px; overflow: hidden; }
     .analysis-result table tr:first-child { background: var(--amanaje-primary-softer) !important; border-bottom: 2px solid var(--amanaje-primary-border-soft) !important; }
     .analysis-result table tr { border-bottom: 1px solid var(--amanaje-primary-soft) !important; }
     .analysis-result th, .analysis-result td { color: #1f2937; }
     .support-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .support-card {
-        background: var(--amanaje-surface-2);
+        background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
+        box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
     }
     .support-card h4 { margin: 0 0 0.45rem; color: var(--amanaje-primary-strong); }
     .support-badges, .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
-    .support-badge, .pill {
-        display: inline-flex;
+    .small-text { color: #6b7280; font-size: 0.92rem; }
+    .selector-workspace {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin: 0.85rem 0 1rem;
+    }
+    .mos-shell {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .mos-heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .mos-options, .mos-selected {
+        display: grid;
+        gap: 0.5rem;
+        min-height: 92px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        padding: 0.7rem;
+        background: var(--amanaje-surface-2);
+    }
+    .mos-option, .mos-selected-item {
+        display: flex;
         align-items: center;
-        padding: 0.35rem 0.7rem;
-        border-radius: 999px;
+        justify-content: space-between;
+        gap: 0.65rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        padding: 0.65rem 0.75rem;
+        background: var(--amanaje-surface);
+        color: #1f2937;
+    }
+    .mos-option {
+        cursor: pointer;
+        text-align: left;
+    }
+    .mos-option.selected {
+        border-color: var(--amanaje-primary);
         background: var(--amanaje-primary-soft);
         color: var(--amanaje-primary-strong);
-        border: 1px solid var(--amanaje-primary-border);
-        font-size: 0.84rem;
+    }
+    .mos-option span, .mos-drag-handle {
+        color: #6b7280;
+        font-size: 0.8rem;
         font-weight: 700;
     }
-    .small-text { color: #6b7280; font-size: 0.92rem; }
+    .mos-selected-item select {
+        max-width: 130px;
+        padding: 0.45rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 10px;
+    }
+    .mos-remove {
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.45rem 0.65rem;
+        cursor: pointer;
+        font-weight: 700;
+    }
     .analysis-kpis {
         display: grid;
         gap: 0.85rem;
@@ -168,15 +251,10 @@
         color: var(--amanaje-primary-strong);
         background: var(--amanaje-primary-softer);
     }
-    .json-block {
-        background: var(--amanaje-code-bg);
-        color: var(--amanaje-code-fg);
-        padding: 1rem;
-        border-radius: 14px;
-        white-space: pre-wrap;
-        overflow: auto;
-        font-family: Consolas, "Courier New", monospace;
-        font-size: 0.9rem;
+    details summary {
+        cursor: pointer;
+        color: var(--amanaje-primary-strong);
+        font-weight: 700;
     }
 </style>
 {% endblock %}
@@ -185,8 +263,8 @@
 <div class="data-operations">
     <section class="workspace-intro data-hero">
         <span class="workspace-eyebrow">Data domain</span>
-        <h2>Data upload operations  with a drag-and-drop</h2>
-        <p>Upload, register, inspect, and analyze assets in a simple workspace where the work spreads through the application.</p>
+        <h2>Data operations for upload, registration, and asset intake</h2>
+        <p>Bring datasets and models into Painel Amanaje through a cleaner operational workspace for ingestion, inspection, and downstream reuse.</p>
     </section>
     <!-- Upload Section -->
     <section class="form-section" id="uploadSection">
@@ -311,15 +389,11 @@
         </div>
     </section>
 
-    <!-- TODO - This section is causing some trouble, needs to be analyzed -->
     <section class="form-section" id="modelsSection">
         <h3>Model History</h3>
         <div class="model-controls">
             <button onclick="refreshModels()" class="btn">Refresh Model</button>
 
-            <!-- CHANGED: Feature extraction is a future enhancement that will break down datasets into individual columns -->
-             <!-- TODO - Feature extraction allows the user to choose a dataset that the user can insert into postgresql in full, 
-              with full control-->
             <button onclick="analyzeModel()" class="btn">Analyze Selected Model</button>
         </div>
         <div class="model-list" id="modelList">
@@ -334,12 +408,9 @@
         <div id="datasetAnalysis">
             <h3>Data Analysis</h3>
 
-            <!--
-            <div id="datasetDragSelect">
-                 MultiObjectSelector mounts here to enable multi-selection for analysis 
+            <div id="datasetDragSelect" class="selector-workspace">
                 <div id="featureSelector"></div>
             </div>
-            -->
 
             <div class="analysis-controls">
                 <select id="datasetSelect">
@@ -356,20 +427,16 @@
 
 
         <!-- Model Analysis -->
-         <!-- TODO - Align and correct the fields below to make a working model analysis section -->
          <div id="modelAnalysis">
             <h3>Model Analysis</h3>
 
-            <!--
-            <div id="modelDragSelect">
-                 MultiObjectSelector mounts here to enable multi-selection for analysis 
+            <div id="modelDragSelect" class="selector-workspace">
                 <div id="modelSelector"></div>
             </div>
-            -->
 
             <div class="analysis-controls">
                 <select id="modelSelect">
-                    <option value="">model Dataset</option>
+                    <option value="">Select Model</option>
                 </select>
 
                 <button onclick="analyzeModel()" class="btn">Analyze</button>
@@ -562,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // TODO - Analyze this function call to address the error in this .html
+    // Populate the model selector from the registry on load.
     PopulateListOptions({
         selectElement: '#modelSelect',
         endpoint: '/learningmodel/list',              // Backend route that returns dataset list
@@ -644,7 +711,7 @@ function getSelectedDatasets() {
     return boxes.filter(b => b.checked).map(b => b.getAttribute('data-id'));
 }
 
-// TODO - Adapt and correct the refreshModels function so it can properly exhibit the upload details of each model in the history
+// Legacy registry loader kept for compatibility with the newer override below.
 async function refreshModels() {
     try {
         const response = await fetch('/learningmodel/list');
@@ -673,7 +740,7 @@ async function refreshModels() {
             </div>
         `).join('');
     } catch (error) {
-        // TODO - The error being return from this catch is: Failed to load models list. TypeError: models.map is not a function.
+        // The override below keeps the active page path aligned with the normalized list/model endpoint.
         console.error('❌ Error fetching models:', error);
         const target = document.getElementById('modelList');
         if (target) target.innerHTML = `<div class="alert alert-error">Failed to load models list. ${error}. </div>`;
@@ -681,14 +748,13 @@ async function refreshModels() {
 }
 
 /**
- * Extract features from a dataset (TODO: Backend implementation needed)
+ * Extract features from a dataset
  * CHANGED: Added proper docstring and error handling
  * 
  * Purpose: Breakdown dataset into individual features/columns for reuse
  * Future: Should call backend endpoint to extract and store features
  */
 async function extractFeatures() {
-    // TODO: Implement feature extraction logic
     // This should:
     // 1. Fetch the selected dataset
     // 2. Parse structure (CSV columns, nested objects, etc.)
@@ -714,8 +780,8 @@ async function extractFeatures() {
  * - Support multiple dataset comparison
  */
 
-// TODO - Data Analysis, to be adapted to object analysis of both datasets and models
-// needs to update in realtime alongside the upload of a new file
+// Legacy analysis function kept for compatibility; the override below handles datasets and models with scalable rendering.
+// It updates alongside uploads through the shared selector refresh path.
 async function analyzeData() {
     const datasetId = document.getElementById('datasetSelect').value;
     if (!datasetId) {
@@ -733,8 +799,7 @@ async function analyzeData() {
         
         const results = await response.json();
         
-        // TODO - This table needs to scale easily according to how many datasets I have selected
-        // with a reusable function
+        // The active override below handles multiple selected datasets with the reusable analysis renderer.
         // CHANGED: Enhanced display with formatted table instead of raw JSON
         document.getElementById('datasetAnalysisResults').innerHTML = `
             <div class="analysis-result" style="grid-column: 1/-1;">
@@ -813,6 +878,10 @@ async function analyzeModel() {
     let fileInputEl;
     let datasetCache = [];
     let modelCache = [];
+    let selectedDatasetIds = [];
+    let selectedModelIds = [];
+    let datasetSelectorWidget = null;
+    let modelSelectorWidget = null;
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -971,6 +1040,9 @@ async function analyzeModel() {
                     <span class="pill">${escapeHtml(manifest.table_name || 'table:n/a')}</span>
                     ${Array.isArray(manifest.available_edits) ? manifest.available_edits.slice(0, 4).map((editName) => `<span class="pill">${escapeHtml(editName)}</span>`).join('') : ''}
                 </div>
+                <div class="feature-controls">
+                    <a class="btn" href="/feature?datasetId=${encodeURIComponent(result.dataset_id || '')}">Open In Feature Workspace</a>
+                </div>
                 ${renderDatasetAnalysis(manifest.analysis || {})}
                 ${previewRows.length ? `<div class="json-block" style="margin-top:1rem;">${escapeHtml(JSON.stringify(previewRows, null, 2))}</div>` : ''}
             </div>
@@ -1056,11 +1128,73 @@ async function analyzeModel() {
     }
 
     function resolveDatasetSelection() {
-        return document.getElementById('datasetSelect').value || (datasetCache[0]?.id ? String(datasetCache[0].id) : '');
+        return selectedDatasetIds[0] || document.getElementById('datasetSelect').value || (datasetCache[0]?.id ? String(datasetCache[0].id) : '');
     }
 
     function resolveModelSelection() {
-        return document.getElementById('modelSelect').value || (modelCache[0]?.id ? String(modelCache[0].id) : '');
+        return selectedModelIds[0] || document.getElementById('modelSelect').value || (modelCache[0]?.id ? String(modelCache[0].id) : '');
+    }
+
+    function selectedDatasetList() {
+        const selectValue = document.getElementById('datasetSelect').value;
+        const ids = selectedDatasetIds.length ? selectedDatasetIds : (selectValue ? [selectValue] : []);
+        return [...new Set(ids.map(String).filter(Boolean))];
+    }
+
+    function selectedModelList() {
+        const selectValue = document.getElementById('modelSelect').value;
+        const ids = selectedModelIds.length ? selectedModelIds : (selectValue ? [selectValue] : []);
+        return [...new Set(ids.map(String).filter(Boolean))];
+    }
+
+    function initializeMultiSelectors() {
+        const datasetContainer = document.getElementById('featureSelector');
+        if (datasetContainer && typeof MultiObjectSelector !== 'undefined' && !datasetSelectorWidget) {
+            datasetSelectorWidget = new MultiObjectSelector({
+                containerId: datasetContainer,
+                objectType: 'dataset',
+                objects: datasetCache,
+                labelField: 'name',
+                valueField: 'id',
+                hiddenFieldName: 'selectedDatasetObjects',
+                hiddenFieldId: 'selectedDatasetObjectsJson',
+                roles: ['primary', 'comparison'],
+                maxSelection: 6,
+                availableTitle: 'Available Datasets',
+                selectedTitle: 'Selected For Analysis',
+                emptySelectedText: 'Select one or more datasets to analyze together.',
+                onSelectionChange: (selected) => {
+                    selectedDatasetIds = selected.map((item) => String(item.id)).filter(Boolean);
+                    if (selectedDatasetIds[0]) document.getElementById('datasetSelect').value = selectedDatasetIds[0];
+                }
+            });
+        } else if (datasetSelectorWidget) {
+            datasetSelectorWidget.setAvailableObjects(datasetCache);
+        }
+
+        const modelContainer = document.getElementById('modelSelector');
+        if (modelContainer && typeof MultiObjectSelector !== 'undefined' && !modelSelectorWidget) {
+            modelSelectorWidget = new MultiObjectSelector({
+                containerId: modelContainer,
+                objectType: 'model',
+                objects: modelCache,
+                labelField: 'name',
+                valueField: 'id',
+                hiddenFieldName: 'selectedModelObjects',
+                hiddenFieldId: 'selectedModelObjectsJson',
+                roles: ['primary', 'comparison'],
+                maxSelection: 6,
+                availableTitle: 'Available Models',
+                selectedTitle: 'Selected For Analysis',
+                emptySelectedText: 'Select one or more models to inspect together.',
+                onSelectionChange: (selected) => {
+                    selectedModelIds = selected.map((item) => String(item.id)).filter(Boolean);
+                    if (selectedModelIds[0]) document.getElementById('modelSelect').value = selectedModelIds[0];
+                }
+            });
+        } else if (modelSelectorWidget) {
+            modelSelectorWidget.setAvailableObjects(modelCache);
+        }
     }
 
     window.refreshFeatures = async function refreshFeaturesOverride() {
@@ -1070,6 +1204,7 @@ async function analyzeModel() {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const features = await response.json();
             datasetCache = Array.isArray(features) ? features : [];
+            initializeMultiSelectors();
             if (!datasetCache.length) {
                 target.innerHTML = '<div class="feature-item">No datasets uploaded yet.</div>';
                 return;
@@ -1097,6 +1232,7 @@ async function analyzeModel() {
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const models = await response.json();
             modelCache = Array.isArray(models) ? models : [];
+            initializeMultiSelectors();
             if (!modelCache.length) {
                 target.innerHTML = '<div class="model-item">No models uploaded yet.</div>';
                 return;
@@ -1139,42 +1275,64 @@ async function analyzeModel() {
     };
 
     window.analyzeData = async function analyzeDataOverride() {
-        const datasetId = resolveDatasetSelection();
+        const datasetIds = selectedDatasetList();
         const target = document.getElementById('datasetAnalysisResults');
-        if (!datasetId) {
-            target.innerHTML = '<div class="alert alert-error">Select a dataset first.</div>';
+        if (!datasetIds.length) {
+            target.innerHTML = '<div class="alert alert-error">Select at least one dataset first.</div>';
             return;
         }
         try {
-            target.innerHTML = '<div class="alert alert-info">Analyzing dataset...</div>';
-            const response = await fetch(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
-            const result = await response.json();
-            if (!response.ok || result.status === 'error') {
-                throw new Error(result.detail || `HTTP ${response.status}`);
-            }
-            document.getElementById('datasetSelect').value = String(datasetId);
-            target.innerHTML = renderDatasetAnalysis(result.summary || {});
+            target.innerHTML = `<div class="alert alert-info">Analyzing ${datasetIds.length} dataset${datasetIds.length === 1 ? '' : 's'}...</div>`;
+            const results = await Promise.all(datasetIds.map(async (datasetId) => {
+                const response = await fetch(`/analysis/data?dataset_id=${encodeURIComponent(datasetId)}`);
+                const result = await response.json();
+                if (!response.ok || result.status === 'error') {
+                    throw new Error(result.detail || `HTTP ${response.status}`);
+                }
+                return { datasetId, result };
+            }));
+            document.getElementById('datasetSelect').value = String(results[0].datasetId);
+            target.innerHTML = results.map(({ datasetId, result }) => `
+                <div style="grid-column: 1 / -1;">
+                    <div class="pill-row">
+                        <span class="pill">Dataset #${escapeHtml(datasetId)}</span>
+                        <span class="pill">${escapeHtml((result.artifacts || []).length)} lifetime plots</span>
+                    </div>
+                    ${renderDatasetAnalysis(result.summary || {})}
+                </div>
+            `).join('');
         } catch (error) {
             target.innerHTML = `<div class="alert alert-error">Analysis failed: ${escapeHtml(error.message)}</div>`;
         }
     };
 
     window.analyzeModel = async function analyzeModelOverride() {
-        const modelId = resolveModelSelection();
+        const modelIds = selectedModelList();
         const target = document.getElementById('modelAnalysisResults');
-        if (!modelId) {
-            target.innerHTML = '<div class="alert alert-error">Select a model first.</div>';
+        if (!modelIds.length) {
+            target.innerHTML = '<div class="alert alert-error">Select at least one model first.</div>';
             return;
         }
         try {
-            target.innerHTML = '<div class="alert alert-info">Analyzing model...</div>';
-            const response = await fetch(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
-            const result = await response.json();
-            if (!response.ok || result.status === 'error') {
-                throw new Error(result.detail || `HTTP ${response.status}`);
-            }
-            document.getElementById('modelSelect').value = String(modelId);
-            target.innerHTML = renderModelAnalysis(result.summary || {});
+            target.innerHTML = `<div class="alert alert-info">Analyzing ${modelIds.length} model${modelIds.length === 1 ? '' : 's'}...</div>`;
+            const results = await Promise.all(modelIds.map(async (modelId) => {
+                const response = await fetch(`/analysis/model?model_id=${encodeURIComponent(modelId)}`);
+                const result = await response.json();
+                if (!response.ok || result.status === 'error') {
+                    throw new Error(result.detail || `HTTP ${response.status}`);
+                }
+                return { modelId, result };
+            }));
+            document.getElementById('modelSelect').value = String(results[0].modelId);
+            target.innerHTML = results.map(({ modelId, result }) => `
+                <div style="grid-column: 1 / -1;">
+                    <div class="pill-row">
+                        <span class="pill">Model #${escapeHtml(modelId)}</span>
+                        <span class="pill">${escapeHtml((result.artifacts || []).length)} lifetime plots</span>
+                    </div>
+                    ${renderModelAnalysis(result.summary || {})}
+                </div>
+            `).join('');
         } catch (error) {
             target.innerHTML = `<div class="alert alert-error">Analysis failed: ${escapeHtml(error.message)}</div>`;
         }

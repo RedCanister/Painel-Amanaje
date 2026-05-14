@@ -4,6 +4,7 @@ mlflow~=3.10.0
 pydantic==2.12.5
 asyncpg==0.30.0
 SQLAlchemy==2.0.45
+sqlparse==0.5.3
 optuna==4.7.0
 aiofiles==25.1.0
 jinja2==3.1.6
@@ -12,6 +13,9 @@ onnxscript==0.6.2
 scikit-learn==1.7.2
 pytorch-forecasting==1.5.0
 python-multipart==0.0.22
+huggingface_hub>=0.23,<1.0
+redis>=5.0,<7.0
+rq>=2.0,<3.0
 torch==2.9.0
 numpy==2.4.3
 pandas<3

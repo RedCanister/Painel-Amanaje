@@ -1225,6 +1225,30 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
         window.editorMetadata = result?.metadata || window.editorDocument.metadata || {};
     }
 
+    async function waitForEditorExecutionRun(runId) {
+        const startedAt = Date.now();
+        while (Date.now() - startedAt < 30 * 60 * 1000) {
+            const response = await fetch(`/runs/get/${encodeURIComponent(runId)}`);
+            const run = await response.json();
+            if (!response.ok || run.status === "error") {
+                throw new Error(run.detail || `Unable to load run ${runId}`);
+            }
+            const latestEvent = run.progress?.latest_event || run.stage || run.status;
+            showStatus(`Execution ${run.status || "queued"}: ${latestEvent || runId}`, "info");
+            if (run.status === "completed") {
+                return run.result || {};
+            }
+            if (run.status === "failed") {
+                if (run.result && Object.keys(run.result).length) {
+                    return run.result;
+                }
+                throw new Error(run.error || "The background execution failed.");
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+        throw new Error("The background execution did not finish within the polling window.");
+    }
+
     async function executeCode() {
         await window.editorReady;
 
@@ -1233,11 +1257,11 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
         if (!code.trim()) return showStatus("There is no code to execute.", "warning");
 
         try {
-            setRuntimeState("Running");
-            showStatus("Executing code on the backend...", "info");
+            setRuntimeState("Queued");
+            showStatus("Queueing code execution...", "info");
             clearExecutionOutput();
 
-            const response = await fetch("/execute", {
+            const response = await fetch("/execute/jobs", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code })
@@ -1248,7 +1272,10 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
-            const result = await response.json();
+            const accepted = await response.json();
+            window.AmanajeUI?.watchRun?.(accepted.run_id, { source: "editor" });
+            setRuntimeState("Running");
+            const result = await waitForEditorExecutionRun(accepted.run_id);
             setEditorStateFromExecution(result);
             displayExecutionOutput(result.stdout, result.stderr, result.status === "success" ? "Execution finished." : "Execution completed with errors.");
             displayExtractedVariables(result.variables || {});

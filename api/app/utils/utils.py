@@ -140,7 +140,9 @@ def get_upload_dir(op_id: str) -> str:
     Resolve the upload directory for the given operation identifier.
     """
 
-    normalized = str(op_id).strip().lower()
+    normalized = str(op_id).strip().lower().replace("_", "-")
+    if normalized in {"assistant-model", "assistant-models", "assistantmodel", "assistant", "llm", "slm"}:
+        return str(REPO_ROOT / "runtime_artifacts" / "assistant_models" / "uploads")
     if normalized in {"model", "models", "learning_model"}:
         return str(MODEL_UPLOAD_DIR)
     return str(DATASET_UPLOAD_DIR)

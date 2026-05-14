@@ -43,6 +43,13 @@ SAFE_ENVIRONMENT_VARIABLES: dict[str, dict[str, Any]] = {
         "restart_required": True,
         "default": "http://localhost:8080",
     },
+    "AMANAJE_DASHBOARD_PUBLIC_URL": {
+        "label": "Visualization Renderer URL",
+        "description": "Internal browser-facing URL used by embedded Visualization plot frames.",
+        "category": "Visualization",
+        "restart_required": True,
+        "default": "http://localhost:8050",
+    },
     "AMANAJE_ASSISTANT_ACTIVE_PROVIDER": {
         "label": "Assistant Active Provider",
         "description": "Provider key used when assistant requests select the configured provider automatically.",
@@ -99,6 +106,9 @@ def default_settings_state() -> dict[str, Any]:
     return {
         "feature_flags": deepcopy(DEFAULT_FEATURE_FLAGS),
         "env_overrides": {},
+        "assistant": {
+            "default_model_id": None,
+        },
         "updated_at": None,
     }
 
@@ -134,6 +144,11 @@ def load_settings_state(path: str | Path | None = None) -> dict[str, Any]:
         for key, value in loaded_overrides.items()
         if str(key).strip().upper() in SAFE_ENVIRONMENT_VARIABLES and value not in (None, "")
     }
+    loaded_assistant = _json_safe_mapping(loaded.get("assistant"))
+    default_model_id = loaded_assistant.get("default_model_id")
+    state["assistant"] = {
+        "default_model_id": str(default_model_id).strip() if default_model_id not in (None, "") else None,
+    }
     state["updated_at"] = loaded.get("updated_at")
     return state
 
@@ -150,6 +165,13 @@ def save_settings_state(state: Mapping[str, Any], path: str | Path | None = None
             key: str(value)
             for key, value in _json_safe_mapping(state.get("env_overrides")).items()
             if key in SAFE_ENVIRONMENT_VARIABLES and value not in (None, "")
+        },
+        "assistant": {
+            "default_model_id": (
+                str(_json_safe_mapping(state.get("assistant")).get("default_model_id")).strip()
+                if _json_safe_mapping(state.get("assistant")).get("default_model_id") not in (None, "")
+                else None
+            ),
         },
         "updated_at": state.get("updated_at") or datetime.now().isoformat(),
     }
@@ -228,6 +250,23 @@ def update_settings_state(payload: Mapping[str, Any], path: str | Path | None = 
                     continue
                 state["env_overrides"][env_key] = env_value
 
+    assistant = payload.get("assistant")
+    if assistant is not None:
+        if not isinstance(assistant, Mapping):
+            errors.append({"field": "assistant", "reason": "must_be_object"})
+        else:
+            default_model_id = assistant.get("default_model_id")
+            if default_model_id in (None, ""):
+                state.setdefault("assistant", {})["default_model_id"] = None
+            else:
+                value = str(default_model_id).strip()
+                if not value:
+                    state.setdefault("assistant", {})["default_model_id"] = None
+                elif len(value) > 128:
+                    errors.append({"field": "assistant.default_model_id", "reason": "value_too_long"})
+                else:
+                    state.setdefault("assistant", {})["default_model_id"] = value
+
     if errors:
         raise SettingsValidationError("Invalid settings payload.", errors)
 
@@ -287,6 +326,10 @@ def build_client_settings(state: Mapping[str, Any] | None = None) -> dict[str, A
             "debug_mode": bool(flags.get("debug_mode", DEFAULT_FEATURE_FLAGS["debug_mode"])),
             "assistant_visible": bool(flags.get("assistant_visible", DEFAULT_FEATURE_FLAGS["assistant_visible"])),
         },
+        "services": {
+            "plotly_dashboard_url": os.getenv("AMANAJE_DASHBOARD_PUBLIC_URL", "http://localhost:8050"),
+        },
+        "assistant": _json_safe_mapping(resolved.get("assistant")),
         "updated_at": resolved.get("updated_at"),
     }
 
@@ -335,6 +378,7 @@ def build_settings_response(
         "feature_flags": flags,
         "environment_variables": env_rows,
         "runtime_config": redact_runtime_config(runtime_config),
+        "assistant": _json_safe_mapping(resolved.get("assistant")),
         "restart_required": {
             "required": bool(restart_keys),
             "keys": restart_keys,

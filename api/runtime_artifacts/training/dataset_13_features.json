@@ -1274,7 +1274,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "False"
+                    "mode": false
                 },
                 "event_projects": {
                     "type": "categorical",
@@ -1289,7 +1289,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "True"
+                    "mode": true
                 },
                 "event_downloads": {
                     "type": "categorical",
@@ -1304,7 +1304,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "True"
+                    "mode": true
                 },
                 "event_wiki": {
                     "type": "categorical",
@@ -1319,7 +1319,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "True"
+                    "mode": true
                 },
                 "event_pages": {
                     "type": "categorical",
@@ -1334,7 +1334,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "False"
+                    "mode": false
                 },
                 "event_discussions": {
                     "type": "categorical",
@@ -1349,7 +1349,7 @@
                     ],
                     "mixed_type": false,
                     "datetime_confidence": 0.0,
-                    "mode": "False"
+                    "mode": false
                 },
                 "date_": {
                     "type": "datetime_candidate",

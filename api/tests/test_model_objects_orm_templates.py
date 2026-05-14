@@ -135,6 +135,7 @@ def test_target_templates_do_not_reference_missing_static_ids():
         "base_blue.html",
         "base_create.html",
         "base_green.html",
+        "base_onnx.html",
         "base_purple.html",
         "base_red.html",
     ]:

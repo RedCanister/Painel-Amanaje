@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "event_name": "draft_review",
+        "provider": "assistant_model_28",
+        "draft_type": "feature_operations",
+        "model_version": "registry-assistant-draft-0.1",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_version": "assistant-context-pack-v1",
+        "context_pack_hash": "481d8e71230d8569d8f2f2b09045f326b7cd3a704338fb36028daa6df485ab10",
+        "reference_pack_hash": "063c06516b4ca108154d116a2044645e30e5b84b7ae2acc0d03cd49eefe6c0ba",
+        "safety_profile_version": "assistant-safety-v1",
+        "evaluation_profile": "assistant-golden-v1",
+        "fallback_provider": "local"
+    },
+    "skipped_conflicts": {}
+}

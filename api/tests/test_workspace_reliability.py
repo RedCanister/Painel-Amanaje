@@ -139,6 +139,10 @@ def test_run_ledger_create_update_and_filter():
     assert read_run_entry(tmp_path, entry["run_id"])["progress"]["latest_event"] == "Training started."
     assert list_run_entries(tmp_path, model_id=7, dataset_id=11)[0]["run_id"] == entry["run_id"]
     assert list_run_entries(tmp_path, inference_id=13)[0]["run_id"] == entry["run_id"]
+    assert list_run_entries(tmp_path, status="running")[0]["run_id"] == entry["run_id"]
+    assert list_run_entries(tmp_path, active_only=True)[0]["run_id"] == entry["run_id"]
+    assert list_run_entries(tmp_path, run_ids=[entry["run_id"]])[0]["run_id"] == entry["run_id"]
+    assert list_run_entries(tmp_path, limit=1)[0]["run_id"] == entry["run_id"]
 
 
 def test_canonicalize_scalar_for_logging_normalizes_equivalent_numeric_strings():

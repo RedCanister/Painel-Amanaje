@@ -1,0 +1,55 @@
+{
+  "run_id": "editor_execution_325b9c3c053e",
+  "run_type": "editor_execution",
+  "status": "failed",
+  "stage": "failed",
+  "created_at": "2026-05-10T20:11:24.193759",
+  "updated_at": "2026-05-10T20:11:24.217900",
+  "started_at": null,
+  "completed_at": "2026-05-10T20:11:24.217900",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false
+  },
+  "parameters": {
+    "code_length": 1647
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": "Redis/RQ dependencies are not available: No module named 'redis'",
+  "progress": {
+    "current_stage": "failed",
+    "latest_event": "Redis/RQ dependencies are not available: No module named 'redis'",
+    "latest_timestamp": "2026-05-10T20:11:24.217900",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-10T20:11:24.193759",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-10T20:11:24.217900",
+        "message": "Redis/RQ dependencies are not available: No module named 'redis'"
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-10T20:11:24.193759",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-10T20:11:24.217900",
+      "message": "Redis/RQ dependencies are not available: No module named 'redis'"
+    }
+  ]
+}

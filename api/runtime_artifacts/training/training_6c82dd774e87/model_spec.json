@@ -1,0 +1,27 @@
+{
+    "framework": "pytorch",
+    "artifact_format": ".pt",
+    "input_features": [
+        "value"
+    ],
+    "output_feature": "category",
+    "task_type": "classification",
+    "label_mapping": {
+        "a": 0,
+        "b": 1,
+        "c": 2
+    },
+    "accelerator": {
+        "torch_available": true,
+        "torch_version": "2.9.0+cu128",
+        "cuda_available": false,
+        "cuda_version": "12.8",
+        "device_count": 0,
+        "devices": [],
+        "fallback_policy": "cpu",
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "fallback_applied": false,
+        "fallback_reason": "auto_selected_cpu"
+    }
+}

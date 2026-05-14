@@ -1,6 +1,6 @@
 {% extends "base_template.html" %}
 
-{% block title %}MLOps - Painel Amanajé{% endblock %}
+{% block title %}MLOps - Painel Amanaje{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,27 +14,33 @@
     .status-active { background-color: #2ecc71; }
     .status-warning { background-color: #f1c40f; }
     .status-error { background-color: #e74c3c; }
+    .editor-guide {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        background: #eef6fb;
+        border: 1px solid #bfdbfe;
+        color: #1e3a5f;
+    }
+    .editor-guide code { white-space: pre-wrap; }
 </style>
 {% endblock %}
 
 
 {% block extra_script %}
 
-<!-- Monaco Editor: Advanced code editor with IntelliSense and debugging capabilities -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-
-<!-- Pyodide: Python runtime for the browser, allows running Python code without server -->
 <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
 
 <style>
     body { font-family: sans-serif; }
     .tabs { display: flex; margin-bottom: 10px; }
-    .tab {padding: 10px; cursor: pointer; border: 1px solid #ccc; }
-    .tab.active {background: #e1e1e1; }
-    .tab-content {display: none; border: 1px solid #ccc; padding: 10px; }
-    .tab-content.active {display: block; }
+    .tab { padding: 10px; cursor: pointer; border: 1px solid #ccc; }
+    .tab.active { background: #e1e1e1; }
+    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; }
+    .tab-content.active { display: block; }
     #monaco { width: 100%; height: 300px; border: 1px solid #ccc; }
-    #output { white-space: pre-wrap; background: #f5f5f5; padding:10px; margin-top: 10px;}
+    #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; margin-top: 10px; }
 </style>
 
 {% endblock %}
@@ -48,25 +54,23 @@
     <div class="tab" data-tab="saved"> Saved Models </div>
 </div>
 
-<!-- Editor Tab -->
-<!-- NOTE - Consider that after done, the code in base_test.html will need to properly interface with the /create endpoint to save the model -->
-<!-- NOTE - Consider that the code in base_test.html will be transfered to base_red.html to expand it's interface. It must fit every template in the app. -->
 <div id="editor" class="tab-content active">
     <h3>Write your Model code</h3>
     <div id="monaco"></div>
     <br>
     <button onClick="runCode()"> Run Monaco Code </button>
     <button onClick="saveModel()"> Save Model </button>
+    <div class="editor-guide">
+        Define executable Python code plus metadata variables such as <code>name</code>, <code>description</code>, <code>model_type</code>, <code>parameters</code>, <code>metrics</code>, <code>input_features</code>, and <code>output_features</code>. To save a real artifact, also materialize one of <code>joblib_bytes</code>, <code>pickle_bytes</code>, <code>torchscript_bytes</code>, or <code>onnx_bytes</code>.
+    </div>
     <div id="output"></div>
-</div> 
-
-<!-- Parameters Tab -->
-<div id="parameters" class="tab-content">
-    <h3> Model Parameters </h3>
-    <pre id="paramsOutput"> Run code to see parameters here.</pre>
 </div>
 
-<!-- Saved Models Tab -->
+<div id="parameters" class="tab-content">
+    <h3> Model Parameters </h3>
+    <pre id="paramsOutput">Run code to inspect execution summary, metadata, and serialized artifact fields here.</pre>
+</div>
+
 <div id="saved" class="tab-content">
     <h3> Saved Models </h3>
     <ul id="savedList"></ul>
@@ -79,131 +83,193 @@
 {% block extra_js %}
 
 <script>
-    // CHANGED: Tab switching functionality - show/hide editor, parameters, and saved models sections
-    document.querySelectorAll(".tab").forEach(tab => {
+    let lastExecutionPayload = null;
+    let monacoEditorReadyResolve;
+    const monacoEditorReady = new Promise((resolve) => {
+        monacoEditorReadyResolve = resolve;
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
         tab.addEventListener("click", () => {
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach((item) => item.classList.remove("active"));
             tab.classList.add("active");
             document.getElementById(tab.dataset.tab).classList.add("active");
         });
     });
 
-
-    // CHANGED: Initialize Pyodide (Python runtime) with scikit-learn package for ML algorithms
-    /*
-    let pyodide;
-    async function initPyodide() {
-        pyodide = await loadPyodide();
-        await pyodide.loadPackage("scikit-learn");
-        console.log("Pyodide loaded with scikit-learn");
-    }
-    */
-
-    //initPyodide();
-
-
-    // CHANGED: Monaco editor setup - advanced IDE-like experience for code writing
-    // FIXED: Corrected CDN URL from cloudfare to cloudflare and vs loader path
-
-    require.config({ paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs'}});
+    require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs" } });
     require(["vs/editor/editor.main"], function () {
         window.monacoEditor = monaco.editor.create(document.getElementById("monaco"), {
-            value: "import sklearn.linear_model as lm\nmodel = lm.LogisticRegression()\nprint(model)",
+            value: "import base64\nimport io\nimport joblib\nfrom sklearn.linear_model import LogisticRegression\n\nmodel = LogisticRegression()\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\nname = \"prototype_model\"\ndescription = \"Prototype model saved from the legacy Monaco page\"\nmodel_type = \"supervised_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"LogisticRegression\"}\nmetrics = {\"task\": \"classification\"}\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\njoblib_bytes = base64.b64encode(buffer.read()).decode(\"utf-8\")\n\nprint(model)",
             language: "python",
             theme: "vs-dark"
         });
+        monacoEditorReadyResolve(window.monacoEditor);
     });
 
-    // TODO - Describe and implement code execution and model saving logic.
-    // TODO - Make a descriptive form and interface for properly parsing and extracting
-    // the code written in monaco editor to a form or file. Currently, it just sends raw code to backend.
-    async function runCode(){
-        const code = window.monacoEditor.getValue();
-        const res = await fetch("/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code: code })
+    async function fetchJson(url, options = {}) {
+        const shouldSetJsonContentType = options.body && !(typeof FormData !== "undefined" && options.body instanceof FormData);
+        const response = await fetch(url, {
+            headers: shouldSetJsonContentType ? { "Content-Type": "application/json", ...(options.headers || {}) } : (options.headers || {}),
+            ...options
         });
-        console.log("Code sent to /create endpoint");
-
-        const data = await res.json();
-        document.getElementById("output").textContent = 
-            "STDOUT:\n" + data.stdout + "\n\nSTDERR:\n" + data.stderr;
-        document.getElementById("paramsOutput").textContent = 
-            data.params ? JSON.stringify(data.params, null, 2) : "No parameters available";
+        const text = await response.text();
+        let payload = {};
+        if (text) {
+            try {
+                payload = JSON.parse(text);
+            } catch (_error) {
+                payload = { detail: text };
+            }
+        }
+        if (!response.ok || payload?.status === "error") {
+            throw new Error(payload?.detail || payload?.error || `HTTP ${response.status}`);
+        }
+        return payload;
     }
 
-    // TODO - Properly make create the file send into the upload endpoint for persistent storage
-    // TODO - Validate and define the process of saving the model - currently it just creates an empty file named model.pkl
+    function decodeBase64Bytes(payload) {
+        const binary = atob(payload);
+        return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    }
+
+    function inferModelArtifactFile(metadata) {
+        const supportedPayloads = [
+            { key: "joblib_bytes", extension: ".joblib", mime: "application/octet-stream" },
+            { key: "pickle_bytes", extension: ".pkl", mime: "application/octet-stream" },
+            { key: "torchscript_bytes", extension: ".pt", mime: "application/octet-stream" },
+            { key: "pytorch_bytes", extension: ".pt", mime: "application/octet-stream" },
+            { key: "model_bytes", extension: ".bin", mime: "application/octet-stream" },
+            { key: "onnx_bytes", extension: ".onnx", mime: "application/octet-stream" }
+        ];
+        const artifact = supportedPayloads.find(({ key }) => typeof metadata[key] === "string" && metadata[key].trim() !== "");
+        if (!artifact) {
+            throw new Error("Run code first and materialize one of joblib_bytes, pickle_bytes, torchscript_bytes, pytorch_bytes, model_bytes, or onnx_bytes.");
+        }
+        const bytes = decodeBase64Bytes(metadata[artifact.key]);
+        const pathName = typeof metadata.path === "string" && metadata.path.trim()
+            ? metadata.path.trim().split(/[\\/]/).pop()
+            : "";
+        const fileName = pathName || `${metadata.name || "model"}${artifact.extension}`;
+        return new File([bytes], fileName, { type: artifact.mime });
+    }
+
+    function appendIfPresent(formData, key, value) {
+        if (value === undefined || value === null || value === "") return;
+        if (typeof value === "object") {
+            formData.append(key, JSON.stringify(value));
+            return;
+        }
+        formData.append(key, String(value));
+    }
+
+    function renderExecutionSummary(data = {}) {
+        const metadata = data.metadata || {};
+        document.getElementById("paramsOutput").textContent = JSON.stringify(
+            {
+                summary: data.summary || {},
+                metadata,
+                defined_variables: Object.keys(data.variables || {}),
+                artifact_fields: ["joblib_bytes", "pickle_bytes", "torchscript_bytes", "pytorch_bytes", "model_bytes", "onnx_bytes"]
+                    .filter((field) => Boolean(metadata[field]))
+            },
+            null,
+            2
+        );
+    }
+
+    async function runCode() {
+        await monacoEditorReady;
+        const code = window.monacoEditor.getValue();
+        if (!code.trim()) {
+            document.getElementById("output").textContent = "Write model code before executing.";
+            return;
+        }
+
+        try {
+            const data = await fetchJson("/execute", {
+                method: "POST",
+                body: JSON.stringify({ code })
+            });
+            lastExecutionPayload = data;
+            const stdout = data.stdout || "";
+            const stderr = data.stderr || "";
+            const errorText = data.error ? `\n\nTRACEBACK:\n${data.error}` : "";
+            document.getElementById("output").textContent =
+                "STDOUT:\n" + stdout + "\n\nSTDERR:\n" + stderr + errorText;
+            renderExecutionSummary(data);
+        } catch (error) {
+            document.getElementById("output").textContent = "Execution failed: " + error.message;
+            document.getElementById("paramsOutput").textContent = "No parameters available";
+        }
+    }
+
     async function saveModel() {
-        const file = new File([""], "model.pkl");
+        await monacoEditorReady;
+        const metadata = lastExecutionPayload?.metadata || {};
+        if (!Object.keys(metadata).length) {
+            document.getElementById("output").textContent = "Run the code first so the page can extract metadata and a serialized model artifact.";
+            return;
+        }
+
+        let file;
+        try {
+            file = inferModelArtifactFile(metadata);
+        } catch (error) {
+            document.getElementById("output").textContent = error.message;
+            return;
+        }
+
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("operationId", "models");
+        formData.append("file", file, file.name);
+        formData.append("objectName", metadata.name || "prototype_model");
+        appendIfPresent(formData, "description", metadata.description || "Saved from base_test.html");
+        appendIfPresent(formData, "path", metadata.path);
+        appendIfPresent(formData, "version", metadata.version || 1);
+        appendIfPresent(formData, "history", metadata.history || [{ operation: "save_from_base_test", when: new Date().toISOString() }]);
+        appendIfPresent(formData, "modelType", metadata.model_type || "supervised_model");
+        appendIfPresent(formData, "parameters", metadata.parameters || {});
+        appendIfPresent(formData, "metrics", metadata.metrics || {});
+        appendIfPresent(formData, "referenceData", metadata.reference_data || metadata.referenceData);
+        appendIfPresent(formData, "inputFeatures", metadata.input_features || []);
+        appendIfPresent(formData, "outputFeatures", metadata.output_features || []);
+        appendIfPresent(formData, "isTrained", metadata.is_trained ?? false);
+        appendIfPresent(formData, "isTested", metadata.is_tested ?? false);
+        appendIfPresent(formData, "isDeployed", metadata.is_deployed ?? false);
 
-        const res = await fetch("/upload/models", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await res.json();
-        document.getElementById("savedList").innerHTML +=
-            `<li>${data.filename}</li>`;
+        try {
+            const data = await fetchJson("/upload/models", {
+                method: "POST",
+                body: formData
+            });
+            document.getElementById("savedList").innerHTML =
+                `<li><strong>${data.name || metadata.name || "model"}</strong> - id ${data.id || "saved"}</li>` +
+                document.getElementById("savedList").innerHTML;
+            document.getElementById("output").textContent = `Saved model ${data.name || metadata.name || "model"} to ${data.path || file.name}.`;
+            await refreshModels();
+        } catch (error) {
+            document.getElementById("output").textContent = "Error saving model: " + error.message;
+        }
     }
 
     async function refreshModels() {
-        const res = await fetch("/learningmodel/list");
-        const data = await res.json();
-        document.getElementById("savedList").innerHTML = 
-            data.models.map(m => `<li>${m}</li>`).join("");
-    }
-
-
-    // CHANGED: Save model locally to browser and send to backend for persistent storage
-    // FIXED: Corrected URL.createdObjectURL -> URL.createObjectURL and octet-stream spacing
-    /*
-    async function saveModel() {
-        try{
-            await pyodide.runPythonAsync(`
-                import joblib
-                joblib.dump(model, "/tmp/model.pkl")
-            `);
-            const data = pyodide.FS.readFile("/tmp/model.pkl");
-            const blob = new Blob([data], {type: "application/octet-stream"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "model.pkl";
-            a.click();
-
-            // Send to backend - uploads trained model to /upload endpoint for storage and registration
-            // CHANGED: Updated endpoint from /upload_model to /upload/{operation_id} for consistency with project pattern
-            const formData = new FormData();
-            formData.append("file", blob, "model.pkl");
-            formData.append("objectName", "user_model_" + new Date().getTime());
-            formData.append("description", "Model trained via code editor");
-            formData.append("operationId", "models");
-
-            fetch("/upload/models", {
-                method: "POST",
-                body: formData
-            }).then(res => res.json())
-              .then(data => {
-                if (data.status === "ok") {
-                    document.getElementById("savedList").innerHTML += `<li>✓ ${data.id} - Saved to database</li>`
-                } else {
-                    document.getElementById("savedList").innerHTML += `<li>⚠ Error saving: ${data.detail}</li>`
-                }
-              })
-              .catch(err => {
-                document.getElementById("savedList").innerHTML += `<li>✗ Upload failed: ${err}</li>`
-              });
-        } catch (err) {
-            document.getElementById("output").textContent = "Error saving model: " + err;
+        try {
+            const data = await fetchJson("/learningmodel/list");
+            const models = Array.isArray(data) ? data : (data.models || data.items || []);
+            document.getElementById("savedList").innerHTML =
+                models.map((model) => `
+                    <li>
+                        <strong>${model.name || "Unnamed model"}</strong>
+                        <span> - ${model.model_type || "model"}</span>
+                        <span> - trained: ${model.is_trained ? "yes" : "no"}</span>
+                    </li>
+                `).join("");
+        } catch (error) {
+            document.getElementById("savedList").innerHTML = `<li>Unable to load saved models: ${error.message}</li>`;
         }
     }
-    */
-
 </script>
 
 {% endblock %}

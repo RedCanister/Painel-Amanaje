@@ -6,68 +6,11 @@
 
 {% block extra_css %}
 <style>
-    :root {
-        --amanaje-primary: #2a9d8f;
-        --amanaje-primary-strong: #115e59;
-        --amanaje-primary-soft: #ccfbf1;
-        --amanaje-primary-softer: #f0fdfa;
-        --amanaje-primary-mid: #99f6e4;
-        --amanaje-primary-border: #5eead4;
-        --amanaje-primary-border-soft: #99f6e4;
-        --amanaje-primary-accent: #14b8a6;
-        --amanaje-primary-gradient: #2a9d8f;
-        --amanaje-primary-bar-gradient: #2a9d8f;
-        --amanaje-primary-shadow: rgba(42, 157, 143, 0.08);
-        --amanaje-primary-shadow-strong: rgba(42, 157, 143, 0.2);
-        --amanaje-code-bg: #0f2f2a;
-        --amanaje-code-fg: #ccfbf1;
-        --amanaje-code-border: #115e59;
-        --amanaje-body-bg: #f7fffd;
-    }
-
     .training-shell { display: grid; gap: 1.25rem; }
-    .global-context {
-        background:
-            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
-            var(--amanaje-shell-panel);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 24px;
-        padding: 1.45rem;
-        box-shadow: 0 20px 42px var(--amanaje-primary-shadow);
-    }
-    .global-context h3 {
-        margin-top: 0;
-        margin-bottom: 0.45rem;
-        color: var(--amanaje-text-strong);
-        font-family: var(--amanaje-heading-font);
-        font-size: clamp(1.8rem, 2.4vw, 2.45rem);
-    }
-    .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .workspace-tab {
-        border: 1px solid var(--amanaje-primary-border);
-        background: rgba(255,255,255,0.76);
-        color: var(--amanaje-primary-strong);
-        padding: 0.8rem 1rem;
-        border-radius: 999px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .workspace-tab.active { background: var(--amanaje-primary-gradient); color: white; border-color: transparent; }
     .training-panel {
         display: none;
-        background: var(--amanaje-surface);
-        border: 1px solid var(--amanaje-border);
-        border-radius: 22px;
-        padding: 1.5rem;
-        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
     }
     .training-panel.active { display: block; }
-    .panel-title {
-        margin: 0 0 0.45rem;
-        color: var(--amanaje-text-strong);
-        font-family: var(--amanaje-heading-font);
-    }
-    .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
     .pipeline-grid, .summary-grid, .tracking-grid { display: grid; gap: 1rem; }
     .pipeline-grid { grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr); }
     .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -85,48 +28,33 @@
         padding: 1rem;
     }
     .surface-card h4, .status-card h4, .inventory-card h4, .snapshot-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
-    .muted-text, .helper-text { color: #6b7280; }
-    .helper-text { font-size: 0.92rem; margin-top: 0.35rem; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--amanaje-primary-border);
-        border-radius: 12px;
-        box-sizing: border-box;
-        background: var(--amanaje-surface-3);
+    .search-space-card {
+        border-left: 4px solid var(--amanaje-primary);
+        box-shadow: 0 10px 24px var(--amanaje-primary-shadow);
     }
+    .search-space-card label {
+        display: block;
+        margin-bottom: 0.4rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .search-space-card input,
+    .search-space-card select {
+        width: 100%;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 10px;
+        padding: 0.62rem;
+        background: var(--amanaje-surface-3);
+        box-sizing: border-box;
+    }
+    .helper-text { font-size: 0.92rem; margin-top: 0.35rem; }
     .form-group textarea { min-height: 140px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .form-group select[multiple] { min-height: 150px; }
     .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
     .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .btn {
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
-    .btn-secondary { background: var(--amanaje-surface-3); color: #374151; }
-    .btn-ghost { background: rgba(255,255,255,0.8); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--amanaje-primary); }
     .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
-    .pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.35rem 0.7rem;
-        border-radius: 999px;
-        background: var(--amanaje-primary-soft);
-        color: var(--amanaje-primary);
-        border: 1px solid var(--amanaje-primary-border);
-        font-size: 0.85rem;
-        font-weight: 700;
-    }
     .timeline-list { display: grid; gap: 0.75rem; margin-top: 1rem; }
     .timeline-item {
         display: flex;
@@ -185,21 +113,6 @@
     .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
     .summary-table td:first-child { font-weight: 700; color: var(--amanaje-primary-strong); width: 38%; }
     .summary-table code { white-space: pre-wrap; word-break: break-word; }
-    .json-block {
-        background: var(--amanaje-code-bg);
-        color: var(--amanaje-code-fg);
-        padding: 1rem;
-        border-radius: 14px;
-        white-space: pre-wrap;
-        overflow: auto;
-        font-family: Consolas, "Courier New", monospace;
-        font-size: 0.9rem;
-    }
-    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
-    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
-    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .detail-modal {
         display: none;
         position: fixed;
@@ -250,7 +163,7 @@
     <section class="global-context">
         <span class="workspace-eyebrow">Models domain</span>
         <h3>Global Training Context</h3>
-        <p class="panel-subtitle">Select the objects to be used in training by the pair, or create new ones by simply picking. They persist among the tabs.</p>
+        <p class="panel-subtitle">Keep the active inference pair, model, dataset, study, and execution framework aligned while the training workspace moves across orchestration, studies, and history.</p>
         <div class="inline-grid">
             <div class="form-group">
                 <label for="globalInferencePairId">Inference Pair</label>
@@ -278,13 +191,20 @@
                 </select>
             </div>
 
-            <!-- TODO - Framework could be automatically infered from the model's metadata -->
             <div class="form-group">
                 <label for="globalFramework">Framework</label>
                 <select id="globalFramework">
                     <option value="pytorch">PyTorch</option>
                     <option value="sklearn">scikit-learn</option>
                     <option value="onnx">ONNX</option>
+                </select>
+            </div>
+            <div class="form-group" id="globalDeviceGroup">
+                <label for="globalDevice">Device</label>
+                <select id="globalDevice">
+                    <option value="auto">Auto</option>
+                    <option value="cuda">CUDA GPU</option>
+                    <option value="cpu">CPU</option>
                 </select>
             </div>
         </div>
@@ -298,6 +218,8 @@
         <button class="workspace-tab active" type="button" data-tab="orchestration">Training </button>
         <button class="workspace-tab" type="button" data-tab="study">Study </button>
         <button class="workspace-tab" type="button" data-tab="tracking">Tracking and ONNX</button>
+        <button class="workspace-tab" type="button" data-tab="history">Run History</button>
+        <button class="workspace-tab" type="button" data-tab="ledger">Run Ledger</button>
     </div>
 
     <section class="training-panel active" id="panel-orchestration">
@@ -307,8 +229,6 @@
         <div class="pipeline-grid">
             <div class="surface-card">
                 <form id="trainingForm">
-
-                    <!-- TODO - Consider removing the learning and dataset model selections from within the Training Orchestrator-->
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="modelId">Learning Model</label>
@@ -323,8 +243,6 @@
                             </select>
                         </div>
                     </div>
-
-                    <!-- TODO - Pick the framework automatically infered from the learning model-->
                     <div class="inline-grid">
                         <div class="form-group">
                             <label for="framework">Execution Framework</label>
@@ -333,6 +251,15 @@
                                 <option value="sklearn">scikit-learn</option>
                                 <option value="onnx">ONNX</option>
                             </select>
+                        </div>
+                        <div class="form-group" id="deviceSelectionGroup">
+                            <label for="device">Execution Device</label>
+                            <select id="device" name="device">
+                                <option value="auto">Auto</option>
+                                <option value="cuda">CUDA GPU</option>
+                                <option value="cpu">CPU</option>
+                            </select>
+                            <div class="helper-text" id="acceleratorStatus">Checking accelerator status...</div>
                         </div>
                         <div class="form-group">
                             <label for="inputType">Parameter Source</label>
@@ -412,17 +339,7 @@
                         <div class="metric-value" id="activeFramework">pytorch</div>
                     </div>
                 </div>
-
-                <!-- TODO - The pills should display interesting metadata or litte facts made from the dataset.-->
-                
-                <!--
-                <div class="pill-row" id="pipelinePills">
-                    <span class="pill">postgresql dataset registry</span>
-                    <span class="pill">StudyModel coordination</span>
-                    <span class="pill">runtime parameter sync</span>
-                    <span class="pill">inference registry handoff</span>
-                </div>
-                -->
+                <div class="pill-row" id="pipelinePills"></div>
 
                 <div class="timeline-list" id="pipelineTimeline"></div>
             </div>
@@ -494,8 +411,6 @@
                         <label for="studyDescription">Description</label>
                         <textarea id="studyDescription" name="studyDescription" spellcheck="false">StudyModel linking dataset ingestion from PostgreSQL to registered training models.</textarea>
                     </div>
-
-                    <!-- TODO - Stylize the search-spaces to fit overall aesthetics of the app.-->
                     <div class="surface-card" style="margin-bottom:1rem;">
                         <div class="toolbar-row">
                             <div>
@@ -541,8 +456,6 @@
                         <div class="metric-value" id="studyFrameworkSummary">pytorch</div>
                     </div>
                 </div>
-
-                <!-- TODO - The studies listed here should have a simple redirect button to their view in the model -->
                 <div id="studyList" class="inventory-list" style="margin-top:1rem;"></div>
 
             </div>
@@ -585,9 +498,13 @@
         </div>
     </section>
 
-    <!-- TODO - Add a Run History tab besides the Run Ledger to show the user a simplified view of all their previous run, the resulting metrics and the parameters used,
-     with no JSONs to clog up the UI. The run History feeds in from the history of the models inside visualization on a scrollable element-->
-    <section class="training-panel active" style="display:block;">
+    <section class="training-panel" id="panel-history">
+        <h3 class="panel-title">Run History</h3>
+        <p class="panel-subtitle">A simplified view of previous training and study runs, with metrics and parameters kept readable.</p>
+        <div id="runHistoryResults" class="inventory-list"></div>
+    </section>
+
+    <section class="training-panel" id="panel-ledger">
         <h3 class="panel-title">Run Ledger</h3>
         <p class="panel-subtitle">All of your active runs are shown here. </p>
         <div id="runLedgerResults"></div>
@@ -615,6 +532,7 @@ const globalModelIdSelect = document.getElementById('globalModelId');
 const globalDatasetIdSelect = document.getElementById('globalDatasetId');
 const globalStudyIdSelect = document.getElementById('globalStudyId');
 const globalFrameworkSelect = document.getElementById('globalFramework');
+const globalDeviceSelect = document.getElementById('globalDevice');
 const modelIdSelect = document.getElementById('modelId');
 const datasetIdSelect = document.getElementById('datasetId');
 const studyIdSelect = document.getElementById('studyId');
@@ -623,6 +541,7 @@ const studyModelIdSelect = document.getElementById('studyModelId');
 const studyDatasetIdSelect = document.getElementById('studyDatasetId');
 const inputTypeSelect = document.getElementById('inputType');
 const frameworkSelect = document.getElementById('framework');
+const deviceSelect = document.getElementById('device');
 const parametersJson = document.getElementById('parametersJson');
 const studyParamsJson = document.getElementById('studyParamsJson');
 const inputFeatureSelect = document.getElementById('inputFeatures');
@@ -643,7 +562,8 @@ const FRAMEWORK_DEFAULTS = {
         learning_rate: 0.001,
         hidden_dim: 64,
         hidden_layers: 2,
-        dropout: 0.1
+        dropout: 0.1,
+        device: 'auto'
     },
     sklearn: {
         estimator_class: 'RandomForestRegressor',
@@ -663,6 +583,7 @@ const PIPELINE_STAGES = [
     { id: 'queued', title: 'Queued', detail: 'The run was registered and is waiting to execute.' },
     { id: 'resolving_context', title: 'Resolving Context', detail: 'Model, dataset, study, and inference-pair context are being resolved.' },
     { id: 'validating_schema', title: 'Validating Schema', detail: 'The selected dataset is checked against the required input and output columns.' },
+    { id: 'resolving_accelerator', title: 'Resolving Accelerator', detail: 'The requested CPU/GPU device is matched to the runtime environment.' },
     { id: 'preparing_dataset', title: 'Preparing Dataset', detail: 'Feature normalization, target encoding, and train/test splits are being prepared.' },
     { id: 'training', title: 'Training', detail: 'Framework-specific fitting is currently running.' },
     { id: 'optimizing', title: 'Optimizing Study', detail: 'Optuna trials are exploring the configured search space.' },
@@ -725,6 +646,30 @@ function findStudyByPair(modelId, datasetId) {
     ) || null;
 }
 
+function inferFrameworkFromModel(model) {
+    const parameters = model?.parameters && typeof model.parameters === 'object' ? model.parameters : {};
+    const manifest = model?.artifact_manifest || parameters.artifact_manifest || model?.artifact_metadata || {};
+    const candidates = [
+        parameters.framework,
+        manifest.framework,
+        parameters.training_backend,
+        parameters.base_framework,
+        model?.model_type
+    ].map((value) => String(value || '').toLowerCase());
+    if (candidates.some((value) => value.includes('onnx'))) return 'onnx';
+    if (candidates.some((value) => value.includes('torch') || value.includes('deep'))) return 'pytorch';
+    if (candidates.some((value) => value.includes('sklearn') || value.includes('scikit') || value.includes('forest') || value.includes('linear'))) return 'sklearn';
+    return frameworkSelect?.value || globalFrameworkSelect?.value || 'pytorch';
+}
+
+function applyFrameworkFromModel(model, { updateGlobal = true } = {}) {
+    if (!model) return;
+    const inferred = inferFrameworkFromModel(model);
+    frameworkSelect.value = inferred;
+    if (updateGlobal) globalFrameworkSelect.value = inferred;
+    updateDeviceControls();
+}
+
 function getSelectedLabel(selectElement) {
     if (!selectElement || selectElement.selectedIndex < 0) return '-';
     return selectElement.options[selectElement.selectedIndex]?.text || '-';
@@ -771,50 +716,26 @@ function getSelectedValues(selectElement) {
 }
 
 function renderPlotDeck(plots = []) {
-    const usablePlots = Array.isArray(plots) ? plots.filter((plot) => Array.isArray(plot.series) && plot.series.length) : [];
-    if (!usablePlots.length) return '';
+    return window.AmanajeUI?.renderPlotDeck
+        ? AmanajeUI.renderPlotDeck(plots)
+        : '';
+}
 
-    return `
-        <div class="plot-grid">
-            ${usablePlots.map((plot) => {
-                const maxValue = Math.max(...plot.series.map((item) => Number(item.value) || 0), 1);
-                return `
-                    <div class="plot-card">
-                        <h5>${escapeHtml(plot.title || 'Generated Plot')}</h5>
-                        <p>${escapeHtml(plot.description || 'Automatic summary plot')}</p>
-                        <div class="plot-bars">
-                            ${plot.series.map((item) => {
-                                const value = Number(item.value) || 0;
-                                const width = Math.max((value / maxValue) * 100, value > 0 ? 6 : 0);
-                                return `
-                                    <div class="plot-bar-row">
-                                        <div class="plot-bar-meta">
-                                            <span>${escapeHtml(item.label)}</span>
-                                            <span>${escapeHtml(value.toFixed(3).replace(/\.000$/, ''))}</span>
-                                        </div>
-                                        <div class="plot-bar-track">
-                                            <div class="plot-bar-fill" style="width:${width}%;"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `;
+function renderJsonValue(value, title = 'JSON') {
+    if (value && typeof value === 'object') {
+        return window.AmanajeUI?.renderJsonExplorer
+            ? AmanajeUI.renderJsonExplorer(value, { title, maxPlotlyRows: 40, maxPlotlyColumns: 14 })
+            : `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`;
+    }
+    return escapeHtml(value);
 }
 
 function buildSummaryTable(summary) {
     const rows = Object.entries(summary || {}).map(([key, value]) => {
-        const renderedValue = typeof value === 'object'
-            ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`
-            : escapeHtml(value);
         return `
             <tr>
                 <td>${escapeHtml(key.replace(/_/g, ' '))}</td>
-                <td>${renderedValue}</td>
+                <td>${renderJsonValue(value, key.replace(/_/g, ' '))}</td>
             </tr>
         `;
     }).join('');
@@ -842,7 +763,15 @@ function renderTrackingMetricCards(metrics = {}) {
         return;
     }
 
-    // TODO - The explanation variable shown here need to be generated on a case-by-case basis
+    const metricExplanation = (key, value) => {
+        if (/loss|rmse|mse|mae/i.test(key)) {
+            return `${key.replace(/_/g, ' ')} is an error-style metric; lower values usually mean the model is fitting this dataset more tightly.`;
+        }
+        if (/acc|auc|f1|precision|recall|score/i.test(key)) {
+            return `${key.replace(/_/g, ' ')} is a quality-style metric; higher values usually indicate stronger validation performance.`;
+        }
+        return `${key.replace(/_/g, ' ')} is stored on the selected registry record with value ${value}.`;
+    };
     document.getElementById('trackingMetricCards').innerHTML = AmanajeUI.renderMetricCards(
         entries.map(([key, value]) => ({
             label: key.replace(/_/g, ' '),
@@ -851,7 +780,7 @@ function renderTrackingMetricCards(metrics = {}) {
             reference: 'selected model',
             expected_range: 'metric specific',
             direction: /loss|rmse|mse|mae/i.test(key) ? 'lower_is_better' : 'higher_is_better',
-            explanation: 'Raw model metric from the currently selected registry record, shown first so the user can orient before opening snapshots.'
+            explanation: metricExplanation(key, value)
         }))
     );
 }
@@ -896,6 +825,8 @@ function updateStudyVisibility() {
 }
 
 function updatePipelineSummary() {
+    const selectedModel = resolveModel(modelIdSelect.value);
+    const selectedDataset = resolveDataset(datasetIdSelect.value);
     document.getElementById('summaryModel').textContent = modelIdSelect.value ? getSelectedLabel(modelIdSelect) : '-';
     document.getElementById('summaryDataset').textContent = datasetIdSelect.value ? getSelectedLabel(datasetIdSelect) : '-';
     document.getElementById('summaryStudy').textContent = inputTypeSelect.value === 'Study'
@@ -903,6 +834,39 @@ function updatePipelineSummary() {
         : 'Manual';
     document.getElementById('activeFramework').textContent = frameworkSelect.value;
     document.getElementById('studyFrameworkSummary').textContent = frameworkSelect.value;
+    document.getElementById('pipelinePills').innerHTML = [
+        selectedDataset?.shape ? `<span class="pill">${escapeHtml(`shape ${selectedDataset.shape.join ? selectedDataset.shape.join(' x ') : selectedDataset.shape}`)}</span>` : '',
+        Array.isArray(selectedDataset?.features_list) ? `<span class="pill">${escapeHtml(`${selectedDataset.features_list.length} features`)}</span>` : '',
+        selectedDataset?.dataset_type ? `<span class="pill">${escapeHtml(selectedDataset.dataset_type)}</span>` : '',
+        selectedModel?.is_trained ? '<span class="pill">trained model</span>' : '',
+        selectedModel?.is_deployed ? '<span class="pill">deployed</span>' : '',
+        `<span class="pill">${escapeHtml(`framework ${frameworkSelect.value}`)}</span>`
+    ].filter(Boolean).join('');
+}
+
+function updateDeviceControls() {
+    const showDevice = frameworkSelect.value === 'pytorch';
+    document.getElementById('deviceSelectionGroup').style.display = showDevice ? 'block' : 'none';
+    document.getElementById('globalDeviceGroup').style.display = (globalFrameworkSelect.value || frameworkSelect.value) === 'pytorch' ? 'block' : 'none';
+    if (!showDevice) {
+        deviceSelect.value = 'cpu';
+    }
+}
+
+async function loadAcceleratorStatus() {
+    const target = document.getElementById('acceleratorStatus');
+    if (!target) return;
+    try {
+        const response = await fetch('/runtime/accelerators');
+        const payload = await response.json();
+        if (!response.ok || payload.status === 'error') throw new Error(payload.detail || 'Unable to load accelerators');
+        const devices = Array.isArray(payload.devices) ? payload.devices : [];
+        target.textContent = payload.cuda_available
+            ? `CUDA available: ${devices.map((device) => device.name || `cuda:${device.index}`).join(', ')}`
+            : 'CUDA unavailable. PyTorch jobs will use CPU unless a GPU worker is available.';
+    } catch (error) {
+        target.textContent = `Accelerator status unavailable: ${error.message}`;
+    }
 }
 
 function syncGlobalContextFromLocal() {
@@ -912,6 +876,8 @@ function syncGlobalContextFromLocal() {
     globalDatasetIdSelect.value = datasetIdSelect.value || '';
     globalStudyIdSelect.value = studyIdSelect.value || existingStudyIdSelect.value || '';
     globalFrameworkSelect.value = frameworkSelect.value || 'pytorch';
+    globalDeviceSelect.value = deviceSelect.value || 'auto';
+    updateDeviceControls();
 }
 
 async function syncLocalContextFromGlobal() {
@@ -934,6 +900,7 @@ async function syncLocalContextFromGlobal() {
         if (globalDatasetIdSelect.value) datasetIdSelect.value = globalDatasetIdSelect.value;
     }
     frameworkSelect.value = globalFrameworkSelect.value;
+    deviceSelect.value = globalDeviceSelect.value || 'auto';
     if (globalStudyIdSelect.value) {
         studyIdSelect.value = globalStudyIdSelect.value;
         existingStudyIdSelect.value = globalStudyIdSelect.value;
@@ -944,6 +911,7 @@ async function syncLocalContextFromGlobal() {
         inputTypeSelect.value = 'Manual';
     }
     updateStudyVisibility();
+    updateDeviceControls();
     updatePipelineSummary();
     renderRuntimeParameterFields();
     await loadModelSnapshot();
@@ -983,10 +951,39 @@ function renderRunLedger(runs = []) {
                 })))}
             ` : ''}
             ${renderRunProgressTimeline(run)}
+            ${renderPlotDeck(run.plots || run.result?.plots || [])}
             ${run.error ? `<div class="alert alert-error">${escapeHtml(run.error)}</div>` : ''}
             ${run.result && Object.keys(run.result).length ? buildSnapshotMarkup('Run Result', run.result, []) : ''}
         </div>
     `).join('');
+}
+
+function renderRunHistory(runs = []) {
+    const target = document.getElementById('runHistoryResults');
+    if (!target) return;
+    if (!runs.length) {
+        target.innerHTML = '<div class="helper-text">No completed or active runs are available for this selection yet.</div>';
+        return;
+    }
+    target.innerHTML = runs.slice(0, 25).map((run) => {
+        const metrics = { ...(run.metrics || {}), ...(run.result?.metrics || {}) };
+        const parameters = run.parameters || run.result?.parameters || {};
+        const metricPills = Object.entries(metrics).slice(0, 6).map(([key, value]) => `<span class="pill">${escapeHtml(`${key}: ${value}`)}</span>`).join('');
+        const parameterPills = Object.entries(parameters).slice(0, 6).map(([key, value]) => `<span class="pill">${escapeHtml(`${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)}</span>`).join('');
+        return `
+            <div class="inventory-row">
+                <strong>${escapeHtml(run.run_type || 'run')} ${escapeHtml(run.run_id || '')}</strong>
+                <div class="helper-text">Status ${escapeHtml(run.status || 'queued')} at ${escapeHtml(run.stage || '-')}.</div>
+                <div class="pill-row">
+                    <span class="pill">model ${escapeHtml(run.context?.model_id || '-')}</span>
+                    <span class="pill">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
+                    ${run.context?.study_id ? `<span class="pill">study ${escapeHtml(run.context.study_id)}</span>` : ''}
+                </div>
+                ${metricPills ? `<div class="pill-row">${metricPills}</div>` : '<div class="helper-text">No metrics recorded yet.</div>'}
+                ${parameterPills ? `<div class="pill-row">${parameterPills}</div>` : ''}
+            </div>
+        `;
+    }).join('');
 }
 
 async function loadRunLedger() {
@@ -999,6 +996,7 @@ async function loadRunLedger() {
         const result = await response.json();
         if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         renderRunLedger(result.runs || []);
+        renderRunHistory(result.runs || []);
         if ((result.runs || []).length) {
             renderPipelineTimeline(result.runs[0].stage || 'queued', String(result.runs[0].status || '').replace(/^./, (match) => match.toUpperCase()));
         }
@@ -1012,6 +1010,7 @@ async function loadRunLedger() {
         }
     } catch (error) {
         document.getElementById('runLedgerResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+        document.getElementById('runHistoryResults').innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
     }
 }
 
@@ -1059,7 +1058,7 @@ function getRuntimeSeed() {
     const modelParameters = selectedModel?.parameters && typeof selectedModel.parameters === 'object'
         ? selectedModel.parameters
         : {};
-    return { ...defaults, ...modelParameters, framework: frameworkSelect.value };
+    return { ...defaults, ...modelParameters, framework: frameworkSelect.value, device: deviceSelect.value || 'auto' };
 }
 
 function renderRuntimeParameterFields() {
@@ -1071,7 +1070,11 @@ function renderRuntimeParameterFields() {
     }
 
     const seed = { ...getRuntimeSeed(), ...currentPayload };
-    const entries = Object.entries(seed).filter(([key, value]) => !Array.isArray(value) && value !== null && typeof value !== 'object');
+    if (seed.device) {
+        deviceSelect.value = String(seed.device);
+    }
+    updateDeviceControls();
+    const entries = Object.entries(seed).filter(([key, value]) => key !== 'device' && !Array.isArray(value) && value !== null && typeof value !== 'object');
     runtimeParameterFields.innerHTML = entries.map(([key, value]) => {
         const valueType = typeof value;
         const inputType = valueType === 'number' ? 'number' : 'text';
@@ -1115,6 +1118,7 @@ function syncRuntimeParametersFromFields() {
         }
     });
     payload.framework = frameworkSelect.value;
+    payload.device = frameworkSelect.value === 'pytorch' ? (deviceSelect.value || 'auto') : 'cpu';
     parametersJson.value = JSON.stringify(payload, null, 2);
 }
 
@@ -1160,6 +1164,7 @@ function getStudySeed() {
         direction: currentPayload.direction ?? 'maximize',
         metric: currentPayload.metric ?? 'accuracy',
         framework: frameworkSelect.value,
+        device: frameworkSelect.value === 'pytorch' ? (deviceSelect.value || 'auto') : 'cpu',
         nn_criterion: currentPayload.nn_criterion ?? 'CrossEntropyLoss',
         nn_optimizer: currentPayload.nn_optimizer ?? 'Adam',
         grad_mode: currentPayload.grad_mode ?? 'with_grad',
@@ -1190,6 +1195,14 @@ function renderStudyControlBuilder() {
         <div class="search-space-card">
             <label for="builder_framework">framework</label>
             <input id="builder_framework" data-study-meta="framework" type="text" value="${escapeHtml(seed.framework)}" readonly>
+        </div>
+        <div class="search-space-card">
+            <label for="builder_device">device</label>
+            <select id="builder_device" data-study-meta="device">
+                <option value="auto" ${seed.device === 'auto' ? 'selected' : ''}>auto</option>
+                <option value="cuda" ${seed.device === 'cuda' ? 'selected' : ''}>cuda</option>
+                <option value="cpu" ${seed.device === 'cpu' ? 'selected' : ''}>cpu</option>
+            </select>
         </div>
     `;
 
@@ -1307,6 +1320,9 @@ function renderStudyInventory() {
                     <span class="pill">${escapeHtml(study.sampler || 'sampler:n/a')}</span>
                     <span class="pill">${escapeHtml(study.objective || 'objective:n/a')}</span>
                     <span class="pill">${escapeHtml((study.study_params || {}).framework || 'framework:auto')}</span>
+                </div>
+                <div class="actions-row" style="margin-top:0.8rem;">
+                    <a class="btn btn-ghost" href="/registry?registryType=StudyModel&itemId=${encodeURIComponent(study.id)}">Open Study</a>
                 </div>
             </div>
         `;
@@ -1523,19 +1539,18 @@ async function runSelectedStudy() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                inferenceId: globalInferencePairIdSelect.value ? Number(globalInferencePairIdSelect.value) : null
+                inferenceId: globalInferencePairIdSelect.value ? Number(globalInferencePairIdSelect.value) : null,
+                device: frameworkSelect.value === 'pytorch' ? (deviceSelect.value || 'auto') : 'cpu',
+                framework: frameworkSelect.value
             })
         });
         const result = await response.json();
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'Study optimization failed');
         }
-        const finalRun = await waitForRunCompletion(result.run_id, 'studyResult', 'Study run completed.');
-        if (finalRun.result?.summary?.best_params) {
-            parametersJson.value = JSON.stringify(finalRun.result.summary.best_params, null, 2);
-            renderRuntimeParameterFields();
-        }
-        await populateRegistryOptions();
+        window.AmanajeUI?.watchRun?.(result.run_id, { source: 'training-study' });
+        renderAlert('studyResult', 'info', `Study run <code>${escapeHtml(result.run_id)}</code> was queued. You can keep working while it runs.`);
+        await loadRunLedger();
     } catch (error) {
         renderAlert('studyResult', 'error', error.message);
     }
@@ -1577,7 +1592,8 @@ trainingForm.addEventListener('submit', async (event) => {
         studyId: inputTypeSelect.value === 'Study' ? String(studyIdSelect.value) : null,
         parameters: {
             ...runtimeParameters,
-            framework: frameworkSelect.value
+            framework: frameworkSelect.value,
+            device: frameworkSelect.value === 'pytorch' ? (deviceSelect.value || 'auto') : 'cpu'
         }
     };
     if (inputFeatures.length) payload.parameters.input_features = inputFeatures;
@@ -1596,11 +1612,9 @@ trainingForm.addEventListener('submit', async (event) => {
         if (!response.ok || result.status === 'error') {
             throw new Error(result.detail || 'Training submission failed');
         }
-        const finalRun = await waitForRunCompletion(result.run_id, 'trainingResult', 'Training run completed.');
-        renderPipelineTimeline('completed', 'Completed');
-        await populateRegistryOptions();
-        await loadModelSnapshot();
-        await loadDatasetSnapshot();
+        window.AmanajeUI?.watchRun?.(result.run_id, { source: 'training' });
+        renderAlert('trainingResult', 'info', `Training run <code>${escapeHtml(result.run_id)}</code> was queued. You can navigate away and follow it in the operation stack.`);
+        await loadRunLedger();
     } catch (error) {
         renderPipelineTimeline('training', 'Failed');
         renderAlert('trainingResult', 'error', error.message);
@@ -1664,10 +1678,18 @@ document.querySelectorAll('.workspace-tab').forEach((button) => {
     button.addEventListener('click', () => setTrainingTab(button.dataset.tab));
 });
 
-globalInferencePairIdSelect.addEventListener('change', syncLocalContextFromGlobal);
+globalInferencePairIdSelect.addEventListener('change', async () => {
+    await syncLocalContextFromGlobal();
+    applyFrameworkFromModel(resolveModel(modelIdSelect.value));
+    updatePipelineSummary();
+});
 globalModelIdSelect.addEventListener('change', async () => {
     if (globalInferencePairIdSelect.value) globalInferencePairIdSelect.value = '';
     await syncLocalContextFromGlobal();
+    applyFrameworkFromModel(resolveModel(modelIdSelect.value));
+    renderRuntimeParameterFields();
+    renderStudyControlBuilder();
+    syncStudyParamsFromBuilder();
     await loadRunLedger();
 });
 globalDatasetIdSelect.addEventListener('change', async () => {
@@ -1751,6 +1773,7 @@ document.getElementById('btnValidateOnnx').addEventListener('click', async () =>
 });
 
 modelIdSelect.addEventListener('change', async () => {
+    applyFrameworkFromModel(resolveModel(modelIdSelect.value));
     syncGlobalContextFromLocal();
     updatePipelineSummary();
     renderRuntimeParameterFields();
@@ -1781,6 +1804,7 @@ existingStudyIdSelect.addEventListener('change', () => {
 });
 
 studyModelIdSelect.addEventListener('change', () => {
+    applyFrameworkFromModel(resolveModel(studyModelIdSelect.value), { updateGlobal: false });
     renderStudyControlBuilder();
     syncStudyParamsFromBuilder();
 });
@@ -1795,7 +1819,22 @@ inputTypeSelect.addEventListener('change', () => {
 frameworkSelect.addEventListener('change', () => {
     syncGlobalContextFromLocal();
     updatePipelineSummary();
+    updateDeviceControls();
     renderRuntimeParameterFields();
+    renderStudyControlBuilder();
+    syncStudyParamsFromBuilder();
+});
+
+deviceSelect.addEventListener('change', () => {
+    syncGlobalContextFromLocal();
+    syncRuntimeParametersFromFields();
+    renderStudyControlBuilder();
+    syncStudyParamsFromBuilder();
+});
+
+globalDeviceSelect.addEventListener('change', () => {
+    deviceSelect.value = globalDeviceSelect.value || 'auto';
+    syncRuntimeParametersFromFields();
     renderStudyControlBuilder();
     syncStudyParamsFromBuilder();
 });
@@ -1831,6 +1870,8 @@ document.getElementById('trainingDetailModal').addEventListener('click', (event)
 
 document.addEventListener('DOMContentLoaded', async () => {
     updateStudyVisibility();
+    updateDeviceControls();
+    await loadAcceleratorStatus();
     renderPipelineTimeline('queued');
     await populateRegistryOptions();
     syncStudyFormWithTrainingSelection();

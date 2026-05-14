@@ -82,8 +82,35 @@ Useful endpoints:
 
 - `GET /assistant/models/list`
 - `GET /assistant/models/{assistant_model_id}/status`
+- `GET /assistant/models/{assistant_model_id}/bundle/status`
 - `POST /assistant/models/{assistant_model_id}/test`
 - `POST /assistant/provider/test?assistant_model_id=1`
+
+## PyTorch/Hugging Face Assistant Bundles
+
+AssistantModels can be uploaded through the Create page or API as `.zip` bundles:
+
+- `POST /upload/assistant-models`
+
+The bundle must include `assistant_model_manifest.json`, model weights, tokenizer assets, and prompt/chat template metadata. Painel Amanaje validates and stores the bundle, but does not load PyTorch weights in the main FastAPI app. Generation still goes through a separate OpenAI-compatible assistant server.
+
+Required manifest fields:
+
+- `provider_type`
+- `model_name`
+- `model_version`
+- `runtime_kind`
+- `base_model_name`
+- `supported_draft_types`
+- `max_context_tokens`
+
+Useful follow-up endpoints:
+
+- `GET /assistant/models/{assistant_model_id}/bundle/status`
+- `POST /assistant/models/{assistant_model_id}/training/dataset/attach`
+- `POST /assistant/models/{assistant_model_id}/training/tokenize`
+
+See `api/assistant_server/pytorch/` for a minimal PyTorch/Hugging Face server example.
 
 Normal assistant UI panels can select one of these registry models. If no model is selected, the configured active provider is used.
 
@@ -97,8 +124,11 @@ Useful endpoints:
 - `GET /assistant/datasets/status`
 - `GET /assistant/datasets/latest`
 - `POST /assistant/models/{assistant_model_id}/training/dataset/attach`
+- `POST /assistant/models/{assistant_model_id}/training/tokenize`
 
 The rebuild endpoint writes a snapshot JSONL and manifest under `runtime_artifacts/assistant_datasets/snapshots/`, updates the latest AssistantTrainingDatasetModel registry row, and records a dataset hash that can be attached to an AssistantModel.
+
+Tokenization preparation uses the canonical assistant JSONL, not the CSV sidecar. It writes instruction-style prompt/response JSONL plus a manifest with token estimates and truncation rate. Fine-tuning remains server/trainer-side.
 
 ## Transfer-Aware LearningModel Training
 

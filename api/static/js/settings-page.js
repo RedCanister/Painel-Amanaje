@@ -1,6 +1,11 @@
 (function () {
     const state = {
         payload: null,
+        logs: {
+            intervalId: null,
+            sourcesRendered: false,
+            loading: false,
+        },
     };
 
     function escapeHtml(value) {
@@ -157,6 +162,116 @@
         container.innerHTML = `<pre class="json-block">${escapeHtml(JSON.stringify(detail, null, 2))}</pre>`;
     }
 
+    function setLogsStatus(message, tone = "") {
+        const element = document.getElementById("settingsLogsStatus");
+        if (!element) return;
+        element.textContent = message;
+        element.className = `settings-badge ${tone}`.trim();
+    }
+
+    function renderLogSources(sources = []) {
+        const select = document.getElementById("settingsLogSource");
+        if (!select || state.logs.sourcesRendered) return;
+        const usableSources = Array.isArray(sources) ? sources : [];
+        select.innerHTML = usableSources
+            .map((source) => {
+                const suffix = source.available === false ? " (unavailable)" : "";
+                return `<option value="${escapeHtml(source.id)}">${escapeHtml(source.label || source.id)}${escapeHtml(suffix)}</option>`;
+            })
+            .join("");
+        select.value = "all";
+        state.logs.sourcesRendered = true;
+    }
+
+    function renderLogWarnings(warnings = []) {
+        const container = document.getElementById("settingsLogsWarnings");
+        if (!container) return;
+        const usableWarnings = Array.isArray(warnings) ? warnings.filter(Boolean) : [];
+        container.innerHTML = usableWarnings
+            .map((warning) => `<div class="settings-log-warning">${escapeHtml(warning)}</div>`)
+            .join("");
+    }
+
+    function levelClass(level) {
+        return String(level || "info").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    }
+
+    function renderLogEntries(entries = []) {
+        const terminal = document.getElementById("settingsLogsTerminal");
+        if (!terminal) return;
+        const usableEntries = Array.isArray(entries) ? entries : [];
+        if (!usableEntries.length) {
+            terminal.innerHTML = `<div class="helper-text">No log entries available for this source.</div>`;
+            return;
+        }
+        const shouldStickToBottom = terminal.scrollTop + terminal.clientHeight >= terminal.scrollHeight - 48;
+        terminal.innerHTML = usableEntries
+            .map((entry) => {
+                const timestamp = entry.timestamp || "";
+                const source = entry.source_label || entry.source || "Log";
+                const level = entry.level || "";
+                const message = entry.message || entry.raw || "";
+                return `
+                    <div class="settings-log-line">
+                        <span class="settings-log-time">${escapeHtml(timestamp)}</span>
+                        <span class="settings-log-source">${escapeHtml(source)}</span>
+                        <span class="settings-log-level ${escapeHtml(levelClass(level))}">${escapeHtml(level || "-")}</span>
+                        <span class="settings-log-message">${escapeHtml(message)}</span>
+                    </div>
+                `;
+            })
+            .join("");
+        if (shouldStickToBottom) {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    }
+
+    function renderLogs(payload) {
+        renderLogSources(payload?.sources || []);
+        renderLogWarnings(payload?.warnings || []);
+        renderLogEntries(payload?.entries || []);
+        const updated = document.getElementById("settingsLogsUpdated");
+        if (updated) {
+            updated.textContent = payload?.generated_at
+                ? `Updated ${new Date(payload.generated_at).toLocaleTimeString()}`
+                : "Updated";
+        }
+        const warningCount = Array.isArray(payload?.warnings) ? payload.warnings.length : 0;
+        setLogsStatus(warningCount ? `${warningCount} warning${warningCount === 1 ? "" : "s"}` : "Live", warningCount ? "warning" : "success");
+    }
+
+    function buildLogsUrl() {
+        const params = new URLSearchParams();
+        params.set("source", document.getElementById("settingsLogSource")?.value || "all");
+        params.set("tail", document.getElementById("settingsLogTail")?.value || "160");
+        params.set("include_docker", document.getElementById("settingsLogsIncludeDocker")?.checked ? "true" : "false");
+        return `/settings/logs?${params.toString()}`;
+    }
+
+    async function loadLogs() {
+        if (state.logs.loading) return;
+        state.logs.loading = true;
+        setLogsStatus("Loading");
+        try {
+            renderLogs(await fetchJson(buildLogsUrl()));
+        } catch (error) {
+            renderLogWarnings([error.message]);
+            setLogsStatus("Error", "error");
+        } finally {
+            state.logs.loading = false;
+        }
+    }
+
+    function syncLogPolling() {
+        if (state.logs.intervalId) {
+            window.clearInterval(state.logs.intervalId);
+            state.logs.intervalId = null;
+        }
+        if (document.getElementById("settingsLogsAutoRefresh")?.checked) {
+            state.logs.intervalId = window.setInterval(loadLogs, 5000);
+        }
+    }
+
     function render(payload) {
         state.payload = payload;
         renderFeatureFlags(payload);
@@ -236,9 +351,16 @@
         document.getElementById("settingsReload")?.addEventListener("click", loadSettings);
         document.getElementById("settingsDebugMode")?.addEventListener("change", previewFeatureFlags);
         document.getElementById("settingsAssistantVisible")?.addEventListener("change", previewFeatureFlags);
+        document.getElementById("settingsLogsRefresh")?.addEventListener("click", loadLogs);
+        document.getElementById("settingsLogSource")?.addEventListener("change", loadLogs);
+        document.getElementById("settingsLogTail")?.addEventListener("change", loadLogs);
+        document.getElementById("settingsLogsIncludeDocker")?.addEventListener("change", loadLogs);
+        document.getElementById("settingsLogsAutoRefresh")?.addEventListener("change", syncLogPolling);
         window.addEventListener("amanaje:frontend-error", (event) => {
             renderFrontendDebug(event.detail);
         });
         loadSettings();
+        loadLogs();
+        syncLogPolling();
     });
 })();

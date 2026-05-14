@@ -1,0 +1,227 @@
+{
+  "run_id": "training_45b04ec44124",
+  "run_type": "training",
+  "status": "failed",
+  "stage": "failed",
+  "created_at": "2026-05-11T01:44:01.102764",
+  "updated_at": "2026-05-11T01:44:01.120371",
+  "started_at": null,
+  "completed_at": "2026-05-11T01:44:01.120371",
+  "context": {
+    "model_id": 5,
+    "dataset_id": 4,
+    "study_id": 6,
+    "inference_id": 8
+  },
+  "parameters": {
+    "epochs": 50,
+    "metric": "accuracy",
+    "dropout": 0.4,
+    "n_trials": 25,
+    "direction": "maximize",
+    "framework": "pytorch",
+    "batch_size": 32,
+    "hidden_dim": 64,
+    "input_size": 4,
+    "num_layers": 2,
+    "hidden_size": 32,
+    "output_size": 1,
+    "hidden_layers": 4,
+    "learning_rate": 0.001,
+    "input_features": [
+      "Date",
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume",
+      "Close_Return",
+      "Volatility",
+      "MA20",
+      "MA50",
+      "Momentum",
+      "RelVolume",
+      "RSI_Close",
+      "Williams_%R",
+      "CCI",
+      "Bollinger_%B",
+      "KeltnerC_%",
+      "MACD_lib",
+      "MACD_signal",
+      "MACD_Hist",
+      "Force_Index",
+      "Volume_Price_Trend",
+      "DLR",
+      "RSI_Over",
+      "RSI_Under",
+      "Williams_Over",
+      "Williams_Under",
+      "MACD_Over",
+      "MACD_Under",
+      "Data",
+      "time_idx",
+      "series_id",
+      "hl_center",
+      "hl_range",
+      "dayofweek"
+    ],
+    "output_features": [
+      "month"
+    ],
+    "artifact_manifest": {
+      "loader": "torchscript",
+      "source": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "metadata": {},
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "framework": "pytorch",
+      "entrypoint": null,
+      "artifact_format": ".pt",
+      "capability_matrix": {
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        }
+      },
+      "needs_companion_spec": true,
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ]
+    },
+    "device": "auto",
+    "training_mode": "transfer",
+    "transfer_strategy": "auto"
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": "Redis/RQ dependencies are not available: No module named 'redis'",
+  "progress": {
+    "current_stage": "failed",
+    "latest_event": "Redis/RQ dependencies are not available: No module named 'redis'",
+    "latest_timestamp": "2026-05-11T01:44:01.120371",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-11T01:44:01.102764",
+        "message": "training run created."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-11T01:44:01.120371",
+        "message": "Redis/RQ dependencies are not available: No module named 'redis'"
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-11T01:44:01.102764",
+      "message": "training run created."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-11T01:44:01.120371",
+      "message": "Redis/RQ dependencies are not available: No module named 'redis'"
+    }
+  ]
+}

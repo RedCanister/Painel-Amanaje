@@ -1,0 +1,63 @@
+{
+    "framework": "pytorch",
+    "metrics": {
+        "train_loss": 2.54766845703125,
+        "val_loss": 0.5612494945526123,
+        "eval_accuracy": 1.0,
+        "eval_precision": 1.0,
+        "eval_recall": 1.0,
+        "eval_f1": 1.0
+    },
+    "history": {
+        "train_loss": [
+            2.54766845703125
+        ],
+        "val_loss": [
+            0.5612494945526123
+        ]
+    },
+    "parameters": {
+        "hidden_dim": 64,
+        "hidden_layers": 2,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "batch_size": 2,
+        "epochs": 1,
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": false,
+        "device_fallback_applied": false,
+        "device": "auto",
+        "device_fallback_reason": "auto_selected_cpu"
+    },
+    "run_id": "efa09d9bd95a425791195c5f1d1bae1b",
+    "artifact_paths": [],
+    "metadata": {
+        "device": "cpu",
+        "epochs": 1,
+        "accelerator": {
+            "torch_available": true,
+            "torch_version": "2.9.0+cu128",
+            "cuda_available": false,
+            "cuda_version": "12.8",
+            "device_count": 0,
+            "devices": [],
+            "fallback_policy": "cpu",
+            "requested_device": "auto",
+            "resolved_device": "cpu",
+            "fallback_applied": false,
+            "fallback_reason": "auto_selected_cpu"
+        },
+        "transfer_learning": {
+            "training_mode": "transfer",
+            "transfer_strategy": "auto",
+            "base_model_id": 2,
+            "base_run_id": "training_9d25d5505bc3",
+            "base_artifact_path": "/models/sample_model.pt",
+            "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+            "transfer_status": "incompatible_base_artifact",
+            "base_model_loaded": false,
+            "transfer_error": "Only TorchScript or app-generated PyTorch bundles can run directly. This artifact appears to need a separate model definition."
+        }
+    }
+}

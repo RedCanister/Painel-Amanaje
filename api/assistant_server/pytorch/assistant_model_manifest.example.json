@@ -1,0 +1,29 @@
+{
+  "provider_type": "openai_compatible",
+  "runtime_kind": "pytorch_hf_server",
+  "model_name": "amanaje-pytorch-assistant",
+  "model_version": "0.1.0",
+  "base_model_name": "example/hf-causal-lm",
+  "supported_draft_types": [
+    "dataset_generation",
+    "model_generation",
+    "registry_object",
+    "feature_operations",
+    "training_run",
+    "study"
+  ],
+  "max_context_tokens": 4096,
+  "base_url": "http://localhost:8080/v1",
+  "model_artifact_path": "model.safetensors",
+  "tokenizer_path": "tokenizer.json",
+  "chat_template_path": "chat_template.txt",
+  "prompt_template_version": "amanaje-assistant-template-v1",
+  "generation_config": {
+    "temperature": 0.2,
+    "max_new_tokens": 1600,
+    "do_sample": false
+  },
+  "device": "auto",
+  "dtype": "auto",
+  "license": "private"
+}

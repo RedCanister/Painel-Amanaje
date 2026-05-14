@@ -90,6 +90,15 @@ pip install -r requirements.txt
 uvicorn main_app:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Node.js prerequisite for frontend tooling
+
+Node.js LTS is now expected on developer machines for frontend-oriented tooling and any future Node-based checks.
+
+- Recommended install target: system-wide Windows Node.js LTS
+- Validate with: `node --version` and `npm --version`
+- If Node was just installed and the commands do not resolve in your current terminal, close and reopen the shell so the updated `PATH` is picked up
+- The repo does not currently require a top-level `package.json`, so this is environment enablement for tooling rather than an app runtime dependency
+
 ## Local stack
 
 The main `docker-compose.yaml` currently brings up:

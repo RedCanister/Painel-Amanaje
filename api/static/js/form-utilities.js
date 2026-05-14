@@ -341,16 +341,9 @@ if (typeof module !== 'undefined' && module.exports) {
  *   onSelectionChange: (selected) => console.log('Selected:', selected)
  * });
  * 
- * CHANGED: Implemented feature requested at end of form-utilities.js for reusable multi-object selection
- * ADDED: Support for object roles and assignment
- * ADDED: Drag-and-drop reordering of selected objects
- * ADDED: Validation of selection constraints (max items, required roles)
+ * The widget is used by the upload analysis page for dataset/model comparisons
+ * and can be reused by other pages without inline event handlers.
  */
-
-/* TODO - Apply and make working examples of the application off the class MultiObjectSelector
-everywhere that it is referenced in the codebase. 
-
-*/
 
 class MultiObjectSelector {
   constructor(config) {
@@ -423,7 +416,7 @@ class MultiObjectSelector {
               cursor: pointer;
               transition: all 0.2s;
             "
-            onclick="this.mos.toggleObject('${valueField}', ${JSON.stringify(obj).replace(/'/g, '&#39;')})"
+            data-legacy-mos-option="${JSON.stringify(obj[valueField]).replace(/"/g, '&quot;')}"
             mos-ref
           >
             ${isSelected ? '✓ ' : '+ '}${label}
@@ -463,12 +456,12 @@ class MultiObjectSelector {
             "
             ondragstart="event.dataTransfer.effectAllowed='move'; event.dataTransfer.setData('index', ${idx})"
             ondragover="event.preventDefault(); event.dataTransfer.dropEffect='move'"
-            ondrop="this.mos.reorderObjects(event, ${idx})"
+            data-legacy-mos-drop="${idx}"
           >
             <span>⋮⋮ ${label}</span>
             <button 
               type="button"
-              onclick="this.mos.removeObject(${idx})"
+              data-legacy-mos-remove="${idx}"
               style="
                 background: #ef4444;
                 color: white;
@@ -551,6 +544,232 @@ class MultiObjectSelector {
   clear() {
     this.selectedObjects = [];
     this.config.onSelectionChange(this.selectedObjects);
+    this.render();
+  }
+
+  static escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  async init() {
+    this.config = {
+      hiddenFieldName: 'selectedObjects',
+      hiddenFieldId: null,
+      roleField: 'role',
+      defaultRole: null,
+      availableTitle: 'Available Objects',
+      selectedTitle: 'Selected Objects',
+      emptyAvailableText: 'No objects available',
+      emptySelectedText: 'Click objects to add them here',
+      objects: null,
+      initialSelection: [],
+      ...this.config
+    };
+    this.selectedObjects = Array.isArray(this.config.initialSelection)
+      ? this.config.initialSelection.map((item) => ({ ...item }))
+      : [];
+
+    try {
+      if (Array.isArray(this.config.objects)) {
+        this.availableObjects = this.config.objects;
+      } else {
+        const response = await fetch(this.config.endpoint);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        this.availableObjects = Array.isArray(data) ? data : (data.items || data.data || []);
+      }
+      this.render();
+    } catch (error) {
+      console.error('MultiObjectSelector: Failed to fetch objects', error);
+      this.container.innerHTML = `<div class="alert alert-error">Error loading objects: ${MultiObjectSelector.escapeHtml(error.message)}</div>`;
+    }
+  }
+
+  getValue(obj) {
+    return obj?.[this.config.valueField];
+  }
+
+  getLabel(obj) {
+    const value = this.getValue(obj);
+    return obj?.[this.config.labelField] || `Object ${value ?? '-'}`;
+  }
+
+  getRole(obj) {
+    const roles = Array.isArray(this.config.roles) ? this.config.roles : [];
+    return obj?.[this.config.roleField] || this.config.defaultRole || roles[0] || '';
+  }
+
+  isSelected(obj) {
+    const value = String(this.getValue(obj));
+    return this.selectedObjects.some((item) => String(this.getValue(item)) === value);
+  }
+
+  emitSelection() {
+    this.config.onSelectionChange(this.getSelection());
+  }
+
+  render() {
+    const roles = Array.isArray(this.config.roles) ? this.config.roles : [];
+    const hiddenId = this.config.hiddenFieldId || `${this.container.id || 'multiObjectSelector'}Selected`;
+    const maxSelection = this.config.maxSelection;
+
+    const availableHTML = this.availableObjects.length
+      ? this.availableObjects.map((obj, index) => {
+          const selected = this.isSelected(obj);
+          return `
+            <button
+              type="button"
+              class="mos-option ${selected ? 'selected' : ''}"
+              data-mos-available-index="${index}"
+              aria-pressed="${selected ? 'true' : 'false'}"
+            >
+              <span>${selected ? 'Selected' : 'Add'}</span>
+              <strong>${MultiObjectSelector.escapeHtml(this.getLabel(obj))}</strong>
+            </button>
+          `;
+        }).join('')
+      : `<div class="helper-text">${MultiObjectSelector.escapeHtml(this.config.emptyAvailableText)}</div>`;
+
+    const selectedHTML = this.selectedObjects.length
+      ? this.selectedObjects.map((obj, index) => `
+          <div class="mos-selected-item" draggable="true" data-mos-selected-index="${index}">
+            <span class="mos-drag-handle" aria-hidden="true">::</span>
+            <strong>${MultiObjectSelector.escapeHtml(this.getLabel(obj))}</strong>
+            ${roles.length ? `
+              <select data-mos-role-index="${index}" aria-label="Role for ${MultiObjectSelector.escapeHtml(this.getLabel(obj))}">
+                ${roles.map((role) => `
+                  <option value="${MultiObjectSelector.escapeHtml(role)}" ${this.getRole(obj) === role ? 'selected' : ''}>
+                    ${MultiObjectSelector.escapeHtml(role)}
+                  </option>
+                `).join('')}
+              </select>
+            ` : ''}
+            <button type="button" class="mos-remove" data-mos-remove-index="${index}" aria-label="Remove ${MultiObjectSelector.escapeHtml(this.getLabel(obj))}">Remove</button>
+          </div>
+        `).join('')
+      : `<div class="helper-text">${MultiObjectSelector.escapeHtml(this.config.emptySelectedText)}</div>`;
+
+    this.container.innerHTML = `
+      <div class="mos-shell" data-multi-object-selector="true">
+        <div class="mos-column">
+          <div class="mos-heading">${MultiObjectSelector.escapeHtml(this.config.availableTitle)}</div>
+          <div class="mos-options">${availableHTML}</div>
+        </div>
+        <div class="mos-column">
+          <div class="mos-heading">
+            ${MultiObjectSelector.escapeHtml(this.config.selectedTitle)}
+            ${maxSelection ? `<span>${this.selectedObjects.length}/${maxSelection}</span>` : ''}
+          </div>
+          <div class="mos-selected">${selectedHTML}</div>
+        </div>
+        <input
+          type="hidden"
+          id="${MultiObjectSelector.escapeHtml(hiddenId)}"
+          name="${MultiObjectSelector.escapeHtml(this.config.hiddenFieldName)}"
+          value="${MultiObjectSelector.escapeHtml(JSON.stringify(this.getSelection()))}"
+        >
+      </div>
+    `;
+
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    this.container.querySelectorAll('[data-mos-available-index]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const index = Number(button.getAttribute('data-mos-available-index'));
+        this.toggleObject(this.availableObjects[index]);
+      });
+    });
+
+    this.container.querySelectorAll('[data-mos-remove-index]').forEach((button) => {
+      button.addEventListener('click', () => {
+        this.removeObject(Number(button.getAttribute('data-mos-remove-index')));
+      });
+    });
+
+    this.container.querySelectorAll('[data-mos-role-index]').forEach((field) => {
+      field.addEventListener('change', () => {
+        const index = Number(field.getAttribute('data-mos-role-index'));
+        if (!this.selectedObjects[index]) return;
+        this.selectedObjects[index] = {
+          ...this.selectedObjects[index],
+          [this.config.roleField]: field.value
+        };
+        this.emitSelection();
+        this.render();
+      });
+    });
+
+    this.container.querySelectorAll('[data-mos-selected-index]').forEach((item) => {
+      item.addEventListener('dragstart', (event) => {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', item.getAttribute('data-mos-selected-index'));
+      });
+      item.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+      });
+      item.addEventListener('drop', (event) => {
+        this.reorderObjects(event, Number(item.getAttribute('data-mos-selected-index')));
+      });
+    });
+  }
+
+  toggleObject(obj) {
+    const value = String(this.getValue(obj));
+    const index = this.selectedObjects.findIndex((item) => String(this.getValue(item)) === value);
+    if (index > -1) {
+      this.selectedObjects.splice(index, 1);
+    } else {
+      if (this.config.maxSelection && this.selectedObjects.length >= this.config.maxSelection) {
+        alert(`Maximum ${this.config.maxSelection} objects allowed`);
+        return;
+      }
+      const roles = Array.isArray(this.config.roles) ? this.config.roles : [];
+      this.selectedObjects.push({
+        ...obj,
+        ...(roles.length ? { [this.config.roleField]: this.config.defaultRole || roles[0] } : {})
+      });
+    }
+    this.emitSelection();
+    this.render();
+  }
+
+  removeObject(index) {
+    if (Number.isNaN(index) || index < 0 || index >= this.selectedObjects.length) return;
+    this.selectedObjects.splice(index, 1);
+    this.emitSelection();
+    this.render();
+  }
+
+  reorderObjects(event, targetIndex) {
+    event.preventDefault();
+    const sourceIndex = Number(event.dataTransfer.getData('text/plain'));
+    if (Number.isNaN(sourceIndex) || sourceIndex === targetIndex) return;
+    const [obj] = this.selectedObjects.splice(sourceIndex, 1);
+    this.selectedObjects.splice(targetIndex, 0, obj);
+    this.emitSelection();
+    this.render();
+  }
+
+  getSelection() {
+    return this.selectedObjects.map((item, order) => ({ ...item, order }));
+  }
+
+  setAvailableObjects(objects = []) {
+    this.availableObjects = Array.isArray(objects) ? objects : [];
+    this.render();
+  }
+
+  clear() {
+    this.selectedObjects = [];
+    this.emitSelection();
     this.render();
   }
 }

@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     # API Settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Painel Amanajé API"
-    VERSION: str = "0.1.0"
+    VERSION: str = "0.7.0"
     
     # Database Settings
     POSTGRES_USER: str = "airflow"

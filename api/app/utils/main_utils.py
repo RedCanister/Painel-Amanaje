@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import sys
 import textwrap
 import traceback
@@ -25,6 +26,7 @@ from fastapi.exceptions import ResponseValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.inspection import inspect as sqlalchemy_inspect
@@ -53,6 +55,7 @@ from app.utils.artifact_utils import (
     inspect_model_artifact,
     load_runtime_artifact,
 )
+from app.utils.accelerators import resolve_torch_device
 from app.utils.io import ensure_dir, save_json
 from app.utils.logging import get_logger, init_global_logging, log_to_mlflow
 from app.utils.metrics import evaluate_and_log_metrics, pretty_print_metrics
@@ -74,6 +77,14 @@ from app.utils.monitoring import (
     track_performance,
 )
 from app.utils.optuna_utils import optimize_with_tracking
+from app.utils.plot_registry import (
+    build_bar_plot_spec,
+    build_dataset_plot_specs,
+    build_line_plot_spec,
+    legacy_plot_specs_for_job,
+    list_legacy_plot_artifacts,
+    resolve_legacy_plot_path,
+)
 from app.utils.plotting import plot_loss_curve, plot_metric_comparison, plot_predictions_vs_actual
 from app.utils.retrain_utils import monitor_and_retrain, should_retrain
 from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
@@ -109,6 +120,14 @@ from app.utils.utils import (
     debug_type
 )
 from app.utils.validation import validate_dataframe_columns, validate_input, validate_required_keys
+
+try:
+    import sqlparse
+
+    SQLPARSE_AVAILABLE = True
+except Exception:
+    sqlparse = None  # type: ignore[assignment]
+    SQLPARSE_AVAILABLE = False
 
 try:
     import mlflow
@@ -193,9 +212,107 @@ apply_saved_env_overrides(SETTINGS_STATE_PATH)
 
 DATASET_OPERATION = "datasets"
 MODEL_OPERATION = "models"
-ALLOWED_UPLOAD_OPERATIONS = {DATASET_OPERATION, MODEL_OPERATION}
+ASSISTANT_MODEL_OPERATION = "assistant-models"
+ALLOWED_UPLOAD_OPERATIONS = {DATASET_OPERATION, MODEL_OPERATION, ASSISTANT_MODEL_OPERATION}
 DEFAULT_TEST_SIZE = 0.2
 DEFAULT_RANDOM_STATE = 42
+SIMULATION_DEFAULT_STEPS = 12
+SIMULATION_MAX_STEPS = 120
+SQL_FEATURE_SOURCE_RELATION = "source_dataset"
+SQL_FEATURE_RESULT_ALIAS = "amanaje_sql_feature_result"
+SQL_FEATURE_BLOCKED_KEYWORDS = {
+    "ALTER",
+    "CALL",
+    "COPY",
+    "CREATE",
+    "DELETE",
+    "DO",
+    "DROP",
+    "EXEC",
+    "EXECUTE",
+    "GRANT",
+    "INSERT",
+    "MERGE",
+    "REINDEX",
+    "REVOKE",
+    "TRUNCATE",
+    "UPDATE",
+    "VACUUM",
+}
+SIMULATION_MAX_SCENARIOS = 6
+SIMULATION_MAX_ROWS = 600
+SIMULATION_MAX_SENSITIVITY_FEATURES = 8
+SIMULATION_FAMILY_LABELS = {
+    "regression": "Regression",
+    "classification": "Classification",
+    "unsupervised": "Unsupervised",
+    "recommendation": "Recommendation",
+    "geospatial": "Geospatial",
+    "llm_slm": "LLM/SLM",
+    "unsupported": "Unsupported",
+}
+SIMULATION_FAMILY_MODES = {
+    "regression": [
+        {
+            "id": "tabular_what_if",
+            "label": "What-if Analysis",
+            "description": "Baseline, feature overrides, prediction path, and sensitivity checks.",
+        }
+    ],
+    "classification": [
+        {
+            "id": "classification_threshold",
+            "label": "Class Probability",
+            "description": "Scenario prediction with class probabilities, threshold, and top-k class review.",
+        }
+    ],
+    "unsupervised": [
+        {
+            "id": "unsupervised_probe",
+            "label": "Cluster / Anomaly Probe",
+            "description": "Inspect assignment, anomaly score, and embeddings when the runtime exposes them.",
+        }
+    ],
+    "recommendation": [
+        {
+            "id": "recommendation_top_n",
+            "label": "Top-N Ranking",
+            "description": "Score or recommend ranked items for a user, item, or context payload.",
+        }
+    ],
+    "geospatial": [
+        {
+            "id": "geospatial_sweep",
+            "label": "Point / Grid Sweep",
+            "description": "Vary coordinates and return map-ready point predictions when latitude and longitude are available.",
+        }
+    ],
+    "llm_slm": [
+        {
+            "id": "llm_prompt",
+            "label": "Prompt Trial",
+            "description": "Prompt, generation controls, response metadata, and readiness for assistant runtimes.",
+        }
+    ],
+    "unsupported": [
+        {
+            "id": "runtime_readiness",
+            "label": "Runtime Readiness",
+            "description": "Explain which runtime capabilities are needed before simulation can execute.",
+        }
+    ],
+}
+SIMULATION_OUTPUT_KINDS = {
+    "regression": "continuous",
+    "classification": "categorical",
+    "unsupervised": "assignment_or_score",
+    "recommendation": "ranking",
+    "geospatial": "map_ready_prediction",
+    "llm_slm": "generated_text",
+    "unsupported": "unknown",
+}
+SIMULATION_GEO_LATITUDE_NAMES = {"lat", "latitude", "y", "geo_lat", "gps_lat"}
+SIMULATION_GEO_LONGITUDE_NAMES = {"lon", "lng", "longitude", "x", "geo_lon", "gps_lon"}
 CONTROL_PARAMETER_KEYS = {
     "framework",
     "input_features",
@@ -219,6 +336,7 @@ CONTROL_PARAMETER_KEYS = {
     "objective_metric",
     "plot_results",
     "training_mode",
+    "device",
     "base_model_id",
     "base_artifact_path",
     "base_run_id",
@@ -868,76 +986,24 @@ async def _upsert_inference_record(
 
 
 def _build_bar_plot(title: str, series: list[tuple[str, Any]], *, description: Optional[str] = None) -> dict[str, Any]:
-    points = []
-    for label, value in series:
-        if value in (None, ""):
-            continue
-        try:
-            points.append({"label": str(label), "value": float(value)})
-        except (TypeError, ValueError):
-            continue
-    return {"kind": "bar", "title": title, "description": description, "series": points}
+    return build_bar_plot_spec(title, series, description=description)
 
 
 def _build_line_plot(title: str, series: list[tuple[Any, Any]], *, description: Optional[str] = None) -> dict[str, Any]:
-    points = []
-    for label, value in series:
-        try:
-            points.append({"label": str(label), "value": float(value)})
-        except (TypeError, ValueError):
-            continue
-    return {"kind": "line", "title": title, "description": description, "series": points}
+    return build_line_plot_spec(title, series, description=description)
 
 
-def _build_dataset_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
-    plots: list[dict[str, Any]] = []
-    profile = dict(summary.get("profile", {}) or {})
-    plots.append(
-        _build_bar_plot(
-            "Column Types",
-            [
-                ("Numeric", len(profile.get("numeric_columns", []) or [])),
-                ("Categorical", len(profile.get("categorical_columns", []) or [])),
-                ("Datetime", len(profile.get("datetime_columns", []) or [])),
-            ],
-            description="Automatic type balance from the extracted dataset profile.",
-        )
+def _build_dataset_plots(summary: Mapping[str, Any], dataframe: Optional[pd.DataFrame] = None) -> list[dict[str, Any]]:
+    return build_dataset_plot_specs(
+        summary,
+        dataframe=dataframe,
+        source={"domain": "dataset_analysis"},
     )
-
-    stats = dict(summary.get("stats", {}) or {})
-    missing_series = sorted(
-        (
-            (column_name, details.get("null_count", 0))
-            for column_name, details in stats.items()
-            if isinstance(details, Mapping)
-        ),
-        key=lambda item: item[1],
-        reverse=True,
-    )[:8]
-    plots.append(
-        _build_bar_plot(
-            "Missing Values by Column",
-            missing_series,
-            description="Top columns ranked by missing-value count.",
-        )
-    )
-
-    mean_series = [
-        (column_name, details.get("mean"))
-        for column_name, details in stats.items()
-        if isinstance(details, Mapping) and details.get("type") == "numeric"
-    ][:8]
-    plots.append(
-        _build_bar_plot(
-            "Numeric Mean Snapshot",
-            mean_series,
-            description="Quick mean comparison for the first numeric columns in the analysis.",
-        )
-    )
-    return [plot for plot in plots if plot["series"]]
 
 
 def _build_model_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    parameters = dict(summary.get("parameters", {}) or {})
+    training_lineage = dict(parameters.get("training_lineage", {}) or {})
     plots = [
         _build_bar_plot(
             "Model Metrics",
@@ -954,7 +1020,8 @@ def _build_model_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
             description="Binary view of the current model lifecycle state.",
         ),
     ]
-    return [plot for plot in plots if plot["series"]]
+    plots.extend(legacy_plot_specs_for_job(PLOT_ARTIFACT_DIR, training_lineage.get("latest_run_id")))
+    return [plot for plot in plots if plot.get("kind") == "legacy_image" or plot.get("series")]
 
 
 def _build_study_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -985,6 +1052,7 @@ def _build_study_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _build_inference_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    inference_params = dict(summary.get("inference_params", {}) or {})
     monitoring_summary = dict((summary.get("latest_monitoring") or {}).get("summary", {}) or {})
     plots = [
         _build_bar_plot(
@@ -1002,7 +1070,15 @@ def _build_inference_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
             description="Current monitoring pressure and inference activity volume.",
         ),
     ]
-    return [plot for plot in plots if plot["series"]]
+    plots.extend(legacy_plot_specs_for_job(PLOT_ARTIFACT_DIR, inference_params.get("last_job_id")))
+    try:
+        artifact_model_id = int(summary.get("learning_model_id")) if summary.get("learning_model_id") not in (None, "") else None
+    except (TypeError, ValueError):
+        artifact_model_id = None
+    model_artifacts = list_legacy_plot_artifacts(PLOT_ARTIFACT_DIR, model_id=artifact_model_id)
+    seen_plot_ids = {plot.get("id") for plot in plots}
+    plots.extend([plot for plot in model_artifacts if plot.get("id") not in seen_plot_ids][:8])
+    return [plot for plot in plots if plot.get("kind") == "legacy_image" or plot.get("series")]
 
 
 def _build_code_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -1020,8 +1096,30 @@ def _build_code_plots(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
-def _build_extraction_manifest(dataset: Any, dataframe: pd.DataFrame) -> dict[str, Any]:
-    preview_rows = _json_safe(dataframe.head(20).replace({np.nan: None}).to_dict(orient="records"))
+def _list_plot_artifacts(
+    *,
+    job_id: Optional[str] = None,
+    model_id: Optional[int] = None,
+    dataset_id: Optional[int] = None,
+    inference_id: Optional[int] = None,
+    kind: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    return list_legacy_plot_artifacts(
+        PLOT_ARTIFACT_DIR,
+        job_id=job_id,
+        model_id=model_id,
+        dataset_id=dataset_id,
+        inference_id=inference_id,
+        kind=kind,
+    )
+
+
+def _resolve_plot_artifact_path(plot_id: str) -> Path:
+    return resolve_legacy_plot_path(PLOT_ARTIFACT_DIR, plot_id)
+
+
+def _build_extraction_manifest(dataset: Any, dataframe: pd.DataFrame, *, preview_row_limit: int = 20) -> dict[str, Any]:
+    preview_rows = _json_safe(dataframe.head(preview_row_limit).replace({np.nan: None}).to_dict(orient="records"))
     column_details = _json_safe(build_column_explorer(dataframe))
 
     return {
@@ -1097,6 +1195,154 @@ def _build_metric_cards(metrics: Mapping[str, Any]) -> list[dict[str, Any]]:
     return cards
 
 
+def _coerce_preview_row_limit(value: Any, default: int = 20, maximum: int = 5000) -> int:
+    try:
+        row_limit = int(value)
+    except (TypeError, ValueError):
+        row_limit = default
+    return max(1, min(row_limit, maximum))
+
+
+def _feature_sql_fingerprint(sql_query: str) -> str:
+    return hashlib.sha256(sql_query.encode("utf-8")).hexdigest()[:12]
+
+
+def _is_sql_feature_payload(payload: Mapping[str, Any]) -> bool:
+    mode = str(payload.get("mode") or payload.get("transformMode") or "").strip().lower()
+    return mode == "sql" or bool(str(payload.get("sqlQuery") or payload.get("sql_query") or "").strip())
+
+
+def _feature_sql_query_from_payload(payload: Mapping[str, Any]) -> str:
+    return str(payload.get("sqlQuery") or payload.get("sql_query") or "").strip()
+
+
+def _sql_statements(sql_query: str) -> list[str]:
+    if SQLPARSE_AVAILABLE and sqlparse is not None:
+        return [statement.strip().rstrip(";").strip() for statement in sqlparse.split(sql_query) if statement.strip()]
+    return [statement.strip() for statement in sql_query.split(";") if statement.strip()]
+
+
+def _sql_visible_token_values(statement: str) -> list[str]:
+    if SQLPARSE_AVAILABLE and sqlparse is not None:
+        parsed = sqlparse.parse(statement)
+        if not parsed:
+            return []
+        values: list[str] = []
+        for token in parsed[0].flatten():
+            if token.is_whitespace:
+                continue
+            token_type = token.ttype
+            if token_type in sqlparse.tokens.Comment:
+                continue
+            if token_type in sqlparse.tokens.Literal.String:
+                continue
+            values.append(str(token.value))
+        return values
+    return re.findall(r"[A-Za-z_][A-Za-z0-9_]*", statement)
+
+
+def _first_sql_keyword(statement: str) -> str:
+    if SQLPARSE_AVAILABLE and sqlparse is not None:
+        parsed = sqlparse.parse(statement)
+        if parsed:
+            for token in parsed[0].tokens:
+                if token.is_whitespace or token.ttype in sqlparse.tokens.Comment:
+                    continue
+                return token.normalized.upper()
+    match = re.search(r"[A-Za-z_][A-Za-z0-9_]*", statement)
+    return match.group(0).upper() if match else ""
+
+
+def validate_feature_sql_query(sql_query: str) -> str:
+    if not sql_query.strip():
+        raise ValueError("SQL query is required for SQL feature mode.")
+
+    statements = _sql_statements(sql_query)
+    if len(statements) != 1:
+        raise ValueError("SQL feature mode accepts exactly one statement.")
+
+    statement = statements[0].strip().rstrip(";").strip()
+    first_keyword = _first_sql_keyword(statement)
+    if first_keyword not in {"SELECT", "WITH"}:
+        raise ValueError("SQL feature mode only accepts SELECT or WITH queries.")
+
+    visible_tokens = _sql_visible_token_values(statement)
+    normalized_words = {token.upper() for token in visible_tokens if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", token)}
+    blocked = sorted(SQL_FEATURE_BLOCKED_KEYWORDS.intersection(normalized_words))
+    if blocked:
+        raise ValueError(f"SQL feature mode does not allow: {', '.join(blocked)}.")
+
+    visible_sql = " ".join(visible_tokens).lower()
+    if not re.search(rf"\b{re.escape(SQL_FEATURE_SOURCE_RELATION)}\b", visible_sql):
+        raise ValueError(f"SQL query must reference {SQL_FEATURE_SOURCE_RELATION}.")
+
+    return statement
+
+
+def build_feature_sql_operation_metadata(sql_query: str) -> dict[str, Any]:
+    statement = validate_feature_sql_query(sql_query)
+    return {
+        "mode": "sql",
+        "source_relation": SQL_FEATURE_SOURCE_RELATION,
+        "sql_query": statement,
+        "sql_hash": _feature_sql_fingerprint(statement),
+    }
+
+
+async def execute_feature_sql_query(
+    db: AsyncSession,
+    dataframe: pd.DataFrame,
+    sql_query: str,
+    *,
+    preview_rows: Any = None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    statement = validate_feature_sql_query(sql_query)
+    bind = getattr(db, "bind", None)
+    if bind is None:
+        raise RuntimeError("PostgreSQL connection is required for SQL feature mode.")
+
+    outer_query = f"SELECT * FROM ({statement}) AS {SQL_FEATURE_RESULT_ALIAS}"
+    row_limit = _coerce_preview_row_limit(preview_rows) if preview_rows not in (None, "", 0, "0") else None
+    if row_limit is not None:
+        outer_query = f"{outer_query}\nLIMIT {row_limit}"
+
+    def _run_sql(sync_conn: Any) -> pd.DataFrame:
+        try:
+            sync_conn.exec_driver_sql("SET LOCAL search_path TO pg_temp")
+            dataframe.to_sql(
+                SQL_FEATURE_SOURCE_RELATION,
+                con=sync_conn,
+                schema="pg_temp",
+                if_exists="replace",
+                index=False,
+            )
+            return pd.read_sql_query(text(outer_query), sync_conn)
+        finally:
+            try:
+                sync_conn.exec_driver_sql(f"DROP TABLE IF EXISTS pg_temp.{SQL_FEATURE_SOURCE_RELATION}")
+            except Exception:
+                LOGGER.debug("Unable to drop temporary SQL feature source table.", exc_info=True)
+
+    async with bind.begin() as conn:
+        result_frame = await conn.run_sync(_run_sql)
+
+    summary = {
+        "shape_before": [int(dataframe.shape[0]), int(dataframe.shape[1])],
+        "shape_after": [int(result_frame.shape[0]), int(result_frame.shape[1])],
+        "steps": [
+            {
+                "operation": "sql_query",
+                "source_relation": SQL_FEATURE_SOURCE_RELATION,
+                "sql_hash": _feature_sql_fingerprint(statement),
+                "preview_rows": row_limit,
+            }
+        ],
+        "preview_rows": _json_safe(result_frame.head(row_limit or 20).replace({np.nan: None}).to_dict(orient="records")),
+        "column_explorer": build_column_explorer(result_frame),
+    }
+    return result_frame, summary
+
+
 def _coerce_feature_operations_from_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     operations = dict(payload.get("operations") or {})
     if operations:
@@ -1155,6 +1401,18 @@ def _coerce_feature_operations_from_payload(payload: Mapping[str, Any]) -> dict[
                 }
         elif transform_type == "limit":
             transformed["limit_rows"] = int(transform.get("value") or 0)
+        elif transform_type == "math":
+            source = str(transform.get("column") or "").strip()
+            operator = str(transform.get("operator") or "").strip().lower()
+            if source and operator:
+                transformed.setdefault("math_operations", []).append(
+                    {
+                        "column": source,
+                        "operator": operator,
+                        "value": transform.get("value"),
+                        "target": str(transform.get("target") or source).strip() or source,
+                    }
+                )
 
     return transformed
 
@@ -1200,8 +1458,9 @@ def _build_feature_workspace_payload(
     *,
     preview: Optional[Mapping[str, Any]] = None,
     operations: Optional[Mapping[str, Any]] = None,
+    preview_row_limit: int = 20,
 ) -> dict[str, Any]:
-    manifest = _build_extraction_manifest(dataset, dataframe)
+    manifest = _build_extraction_manifest(dataset, dataframe, preview_row_limit=preview_row_limit)
     analysis = dict(manifest.get("analysis", {}) or {})
     column_explorer = list(manifest.get("columns", []) or [])
     profile = dict(analysis.get("profile", {}) or {})
@@ -1223,7 +1482,7 @@ def _build_feature_workspace_payload(
         "preview_rows": list(manifest.get("preview_rows", []) or []),
         "column_explorer": column_explorer,
         "metric_cards": metric_cards,
-        "plots": _build_dataset_plots(analysis),
+        "plots": _build_dataset_plots(analysis, dataframe=dataframe),
         "summary_cards": metric_cards,
         "transform_suggestions": _build_transform_suggestions(column_explorer),
         "operations": _json_safe(operations or {}),
@@ -1296,7 +1555,7 @@ async def _build_registry_analysis(db: AsyncSession, registry_type: str, item_id
             dataframe,
             str(_resolve_fs_path(getattr(record, "path", None), default_parent=REPO_ROOT) or getattr(record, "path", "")),
         )
-        plots = _build_dataset_plots(summary)
+        plots = _build_dataset_plots(summary, dataframe=dataframe)
     elif normalized_type in {"learningmodel", "learning"}:
         summary = _augment_model_analysis(record)
         plots = _build_model_plots(summary)
@@ -1358,6 +1617,1439 @@ def _prepare_runtime_execution(model_record: Any, dataset_record: Any) -> tuple[
     )
     runtime_result.parameters = {**parameters, "artifact_manifest": runtime_payload.get("manifest", {})}
     return prepared, runtime_result
+
+
+def _simulation_mapping(value: Any) -> dict[str, Any]:
+    if isinstance(value, Mapping):
+        return dict(value)
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            return {}
+        return dict(parsed) if isinstance(parsed, Mapping) else {}
+    return {}
+
+
+def _simulation_value(value: Any) -> Any:
+    try:
+        numeric_value = float(value)
+        if math.isfinite(numeric_value):
+            return round(numeric_value, 6)
+    except (TypeError, ValueError):
+        pass
+    return _json_safe(value)
+
+
+def _simulation_row_payload(row: pd.Series | Mapping[str, Any]) -> dict[str, Any]:
+    items = row.to_dict() if isinstance(row, pd.Series) else dict(row)
+    return {str(key): _simulation_value(value) for key, value in items.items()}
+
+
+def _simulation_feature_columns(prepared: PreparedDataset) -> list[str]:
+    return [str(column) for column in prepared.feature_frame.columns]
+
+
+def _validate_simulation_features(
+    values: Mapping[str, Any] | list[str] | tuple[str, ...],
+    feature_columns: list[str],
+    *,
+    context: str,
+) -> None:
+    candidate_names = values.keys() if isinstance(values, Mapping) else values
+    available = {str(column) for column in feature_columns}
+    unknown = sorted({str(name) for name in candidate_names if str(name) not in available})
+    if unknown:
+        preview = ", ".join(feature_columns[:12])
+        suffix = f" Available features include: {preview}." if preview else ""
+        raise ValueError(f"Unknown simulation feature(s) in {context}: {', '.join(unknown)}.{suffix}")
+
+
+def _feature_is_numeric(series: pd.Series, value: Any) -> bool:
+    if pd.api.types.is_numeric_dtype(series):
+        return True
+    try:
+        float(value)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+def _simulation_feature_stats(feature_frame: pd.DataFrame, baseline: pd.Series) -> list[dict[str, Any]]:
+    stats: list[dict[str, Any]] = []
+    for column in feature_frame.columns:
+        series = feature_frame[column]
+        baseline_value = baseline.get(column)
+        item: dict[str, Any] = {
+            "name": str(column),
+            "dtype": str(series.dtype),
+            "family": "numeric" if _feature_is_numeric(series, baseline_value) else "categorical",
+            "baseline": _simulation_value(baseline_value),
+            "sample_values": [_simulation_value(value) for value in series.head(5).tolist()],
+        }
+        if item["family"] == "numeric":
+            numeric_series = pd.to_numeric(series, errors="coerce")
+            item.update(
+                {
+                    "min": _simulation_value(numeric_series.min()) if numeric_series.notna().any() else None,
+                    "max": _simulation_value(numeric_series.max()) if numeric_series.notna().any() else None,
+                    "mean": _simulation_value(numeric_series.mean()) if numeric_series.notna().any() else None,
+                    "std": _simulation_value(numeric_series.std()) if numeric_series.notna().any() else None,
+                }
+            )
+        else:
+            mode = series.mode(dropna=True)
+            item["mode"] = None if mode.empty else _simulation_value(mode.iloc[0])
+            try:
+                item["unique_values"] = int(series.nunique(dropna=True))
+            except Exception:
+                item["unique_values"] = None
+        stats.append(item)
+    return stats
+
+
+def _baseline_from_source(feature_frame: pd.DataFrame, baseline_source: str) -> pd.Series:
+    if feature_frame.empty:
+        raise ValueError("The selected dataset does not contain rows for simulation.")
+
+    source = str(baseline_source or "last").strip().lower()
+    if source in {"first", "head"}:
+        return feature_frame.head(1).iloc[0].copy()
+    if source in {"mean", "average", "median"}:
+        values: dict[str, Any] = {}
+        for column in feature_frame.columns:
+            series = feature_frame[column]
+            if pd.api.types.is_numeric_dtype(series):
+                numeric = pd.to_numeric(series, errors="coerce")
+                if numeric.notna().any():
+                    values[column] = float(numeric.median() if source == "median" else numeric.mean())
+                    continue
+            mode = series.mode(dropna=True)
+            values[column] = feature_frame.tail(1).iloc[0][column] if mode.empty else mode.iloc[0]
+        return pd.Series(values, index=feature_frame.columns)
+    return feature_frame.tail(1).iloc[0].copy()
+
+
+def _build_simulation_baseline(
+    prepared: PreparedDataset,
+    *,
+    baseline_source: str = "last",
+    baseline_row: Optional[Mapping[str, Any]] = None,
+) -> pd.Series:
+    feature_columns = _simulation_feature_columns(prepared)
+    baseline = _baseline_from_source(prepared.feature_frame, baseline_source)
+    baseline_overrides = _simulation_mapping(baseline_row)
+    if baseline_overrides:
+        _validate_simulation_features(baseline_overrides, feature_columns, context="baselineRow")
+        for feature_name, value in baseline_overrides.items():
+            baseline[str(feature_name)] = value
+    return baseline
+
+
+def _coerce_simulation_int(value: Any, default: int, *, minimum: int = 1, maximum: int = SIMULATION_MAX_STEPS) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(minimum, min(parsed, maximum))
+
+
+def _coerce_simulation_float(value: Any, default: float) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        parsed = default
+    if not math.isfinite(parsed):
+        return default
+    return parsed
+
+
+def _scenario_feature_overrides(raw_scenario: Mapping[str, Any], feature_columns: list[str]) -> dict[str, Any]:
+    overrides = _simulation_mapping(raw_scenario.get("overrides"))
+    if not overrides:
+        overrides = _simulation_mapping(raw_scenario.get("scenario"))
+    if not overrides:
+        controls = {
+            "name",
+            "label",
+            "steps",
+            "amplitude",
+            "trend",
+            "stepPlan",
+            "baselineRow",
+            "baselineSource",
+            "sensitivity",
+        }
+        overrides = {
+            str(key): value
+            for key, value in raw_scenario.items()
+            if str(key) in set(feature_columns) and str(key) not in controls
+        }
+    return overrides
+
+
+def _normalize_simulation_scenarios(payload: Mapping[str, Any], feature_columns: list[str]) -> list[dict[str, Any]]:
+    raw_scenarios = payload.get("scenarios")
+    scenario_items: list[Mapping[str, Any]] = []
+    if isinstance(raw_scenarios, list):
+        for item in raw_scenarios[:SIMULATION_MAX_SCENARIOS]:
+            if isinstance(item, Mapping):
+                scenario_items.append(item)
+    elif isinstance(raw_scenarios, Mapping):
+        for name, overrides in list(raw_scenarios.items())[:SIMULATION_MAX_SCENARIOS]:
+            scenario_items.append({"name": name, "overrides": overrides})
+
+    if not scenario_items:
+        scenario_items = [
+            {
+                "name": payload.get("scenarioName") or payload.get("name") or "Scenario",
+                "overrides": payload.get("scenario", {}),
+                "steps": payload.get("steps"),
+                "amplitude": payload.get("amplitude"),
+                "trend": payload.get("trend"),
+                "stepPlan": payload.get("stepPlan"),
+            }
+        ]
+
+    max_steps_per_scenario = max(1, min(SIMULATION_MAX_STEPS, SIMULATION_MAX_ROWS // max(len(scenario_items), 1)))
+    normalized: list[dict[str, Any]] = []
+    for index, raw in enumerate(scenario_items, start=1):
+        overrides = _scenario_feature_overrides(raw, feature_columns)
+        _validate_simulation_features(overrides, feature_columns, context=f"scenario {index}")
+        step_plan = _simulation_mapping(payload.get("stepPlan"))
+        step_plan.update(_simulation_mapping(raw.get("stepPlan")))
+        delta_config = _simulation_mapping(step_plan.get("deltas"))
+        if delta_config:
+            _validate_simulation_features(delta_config, feature_columns, context=f"scenario {index} stepPlan.deltas")
+        planned_features = _coerce_feature_list(step_plan.get("features"))
+        if planned_features:
+            _validate_simulation_features(planned_features, feature_columns, context=f"scenario {index} stepPlan.features")
+
+        normalized.append(
+            {
+                "name": str(raw.get("name") or raw.get("label") or f"Scenario {index}"),
+                "overrides": overrides,
+                "steps": _coerce_simulation_int(
+                    raw.get("steps", payload.get("steps", SIMULATION_DEFAULT_STEPS)),
+                    SIMULATION_DEFAULT_STEPS,
+                    maximum=max_steps_per_scenario,
+                ),
+                "amplitude": _coerce_simulation_float(raw.get("amplitude", payload.get("amplitude", 0.05)), 0.05),
+                "trend": str(raw.get("trend", payload.get("trend", "up")) or "up").strip().lower(),
+                "step_plan": step_plan,
+            }
+        )
+    return normalized
+
+
+def _apply_direct_overrides(row: pd.Series, overrides: Mapping[str, Any]) -> pd.Series:
+    updated = row.copy()
+    for feature_name, value in overrides.items():
+        updated[str(feature_name)] = value
+    return updated
+
+
+def _direction_value(trend: str) -> float:
+    return -1.0 if str(trend or "").lower() in {"down", "decrease", "negative", "lower"} else 1.0
+
+
+def _delta_config_for_feature(
+    feature_name: str,
+    *,
+    default_amplitude: float,
+    default_trend: str,
+    step_plan: Mapping[str, Any],
+) -> dict[str, Any] | None:
+    delta_map = _simulation_mapping(step_plan.get("deltas"))
+    if feature_name in delta_map:
+        raw_delta = delta_map[feature_name]
+        if isinstance(raw_delta, Mapping):
+            return {
+                "value": _coerce_simulation_float(raw_delta.get("value", default_amplitude), default_amplitude),
+                "mode": str(raw_delta.get("mode", "relative") or "relative").lower(),
+                "trend": str(raw_delta.get("trend", default_trend) or default_trend).lower(),
+            }
+        return {
+            "value": _coerce_simulation_float(raw_delta, default_amplitude),
+            "mode": "relative",
+            "trend": default_trend,
+        }
+
+    planned_features = _coerce_feature_list(step_plan.get("features"))
+    if planned_features and feature_name not in planned_features:
+        return None
+    return {"value": default_amplitude, "mode": "relative", "trend": default_trend}
+
+
+def _apply_step_plan(
+    scenario_base: pd.Series,
+    *,
+    step_index: int,
+    steps: int,
+    amplitude: float,
+    trend: str,
+    step_plan: Mapping[str, Any],
+) -> pd.Series:
+    fraction = step_index / max(steps, 1)
+    row = scenario_base.copy()
+    for feature_name in row.index:
+        config = _delta_config_for_feature(
+            str(feature_name),
+            default_amplitude=amplitude,
+            default_trend=trend,
+            step_plan=step_plan,
+        )
+        if config is None:
+            continue
+        try:
+            numeric_value = float(row[feature_name])
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(numeric_value):
+            continue
+
+        value = _coerce_simulation_float(config.get("value"), amplitude)
+        direction = _direction_value(str(config.get("trend") or trend))
+        mode = str(config.get("mode") or "relative").lower()
+        if mode in {"absolute", "add", "linear"}:
+            row[feature_name] = numeric_value + direction * value * fraction
+        elif mode in {"target", "set"}:
+            row[feature_name] = numeric_value + (value - numeric_value) * fraction
+        else:
+            row[feature_name] = numeric_value * (1.0 + direction * value * fraction)
+    return row
+
+
+def _render_simulation_prediction(prediction: Any, prepared: PreparedDataset) -> Any:
+    if prepared.task_type == "classification":
+        reverse_mapping = {value: key for key, value in prepared.label_mapping.items()}
+        try:
+            return reverse_mapping.get(int(prediction), int(prediction))
+        except (TypeError, ValueError):
+            return _simulation_value(prediction)
+    return _simulation_value(prediction)
+
+
+def _prediction_delta(first_prediction: Any, final_prediction: Any) -> Any:
+    try:
+        return round(float(final_prediction) - float(first_prediction), 6)
+    except (TypeError, ValueError):
+        return None
+
+
+def _predict_probabilities_with_result(
+    result: TrainingResult,
+    features: pd.DataFrame,
+    prepared: PreparedDataset,
+) -> list[dict[str, Any]] | None:
+    if getattr(result, "framework", None) != "sklearn" or not hasattr(getattr(result, "model", None), "predict_proba"):
+        return None
+    try:
+        probabilities = np.asarray(result.model.predict_proba(features))
+    except Exception:
+        return None
+    classes = list(getattr(result.model, "classes_", range(probabilities.shape[-1] if probabilities.ndim > 1 else 0)))
+    reverse_mapping = {value: key for key, value in prepared.label_mapping.items()}
+    rendered_rows: list[dict[str, Any]] = []
+    for row in probabilities:
+        rendered: dict[str, Any] = {}
+        for index, probability in enumerate(np.asarray(row).reshape(-1)):
+            raw_class = classes[index] if index < len(classes) else index
+            try:
+                label = reverse_mapping.get(int(raw_class), raw_class)
+            except (TypeError, ValueError):
+                label = raw_class
+            rendered[str(label)] = _simulation_value(probability)
+        rendered_rows.append(rendered)
+    return rendered_rows
+
+
+def _changed_features(baseline: pd.Series, scenario_base: pd.Series) -> list[dict[str, Any]]:
+    changes: list[dict[str, Any]] = []
+    for feature_name in scenario_base.index:
+        baseline_value = baseline.get(feature_name)
+        scenario_value = scenario_base.get(feature_name)
+        if _simulation_value(baseline_value) == _simulation_value(scenario_value):
+            continue
+        changes.append(
+            {
+                "feature": str(feature_name),
+                "baseline": _simulation_value(baseline_value),
+                "scenario": _simulation_value(scenario_value),
+                "delta": _prediction_delta(baseline_value, scenario_value),
+            }
+        )
+    return changes
+
+
+def _build_sensitivity_summary(
+    payload: Mapping[str, Any],
+    *,
+    baseline: pd.Series,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    output_feature: str,
+) -> dict[str, Any]:
+    settings = _simulation_mapping(payload.get("sensitivity"))
+    if not settings or settings.get("enabled") is False:
+        return {"enabled": False, "features": [], "plots": []}
+
+    feature_columns = _simulation_feature_columns(prepared)
+    requested_features = _coerce_feature_list(settings.get("features"))
+    if requested_features:
+        _validate_simulation_features(requested_features, feature_columns, context="sensitivity.features")
+    else:
+        requested_features = [
+            column
+            for column in feature_columns
+            if _feature_is_numeric(prepared.feature_frame[column], baseline.get(column))
+        ]
+    requested_features = requested_features[:SIMULATION_MAX_SENSITIVITY_FEATURES]
+    amplitude = abs(_coerce_simulation_float(settings.get("amplitude", payload.get("amplitude", 0.05)), 0.05))
+    rows: list[pd.Series] = []
+    row_labels: list[tuple[str, str]] = []
+    for feature_name in requested_features:
+        try:
+            base_value = float(baseline[feature_name])
+        except (TypeError, ValueError):
+            continue
+        lower = baseline.copy()
+        upper = baseline.copy()
+        lower[feature_name] = base_value * (1.0 - amplitude)
+        upper[feature_name] = base_value * (1.0 + amplitude)
+        rows.extend([lower, upper])
+        row_labels.extend([(feature_name, "lower"), (feature_name, "upper")])
+
+    if not rows:
+        return {"enabled": True, "features": [], "plots": []}
+
+    frame = pd.DataFrame(rows, columns=feature_columns)
+    predictions = np.asarray(_predict_with_result(runtime_result, frame, prepared.task_type)).reshape(-1)
+    rendered_predictions = [_render_simulation_prediction(prediction, prepared) for prediction in predictions]
+    grouped: dict[str, dict[str, Any]] = {}
+    for (feature_name, side), prediction in zip(row_labels, rendered_predictions):
+        grouped.setdefault(feature_name, {"feature": feature_name, "output_feature": output_feature})[side] = prediction
+
+    feature_rows: list[dict[str, Any]] = []
+    for feature_name in requested_features:
+        item = grouped.get(feature_name)
+        if not item:
+            continue
+        item["impact"] = _prediction_delta(item.get("lower"), item.get("upper"))
+        try:
+            item["absolute_impact"] = abs(float(item["impact"]))
+        except (TypeError, ValueError, KeyError):
+            item["absolute_impact"] = None
+        feature_rows.append(item)
+    feature_rows.sort(key=lambda item: float(item.get("absolute_impact") or 0.0), reverse=True)
+    impact_series = [
+        (item["feature"], item["absolute_impact"])
+        for item in feature_rows
+        if isinstance(item.get("absolute_impact"), (int, float))
+    ]
+    return {
+        "enabled": True,
+        "amplitude": amplitude,
+        "features": feature_rows,
+        "plots": [
+            _build_bar_plot(
+                "Sensitivity Impact",
+                impact_series,
+                description="Absolute prediction movement when one feature is nudged around the baseline.",
+            )
+        ]
+        if impact_series
+        else [],
+    }
+
+
+def _normalize_simulation_family(value: Any) -> str | None:
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "supervised_regression": "regression",
+        "tabular_regression": "regression",
+        "regressor": "regression",
+        "supervised_classification": "classification",
+        "tabular_classification": "classification",
+        "classifier": "classification",
+        "clustering": "unsupervised",
+        "cluster": "unsupervised",
+        "anomaly": "unsupervised",
+        "anomaly_detection": "unsupervised",
+        "recommender": "recommendation",
+        "recommendations": "recommendation",
+        "ranking": "recommendation",
+        "geo": "geospatial",
+        "spatial": "geospatial",
+        "llm": "llm_slm",
+        "slm": "llm_slm",
+        "assistant": "llm_slm",
+        "assistant_model": "llm_slm",
+        "text_generation": "llm_slm",
+    }
+    normalized = aliases.get(normalized, normalized)
+    return normalized if normalized in SIMULATION_FAMILY_LABELS else None
+
+
+def _simulation_profile_from_record(inference_record: Any | None, model_record: Any | None) -> dict[str, Any]:
+    candidates: list[Any] = []
+    if inference_record is not None:
+        params = dict(getattr(inference_record, "inference_params", {}) or {})
+        candidates.extend([params.get("simulation_profile"), params.get("simulationProfile")])
+    if model_record is not None:
+        params = dict(getattr(model_record, "parameters", {}) or {})
+        candidates.extend([params.get("simulation_profile"), params.get("simulationProfile")])
+    for candidate in candidates:
+        profile = _simulation_mapping(candidate)
+        if profile:
+            return profile
+    return {}
+
+
+def _simulation_feature_names_from_prepared(prepared: PreparedDataset | None, model_record: Any | None = None) -> list[str]:
+    if prepared is not None:
+        return _simulation_feature_columns(prepared)
+    return _coerce_feature_list(getattr(model_record, "input_features", None))
+
+
+def _simulation_geo_features(feature_columns: list[str]) -> dict[str, str | None]:
+    normalized = {str(column).strip().lower(): str(column) for column in feature_columns}
+    latitude = None
+    longitude = None
+    for name in SIMULATION_GEO_LATITUDE_NAMES:
+        if name in normalized:
+            latitude = normalized[name]
+            break
+    for name in SIMULATION_GEO_LONGITUDE_NAMES:
+        if name in normalized:
+            longitude = normalized[name]
+            break
+    return {"latitude": latitude, "longitude": longitude}
+
+
+def _simulation_capability_flags(
+    runtime_result: TrainingResult | Any | None,
+    *,
+    feature_columns: Optional[list[str]] = None,
+    runtime_error: BaseException | None = None,
+) -> dict[str, Any]:
+    model = getattr(runtime_result, "model", None) if runtime_result is not None else None
+    parameters = dict(getattr(runtime_result, "parameters", {}) or {}) if runtime_result is not None else {}
+    manifest = parameters.get("artifact_manifest", {}) if isinstance(parameters.get("artifact_manifest"), Mapping) else {}
+    manifest_capabilities = dict((manifest or {}).get("runtime_capabilities", {}) or {})
+    framework = str(getattr(runtime_result, "framework", "") or parameters.get("framework", "") or "").strip().lower()
+    method_names = [
+        "predict",
+        "predict_proba",
+        "transform",
+        "decision_function",
+        "score_samples",
+        "recommend",
+        "predict_for_user",
+        "score_items",
+        "generate",
+        "generate_text",
+        "chat",
+    ]
+    methods = {name: callable(getattr(model, name, None)) for name in method_names}
+    geo_features = _simulation_geo_features(feature_columns or [])
+    flags = {
+        "runtime_ready": runtime_error is None,
+        "runtime_error": str(runtime_error) if runtime_error else None,
+        "framework": framework or None,
+        "predict": bool(manifest_capabilities.get("predict") or methods["predict"] or framework in {"sklearn", "pytorch"}),
+        "predict_proba": bool(manifest_capabilities.get("predict_proba") or methods["predict_proba"]),
+        "transform": bool(manifest_capabilities.get("transform") or methods["transform"]),
+        "decision_function": bool(manifest_capabilities.get("decision_function") or methods["decision_function"]),
+        "score_samples": bool(manifest_capabilities.get("score_samples") or methods["score_samples"]),
+        "recommend": bool(manifest_capabilities.get("recommend") or methods["recommend"]),
+        "score_items": bool(manifest_capabilities.get("score_items") or methods["score_items"] or methods["predict_for_user"]),
+        "llm_generation": bool(
+            manifest_capabilities.get("chat")
+            or manifest_capabilities.get("generate")
+            or manifest_capabilities.get("requires_assistant_server")
+            or methods["generate"]
+            or methods["generate_text"]
+            or methods["chat"]
+        ),
+        "geospatial_features": bool(geo_features.get("latitude") and geo_features.get("longitude")),
+        "latitude_feature": geo_features.get("latitude"),
+        "longitude_feature": geo_features.get("longitude"),
+        "manifest": manifest_capabilities,
+    }
+    return flags
+
+
+def _simulation_search_blob(
+    *,
+    model_record: Any | None,
+    prepared: PreparedDataset | None,
+    output_features: list[str],
+    feature_columns: list[str],
+) -> str:
+    parameters = dict(getattr(model_record, "parameters", {}) or {}) if model_record is not None else {}
+    manifest = parameters.get("artifact_manifest", {}) if isinstance(parameters.get("artifact_manifest"), Mapping) else {}
+    values = [
+        getattr(model_record, "model_type", None),
+        getattr(model_record, "object_type", None),
+        getattr(model_record, "name", None),
+        parameters.get("task_type"),
+        parameters.get("model_family"),
+        parameters.get("simulation_family"),
+        parameters.get("algorithm"),
+        parameters.get("estimator_class"),
+        parameters.get("framework"),
+        manifest.get("artifact_format") if isinstance(manifest, Mapping) else None,
+        manifest.get("loader") if isinstance(manifest, Mapping) else None,
+        getattr(prepared, "task_type", None),
+        *output_features,
+        *feature_columns,
+    ]
+    return " ".join(str(value).lower() for value in values if value not in (None, ""))
+
+
+def _detect_simulation_family(
+    *,
+    model_record: Any | None,
+    inference_record: Any | None,
+    prepared: PreparedDataset | None,
+    runtime_result: TrainingResult | Any | None,
+    payload: Optional[Mapping[str, Any]] = None,
+) -> str:
+    saved_profile = _simulation_profile_from_record(inference_record, model_record)
+    payload_profile = _simulation_mapping((payload or {}).get("simulationProfile") or (payload or {}).get("simulation_profile"))
+    explicit = (
+        _normalize_simulation_family((payload or {}).get("family"))
+        or _normalize_simulation_family(payload_profile.get("family"))
+        or _normalize_simulation_family(saved_profile.get("family"))
+    )
+    if explicit:
+        return explicit
+
+    output_features = (
+        _coerce_feature_list(getattr(inference_record, "output_features", None))
+        or _coerce_feature_list(getattr(model_record, "output_features", None))
+        or ([prepared.output_feature] if prepared is not None and getattr(prepared, "output_feature", None) else [])
+    )
+    feature_columns = _simulation_feature_names_from_prepared(prepared, model_record)
+    blob = _simulation_search_blob(
+        model_record=model_record,
+        prepared=prepared,
+        output_features=output_features,
+        feature_columns=feature_columns,
+    )
+    if any(token in blob for token in ("assistant", "llm", "slm", "language_model", "text_generation", "chat")):
+        return "llm_slm"
+    if any(token in blob for token in ("recommend", "recommender", "ranking", "collaborative", "lightfm", "implicit")):
+        return "recommendation"
+    if any(token in blob for token in ("unsupervised", "cluster", "kmeans", "dbscan", "anomaly", "isolationforest", "pca", "embedding")):
+        return "unsupervised"
+    if any(token in blob for token in ("geospatial", "geo_", "spatial", "latitude", "longitude")) and _simulation_capability_flags(
+        runtime_result,
+        feature_columns=feature_columns,
+    ).get("geospatial_features"):
+        return "geospatial"
+    if prepared is not None and getattr(prepared, "task_type", None) == "classification":
+        return "classification"
+    if prepared is not None and getattr(prepared, "task_type", None) == "regression":
+        return "regression"
+    return "unsupported"
+
+
+def _simulation_disabled_reasons(family: str, capabilities: Mapping[str, Any]) -> list[str]:
+    reasons: list[str] = []
+    if not capabilities.get("runtime_ready", True):
+        reasons.append(str(capabilities.get("runtime_error") or "Runtime is not ready."))
+    if family in {"regression", "classification"} and not capabilities.get("predict"):
+        reasons.append("This mode requires a runtime predict path.")
+    elif family == "unsupervised" and not any(
+        capabilities.get(name) for name in ("predict", "transform", "decision_function", "score_samples")
+    ):
+        reasons.append("This mode requires predict, transform, decision_function, or score_samples.")
+    elif family == "recommendation" and not any(capabilities.get(name) for name in ("recommend", "score_items")):
+        reasons.append("This mode requires a recommend or item-scoring runtime method.")
+    elif family == "geospatial":
+        if not capabilities.get("geospatial_features"):
+            reasons.append("Latitude and longitude feature columns are required.")
+        if not capabilities.get("predict"):
+            reasons.append("Geospatial sweeps require a runtime predict path.")
+    elif family == "llm_slm" and not capabilities.get("llm_generation"):
+        reasons.append("Prompt simulation requires an assistant/LLM generation runtime.")
+    elif family == "unsupported":
+        reasons.append("No simulation adapter matched this model type or output.")
+    return reasons
+
+
+def _simulation_controls_schema(
+    family: str,
+    *,
+    feature_stats: Optional[list[dict[str, Any]]] = None,
+    capabilities: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    feature_stats = feature_stats or []
+    capabilities = capabilities or {}
+    numeric_features = [item["name"] for item in feature_stats if item.get("family") == "numeric"]
+    categorical_features = [item["name"] for item in feature_stats if item.get("family") != "numeric"]
+    family_fields: dict[str, list[dict[str, Any]]] = {
+        "regression": [
+            {"name": "focusFeature", "label": "Focus Feature", "type": "select", "options": numeric_features[:12]},
+            {"name": "explainDeltas", "label": "Explain Deltas", "type": "checkbox", "default": True},
+        ],
+        "classification": [
+            {"name": "threshold", "label": "Decision Threshold", "type": "number", "default": 0.5, "min": 0, "max": 1, "step": 0.01},
+            {"name": "topK", "label": "Top Classes", "type": "number", "default": 3, "min": 1, "max": 10, "step": 1},
+        ],
+        "unsupervised": [
+            {"name": "scoreMethod", "label": "Score Method", "type": "select", "options": ["auto", "predict", "decision_function", "score_samples", "transform"]},
+            {"name": "includeTransform", "label": "Include Embedding", "type": "checkbox", "default": True},
+        ],
+        "recommendation": [
+            {"name": "userId", "label": "User ID", "type": "text", "default": ""},
+            {"name": "itemId", "label": "Item ID", "type": "text", "default": ""},
+            {"name": "topN", "label": "Top N", "type": "number", "default": 10, "min": 1, "max": 50, "step": 1},
+            {"name": "excludeSeen", "label": "Exclude Seen", "type": "checkbox", "default": True},
+        ],
+        "geospatial": [
+            {"name": "latitudeFeature", "label": "Latitude Feature", "type": "select", "options": [capabilities.get("latitude_feature")] + numeric_features},
+            {"name": "longitudeFeature", "label": "Longitude Feature", "type": "select", "options": [capabilities.get("longitude_feature")] + numeric_features},
+            {"name": "radius", "label": "Radius", "type": "number", "default": 0.01, "min": 0, "step": 0.001},
+            {"name": "gridSize", "label": "Grid Size", "type": "number", "default": 5, "min": 1, "max": 25, "step": 1},
+        ],
+        "llm_slm": [
+            {"name": "system", "label": "System Context", "type": "textarea", "default": ""},
+            {"name": "prompt", "label": "Prompt", "type": "textarea", "default": ""},
+            {"name": "temperature", "label": "Temperature", "type": "number", "default": 0.2, "min": 0, "max": 2, "step": 0.1},
+            {"name": "maxTokens", "label": "Max Tokens", "type": "number", "default": 512, "min": 1, "max": 8192, "step": 1},
+        ],
+        "unsupported": [
+            {"name": "notes", "label": "Readiness Notes", "type": "textarea", "default": ""},
+        ],
+    }
+    fields = family_fields.get(family, family_fields["unsupported"])
+    for field in fields:
+        if isinstance(field.get("options"), list):
+            deduped = []
+            for option in field["options"]:
+                if option in (None, "") or option in deduped:
+                    continue
+                deduped.append(option)
+            field["options"] = deduped
+    return {
+        "version": 1,
+        "family": family,
+        "sections": [
+            {"id": "baseline", "label": "Baseline", "controls": ["baselineSource", "featureOverrides"]},
+            {"id": "scenario", "label": "Scenario", "controls": ["scenarioName", "steps", "amplitude", "trend"]},
+            {"id": "family", "label": SIMULATION_FAMILY_LABELS.get(family, "Model"), "fields": fields},
+        ],
+        "feature_groups": {
+            "numeric": numeric_features,
+            "categorical": categorical_features,
+        },
+    }
+
+
+def _build_simulation_profile(
+    *,
+    model_record: Any | None,
+    inference_record: Any | None,
+    prepared: PreparedDataset | None,
+    runtime_result: TrainingResult | Any | None,
+    payload: Optional[Mapping[str, Any]] = None,
+    feature_stats: Optional[list[dict[str, Any]]] = None,
+    runtime_error: BaseException | None = None,
+) -> dict[str, Any]:
+    feature_columns = _simulation_feature_names_from_prepared(prepared, model_record)
+    capabilities = _simulation_capability_flags(runtime_result, feature_columns=feature_columns, runtime_error=runtime_error)
+    family = _detect_simulation_family(
+        model_record=model_record,
+        inference_record=inference_record,
+        prepared=prepared,
+        runtime_result=runtime_result,
+        payload=payload,
+    )
+    saved_profile = _simulation_profile_from_record(inference_record, model_record)
+    modes = [dict(item) for item in SIMULATION_FAMILY_MODES.get(family, SIMULATION_FAMILY_MODES["unsupported"])]
+    disabled_reasons = _simulation_disabled_reasons(family, capabilities)
+    for mode in modes:
+        mode["enabled"] = not disabled_reasons
+    requested_mode = str((payload or {}).get("mode") or "").strip()
+    saved_mode = str(saved_profile.get("default_mode") or saved_profile.get("mode") or "").strip()
+    default_mode = requested_mode or saved_mode or (modes[0]["id"] if modes else "runtime_readiness")
+    if default_mode not in {mode["id"] for mode in modes}:
+        default_mode = modes[0]["id"] if modes else "runtime_readiness"
+    return {
+        "family": family,
+        "label": SIMULATION_FAMILY_LABELS.get(family, "Unsupported"),
+        "output_kind": SIMULATION_OUTPUT_KINDS.get(family, "unknown"),
+        "supported_modes": modes,
+        "default_mode": default_mode,
+        "capabilities": capabilities,
+        "disabled_reasons": disabled_reasons,
+        "controls_schema": _simulation_controls_schema(family, feature_stats=feature_stats, capabilities=capabilities),
+        "result_schema": {
+            "primary_result": True,
+            "series": family in {"regression", "classification", "geospatial"},
+            "probabilities": family == "classification",
+            "ranking": family == "recommendation",
+            "geojson": family == "geospatial",
+            "generated_text": family == "llm_slm",
+        },
+    }
+
+
+def _build_unavailable_simulation_context(
+    *,
+    model_record: Any | None,
+    dataset_record: Any | None,
+    inference_record: Any | None,
+    runtime_error: BaseException,
+) -> dict[str, Any]:
+    inference_summary = _serialize_inference_summary(inference_record) if inference_record is not None else {}
+    model_summary = _serialize_model_summary(model_record) if model_record is not None else {}
+    dataset_summary = _serialize_dataset_summary(dataset_record) if dataset_record is not None else {}
+    profile = _build_simulation_profile(
+        model_record=model_record,
+        inference_record=inference_record,
+        prepared=None,
+        runtime_result=None,
+        runtime_error=runtime_error,
+    )
+    return {
+        "model": model_summary,
+        "dataset": dataset_summary,
+        "inference": inference_summary,
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": None,
+        "input_features": _coerce_feature_list(getattr(model_record, "input_features", None)),
+        "runtime_features": _coerce_feature_list(getattr(model_record, "input_features", None)),
+        "output_features": _coerce_feature_list(getattr(inference_record, "output_features", None))
+        or _coerce_feature_list(getattr(model_record, "output_features", None)),
+        "baseline_source": "last",
+        "baseline": {},
+        "feature_stats": [],
+        "simulation_defaults": dict(inference_summary.get("simulation_defaults") or {}),
+        "latest_simulation": dict((inference_summary.get("inference_params") or {}).get("latest_simulation") or {}),
+        "runtime_ready": False,
+        "runtime_framework": None,
+        "runtime_capabilities": {},
+        "simulation_profile": profile,
+    }
+
+
+def _build_simulation_context(
+    *,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    baseline_source: str = "last",
+) -> dict[str, Any]:
+    baseline = _build_simulation_baseline(prepared, baseline_source=baseline_source)
+    feature_stats = _simulation_feature_stats(prepared.feature_frame, baseline)
+    inference_summary = _serialize_inference_summary(inference_record) if inference_record is not None else {}
+    model_summary = _serialize_model_summary(model_record)
+    dataset_summary = _serialize_dataset_summary(dataset_record)
+    runtime_parameters = dict(getattr(runtime_result, "parameters", {}) or {})
+    runtime_capabilities = dict((runtime_parameters.get("artifact_manifest", {}) or {}).get("runtime_capabilities", {}) or {})
+    simulation_profile = _build_simulation_profile(
+        model_record=model_record,
+        inference_record=inference_record,
+        prepared=prepared,
+        runtime_result=runtime_result,
+        feature_stats=feature_stats,
+    )
+    return {
+        "model": model_summary,
+        "dataset": dataset_summary,
+        "inference": inference_summary,
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": prepared.task_type,
+        "input_features": list(prepared.input_features),
+        "runtime_features": _simulation_feature_columns(prepared),
+        "output_features": _coerce_feature_list(getattr(inference_record, "output_features", None))
+        or _coerce_feature_list(getattr(model_record, "output_features", None))
+        or [prepared.output_feature],
+        "baseline_source": baseline_source or "last",
+        "baseline": _simulation_row_payload(baseline),
+        "feature_stats": feature_stats,
+        "simulation_defaults": dict(inference_summary.get("simulation_defaults") or {}),
+        "latest_simulation": dict((inference_summary.get("inference_params") or {}).get("latest_simulation") or {}),
+        "runtime_ready": True,
+        "runtime_framework": getattr(runtime_result, "framework", None),
+        "runtime_capabilities": runtime_capabilities,
+        "simulation_profile": simulation_profile,
+    }
+
+
+def _run_tabular_simulation_adapter(
+    payload: Mapping[str, Any],
+    *,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+    simulation_profile: Optional[Mapping[str, Any]] = None,
+    mode: Optional[str] = None,
+) -> dict[str, Any]:
+    feature_columns = _simulation_feature_columns(prepared)
+    if prepared.feature_frame.empty:
+        raise ValueError("The selected dataset does not contain rows for simulation.")
+
+    baseline_source = str(payload.get("baselineSource") or payload.get("baseline_source") or "last").strip().lower()
+    baseline = _build_simulation_baseline(
+        prepared,
+        baseline_source=baseline_source,
+        baseline_row=_simulation_mapping(payload.get("baselineRow") or payload.get("baseline_row")),
+    )
+    scenarios = _normalize_simulation_scenarios(payload, feature_columns)
+    output_features = _coerce_feature_list(getattr(inference_record, "output_features", None)) or _coerce_feature_list(getattr(model_record, "output_features", None))
+    output_feature = output_features[0] if output_features else prepared.output_feature or "prediction"
+
+    scenario_summaries: list[dict[str, Any]] = []
+    all_plot_points: list[tuple[str, Any]] = []
+    all_table_rows: list[dict[str, Any]] = []
+    drift_series: list[tuple[str, Any]] = []
+    for scenario in scenarios:
+        scenario_base = _apply_direct_overrides(baseline, scenario["overrides"])
+        rows = [
+            _apply_step_plan(
+                scenario_base,
+                step_index=step_index,
+                steps=int(scenario["steps"]),
+                amplitude=float(scenario["amplitude"]),
+                trend=str(scenario["trend"]),
+                step_plan=scenario["step_plan"],
+            )
+            for step_index in range(1, int(scenario["steps"]) + 1)
+        ]
+        simulation_frame = pd.DataFrame(rows, columns=feature_columns)
+        predictions = np.asarray(_predict_with_result(runtime_result, simulation_frame, prepared.task_type)).reshape(-1)
+        probabilities = _predict_probabilities_with_result(runtime_result, simulation_frame, prepared)
+        series: list[dict[str, Any]] = []
+        for step_index, prediction in enumerate(predictions[: len(simulation_frame)], start=1):
+            rendered_prediction = _render_simulation_prediction(prediction, prepared)
+            row_payload = {
+                "scenario": scenario["name"],
+                "step": step_index,
+                "prediction": rendered_prediction,
+                "output_feature": output_feature,
+                "inputs": _simulation_row_payload(simulation_frame.iloc[step_index - 1]),
+            }
+            if probabilities and step_index - 1 < len(probabilities):
+                row_payload["probabilities"] = probabilities[step_index - 1]
+            series.append(row_payload)
+            all_table_rows.append(
+                {
+                    "scenario": scenario["name"],
+                    "step": step_index,
+                    output_feature: rendered_prediction,
+                    "changed_features": len(_changed_features(baseline, scenario_base)),
+                }
+            )
+            if isinstance(rendered_prediction, (int, float)):
+                all_plot_points.append((f"{scenario['name']} #{step_index}", rendered_prediction))
+
+        prediction_summary = {
+            "label": output_feature,
+            "first_prediction": series[0]["prediction"] if series else None,
+            "final_prediction": series[-1]["prediction"] if series else None,
+            "prediction_delta": _prediction_delta(series[0]["prediction"], series[-1]["prediction"]) if series else None,
+            "step_count": len(series),
+        }
+        final_row = simulation_frame.tail(1).iloc[0] if not simulation_frame.empty else scenario_base
+        if not drift_series:
+            for feature_name in feature_columns[:8]:
+                try:
+                    drift_series.append((feature_name, abs(float(final_row[feature_name]) - float(baseline[feature_name]))))
+                except (TypeError, ValueError):
+                    continue
+        scenario_summaries.append(
+            {
+                "name": scenario["name"],
+                "steps": scenario["steps"],
+                "trend": scenario["trend"],
+                "amplitude": scenario["amplitude"],
+                "overrides": _json_safe(scenario["overrides"]),
+                "changed_features": _changed_features(baseline, scenario_base),
+                "prediction_summary": prediction_summary,
+                "series": series,
+            }
+        )
+
+    primary = scenario_summaries[0] if scenario_summaries else {"series": [], "prediction_summary": {}}
+    sensitivity = _build_sensitivity_summary(
+        payload,
+        baseline=baseline,
+        prepared=prepared,
+        runtime_result=runtime_result,
+        output_feature=output_feature,
+    )
+    plots = [
+        _build_line_plot(
+            "Simulated Prediction Path",
+            all_plot_points,
+            description="Future-step predictions generated from the current production pair.",
+        ),
+        _build_bar_plot(
+            "Feature Drift Applied",
+            drift_series,
+            description="Absolute change applied between the baseline row and the final simulated step.",
+        ),
+    ]
+    plots.extend(sensitivity.get("plots", []))
+    plots = [plot for plot in plots if plot.get("series")]
+
+    result = {
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": prepared.task_type,
+        "family": (simulation_profile or {}).get("family") or prepared.task_type,
+        "mode": mode or (simulation_profile or {}).get("default_mode") or "tabular_what_if",
+        "simulation_profile": dict(simulation_profile or {}),
+        "steps": primary.get("steps") or 0,
+        "trend": primary.get("trend"),
+        "amplitude": primary.get("amplitude"),
+        "baseline_source": baseline_source,
+        "output_features": output_features,
+        "output_feature": output_feature,
+        "prediction_summary": primary.get("prediction_summary") or {},
+        "baseline": _simulation_row_payload(baseline),
+        "feature_stats": _simulation_feature_stats(prepared.feature_frame, baseline),
+        "scenarios": scenario_summaries,
+        "series": primary.get("series") or [],
+        "table_rows": all_table_rows,
+        "sensitivity": sensitivity,
+        "limits": {
+            "max_scenarios": SIMULATION_MAX_SCENARIOS,
+            "max_rows": SIMULATION_MAX_ROWS,
+            "max_steps": SIMULATION_MAX_STEPS,
+        },
+        "plots": plots,
+    }
+    family_payload = _simulation_mapping(payload.get("familyPayload") or payload.get("family_payload"))
+    if (simulation_profile or {}).get("family") == "classification" or prepared.task_type == "classification":
+        top_k = _coerce_simulation_int(family_payload.get("topK") or family_payload.get("top_k"), 3, minimum=1, maximum=10)
+        threshold = _coerce_simulation_float(family_payload.get("threshold"), 0.5)
+        final_probabilities = None
+        if primary.get("series"):
+            final_probabilities = (primary.get("series") or [{}])[-1].get("probabilities")
+        if isinstance(final_probabilities, Mapping):
+            ranked = sorted(final_probabilities.items(), key=lambda item: float(item[1] or 0.0), reverse=True)
+        else:
+            ranked = []
+        result["classification"] = {
+            "threshold": threshold,
+            "top_k": top_k,
+            "final_probabilities": dict(final_probabilities or {}),
+            "top_classes": [
+                {"class": str(label), "probability": _simulation_value(probability)}
+                for label, probability in ranked[:top_k]
+            ],
+        }
+        result["prediction_summary"]["final_probabilities"] = dict(final_probabilities or {})
+    else:
+        result["regression"] = {
+            "delta_explained": bool(family_payload.get("explainDeltas", True)),
+            "focus_feature": family_payload.get("focusFeature"),
+        }
+    result["primary_result"] = {
+        "label": output_feature,
+        "value": result["prediction_summary"].get("final_prediction"),
+        "delta": result["prediction_summary"].get("prediction_delta"),
+    }
+    return result
+
+
+def _simulation_readiness_result(
+    payload: Mapping[str, Any],
+    *,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+    simulation_profile: Mapping[str, Any],
+    mode: str,
+) -> dict[str, Any]:
+    baseline_source = str(payload.get("baselineSource") or payload.get("baseline_source") or "last").strip().lower()
+    baseline = _build_simulation_baseline(
+        prepared,
+        baseline_source=baseline_source,
+        baseline_row=_simulation_mapping(payload.get("baselineRow") or payload.get("baseline_row")),
+    )
+    output_features = _coerce_feature_list(getattr(inference_record, "output_features", None)) or _coerce_feature_list(getattr(model_record, "output_features", None))
+    output_feature = output_features[0] if output_features else getattr(prepared, "output_feature", None) or "prediction"
+    family = str(simulation_profile.get("family") or "unsupported")
+    reasons = list(simulation_profile.get("disabled_reasons") or [])
+    return {
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": getattr(prepared, "task_type", None),
+        "family": family,
+        "mode": mode,
+        "status": "not_ready",
+        "simulation_profile": dict(simulation_profile),
+        "readiness": {
+            "ready": False,
+            "family": family,
+            "mode": mode,
+            "disabled_reasons": reasons,
+            "capabilities": dict(simulation_profile.get("capabilities") or {}),
+        },
+        "steps": 0,
+        "trend": None,
+        "amplitude": None,
+        "baseline_source": baseline_source,
+        "output_features": output_features,
+        "output_feature": output_feature,
+        "prediction_summary": {
+            "label": output_feature,
+            "first_prediction": None,
+            "final_prediction": None,
+            "prediction_delta": None,
+            "step_count": 0,
+        },
+        "primary_result": {
+            "label": SIMULATION_FAMILY_LABELS.get(family, "Simulation"),
+            "value": "Runtime not ready",
+            "delta": None,
+        },
+        "baseline": _simulation_row_payload(baseline),
+        "feature_stats": _simulation_feature_stats(prepared.feature_frame, baseline),
+        "scenarios": [],
+        "series": [],
+        "table_rows": [],
+        "sensitivity": {"enabled": False, "features": [], "plots": []},
+        "limits": {
+            "max_scenarios": SIMULATION_MAX_SCENARIOS,
+            "max_rows": SIMULATION_MAX_ROWS,
+            "max_steps": SIMULATION_MAX_STEPS,
+        },
+        "plots": [],
+    }
+
+
+def _run_unsupervised_simulation_adapter(
+    payload: Mapping[str, Any],
+    *,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+    simulation_profile: Mapping[str, Any],
+    mode: str,
+) -> dict[str, Any]:
+    capabilities = simulation_profile.get("capabilities") or {}
+    if simulation_profile.get("disabled_reasons"):
+        return _simulation_readiness_result(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+
+    feature_columns = _simulation_feature_columns(prepared)
+    baseline_source = str(payload.get("baselineSource") or payload.get("baseline_source") or "last").strip().lower()
+    baseline = _build_simulation_baseline(
+        prepared,
+        baseline_source=baseline_source,
+        baseline_row=_simulation_mapping(payload.get("baselineRow") or payload.get("baseline_row")),
+    )
+    family_payload = _simulation_mapping(payload.get("familyPayload") or payload.get("family_payload"))
+    scenario = _simulation_mapping(payload.get("scenario"))
+    if scenario:
+        _validate_simulation_features(scenario, feature_columns, context="scenario")
+    probe_row = _apply_direct_overrides(baseline, scenario)
+    frame = pd.DataFrame([probe_row], columns=feature_columns)
+    model = getattr(runtime_result, "model", None)
+    result_payload: dict[str, Any] = {}
+    if capabilities.get("predict") and callable(getattr(model, "predict", None)):
+        try:
+            prediction = np.asarray(model.predict(frame)).reshape(-1)
+            result_payload["assignment"] = _simulation_value(prediction[0] if len(prediction) else None)
+        except Exception as exc:
+            result_payload["assignment_error"] = str(exc)
+    if capabilities.get("decision_function") and callable(getattr(model, "decision_function", None)):
+        try:
+            score = np.asarray(model.decision_function(frame)).reshape(-1)
+            result_payload["decision_score"] = _simulation_value(score[0] if len(score) else None)
+        except Exception as exc:
+            result_payload["decision_score_error"] = str(exc)
+    if capabilities.get("score_samples") and callable(getattr(model, "score_samples", None)):
+        try:
+            score = np.asarray(model.score_samples(frame)).reshape(-1)
+            result_payload["sample_score"] = _simulation_value(score[0] if len(score) else None)
+        except Exception as exc:
+            result_payload["sample_score_error"] = str(exc)
+    if family_payload.get("includeTransform", True) and capabilities.get("transform") and callable(getattr(model, "transform", None)):
+        try:
+            transformed = np.asarray(model.transform(frame))
+            result_payload["embedding"] = _json_safe(transformed[:1].tolist())
+        except Exception as exc:
+            result_payload["embedding_error"] = str(exc)
+
+    if not result_payload:
+        updated_profile = dict(simulation_profile)
+        updated_profile["disabled_reasons"] = ["The runtime advertised an unsupervised capability, but no callable method returned a result."]
+        return _simulation_readiness_result(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=updated_profile,
+            mode=mode,
+        )
+
+    output_feature = "assignment" if "assignment" in result_payload else next(iter(result_payload.keys()), "unsupervised_result")
+    series = [
+        {
+            "scenario": payload.get("scenarioName") or "Probe",
+            "step": 1,
+            "prediction": result_payload.get(output_feature),
+            "output_feature": output_feature,
+            "inputs": _simulation_row_payload(probe_row),
+            "unsupervised": result_payload,
+        }
+    ]
+    return {
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": getattr(prepared, "task_type", None),
+        "family": "unsupervised",
+        "mode": mode,
+        "status": "simulated",
+        "simulation_profile": dict(simulation_profile),
+        "steps": 1,
+        "baseline_source": baseline_source,
+        "output_features": [output_feature],
+        "output_feature": output_feature,
+        "prediction_summary": {
+            "label": output_feature,
+            "first_prediction": series[0]["prediction"],
+            "final_prediction": series[0]["prediction"],
+            "prediction_delta": None,
+            "step_count": 1,
+        },
+        "primary_result": {"label": output_feature, "value": series[0]["prediction"], "delta": None},
+        "baseline": _simulation_row_payload(baseline),
+        "feature_stats": _simulation_feature_stats(prepared.feature_frame, baseline),
+        "scenarios": [{"name": series[0]["scenario"], "steps": 1, "changed_features": _changed_features(baseline, probe_row), "prediction_summary": {"final_prediction": series[0]["prediction"], "step_count": 1}, "series": series}],
+        "series": series,
+        "table_rows": [{"scenario": series[0]["scenario"], "step": 1, output_feature: series[0]["prediction"], "changed_features": len(_changed_features(baseline, probe_row))}],
+        "unsupervised": result_payload,
+        "sensitivity": {"enabled": False, "features": [], "plots": []},
+        "limits": {"max_scenarios": SIMULATION_MAX_SCENARIOS, "max_rows": SIMULATION_MAX_ROWS, "max_steps": SIMULATION_MAX_STEPS},
+        "plots": [],
+    }
+
+
+def _run_recommendation_simulation_adapter(
+    payload: Mapping[str, Any],
+    *,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+    simulation_profile: Mapping[str, Any],
+    mode: str,
+) -> dict[str, Any]:
+    if simulation_profile.get("disabled_reasons"):
+        return _simulation_readiness_result(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+    family_payload = _simulation_mapping(payload.get("familyPayload") or payload.get("family_payload"))
+    model = getattr(runtime_result, "model", None)
+    top_n = _coerce_simulation_int(family_payload.get("topN") or family_payload.get("top_n"), 10, minimum=1, maximum=50)
+    user_id = family_payload.get("userId") or family_payload.get("user_id")
+    recommendations: Any = None
+    recommend = getattr(model, "recommend", None)
+    if callable(recommend):
+        for args in ((user_id, top_n), (user_id,), ()):
+            try:
+                recommendations = recommend(*args)
+                break
+            except TypeError:
+                continue
+    if recommendations is None:
+        updated_profile = dict(simulation_profile)
+        updated_profile["disabled_reasons"] = ["The recommender adapter could not call a compatible recommend(user_id, top_n) method."]
+        return _simulation_readiness_result(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=updated_profile,
+            mode=mode,
+        )
+    rows = _json_safe(recommendations)
+    if not isinstance(rows, list):
+        rows = [rows]
+    rows = rows[:top_n]
+    return {
+        "model_id": getattr(model_record, "id", None),
+        "dataset_id": getattr(dataset_record, "id", None),
+        "inference_id": getattr(inference_record, "id", None),
+        "task_type": getattr(prepared, "task_type", None),
+        "family": "recommendation",
+        "mode": mode,
+        "status": "simulated",
+        "simulation_profile": dict(simulation_profile),
+        "steps": len(rows),
+        "baseline_source": str(payload.get("baselineSource") or payload.get("baseline_source") or "last").strip().lower(),
+        "output_features": ["recommendations"],
+        "output_feature": "recommendations",
+        "prediction_summary": {"label": "recommendations", "first_prediction": rows[0] if rows else None, "final_prediction": rows[0] if rows else None, "prediction_delta": None, "step_count": len(rows)},
+        "primary_result": {"label": "Recommendations", "value": len(rows), "delta": None},
+        "baseline": {},
+        "feature_stats": _simulation_feature_stats(prepared.feature_frame, _baseline_from_source(prepared.feature_frame, "last")),
+        "scenarios": [],
+        "series": [],
+        "table_rows": rows,
+        "recommendation": {"user_id": user_id, "top_n": top_n, "items": rows},
+        "sensitivity": {"enabled": False, "features": [], "plots": []},
+        "limits": {"max_scenarios": SIMULATION_MAX_SCENARIOS, "max_rows": SIMULATION_MAX_ROWS, "max_steps": SIMULATION_MAX_STEPS},
+        "plots": [],
+    }
+
+
+def _simulation_geojson_from_series(series: list[dict[str, Any]], capabilities: Mapping[str, Any]) -> dict[str, Any] | None:
+    latitude_feature = capabilities.get("latitude_feature")
+    longitude_feature = capabilities.get("longitude_feature")
+    if not latitude_feature or not longitude_feature:
+        return None
+    features = []
+    for row in series[:SIMULATION_MAX_ROWS]:
+        inputs = row.get("inputs") or {}
+        try:
+            latitude = float(inputs.get(latitude_feature))
+            longitude = float(inputs.get(longitude_feature))
+        except (TypeError, ValueError):
+            continue
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [longitude, latitude]},
+                "properties": {
+                    "scenario": row.get("scenario"),
+                    "step": row.get("step"),
+                    "prediction": row.get("prediction"),
+                },
+            }
+        )
+    return {"type": "FeatureCollection", "features": features} if features else None
+
+
+def _run_simulation_workbench(
+    payload: Mapping[str, Any],
+    *,
+    prepared: PreparedDataset,
+    runtime_result: TrainingResult,
+    model_record: Any,
+    dataset_record: Any,
+    inference_record: Any | None,
+) -> dict[str, Any]:
+    feature_columns = _simulation_feature_columns(prepared)
+    baseline_source = str(payload.get("baselineSource") or payload.get("baseline_source") or "last").strip().lower()
+    baseline = _build_simulation_baseline(prepared, baseline_source=baseline_source)
+    feature_stats = _simulation_feature_stats(prepared.feature_frame, baseline)
+    simulation_profile = _build_simulation_profile(
+        model_record=model_record,
+        inference_record=inference_record,
+        prepared=prepared,
+        runtime_result=runtime_result,
+        payload=payload,
+        feature_stats=feature_stats,
+    )
+    mode = str(payload.get("mode") or simulation_profile.get("default_mode") or "tabular_what_if").strip()
+    family = str(simulation_profile.get("family") or "unsupported")
+
+    if family in {"regression", "classification"}:
+        return _run_tabular_simulation_adapter(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+
+    if family == "geospatial" and not simulation_profile.get("disabled_reasons"):
+        result = _run_tabular_simulation_adapter(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+        result["geojson"] = _simulation_geojson_from_series(result.get("series") or [], simulation_profile.get("capabilities") or {})
+        return result
+
+    if family == "unsupervised":
+        return _run_unsupervised_simulation_adapter(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+
+    if family == "recommendation":
+        return _run_recommendation_simulation_adapter(
+            payload,
+            prepared=prepared,
+            runtime_result=runtime_result,
+            model_record=model_record,
+            dataset_record=dataset_record,
+            inference_record=inference_record,
+            simulation_profile=simulation_profile,
+            mode=mode,
+        )
+
+    return _simulation_readiness_result(
+        payload,
+        prepared=prepared,
+        runtime_result=runtime_result,
+        model_record=model_record,
+        dataset_record=dataset_record,
+        inference_record=inference_record,
+        simulation_profile=simulation_profile,
+        mode=mode,
+    )
 
 
 def _build_training_tracking_context(
@@ -2181,6 +3873,11 @@ def _predict_with_result(result: TrainingResult, features: pd.DataFrame, task_ty
     model = result.model
     model.eval()
     tensor_x = torch.as_tensor(features.to_numpy(dtype=np.float32))
+    try:
+        model_device = next(model.parameters()).device
+        tensor_x = tensor_x.to(model_device)
+    except Exception:
+        pass
     with torch.no_grad():
         outputs = model(tensor_x)
         if isinstance(outputs, (tuple, list)):
@@ -2305,6 +4002,7 @@ def _train_with_pytorch(
     learning_rate = float(parameters.get("learning_rate", 0.001))
     batch_size = int(parameters.get("batch_size", 32))
     epochs = int(parameters.get("epochs", 20))
+    device_resolution = resolve_torch_device(parameters.get("device", "auto"))
 
     if prepared.task_type == "classification":
         n_classes = int(pd.Series(prepared.y_train).nunique())
@@ -2349,9 +4047,26 @@ def _train_with_pytorch(
         "model_name": str(getattr(model_record, "name", "model")),
         "model_id": str(getattr(model_record, "id", "")),
         "task_type": prepared.task_type,
+        "requested_device": str(device_resolution["requested_device"]),
+        "resolved_device": str(device_resolution["resolved_device"]),
+        "cuda_available": str(device_resolution["cuda_available"]),
     }
 
     if progress_callback is not None:
+        progress_callback(
+            {
+                "stage": "resolving_accelerator",
+                "message": (
+                    f"Requested device {device_resolution['requested_device']} resolved to "
+                    f"{device_resolution['resolved_device']}."
+                ),
+                "counters": {
+                    "cuda_available": device_resolution.get("cuda_available"),
+                    "device_count": device_resolution.get("device_count"),
+                    "fallback_applied": device_resolution.get("fallback_applied"),
+                },
+            }
+        )
         progress_callback(
             {
                 "stage": "training",
@@ -2369,6 +4084,7 @@ def _train_with_pytorch(
             epochs=epochs,
             batch_size=batch_size,
             val_data=(torch.as_tensor(x_test), y_test_tensor),
+            device=str(device_resolution["resolved_device"]),
             params={
                 "hidden_dim": hidden_dim,
                 "hidden_layers": hidden_layers,
@@ -2376,6 +4092,10 @@ def _train_with_pytorch(
                 "learning_rate": learning_rate,
                 "batch_size": batch_size,
                 "epochs": epochs,
+                "requested_device": device_resolution["requested_device"],
+                "resolved_device": device_resolution["resolved_device"],
+                "cuda_available": device_resolution["cuda_available"],
+                "device_fallback_applied": device_resolution["fallback_applied"],
             },
             experiment_name=None,
             run_name=None,
@@ -2400,7 +4120,12 @@ def _train_with_pytorch(
         ),
         experiment_name=experiment_name,
         run_name=run_name,
-        params=parameters,
+        params={
+            **dict(parameters),
+            "requested_device": device_resolution["requested_device"],
+            "resolved_device": device_resolution["resolved_device"],
+            "cuda_available": device_resolution["cuda_available"],
+        },
         tags=tags,
         log_to_mlflow=True,
     )
@@ -2428,6 +4153,16 @@ def _train_with_pytorch(
             "transfer_learning": _public_transfer_context(transfer_context),
         },
     )
+    result.parameters = {
+        **dict(result.parameters or {}),
+        "device": parameters.get("device", "auto"),
+        "requested_device": device_resolution["requested_device"],
+        "resolved_device": device_resolution["resolved_device"],
+        "cuda_available": device_resolution["cuda_available"],
+        "device_fallback_applied": device_resolution["fallback_applied"],
+        "device_fallback_reason": device_resolution["fallback_reason"],
+    }
+    result.metadata["accelerator"] = device_resolution
     result.metadata["transfer_learning"] = _public_transfer_context(transfer_context)
     pretty_print_metrics(result.metrics)
     return result, predictions
@@ -2467,6 +4202,10 @@ def _generate_training_artifacts(
                 raise RuntimeError("PyTorch is not available in the current environment.")
             target_path = artifact_dir / "model_pytorch.pt"
             result.model.eval()
+            try:
+                result.model = result.model.to("cpu")
+            except Exception:
+                pass
             example_input = torch.as_tensor(prepared.x_train.head(2).to_numpy(dtype=np.float32))
             try:
                 exported_model = torch.jit.script(result.model)
@@ -2480,6 +4219,7 @@ def _generate_training_artifacts(
                 "output_feature": prepared.output_feature,
                 "task_type": prepared.task_type,
                 "label_mapping": dict(prepared.label_mapping),
+                "accelerator": dict(result.metadata.get("accelerator") or {}),
             }
             companion_path = artifact_dir / "model_spec.json"
             save_json(companion_spec, companion_path)
@@ -2811,7 +4551,8 @@ async def _optimize_study(
 
     base_parameters = dict(getattr(learning_model, "parameters", {}) or {})
     study_parameters = dict(getattr(study_record, "study_params", {}) or {})
-    merged_parameters = {**base_parameters, **study_parameters}
+    request_parameters = dict(request_payload.model_dump(exclude_none=True) or {})
+    merged_parameters = {**base_parameters, **study_parameters, **request_parameters}
     if progress_callback is not None:
         progress_callback({"stage": "validating_schema", "message": "Validating the linked model and dataset schema for the study."})
     prepared = _prepare_dataset_for_training(dataset_model, learning_model, merged_parameters)
