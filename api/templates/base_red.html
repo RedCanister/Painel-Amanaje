@@ -19,7 +19,10 @@
     }
     .form-section > h3 {
         margin: 0;
-        color: var(--amanaje-primary-strong);
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.22rem, 1.8vw, 1.5rem);
+        line-height: 1.12;
     }
     #uploadForm,
     #datasetFields,
@@ -120,7 +123,13 @@
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
     }
-    .feature-item h4, .model-item h4, .analysis-result h4 { color: var(--amanaje-primary); }
+    .feature-item h4, .model-item h4, .analysis-result h4 {
+        margin: 0 0 0.45rem;
+        color: var(--amanaje-primary);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.05rem;
+        line-height: 1.15;
+    }
     .feature-item p, .model-item p { color: #6b7280 !important; }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; align-items: start; }
     .analysis-result table { background: white; border-radius: 14px; overflow: hidden; }
@@ -135,7 +144,13 @@
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
     }
-    .support-card h4 { margin: 0 0 0.45rem; color: var(--amanaje-primary-strong); }
+    .support-card h4 {
+        margin: 0 0 0.45rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+    }
     .support-badges, .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
     .small-text { color: #6b7280; font-size: 0.92rem; }
     .selector-workspace {

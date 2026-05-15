@@ -1,0 +1,203 @@
+{
+  "run_id": "study_b341b4e57eb6",
+  "run_type": "study",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-14T21:42:48.220861",
+  "updated_at": "2026-05-14T21:43:17.067403",
+  "started_at": "2026-05-14T21:42:58.628635",
+  "completed_at": "2026-05-14T21:43:17.067403",
+  "context": {
+    "study_id": 3,
+    "model_id": 2,
+    "dataset_id": 1,
+    "inference_id": null
+  },
+  "parameters": {
+    "nTrials": 1,
+    "outputDir": null,
+    "plotResults": true
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "study": {
+      "id": 3,
+      "name": "sample-study",
+      "description": "StudyModel linking dataset ingestion from PostgreSQL to registered training models.",
+      "learning_model_id": 2,
+      "dataset_id": 1,
+      "sampler": "RandomSampler",
+      "objective": "maximize_accuracy",
+      "best_trial": {
+        "value": 1.0
+      },
+      "best_params": {
+        "dropout": 0.2,
+        "batch_size": 64,
+        "hidden_dim": 16,
+        "hidden_layers": 4,
+        "learning_rate": 0.002498220903977298
+      },
+      "study_params": {
+        "metric": "accuracy",
+        "n_trials": 25,
+        "direction": "maximize",
+        "framework": "pytorch"
+      },
+      "path": "/app/runtime_artifacts/optuna/study_3/study_summary.json"
+    },
+    "summary": {
+      "study_name": "sample-study",
+      "direction": "MAXIMIZE",
+      "best_value": 1.0,
+      "best_params": {
+        "hidden_dim": 16,
+        "hidden_layers": 4,
+        "dropout": 0.2,
+        "learning_rate": 0.002498220903977298,
+        "batch_size": 64
+      },
+      "n_trials": 1,
+      "completed_trials": 1,
+      "pruned_trials": 0,
+      "failed_trials": 0,
+      "has_best_trial": true
+    },
+    "plot_paths": [
+      "/app/runtime_artifacts/optuna/study_3/optimization_history.png"
+    ],
+    "output_dir": "/app/runtime_artifacts/optuna/study_3",
+    "objective_metric": "eval_accuracy"
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Study optimization completed.",
+    "latest_timestamp": "2026-05-14T21:43:17.067403",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:42:48.220861",
+        "message": "study run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:42:48.255220",
+        "message": "Study run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-14T21:42:58.628635",
+        "message": "Resolving study, model, and dataset context."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-14T21:42:59.104075",
+        "message": "Study context resolved."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-14T21:42:59.138628",
+        "message": "Study preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-14T21:42:59.228020",
+        "message": "Validating the linked model and dataset schema for the study."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-05-14T21:42:59.393388",
+        "message": "Running Optuna trials for the selected study."
+      },
+      {
+        "status": "running",
+        "stage": "optimizing",
+        "timestamp": "2026-05-14T21:43:13.718505",
+        "message": "Study optimization updated."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-14T21:43:17.067403",
+        "message": "Study optimization completed."
+      }
+    ],
+    "counters": {
+      "total_trials": 1,
+      "trial_number": 0,
+      "completed_trials": 1,
+      "best_value": 1.0,
+      "n_trials": 1
+    }
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:42:48.220861",
+      "message": "study run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:42:48.255220",
+      "message": "Study run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-14T21:42:58.628635",
+      "message": "Resolving study, model, and dataset context."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-14T21:42:59.104075",
+      "message": "Study context resolved."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-14T21:42:59.138628",
+      "message": "Study preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-14T21:42:59.228020",
+      "message": "Validating the linked model and dataset schema for the study."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-05-14T21:42:59.393388",
+      "message": "Running Optuna trials for the selected study."
+    },
+    {
+      "status": "running",
+      "stage": "optimizing",
+      "timestamp": "2026-05-14T21:43:13.718505",
+      "message": "Study optimization updated."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-14T21:43:17.067403",
+      "message": "Study optimization completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "study_b341b4e57eb6"
+  }
+}

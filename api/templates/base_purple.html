@@ -6,18 +6,9 @@
 <style>
     .registry-container { max-width: 1400px; margin: 0 auto; padding: 1.4rem 0 2rem; }
     .registry-header {
-        background: white;
-        color: var(--amanaje-text-strong);
-        padding: 1.25rem;
-        border: 1px solid var(--amanaje-primary-border-soft);
-        border-radius: 14px;
+        display: grid;
+        gap: 0.35rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
-    }
-    .registry-header h2 {
-        margin: 0 0 0.35rem;
-        font-family: var(--amanaje-heading-font);
-        font-size: clamp(1.72rem, 2.35vw, 2.3rem);
     }
     .registry-header p { margin: 0; color: var(--amanaje-muted); max-width: 68ch; }
     .tabs-container, .mode-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
@@ -30,6 +21,15 @@
         box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
     }
     .form-section, .detail-section, .modal-content { padding: 1.25rem; }
+    .form-section h3,
+    .detail-section h3,
+    .modal-header h3 {
+        margin: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.22rem, 1.75vw, 1.45rem);
+        line-height: 1.12;
+    }
     .form-group { margin-bottom: 1rem; }
     .form-group label {
         display: block;
@@ -198,7 +198,7 @@
 
 {% block content %}
 <div class="registry-container">
-    <div class="registry-header">
+    <div class="registry-header atlas-intro-card">
         <span class="workspace-eyebrow">Management domain</span>
         <h2>Model Registry - CRUD Management</h2>
         <p>Create, upload, inspect, edit, download, and organize dataset, learning, inference, study, and code entries in a single registry workspace.</p>

@@ -9,6 +9,10 @@
         gap: 1rem;
     }
 
+    .editor-page > .workspace-intro {
+        margin-bottom: 0.1rem;
+    }
+
     .editor-shell {
         display: grid;
         gap: 1rem;
@@ -153,6 +157,17 @@
     .editor-status strong {
         margin: 0;
         color: var(--amanaje-text-strong);
+    }
+
+    .minimal-card h3,
+    .minimal-collapse h3,
+    .panel-card h3 {
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.05rem;
+        line-height: 1.1;
+    }
+
+    .editor-status strong {
         font-size: 0.95rem;
     }
 
@@ -518,13 +533,13 @@
 
 {% block content %}
 <div class="editor-page">
-    <section class="editor-shell">
-        <div class="editor-header">
-            <span class="workspace-eyebrow">Code Editor</span>
-            <h2>Simple workspace for editing, running, and saving scripts.</h2>
-            <p>The editor stays at the center, commands stay up top, and supporting context stays quiet and out of the way.</p>
-        </div>
+    <section class="workspace-intro editor-hero">
+        <span class="workspace-eyebrow">Management domain</span>
+        <h2>Code editing, execution, and script saving in one Atlas workspace.</h2>
+        <p>Keep the editor at the center while parsing, execution, saved files, and supporting context stay aligned around the same management workflow.</p>
+    </section>
 
+    <section class="editor-shell">
         <div id="statusMessage" class="status-message" aria-live="polite"></div>
 
         <div class="editor-toolbar">

@@ -16,7 +16,15 @@
         box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
         padding: 1.25rem;
     }
-    .feature-panel h3, .feature-panel h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .feature-panel h3,
+    .feature-panel h4 {
+        margin-top: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        line-height: 1.12;
+    }
+    .feature-panel h3 { font-size: clamp(1.22rem, 1.8vw, 1.5rem); }
+    .feature-panel h4 { font-size: 1.04rem; }
     .inline-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .feature-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); }
     .feature-shell .form-group {

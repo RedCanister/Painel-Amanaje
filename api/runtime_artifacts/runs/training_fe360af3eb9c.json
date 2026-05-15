@@ -1,0 +1,1754 @@
+{
+  "run_id": "training_fe360af3eb9c",
+  "run_type": "training",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-14T21:41:49.611130",
+  "updated_at": "2026-05-14T21:42:46.887735",
+  "started_at": "2026-05-14T21:42:00.908504",
+  "completed_at": "2026-05-14T21:42:46.887735",
+  "context": {
+    "model_id": 2,
+    "dataset_id": 1,
+    "study_id": null,
+    "inference_id": null
+  },
+  "parameters": {
+    "device": "auto",
+    "epochs": 1,
+    "dropout": 0.1,
+    "framework": "pytorch",
+    "batch_size": 2,
+    "hidden_dim": 64,
+    "input_size": 1,
+    "base_run_id": null,
+    "hidden_size": 1,
+    "output_size": 1,
+    "base_model_id": 2,
+    "hidden_layers": 2,
+    "learning_rate": 0.001,
+    "training_mode": "transfer",
+    "cuda_available": false,
+    "input_features": [
+      "value"
+    ],
+    "output_features": [
+      "category"
+    ],
+    "resolved_device": "cpu",
+    "requested_device": "auto",
+    "training_lineage": {
+      "iteration": 2,
+      "base_run_id": "training_9d25d5505bc3",
+      "base_model_id": 2,
+      "latest_run_id": "training_6c82dd774e87",
+      "mlflow_run_id": "efa09d9bd95a425791195c5f1d1bae1b",
+      "training_mode": "transfer",
+      "transfer_status": "incompatible_base_artifact",
+      "new_artifact_path": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt",
+      "transfer_strategy": "auto",
+      "base_artifact_path": "/models/sample_model.pt",
+      "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+      "previous_artifact_path": "/app/runtime_artifacts/training/training_9d25d5505bc3/model_pytorch.pt"
+    },
+    "artifact_manifest": {
+      "loader": "torchscript",
+      "source": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt",
+      "metadata": {},
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "framework": "pytorch",
+      "entrypoint": null,
+      "artifact_format": ".pt",
+      "capability_matrix": {
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        }
+      },
+      "needs_companion_spec": true,
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ]
+    },
+    "transfer_strategy": "auto",
+    "base_artifact_path": "/models/sample_model.pt",
+    "device_fallback_reason": "auto_selected_cpu",
+    "device_fallback_applied": false
+  },
+  "metrics": {
+    "train_loss": 2.1421844959259033,
+    "val_loss": 0.795732319355011,
+    "eval_accuracy": 0.0,
+    "eval_precision": 0.0,
+    "eval_recall": 0.0,
+    "eval_f1": 0.0
+  },
+  "artifacts": {
+    "summary_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+    "artifact_paths": [
+      "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+      "/app/runtime_artifacts/training/training_fe360af3eb9c/model_spec.json",
+      "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "/app/runtime_artifacts/plots/training_fe360af3eb9c/metric_comparison.png",
+      "/app/runtime_artifacts/plots/training_fe360af3eb9c/loss_curve.png",
+      "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py"
+    ],
+    "model_artifact_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+    "artifact_manifest": {
+      "artifact_format": ".pt",
+      "loader": "torchscript",
+      "runtime_capabilities": {
+        "register": true,
+        "inspect": true,
+        "train": false,
+        "predict": false,
+        "simulate": false,
+        "monitor": false
+      },
+      "framework": "pytorch",
+      "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "entrypoint": null,
+      "needs_companion_spec": true,
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "metadata": {},
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ],
+      "capability_matrix": {
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": true,
+          "simulate": true,
+          "monitor": true
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        }
+      }
+    },
+    "serving_file": "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py",
+    "model_uri": "runs:/c19b8b6e16004cfab92bac07974d7fab/model"
+  },
+  "result": {
+    "model_id": 2,
+    "dataset_id": 1,
+    "input_type": "Manual",
+    "study_id": null,
+    "framework": "pytorch",
+    "metrics": {
+      "train_loss": 2.1421844959259033,
+      "val_loss": 0.795732319355011,
+      "eval_accuracy": 0.0,
+      "eval_precision": 0.0,
+      "eval_recall": 0.0,
+      "eval_f1": 0.0
+    },
+    "parameters": {
+      "device": "auto",
+      "epochs": 1,
+      "dropout": 0.1,
+      "framework": "pytorch",
+      "batch_size": 2,
+      "hidden_dim": 64,
+      "input_size": 1,
+      "base_run_id": null,
+      "hidden_size": 1,
+      "output_size": 1,
+      "base_model_id": 2,
+      "hidden_layers": 2,
+      "learning_rate": 0.001,
+      "training_mode": "transfer",
+      "cuda_available": false,
+      "input_features": [
+        "value"
+      ],
+      "output_features": [
+        "category"
+      ],
+      "resolved_device": "cpu",
+      "requested_device": "auto",
+      "training_lineage": {
+        "iteration": 2,
+        "base_run_id": "training_9d25d5505bc3",
+        "base_model_id": 2,
+        "latest_run_id": "training_6c82dd774e87",
+        "mlflow_run_id": "efa09d9bd95a425791195c5f1d1bae1b",
+        "training_mode": "transfer",
+        "transfer_status": "incompatible_base_artifact",
+        "new_artifact_path": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt",
+        "transfer_strategy": "auto",
+        "base_artifact_path": "/models/sample_model.pt",
+        "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+        "previous_artifact_path": "/app/runtime_artifacts/training/training_9d25d5505bc3/model_pytorch.pt"
+      },
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "transfer_strategy": "auto",
+      "base_artifact_path": "/models/sample_model.pt",
+      "device_fallback_reason": "auto_selected_cpu",
+      "device_fallback_applied": false
+    },
+    "monitoring": {
+      "job_id": "training_fe360af3eb9c",
+      "drift_results": {
+        "value": false
+      },
+      "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+      },
+      "degradation_results": {
+        "train_loss": false,
+        "val_loss": true,
+        "eval_accuracy": true,
+        "eval_precision": true,
+        "eval_recall": true,
+        "eval_f1": true
+      },
+      "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 5
+      },
+      "retrain_recommended": true,
+      "evaluated_at": "2026-05-14T21:42:44.024965"
+    },
+    "artifacts": {
+      "summary_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+      "artifact_paths": [
+        "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+        "/app/runtime_artifacts/training/training_fe360af3eb9c/model_spec.json",
+        "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+        "/app/runtime_artifacts/plots/training_fe360af3eb9c/metric_comparison.png",
+        "/app/runtime_artifacts/plots/training_fe360af3eb9c/loss_curve.png",
+        "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py"
+      ],
+      "model_artifact_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "artifact_manifest": {
+        "artifact_format": ".pt",
+        "loader": "torchscript",
+        "runtime_capabilities": {
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        "framework": "pytorch",
+        "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+        "entrypoint": null,
+        "needs_companion_spec": true,
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "metadata": {},
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ],
+        "capability_matrix": {
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": true,
+            "simulate": true,
+            "monitor": true
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          }
+        }
+      },
+      "serving_file": "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py",
+      "model_uri": "runs:/c19b8b6e16004cfab92bac07974d7fab/model"
+    },
+    "plots": [
+      {
+        "id": "4f4263fcf2d69a4c",
+        "kind": "legacy_image",
+        "title": "Loss Curve",
+        "description": "Saved runtime plot artifact.",
+        "source": {
+          "domain": "training",
+          "job_id": "training_fe360af3eb9c"
+        },
+        "metadata": {
+          "display_id": "4f4263fcf2d69a4c",
+          "kind": "legacy_image",
+          "domain": "training",
+          "job_id": "training_fe360af3eb9c",
+          "plot_type": "loss_curve",
+          "filename": "loss_curve.png",
+          "relative_path": "training_fe360af3eb9c/loss_curve.png",
+          "extension": ".png",
+          "size_bytes": 39719,
+          "modified_at": "2026-05-14T21:42:16.343903+00:00"
+        },
+        "artifact": {
+          "url": "/plots/artifacts/4f4263fcf2d69a4c/file",
+          "relative_path": "training_fe360af3eb9c/loss_curve.png",
+          "filename": "loss_curve.png",
+          "extension": ".png",
+          "size_bytes": 39719,
+          "modified_at": "2026-05-14T21:42:16.343903+00:00"
+        },
+        "plot_type": "loss_curve"
+      },
+      {
+        "id": "f3296485b4eadfae",
+        "kind": "legacy_image",
+        "title": "Metric Comparison",
+        "description": "Saved runtime plot artifact.",
+        "source": {
+          "domain": "training",
+          "job_id": "training_fe360af3eb9c"
+        },
+        "metadata": {
+          "display_id": "f3296485b4eadfae",
+          "kind": "legacy_image",
+          "domain": "training",
+          "job_id": "training_fe360af3eb9c",
+          "plot_type": "metric_comparison",
+          "filename": "metric_comparison.png",
+          "relative_path": "training_fe360af3eb9c/metric_comparison.png",
+          "extension": ".png",
+          "size_bytes": 51606,
+          "modified_at": "2026-05-14T21:42:15.537638+00:00"
+        },
+        "artifact": {
+          "url": "/plots/artifacts/f3296485b4eadfae/file",
+          "relative_path": "training_fe360af3eb9c/metric_comparison.png",
+          "filename": "metric_comparison.png",
+          "extension": ".png",
+          "size_bytes": 51606,
+          "modified_at": "2026-05-14T21:42:15.537638+00:00"
+        },
+        "plot_type": "metric_comparison"
+      }
+    ],
+    "transfer_learning": {
+      "training_mode": "transfer",
+      "transfer_strategy": "auto",
+      "base_model_id": 2,
+      "base_run_id": "training_6c82dd774e87",
+      "base_artifact_path": "/models/sample_model.pt",
+      "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+      "transfer_status": "incompatible_base_artifact",
+      "base_model_loaded": false,
+      "transfer_error": "Only TorchScript or app-generated PyTorch bundles can run directly. This artifact appears to need a separate model definition."
+    },
+    "training_lineage": {
+      "iteration": 3,
+      "latest_run_id": "training_fe360af3eb9c",
+      "base_run_id": "training_6c82dd774e87",
+      "base_model_id": 2,
+      "base_artifact_path": "/models/sample_model.pt",
+      "previous_artifact_path": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt",
+      "new_artifact_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "transfer_status": "incompatible_base_artifact",
+      "transfer_strategy": "auto",
+      "training_mode": "transfer",
+      "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+      "mlflow_run_id": "c19b8b6e16004cfab92bac07974d7fab"
+    },
+    "mlflow_run_id": "c19b8b6e16004cfab92bac07974d7fab",
+    "model": {
+      "id": 2,
+      "name": "sample_model",
+      "description": "Model created from the editor",
+      "model_type": "supervised_model",
+      "is_trained": true,
+      "is_tested": true,
+      "is_deployed": true,
+      "metrics": {
+        "eval_f1": 0.0,
+        "val_loss": 0.795732319355011,
+        "train_loss": 2.1421844959259033,
+        "eval_recall": 0.0,
+        "eval_accuracy": 0.0,
+        "eval_precision": 0.0
+      },
+      "parameters": {
+        "device": "auto",
+        "epochs": 1,
+        "dropout": 0.1,
+        "framework": "pytorch",
+        "batch_size": 2,
+        "hidden_dim": 64,
+        "input_size": 1,
+        "base_run_id": null,
+        "hidden_size": 1,
+        "output_size": 1,
+        "base_model_id": 2,
+        "hidden_layers": 2,
+        "learning_rate": 0.001,
+        "training_mode": "transfer",
+        "cuda_available": false,
+        "input_features": [
+          "value"
+        ],
+        "output_features": [
+          "category"
+        ],
+        "resolved_device": "cpu",
+        "requested_device": "auto",
+        "training_lineage": {
+          "iteration": 3,
+          "base_run_id": "training_6c82dd774e87",
+          "base_model_id": 2,
+          "latest_run_id": "training_fe360af3eb9c",
+          "mlflow_run_id": "c19b8b6e16004cfab92bac07974d7fab",
+          "training_mode": "transfer",
+          "transfer_status": "incompatible_base_artifact",
+          "new_artifact_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+          "transfer_strategy": "auto",
+          "base_artifact_path": "/models/sample_model.pt",
+          "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+          "previous_artifact_path": "/app/runtime_artifacts/training/training_6c82dd774e87/model_pytorch.pt"
+        },
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "transfer_strategy": "auto",
+        "base_artifact_path": "/models/sample_model.pt",
+        "device_fallback_reason": "auto_selected_cpu",
+        "device_fallback_applied": false
+      },
+      "input_features": [
+        "value"
+      ],
+      "output_features": [
+        "category"
+      ],
+      "size": 0.0013,
+      "path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      }
+    },
+    "inference": {
+      "id": 35,
+      "name": "sample_model :: sample_dataset",
+      "description": "Inference pair for sample_model :: sample_dataset",
+      "learning_model_id": 2,
+      "dataset_id": 1,
+      "input_features": [
+        "value"
+      ],
+      "output_features": [
+        "category"
+      ],
+      "path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+      "status": "trained",
+      "latest_metrics": {
+        "eval_f1": 0.0,
+        "val_loss": 0.795732319355011,
+        "train_loss": 2.1421844959259033,
+        "eval_recall": 0.0,
+        "eval_accuracy": 0.0,
+        "eval_precision": 0.0
+      },
+      "latest_monitoring": {
+        "job_id": "training_fe360af3eb9c",
+        "summary": {
+          "degraded_metrics": 5,
+          "drifted_features": 0
+        },
+        "evaluated_at": "2026-05-14T21:42:44.024965",
+        "drift_results": {
+          "value": false
+        },
+        "prediction_drift": {
+          "p_value": 1.0,
+          "detected": false
+        },
+        "degradation_results": {
+          "eval_f1": true,
+          "val_loss": true,
+          "train_loss": false,
+          "eval_recall": true,
+          "eval_accuracy": true,
+          "eval_precision": true
+        },
+        "retrain_recommended": true
+      },
+      "simulation_defaults": {
+        "steps": 12,
+        "strategy": "carry-forward",
+        "amplitude": 0.05
+      },
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "history": [
+        {
+          "when": "2026-05-14T21:42:44.421807",
+          "job_id": "training_fe360af3eb9c",
+          "model_id": 2,
+          "operation": "training_sync",
+          "dataset_id": 1
+        }
+      ],
+      "inference_params": {
+        "status": "trained",
+        "artifacts": {
+          "model_uri": "runs:/c19b8b6e16004cfab92bac07974d7fab/model",
+          "serving_file": "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py",
+          "summary_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+          "artifact_paths": [
+            "/app/runtime_artifacts/training/training_fe360af3eb9c/training_summary.json",
+            "/app/runtime_artifacts/training/training_fe360af3eb9c/model_spec.json",
+            "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+            "/app/runtime_artifacts/plots/training_fe360af3eb9c/metric_comparison.png",
+            "/app/runtime_artifacts/plots/training_fe360af3eb9c/loss_curve.png",
+            "/app/runtime_artifacts/serving/training_fe360af3eb9c_service.py"
+          ],
+          "artifact_manifest": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+            "metadata": {},
+            "warnings": [
+              "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+            ],
+            "framework": "pytorch",
+            "entrypoint": null,
+            "artifact_format": ".pt",
+            "capability_matrix": {
+              ".pt": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pkl": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pth": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".yml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".json": {
+                "label": "JSON Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".onnx": {
+                "label": "ONNX",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".yaml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".joblib": {
+                "label": "scikit-learn Joblib",
+                "train": false,
+                "inspect": true,
+                "monitor": true,
+                "predict": true,
+                "register": true,
+                "simulate": true
+              },
+              ".pickle": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              }
+            },
+            "needs_companion_spec": true,
+            "runtime_capabilities": {
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            "supported_file_types": [
+              ".joblib",
+              ".json",
+              ".onnx",
+              ".pickle",
+              ".pkl",
+              ".pt",
+              ".pth",
+              ".yaml",
+              ".yml"
+            ]
+          },
+          "model_artifact_path": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt"
+        },
+        "framework": "pytorch",
+        "monitoring": {
+          "job_id": "training_fe360af3eb9c",
+          "summary": {
+            "degraded_metrics": 5,
+            "drifted_features": 0
+          },
+          "evaluated_at": "2026-05-14T21:42:44.024965",
+          "drift_results": {
+            "value": false
+          },
+          "prediction_drift": {
+            "p_value": 1.0,
+            "detected": false
+          },
+          "degradation_results": {
+            "eval_f1": true,
+            "val_loss": true,
+            "train_loss": false,
+            "eval_recall": true,
+            "eval_accuracy": true,
+            "eval_precision": true
+          },
+          "retrain_recommended": true
+        },
+        "last_job_id": "training_fe360af3eb9c",
+        "latest_metrics": {
+          "eval_f1": 0.0,
+          "val_loss": 0.795732319355011,
+          "train_loss": 2.1421844959259033,
+          "eval_recall": 0.0,
+          "eval_accuracy": 0.0,
+          "eval_precision": 0.0
+        },
+        "last_trained_at": "2026-05-14T21:42:44.421734",
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_fe360af3eb9c/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "simulation_defaults": {
+          "steps": 12,
+          "strategy": "carry-forward",
+          "amplitude": 0.05
+        }
+      }
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Training workflow completed.",
+    "latest_timestamp": "2026-05-14T21:42:46.887735",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:41:49.611130",
+        "message": "training run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:41:49.666432",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-14T21:42:00.908504",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-14T21:42:01.248595",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-14T21:42:01.267536",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-05-14T21:42:01.288047",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_accelerator",
+        "timestamp": "2026-05-14T21:42:11.711823",
+        "message": "Requested device auto resolved to cpu."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-14T21:42:11.739058",
+        "message": "Running PyTorch training epochs."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-14T21:42:13.355978",
+        "message": "Completed epoch 1 of 1."
+      },
+      {
+        "status": "running",
+        "stage": "evaluating",
+        "timestamp": "2026-05-14T21:42:13.601482",
+        "message": "Scoring PyTorch predictions on the validation split."
+      },
+      {
+        "status": "running",
+        "stage": "persisting_artifacts",
+        "timestamp": "2026-05-14T21:42:14.606222",
+        "message": "Persisting artifacts, summaries, and runtime bundles."
+      },
+      {
+        "status": "running",
+        "stage": "logging_mlflow",
+        "timestamp": "2026-05-14T21:42:43.867500",
+        "message": "Logging monitoring summaries and artifact context."
+      },
+      {
+        "status": "running",
+        "stage": "syncing_inference",
+        "timestamp": "2026-05-14T21:42:44.666698",
+        "message": "Persisting run outputs to the registry and inference pair."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-14T21:42:46.887735",
+        "message": "Training workflow completed."
+      }
+    ],
+    "counters": {
+      "cuda_available": false,
+      "device_count": 0,
+      "fallback_applied": false,
+      "epochs_total": 1,
+      "epochs_completed": 1,
+      "train_loss": 2.1421844959259033,
+      "val_loss": 0.795732319355011,
+      "mlflow_run_id": "c19b8b6e16004cfab92bac07974d7fab",
+      "metric_count": 6
+    }
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:41:49.611130",
+      "message": "training run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:41:49.666432",
+      "message": "Training run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-14T21:42:00.908504",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-14T21:42:01.248595",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-14T21:42:01.267536",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-05-14T21:42:01.288047",
+      "message": "Preparing dataset splits and feature encodings."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_accelerator",
+      "timestamp": "2026-05-14T21:42:11.711823",
+      "message": "Requested device auto resolved to cpu."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-14T21:42:11.739058",
+      "message": "Running PyTorch training epochs."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-14T21:42:13.355978",
+      "message": "Completed epoch 1 of 1."
+    },
+    {
+      "status": "running",
+      "stage": "evaluating",
+      "timestamp": "2026-05-14T21:42:13.601482",
+      "message": "Scoring PyTorch predictions on the validation split."
+    },
+    {
+      "status": "running",
+      "stage": "persisting_artifacts",
+      "timestamp": "2026-05-14T21:42:14.606222",
+      "message": "Persisting artifacts, summaries, and runtime bundles."
+    },
+    {
+      "status": "running",
+      "stage": "logging_mlflow",
+      "timestamp": "2026-05-14T21:42:43.867500",
+      "message": "Logging monitoring summaries and artifact context."
+    },
+    {
+      "status": "running",
+      "stage": "syncing_inference",
+      "timestamp": "2026-05-14T21:42:44.666698",
+      "message": "Persisting run outputs to the registry and inference pair."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-14T21:42:46.887735",
+      "message": "Training workflow completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "training_fe360af3eb9c"
+  },
+  "plots": [
+    {
+      "id": "4f4263fcf2d69a4c",
+      "kind": "legacy_image",
+      "title": "Loss Curve",
+      "description": "Saved runtime plot artifact.",
+      "source": {
+        "domain": "training",
+        "job_id": "training_fe360af3eb9c"
+      },
+      "metadata": {
+        "display_id": "4f4263fcf2d69a4c",
+        "kind": "legacy_image",
+        "domain": "training",
+        "job_id": "training_fe360af3eb9c",
+        "plot_type": "loss_curve",
+        "filename": "loss_curve.png",
+        "relative_path": "training_fe360af3eb9c/loss_curve.png",
+        "extension": ".png",
+        "size_bytes": 39719,
+        "modified_at": "2026-05-14T21:42:16.343903+00:00"
+      },
+      "artifact": {
+        "url": "/plots/artifacts/4f4263fcf2d69a4c/file",
+        "relative_path": "training_fe360af3eb9c/loss_curve.png",
+        "filename": "loss_curve.png",
+        "extension": ".png",
+        "size_bytes": 39719,
+        "modified_at": "2026-05-14T21:42:16.343903+00:00"
+      },
+      "plot_type": "loss_curve"
+    },
+    {
+      "id": "f3296485b4eadfae",
+      "kind": "legacy_image",
+      "title": "Metric Comparison",
+      "description": "Saved runtime plot artifact.",
+      "source": {
+        "domain": "training",
+        "job_id": "training_fe360af3eb9c"
+      },
+      "metadata": {
+        "display_id": "f3296485b4eadfae",
+        "kind": "legacy_image",
+        "domain": "training",
+        "job_id": "training_fe360af3eb9c",
+        "plot_type": "metric_comparison",
+        "filename": "metric_comparison.png",
+        "relative_path": "training_fe360af3eb9c/metric_comparison.png",
+        "extension": ".png",
+        "size_bytes": 51606,
+        "modified_at": "2026-05-14T21:42:15.537638+00:00"
+      },
+      "artifact": {
+        "url": "/plots/artifacts/f3296485b4eadfae/file",
+        "relative_path": "training_fe360af3eb9c/metric_comparison.png",
+        "filename": "metric_comparison.png",
+        "extension": ".png",
+        "size_bytes": 51606,
+        "modified_at": "2026-05-14T21:42:15.537638+00:00"
+      },
+      "plot_type": "metric_comparison"
+    }
+  ],
+  "mlflow_run_id": "c19b8b6e16004cfab92bac07974d7fab"
+}

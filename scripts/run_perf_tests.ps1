@@ -2,7 +2,8 @@ $ErrorActionPreference = "Stop"
 
 $python = ".\.venv\Scripts\python.exe"
 $projectRoot = (Resolve-Path -LiteralPath ".").Path
-$testTemp = Join-Path $projectRoot "temp\pytest-perf"
+$runId = [System.Guid]::NewGuid().ToString("N")
+$testTemp = Join-Path $projectRoot "temp\pytest-perf-$runId"
 
 New-Item -ItemType Directory -Force -Path $testTemp | Out-Null
 

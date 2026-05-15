@@ -50,6 +50,27 @@ SAFE_ENVIRONMENT_VARIABLES: dict[str, dict[str, Any]] = {
         "restart_required": True,
         "default": "http://localhost:8050",
     },
+    "AMANAJE_DASH_EXTENSIONS_ENABLED": {
+        "label": "Visualization Extensions Enabled",
+        "description": "Enables trusted local Python dashboard extensions in the Visualization renderer.",
+        "category": "Visualization",
+        "restart_required": True,
+        "default": "false",
+    },
+    "AMANAJE_DASH_EXTENSIONS_DIR": {
+        "label": "Visualization Extensions Directory",
+        "description": "Renderer-local directory scanned for trusted dashboard extension modules.",
+        "category": "Visualization",
+        "restart_required": True,
+        "default": "/app/extensions",
+    },
+    "AMANAJE_DASH_EXTENSIONS_ALLOWLIST": {
+        "label": "Visualization Extensions Allowlist",
+        "description": "Comma-separated extension ids allowed to load. Leave empty to allow enabled local extensions.",
+        "category": "Visualization",
+        "restart_required": True,
+        "default": "",
+    },
     "AMANAJE_ASSISTANT_ACTIVE_PROVIDER": {
         "label": "Assistant Active Provider",
         "description": "Provider key used when assistant requests select the configured provider automatically.",

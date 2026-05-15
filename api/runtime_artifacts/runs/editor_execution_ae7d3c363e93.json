@@ -1,0 +1,145 @@
+{
+  "run_id": "editor_execution_ae7d3c363e93",
+  "run_type": "editor_execution",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-14T21:41:39.146208",
+  "updated_at": "2026-05-14T21:41:49.374564",
+  "started_at": "2026-05-14T21:41:49.261765",
+  "completed_at": "2026-05-14T21:41:49.374564",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false
+  },
+  "parameters": {
+    "code_length": 42
+  },
+  "metrics": {
+    "variable_count": 1
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "result": {
+        "name": "result",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "4",
+        "preview": "4",
+        "metadata": null,
+        "raw_value": 4
+      }
+    },
+    "metadata": {},
+    "document": {
+      "name": "code_model_20260514_214149",
+      "description": "Code created in the editor",
+      "object_type": "code_model",
+      "size": 0.0,
+      "path": "editor",
+      "date": "2026-05-14T21:41:49.366761",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-14T21:41:49.366761"
+        }
+      ],
+      "variables": {
+        "result": {
+          "name": "result",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "4",
+          "preview": "4",
+          "metadata": null,
+          "raw_value": 4
+        }
+      },
+      "metadata": {},
+      "code": {
+        "script": "print('amanaje live smoke')\nresult = 2 + 2",
+        "language": "python",
+        "line_count": 2
+      }
+    },
+    "summary": {
+      "variable_count": 1,
+      "defined_name_count": 1,
+      "defined_names": [
+        "result"
+      ],
+      "has_error": false
+    },
+    "stdout": "amanaje live smoke\n",
+    "stderr": "",
+    "error": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-14T21:41:49.374564",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:41:39.146208",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-14T21:41:39.182561",
+        "message": "Editor execution enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-14T21:41:49.261765",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-14T21:41:49.374564",
+        "message": "Editor execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:41:39.146208",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-14T21:41:39.182561",
+      "message": "Editor execution enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-14T21:41:49.261765",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-14T21:41:49.374564",
+      "message": "Editor execution completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "editor_execution_ae7d3c363e93"
+  }
+}

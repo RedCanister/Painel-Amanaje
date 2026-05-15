@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import parse_qs
 
@@ -10,30 +11,70 @@ import dash
 import plotly.graph_objects as go
 import requests
 from dash import Input, Output, dcc, html
+from flask import jsonify
+
+from extension_loader import ExtensionRegistry, LoadedExtension, load_dashboard_extensions
 
 
 API_INTERNAL_URL = os.getenv("AMANAJE_API_INTERNAL_URL", "http://localhost:8000").rstrip("/")
 API_PUBLIC_URL = os.getenv("AMANAJE_API_PUBLIC_URL", "http://localhost:8000").rstrip("/")
 REQUEST_TIMEOUT_SECONDS = float(os.getenv("AMANAJE_DASHBOARD_REQUEST_TIMEOUT", "8"))
+EXTENSIONS_ENABLED = os.getenv("AMANAJE_DASH_EXTENSIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+EXTENSIONS_DIR = Path(os.getenv("AMANAJE_DASH_EXTENSIONS_DIR", "/app/extensions"))
+EXTENSIONS_ALLOWLIST = os.getenv("AMANAJE_DASH_EXTENSIONS_ALLOWLIST", "")
 
-app = dash.Dash(__name__, suppress_callback_exceptions=True, title="Painel Amanaje Plotly")
+app = dash.Dash(__name__, suppress_callback_exceptions=True, title="Painel Amanaje Visualization")
 server = app.server
 
 
+class DashboardApiClient:
+    def __init__(self, base_url: str, timeout_seconds: float) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.timeout_seconds = timeout_seconds
+
+    def get(self, path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any] | list[Any]:
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        try:
+            response = requests.get(url, params=dict(params or {}), timeout=self.timeout_seconds)
+            response.raise_for_status()
+            return response.json()
+        except Exception as exc:
+            return {"status": "error", "detail": str(exc), "url": url}
+
+
+api_client = DashboardApiClient(API_INTERNAL_URL, REQUEST_TIMEOUT_SECONDS)
+
+
 def api_get(path: str, params: Mapping[str, Any] | None = None) -> dict[str, Any] | list[Any]:
-    url = f"{API_INTERNAL_URL}/{path.lstrip('/')}"
-    try:
-        response = requests.get(url, params=dict(params or {}), timeout=REQUEST_TIMEOUT_SECONDS)
-        response.raise_for_status()
-        return response.json()
-    except Exception as exc:
-        return {"status": "error", "detail": str(exc), "url": url}
+    return api_client.get(path, params)
 
 
 def public_api_url(path: str) -> str:
     if path.startswith(("http://", "https://")):
         return path
     return f"{API_PUBLIC_URL}/{path.lstrip('/')}"
+
+
+extension_registry: ExtensionRegistry = load_dashboard_extensions(
+    EXTENSIONS_DIR,
+    enabled=EXTENSIONS_ENABLED,
+    allowlist=EXTENSIONS_ALLOWLIST,
+    app=app,
+    api_client=api_client,
+    config={
+        "api_internal_url": API_INTERNAL_URL,
+        "api_public_url": API_PUBLIC_URL,
+        "request_timeout_seconds": REQUEST_TIMEOUT_SECONDS,
+    },
+)
+
+
+@server.route("/extensions.json")
+def extensions_json():
+    response = jsonify(extension_registry.to_payload())
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def option_rows(path: str, *, label_field: str = "name", value_field: str = "id") -> list[dict[str, str]]:
@@ -128,6 +169,104 @@ def render_plot_deck(plots: Any) -> html.Div:
     return html.Div([render_plot_card(plot) for plot in usable_plots], className="plot-grid")
 
 
+def render_extension_layout(extension: LoadedExtension) -> Any:
+    layout = extension.layout
+    if callable(layout):
+        return layout(extension.context)
+    if layout is None:
+        return html.Div("This extension did not provide a layout.", className="muted")
+    if isinstance(layout, (str, int, float)):
+        return html.Div(str(layout))
+    return layout
+
+
+def render_extension_card(extension: LoadedExtension, active_id: str | None) -> html.A:
+    metadata = extension.metadata
+    tags = metadata.get("tags") if isinstance(metadata.get("tags"), list) else []
+    return html.A(
+        [
+            html.Strong(metadata.get("title") or extension.id),
+            html.Span(metadata.get("description") or "Custom Visualization dashboard.", className="muted"),
+            html.Div([html.Span(str(tag), className="extension-tag") for tag in tags[:5]], className="extension-tags"),
+        ],
+        href=f"/extensions/{extension.id}",
+        className=f"extension-card{' active' if active_id == extension.id else ''}",
+    )
+
+
+def render_extension_errors(registry: ExtensionRegistry) -> html.Details | None:
+    if not registry.errors:
+        return None
+    return html.Details(
+        [
+            html.Summary(f"{len(registry.errors)} extension issue(s)"),
+            html.Pre(json.dumps(registry.errors, indent=2), className="extension-error-json"),
+        ],
+        className="extension-errors",
+    )
+
+
+def render_extensions_workspace(selected_id: str | None = None) -> html.Div:
+    registry = extension_registry
+    if not registry.enabled:
+        return html.Div(
+            [
+                html.Header([html.H1("Custom Dashboards"), html.P("Trusted Python Visualization extensions are currently disabled.")], className="hero"),
+                html.Div("Set AMANAJE_DASH_EXTENSIONS_ENABLED=true and restart the dashboard renderer to enable local dashboard modules.", className="empty-state"),
+                render_extension_errors(registry),
+            ],
+            className="dashboard-shell extension-shell",
+        )
+
+    selected_extension = registry.get(selected_id) or registry.first()
+    if not registry.extensions:
+        return html.Div(
+            [
+                html.Header([html.H1("Custom Dashboards"), html.P("No enabled Visualization extensions were found.")], className="hero"),
+                html.Div("Add a trusted extension under /app/extensions and allowlist it if required.", className="empty-state"),
+                render_extension_errors(registry),
+            ],
+            className="dashboard-shell extension-shell",
+        )
+
+    body: Any
+    try:
+        body = render_extension_layout(selected_extension) if selected_extension else html.Div("Select a dashboard.", className="muted")
+    except Exception as exc:
+        body = html.Div(
+            [
+                html.H3("Extension render failed"),
+                html.P(str(exc), className="muted"),
+            ],
+            className="extension-render-error",
+        )
+
+    children = [
+        html.Header(
+            [
+                html.H1("Custom Dashboards"),
+                html.P("Personalized Dash dashboards loaded from trusted local Python modules."),
+            ],
+            className="hero",
+        ),
+        html.Div(
+            [render_extension_card(extension, selected_extension.id if selected_extension else None) for extension in registry.extensions.values()],
+            className="extension-card-grid",
+        ),
+        html.Section(
+            [
+                html.H2(selected_extension.metadata.get("title") if selected_extension else "Dashboard"),
+                body,
+            ],
+            className="extension-stage",
+        ),
+    ]
+    error_details = render_extension_errors(registry)
+    if error_details is not None:
+        children.append(error_details)
+    return html.Div(children, className="dashboard-shell extension-shell")
+
+
 def decode_embedded_figure(search: str) -> tuple[str, dict[str, Any]]:
     query = parse_qs((search or "").lstrip("?"))
     title = (query.get("title") or ["Plot"])[0]
@@ -173,7 +312,7 @@ def render_dashboard() -> html.Div:
         [
             html.Header(
                 [
-                    html.H1("Painel Amanaje Plotly"),
+                    html.H1("Painel Amanaje Visualization"),
                     html.P("Interactive plots rendered from the FastAPI registry, runtime artifacts, and analysis endpoints."),
                 ],
                 className="hero",
@@ -246,6 +385,9 @@ app.layout = html.Div([dcc.Location(id="location"), html.Div(id="page")])
 def render_page(pathname: str, search: str) -> html.Div:
     if pathname == "/embed":
         return render_embed(search)
+    if pathname == "/extensions" or (pathname or "").startswith("/extensions/"):
+        selected_id = (pathname or "").rstrip("/").split("/")[-1] if pathname not in {None, "", "/extensions"} else None
+        return render_extensions_workspace(selected_id)
     return render_dashboard()
 
 
@@ -323,6 +465,15 @@ server.index_string = """
             .embed-shell { height: 100vh; display: grid; grid-template-rows: auto 1fr; background: white; }
             .embed-title { padding: 8px 12px; color: #475569; font-size: 13px; border-bottom: 1px solid #e5e7eb; }
             .embed-graph { min-height: 320px; height: 100%; }
+            .extension-shell { display: grid; gap: 18px; }
+            .extension-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+            .extension-card { display: grid; gap: 6px; padding: 14px; border: 1px solid #d1fae5; border-radius: 12px; color: inherit; text-decoration: none; background: white; }
+            .extension-card.active { border-color: #0f766e; box-shadow: 0 12px 28px rgba(15, 118, 110, 0.12); }
+            .extension-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+            .extension-tag { border-radius: 999px; padding: 3px 8px; background: #ecfeff; color: #0f766e; font-size: 12px; font-weight: 700; }
+            .extension-stage, .empty-state, .extension-errors, .extension-render-error { background: white; border: 1px solid #d1fae5; border-radius: 12px; padding: 16px; }
+            .extension-stage h2 { margin: 0 0 12px; color: #115e59; }
+            .extension-error-json { overflow: auto; max-height: 280px; background: #f8fafc; padding: 12px; border-radius: 8px; }
         </style>
     </head>
     <body>

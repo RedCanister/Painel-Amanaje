@@ -11,7 +11,6 @@
         gap: 1rem;
     }
 
-    .settings-header,
     .settings-panel {
         background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
@@ -20,10 +19,12 @@
         padding: 1.25rem;
     }
 
-    .settings-header h2,
     .settings-panel h3 {
         margin: 0;
-        color: var(--amanaje-primary-strong);
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.22rem, 1.75vw, 1.45rem);
+        line-height: 1.12;
     }
 
     .settings-header {
@@ -36,6 +37,12 @@
     .settings-title-block {
         display: grid;
         gap: 0.35rem;
+    }
+
+    .settings-title-block p {
+        margin: 0;
+        max-width: 70ch;
+        color: var(--amanaje-muted);
     }
 
     .settings-status {
@@ -386,11 +393,11 @@
 
 {% block content %}
 <div class="settings-shell">
-    <section class="settings-header">
+    <section class="settings-header atlas-intro-card">
         <div class="settings-title-block">
             <span class="workspace-eyebrow">Management domain</span>
             <h2>Global Settings</h2>
-            <p class="helper-text">Operate app-wide feature flags and safe environment overrides from one control surface.</p>
+            <p>Operate app-wide feature flags and safe environment overrides from one control surface.</p>
             <div class="settings-debug-state">
                 <span id="settingsDebugState" class="settings-badge">Debug inactive</span>
                 <span class="helper-text">Debug mode controls backend error metadata and frontend stack capture.</span>

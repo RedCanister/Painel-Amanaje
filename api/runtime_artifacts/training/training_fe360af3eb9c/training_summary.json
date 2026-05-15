@@ -1,0 +1,63 @@
+{
+    "framework": "pytorch",
+    "metrics": {
+        "train_loss": 2.1421844959259033,
+        "val_loss": 0.795732319355011,
+        "eval_accuracy": 0.0,
+        "eval_precision": 0.0,
+        "eval_recall": 0.0,
+        "eval_f1": 0.0
+    },
+    "history": {
+        "train_loss": [
+            2.1421844959259033
+        ],
+        "val_loss": [
+            0.795732319355011
+        ]
+    },
+    "parameters": {
+        "hidden_dim": 64,
+        "hidden_layers": 2,
+        "dropout": 0.1,
+        "learning_rate": 0.001,
+        "batch_size": 2,
+        "epochs": 1,
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": false,
+        "device_fallback_applied": false,
+        "device": "auto",
+        "device_fallback_reason": "auto_selected_cpu"
+    },
+    "run_id": "c19b8b6e16004cfab92bac07974d7fab",
+    "artifact_paths": [],
+    "metadata": {
+        "device": "cpu",
+        "epochs": 1,
+        "accelerator": {
+            "torch_available": true,
+            "torch_version": "2.9.0+cu128",
+            "cuda_available": false,
+            "cuda_version": "12.8",
+            "device_count": 0,
+            "devices": [],
+            "fallback_policy": "cpu",
+            "requested_device": "auto",
+            "resolved_device": "cpu",
+            "fallback_applied": false,
+            "fallback_reason": "auto_selected_cpu"
+        },
+        "transfer_learning": {
+            "training_mode": "transfer",
+            "transfer_strategy": "auto",
+            "base_model_id": 2,
+            "base_run_id": "training_6c82dd774e87",
+            "base_artifact_path": "/models/sample_model.pt",
+            "dataset_snapshot_hash": "56ff31b5c462ec29bf62462cdc85ce8ea4118d69f45beaa101312b05f8095a52",
+            "transfer_status": "incompatible_base_artifact",
+            "base_model_loaded": false,
+            "transfer_error": "Only TorchScript or app-generated PyTorch bundles can run directly. This artifact appears to need a separate model definition."
+        }
+    }
+}

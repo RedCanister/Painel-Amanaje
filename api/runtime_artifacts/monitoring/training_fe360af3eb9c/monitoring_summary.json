@@ -1,0 +1,24 @@
+{
+    "job_id": "training_fe360af3eb9c",
+    "drift_results": {
+        "value": false
+    },
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+    },
+    "degradation_results": {
+        "train_loss": false,
+        "val_loss": true,
+        "eval_accuracy": true,
+        "eval_precision": true,
+        "eval_recall": true,
+        "eval_f1": true
+    },
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 5
+    },
+    "retrain_recommended": true,
+    "evaluated_at": "2026-05-14T21:42:44.024965"
+}

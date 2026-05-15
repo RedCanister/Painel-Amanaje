@@ -25,6 +25,9 @@ POLYMORPHIC_IDENTITY_ALIASES = {
         "model": "learning_model",
         "models": "learning_model",
         "study": "study_model",
+        "panel": "panel_dashboard",
+        "paneldashboard": "panel_dashboard",
+        "panel_dashboard": "panel_dashboard",
     },
     "dataset_type": {
         "csv": "dataset",
@@ -101,6 +104,11 @@ JSONB_CONTAINER_COLUMNS = {
     "code_models": {
         "variables": "{",
         "code": "{",
+    },
+    "panel_dashboards": {
+        "layout": "{",
+        "widgets": "[",
+        "panel_metadata": "{",
     },
     "study_models": {
         "best_trial": "{",

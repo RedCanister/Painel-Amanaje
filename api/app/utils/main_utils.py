@@ -39,8 +39,8 @@ from app.database.db_utils import (
     normalize_legacy_polymorphic_identities,
     update_entry,
 )
-from app.models.model_objects import AssistantModel, AssistantTrainingDatasetModel, CodeModel, DatasetModel, InferenceModel, LearningModel, StudyModel
-from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
+from app.models.model_objects import AssistantModel, AssistantTrainingDatasetModel, CodeModel, DatasetModel, InferenceModel, LearningModel, PanelDashboardModel, StudyModel
+from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, PanelDashboardORM, StudyORM
 from app.models.model_registry import ModelRegistry
 from app.utils.config import merge_env_overrides, save_config_snapshot
 from app.utils.deployment_utils import (
@@ -377,6 +377,9 @@ REGISTRY_MODEL_MAP: dict[str, dict[str, Any]] = {
     "study": {"model": StudyModel, "orm": StudyORM, "label": "StudyModel"},
     "codemodel": {"model": CodeModel, "orm": CodeORM, "label": "CodeModel"},
     "code": {"model": CodeModel, "orm": CodeORM, "label": "CodeModel"},
+    "paneldashboardmodel": {"model": PanelDashboardModel, "orm": PanelDashboardORM, "label": "PanelDashboardModel"},
+    "paneldashboard": {"model": PanelDashboardModel, "orm": PanelDashboardORM, "label": "PanelDashboardModel"},
+    "panel": {"model": PanelDashboardModel, "orm": PanelDashboardORM, "label": "PanelDashboardModel"},
 }
 
 
@@ -424,6 +427,7 @@ def _register_models() -> None:
         (InferenceModel, InferenceORM),
         (CodeModel, CodeORM),
         (StudyModel, StudyORM),
+        (PanelDashboardModel, PanelDashboardORM),
     )
     for pydantic_model, orm_model in registry_pairs:
         if ModelRegistry._registry.get(pydantic_model) is not orm_model:

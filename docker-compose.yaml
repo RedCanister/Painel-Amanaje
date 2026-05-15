@@ -351,6 +351,9 @@ services:
       AMANAJE_API_PUBLIC_URL: "http://localhost:8000"
       AMANAJE_DASHBOARD_PUBLIC_URL: "http://localhost:8050"
       AMANAJE_RUNTIME_ARTIFACTS_DIR: "/runtime_artifacts"
+      AMANAJE_DASH_EXTENSIONS_ENABLED: "${AMANAJE_DASH_EXTENSIONS_ENABLED:-false}"
+      AMANAJE_DASH_EXTENSIONS_DIR: "/app/extensions"
+      AMANAJE_DASH_EXTENSIONS_ALLOWLIST: "${AMANAJE_DASH_EXTENSIONS_ALLOWLIST:-}"
     volumes:
       - ./dashboard:/app:cached
       - ./api/runtime_artifacts:/runtime_artifacts:ro

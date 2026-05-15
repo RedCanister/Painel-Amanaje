@@ -5,8 +5,8 @@ import re
 import pytest
 from sklearn.dummy import DummyRegressor
 
-from app.models.model_objects import InferenceModel, LearningModel, StudyModel
-from app.models.model_orm import InferenceORM, StudyORM
+from app.models.model_objects import InferenceModel, LearningModel, PanelDashboardModel, StudyModel
+from app.models.model_orm import InferenceORM, PanelDashboardORM, StudyORM
 
 
 TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "templates"
@@ -130,12 +130,63 @@ def test_orm_mappings_include_inference_and_study_relationship_columns():
     assert study.learning_model_id == 1
 
 
+def test_panel_dashboard_model_and_orm_store_saved_layout_state():
+    panel = PanelDashboardModel.model_validate(
+        {
+            "id": 3,
+            "name": "Amanaje Panel",
+            "object_type": "panel_dashboard",
+            "size": 0.0,
+            "path": "panel://amanaje-panel",
+            "layout": '{"version": 1, "columns": 12}',
+            "widgets": '[{"id": "objective", "kind": "metadata"}]',
+            "panel_metadata": '{"owner": "local"}',
+        }
+    )
+    orm_panel = PanelDashboardORM(
+        name="Amanaje Panel",
+        object_type="panel_dashboard",
+        size=0.0,
+        path="panel://amanaje-panel",
+        layout={"version": 1},
+        widgets=[{"id": "objective"}],
+        panel_metadata={"owner": "local"},
+    )
+
+    assert panel.layout == {"version": 1, "columns": 12}
+    assert panel.widgets == [{"id": "objective", "kind": "metadata"}]
+    assert panel.panel_metadata == {"owner": "local"}
+    assert PanelDashboardORM.__mapper__.polymorphic_identity == "panel_dashboard"
+    assert orm_panel.tint is None or orm_panel.tint == "amanaje"
+
+
+def test_panel_widget_normalization_keeps_only_wide_and_full_sizes():
+    pytest.importorskip("numpy")
+    pytest.importorskip("pandas")
+    import main_app
+
+    widgets = main_app._coerce_panel_widgets(
+        [
+            {"id": "old-compact", "kind": "metadata", "size": "compact"},
+            {"id": "old-standard", "kind": "plot", "size": "standard"},
+            {"id": "dash", "kind": "dash_workspace", "size": "full", "settings": {"path": "/extensions"}},
+            {"id": "bad-size", "kind": "dataset", "size": "tiny"},
+        ]
+    )
+
+    assert [widget["size"] for widget in widgets] == ["wide", "wide", "full", "wide"]
+    assert widgets[2]["kind"] == "dash_workspace"
+    assert {widget["size"] for widget in main_app._default_panel_widgets()} <= {"wide", "full"}
+    assert any(widget["kind"] == "dash_workspace" and widget["size"] == "full" for widget in main_app._default_panel_widgets())
+
+
 def test_target_templates_do_not_reference_missing_static_ids():
     for template_name in [
         "base_blue.html",
         "base_create.html",
         "base_green.html",
         "base_onnx.html",
+        "base_panel.html",
         "base_purple.html",
         "base_red.html",
     ]:

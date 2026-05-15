@@ -1,0 +1,33 @@
+{
+    "framework": "pytorch",
+    "metrics": {
+        "train_loss": 0.8884197473526001,
+        "val_loss": 0.6459794640541077
+    },
+    "history": {
+        "train_loss": [
+            0.8884197473526001
+        ],
+        "val_loss": [
+            0.6459794640541077
+        ]
+    },
+    "parameters": {
+        "hidden_dim": 16,
+        "hidden_layers": 4,
+        "dropout": 0.2,
+        "learning_rate": 0.002498220903977298,
+        "batch_size": 64,
+        "epochs": 1,
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": false,
+        "device_fallback_applied": false
+    },
+    "run_id": "10a03ce7833b443591a587ae6b51a93c",
+    "artifact_paths": [],
+    "metadata": {
+        "device": "cpu",
+        "epochs": 1
+    }
+}

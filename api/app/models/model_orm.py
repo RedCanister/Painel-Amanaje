@@ -217,6 +217,23 @@ class CodeORM(ObjectORM):
         "polymorphic_identity": "code_model"
     }
 
+
+class PanelDashboardORM(ObjectORM):
+    __tablename__ = "panel_dashboards"
+
+    id = Column(Integer, ForeignKey("objects.id"), primary_key=True)
+
+    objective = Column(String, nullable=True)
+    tint = Column(String, nullable=False, default="amanaje")
+    layout = Column(JSONB, nullable=False, default=dict)
+    widgets = Column(JSONB, nullable=False, default=list)
+    panel_metadata = Column(JSONB, nullable=True, default=dict)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "panel_dashboard"
+    }
+
+
 class InferenceORM(ObjectORM):
     __tablename__ = "inference_models"
 

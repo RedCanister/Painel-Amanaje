@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from uuid import uuid4
+
 import pytest
+from playwright.sync_api import expect
 
 from .page_objects import (
     AssistantPage,
@@ -18,7 +21,7 @@ pytestmark = pytest.mark.e2e
 
 
 def _computed_style_snapshot(page, selector):
-    return page.locator(selector).evaluate(
+    return page.locator(selector).first.evaluate(
         """
         (element) => {
             const style = getComputedStyle(element);
@@ -27,7 +30,8 @@ def _computed_style_snapshot(page, selector):
                 borderColor: style.borderTopColor,
                 boxShadow: style.boxShadow,
                 boxSizing: style.boxSizing,
-                paddingTop: parseFloat(style.paddingTop || "0")
+                paddingTop: parseFloat(style.paddingTop || "0"),
+                fontFamily: style.fontFamily
             };
         }
         """
@@ -45,6 +49,7 @@ def _computed_style_snapshot(page, selector):
         (ProductionPage, "/production", "Global Production Watch"),
         (VisualizationPage, "/visualization", "Visualization"),
         (VisualizationPage, "/plot", "Visualization"),
+        (SettingsPage, "/registry", "Model Registry - CRUD Management"),
         (AssistantPage, "/assistant", "Assistant Management"),
         (SettingsPage, "/settings", "Global Settings"),
     ],
@@ -54,6 +59,108 @@ def test_primary_routes_render_core_workspace_surfaces(page, page_cls, path, exp
     workspace.goto(path)
 
     assert expected_text in page.content()
+
+
+def test_panel_workspace_saves_reloads_and_deletes_dashboard(page):
+    panel_name = f"E2E Panel {uuid4().hex[:8]}"
+
+    page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
+    page.goto("/panel", wait_until="networkidle")
+    page.locator("#panelModeEdit").wait_for(state="visible")
+    page.locator("#panelModeEdit").click()
+    page.locator("#panelDashboardName").wait_for(state="visible")
+    page.locator("#panelNewDashboard").click()
+    page.locator("#panelDashboardName").fill(panel_name)
+    page.locator("#panelObjective").fill("Verify saved panel dashboard persistence.")
+    page.locator("#panelWidgetKind").select_option("note")
+    page.locator("#panelWidgetTitle").fill("E2E Note")
+    page.locator("#panelWidgetConfig").fill('{"text": "Saved by Playwright E2E."}')
+    page.locator("#panelAddWidget").click()
+
+    expect(page.locator(".panel-widget-title", has_text="E2E Note")).to_be_visible()
+
+    page.locator("#panelSaveDashboard").click()
+    expect(page.locator("#statusMessage")).to_contain_text("Panel saved.", timeout=10000)
+
+    page.locator("#panelNewDashboard").click()
+    page.locator("#panelDashboardSelect").select_option(label=panel_name)
+    expect(page.locator("#panelDashboardName")).to_have_value(panel_name, timeout=10000)
+    expect(page.locator(".panel-widget-title", has_text="E2E Note")).to_be_visible()
+
+    page.locator("#panelDeleteDashboard").click()
+    expect(page.locator("#statusMessage")).to_contain_text("Panel deleted.", timeout=10000)
+
+
+def test_panel_modes_sizes_and_dash_workspace_render(page):
+    page.add_init_script("window.localStorage.removeItem('amanajePanelMode')")
+    page.goto("/panel", wait_until="networkidle")
+    page.locator("#panelModeRun").wait_for(state="visible")
+
+    assert page.locator("#panelModeRun").count() == 1
+    assert page.locator("#panelModeEdit").count() == 1
+    assert page.locator("#panelWidgetSize option[value='compact']").count() == 0
+    assert page.locator("#panelWidgetSize option[value='standard']").count() == 0
+
+    page.locator("#panelModeEdit").click()
+    page.locator("#panelNewDashboard").click()
+    expect(page.locator(".panel-dash-frame")).to_be_visible()
+    assert page.locator(".panel-widget select[data-panel-action='resize'] option[value='compact']").count() == 0
+    assert page.locator(".panel-widget select[data-panel-action='resize'] option[value='standard']").count() == 0
+
+    page.locator("#panelModeRun").click()
+    expect(page.locator(".panel-sidebar")).to_be_hidden()
+    expect(page.locator("#panelNewDashboard")).to_be_hidden()
+    expect(page.locator(".panel-widget-actions[data-panel-edit-only='true']").first).to_be_hidden()
+    expect(page.locator("#panelObjectiveRun")).to_be_visible()
+
+
+def test_operational_atlas_shell_kicker_and_domain_navigation_render(page):
+    page.goto("/settings", wait_until="networkidle")
+
+    assert page.locator(".brand-kicker").inner_text().upper() == "OPERATIONAL ATLAS"
+    assert page.locator(".nav-section").count() == 4
+    for label in ("Data", "Models", "MLOps", "Management"):
+        assert page.locator(".nav-section h3", has_text=label).count() == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "selector"),
+    [
+        ("/upload", ".workspace-intro h2"),
+        ("/create", ".workspace-intro h2"),
+        ("/feature", ".workspace-intro h2"),
+        ("/assistant", ".assistant-hero h2"),
+        ("/settings", ".settings-header h2"),
+        ("/registry", ".registry-header h2"),
+        ("/training", ".global-context h3"),
+        ("/onnx", ".onnx-context-panel h3"),
+        ("/production", ".global-watch-panel h3"),
+        ("/visualization", ".global-context h3"),
+    ],
+)
+def test_atlas_page_titles_keep_heading_font_family(page, path, selector):
+    page.goto(path, wait_until="domcontentloaded")
+    page.locator(selector).first.wait_for(state="visible")
+
+    style = _computed_style_snapshot(page, selector)
+    assert "Fraunces" in style["fontFamily"]
+
+
+@pytest.mark.parametrize(
+    ("path", "selector"),
+    [
+        ("/training", ".panel-title"),
+        ("/onnx", ".panel-title"),
+        ("/production", ".panel-title"),
+        ("/visualization", ".panel-title"),
+    ],
+)
+def test_atlas_context_panels_keep_heading_font_family(page, path, selector):
+    page.goto(path, wait_until="domcontentloaded")
+    page.locator(selector).first.wait_for(state="visible")
+
+    style = _computed_style_snapshot(page, selector)
+    assert "Fraunces" in style["fontFamily"]
 
 
 def test_upload_and_create_support_matrices_are_collapsible(page):

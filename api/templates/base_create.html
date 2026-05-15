@@ -16,7 +16,13 @@
         box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
         padding: 1.25rem;
     }
-    .data-operations .form-section h3 { color: var(--amanaje-primary-strong); margin: 0; }
+    .data-operations .form-section h3 {
+        color: var(--amanaje-text-strong);
+        margin: 0;
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.22rem, 1.8vw, 1.5rem);
+        line-height: 1.12;
+    }
     .data-operations #uploadForm {
         display: grid;
         gap: 1rem;
@@ -90,7 +96,13 @@
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 0.95rem;
     }
-    .support-card h4 { margin: 0 0 0.35rem; color: var(--amanaje-primary-strong); }
+    .support-card h4 {
+        margin: 0 0 0.35rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+    }
     .support-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
     .support-badge {
         display: inline-flex;
@@ -107,7 +119,13 @@
         border-radius: 14px;
         padding: 0.95rem;
     }
-    .analysis-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .analysis-card h4 {
+        margin-top: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+    }
     .analysis-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
     .analysis-kpi {
         background: white;
@@ -214,7 +232,13 @@
         padding: 1rem;
         min-height: 160px;
     }
-    .assistant-output h4 { margin: 0 0 0.5rem; color: var(--amanaje-primary-strong); }
+    .assistant-output h4 {
+        margin: 0 0 0.5rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+    }
     .assistant-pill-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.6rem 0; }
     .assistant-pill {
         display: inline-flex;
@@ -265,7 +289,14 @@
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 0.9rem 1rem;
     }
-    .file-panel-inline h3 { margin: 0 0 0.55rem; color: var(--amanaje-primary-strong); }
+    .file-panel-inline summary {
+        margin: 0 0 0.55rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.12rem;
+        line-height: 1.15;
+        cursor: pointer;
+    }
     .file-list {
         list-style: none;
         padding: 0;
@@ -282,7 +313,10 @@
     }
     .workspace-subsection h4 {
         margin: 0 0 0.5rem;
-        color: var(--amanaje-primary-strong);
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
     }
     @media (max-width: 900px) {
         .assistant-create-grid { grid-template-columns: 1fr; }
@@ -342,13 +376,11 @@
                 <button type="button" id="btnResetScript" class="success">Reset</button>
             </div>
 
-            <!-- TODO - This saved scripts should be collapsable, and colored just like the theme.-->
-            <div id="filePanel" class="file-panel-inline" style="display:none;">
-                <h3>Saved Scripts</h3>
+            <details id="filePanel" class="file-panel-inline" style="display:none;" open>
+                <summary>Saved Scripts</summary>
                 <ul id="fileList" class="file-list"></ul>
-            </div>
+            </details>
 
-            <!-- This assistant button needs to fit the same styling of every other element in the interface-->
             <div class="assistant-collapsible" data-assistant-collapsible="create">
                 <button type="button" class="assistant-toggle" data-assistant-toggle="create" aria-expanded="false">
                     Assistant <span class="assistant-status-badge" data-assistant-status="create">Ready</span>
@@ -419,7 +451,6 @@
     </section>
 
 
-    <!-- TODO - Adapt this section to be like the analysis section in base_red.html-->
     <section class="form-section" id="featuresSection">
         <h3>Dataset Workspace</h3>
         <p class="small-text">Refresh, inspect, extract, and analyze datasets without leaving the same surface.</p>

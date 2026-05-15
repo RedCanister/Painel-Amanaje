@@ -31,6 +31,14 @@
         gap: 0.85rem;
         align-items: end;
     }
+    .assistant-section h3,
+    .assistant-panel-card h3 {
+        margin: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.18rem, 1.7vw, 1.4rem);
+        line-height: 1.12;
+    }
     .assistant-tab-panel textarea { min-height: 120px; }
     .assistant-table-wrapper { overflow: auto; }
     .assistant-metric span { color: #6b7280; display: block; font-size: 0.85rem; }
@@ -46,7 +54,7 @@
 
 {% block content %}
 <div class="assistant-page">
-    <section class="assistant-hero">
+    <section class="assistant-hero atlas-intro-card">
         <span class="workspace-eyebrow">Management domain</span>
         <h2>Assistant Management</h2>
         <p>Operate assistant providers, runtime-loaded AssistantModels, curated training examples, internal references, guarded execution, and evaluation workflows inside the central purple management layer.</p>

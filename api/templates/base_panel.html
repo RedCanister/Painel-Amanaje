@@ -1,0 +1,129 @@
+{% extends "base_template.html" %}
+
+{% block title %}Painel Amanaje Panel{% endblock %}
+
+{% block body_class %}panel-theme{% endblock %}
+
+{% block content %}
+<div class="panel-page" id="panelPage" data-panel-page>
+    <section class="panel-hero">
+        <div class="panel-hero-copy">
+            <span class="workspace-eyebrow">Amanaje panel</span>
+            <h2>Painel Amanaje Panel</h2>
+            <div class="panel-objective-field" data-panel-edit-only="true">
+                <label for="panelObjective">Objective</label>
+                <textarea id="panelObjective" rows="3" placeholder="What question, interest, or perspective should this panel represent?"></textarea>
+            </div>
+            <div class="panel-objective-run" id="panelObjectiveRun"></div>
+        </div>
+
+        <div class="panel-command-center">
+            <div class="panel-mode-toggle" role="group" aria-label="Panel mode">
+                <button type="button" class="mode-button active" id="panelModeRun" data-panel-mode-button="run" aria-pressed="true">Run</button>
+                <button type="button" class="mode-button" id="panelModeEdit" data-panel-mode-button="edit" aria-pressed="false">Edit</button>
+            </div>
+            <div class="form-group" data-panel-edit-only="true">
+                <label for="panelDashboardSelect">Saved Panel</label>
+                <select id="panelDashboardSelect">
+                    <option value="">Loading panels...</option>
+                </select>
+            </div>
+            <div class="panel-command-row">
+                <button type="button" class="btn btn-secondary" id="panelNewDashboard" data-panel-edit-only="true">New</button>
+                <button type="button" class="btn btn-primary" id="panelSaveDashboard" data-panel-edit-only="true">Save</button>
+                <button type="button" class="btn btn-ghost" id="panelRefreshContext">Refresh</button>
+                <button type="button" class="btn btn-danger" id="panelDeleteDashboard" data-panel-edit-only="true">Delete</button>
+            </div>
+            <div class="panel-save-state" data-panel-edit-only="true">
+                <span class="status-pill inactive" id="panelDirtyState">Clean</span>
+                <span class="panel-widget-count" id="panelWidgetCount">0 widgets</span>
+            </div>
+        </div>
+    </section>
+
+    <div id="statusMessage" class="statusMessage panel-status-line" role="status"></div>
+
+    <section class="panel-builder">
+        <aside class="panel-sidebar" data-panel-edit-only="true">
+            <div class="panel-sidebar-section">
+                <h3>Panel Object</h3>
+                <div class="form-group">
+                    <label for="panelDashboardName">Name</label>
+                    <input id="panelDashboardName" type="text" placeholder="Amanaje Panel">
+                </div>
+            </div>
+
+            <div class="panel-sidebar-section">
+                <h3>Add Widget</h3>
+                <div class="form-group">
+                    <label for="panelWidgetKind">Type</label>
+                    <select id="panelWidgetKind">
+                        <option value="dataset">Dataset</option>
+                        <option value="dash_workspace">Dash Workspace</option>
+                        <option value="learning_model">Learning Model</option>
+                        <option value="plot">Plot</option>
+                        <option value="study">Study</option>
+                        <option value="inference">Inference</option>
+                        <option value="simulation">Simulation</option>
+                        <option value="prediction">Prediction</option>
+                        <option value="metric">Metric</option>
+                        <option value="metadata">Metadata</option>
+                        <option value="note">Note</option>
+                        <option value="custom_json">Custom JSON</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetSource">Source</label>
+                    <select id="panelWidgetSource">
+                        <option value="">No source</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetTitle">Title</label>
+                    <input id="panelWidgetTitle" type="text" placeholder="Widget title">
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetSize">Size</label>
+                    <select id="panelWidgetSize">
+                        <option value="wide" selected>Wide</option>
+                        <option value="full">Full</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetConfig">Configuration JSON</label>
+                    <textarea id="panelWidgetConfig" rows="5" placeholder='{"text": "", "metrics": []}'></textarea>
+                </div>
+                <button type="button" class="btn btn-primary panel-add-button" id="panelAddWidget">Add Widget</button>
+            </div>
+
+            <div class="panel-sidebar-section">
+                <h3>Artifact Palette</h3>
+                <div class="panel-context-summary" id="panelContextSummary">Loading artifacts...</div>
+            </div>
+        </aside>
+
+        <section class="panel-canvas" aria-label="Saved dashboard canvas">
+            <div class="panel-canvas-head">
+                <div>
+                    <span class="workspace-eyebrow">Canvas</span>
+                    <h3 id="panelCanvasTitle">Saved Objective Dashboard</h3>
+                </div>
+                <div class="panel-canvas-actions" data-panel-edit-only="true">
+                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedUp" hidden>Move Up</button>
+                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedDown" hidden>Move Down</button>
+                </div>
+            </div>
+
+            <div id="panelEmptyState" class="panel-empty-state" hidden>
+                Add widgets from the palette to shape this panel.
+            </div>
+
+            <div id="panelWidgetDeck" class="panel-widget-deck"></div>
+        </section>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/panel-page.js') }}"></script>
+{% endblock %}

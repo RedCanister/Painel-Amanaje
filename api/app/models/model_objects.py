@@ -264,6 +264,27 @@ class CodeModel(ObjectModel):
         return _coerce_dict_field(value)
 
 
+class PanelDashboardModel(ObjectModel):
+    """Saved editable dashboard that represents a user's active analysis panel."""
+
+    object_type: str = "panel_dashboard"
+    objective: Optional[str] = None
+    tint: str = "amanaje"
+    layout: Dict[str, Any] = Field(default_factory=dict)
+    widgets: List[Dict[str, Any]] = Field(default_factory=list)
+    panel_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("layout", "panel_metadata", mode="before")
+    @classmethod
+    def _validate_panel_dicts(cls, value: Any) -> Any:
+        return _coerce_dict_field(value) or {}
+
+    @field_validator("widgets", mode="before")
+    @classmethod
+    def _validate_panel_widgets(cls, value: Any) -> Any:
+        return _coerce_list_field(value) or []
+
+
 class InferenceModel(ObjectModel):
 
     learning_model_id: int

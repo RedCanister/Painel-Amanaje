@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from fastapi import Body, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db_session import get_db
@@ -33,7 +34,7 @@ from app.models.assistant_objects import (
     WorkflowDraft,
 )
 from app.models.model_objects import AssistantModel, AssistantTrainingDatasetModel, DatasetModel, LearningModel, StudyModel
-from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, StudyORM
+from app.models.model_orm import AssistantORM, AssistantTrainingDatasetORM, CodeORM, DatasetORM, InferenceORM, LearningORM, PanelDashboardORM, StudyORM
 from app.utils.deployment_utils import save_deployment_summary
 from app.utils.assistant_llmops import (
     assistant_alignment_contracts,
@@ -343,9 +344,245 @@ def _normalize_upload_operation(operation_id: str) -> str:
     return aliases.get(normalized, normalized)
 
 
+PANEL_DEFAULT_OBJECTIVE = "Understand the current question through connected data, models, plots, simulations, metrics, and notes."
+PANEL_WIDGET_KINDS = {
+    "dataset",
+    "dash_workspace",
+    "learning_model",
+    "plot",
+    "study",
+    "inference",
+    "simulation",
+    "prediction",
+    "metric",
+    "metadata",
+    "note",
+    "custom_json",
+}
+PANEL_WIDGET_SIZES = {"wide", "full"}
+
+
+class PanelDashboardPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    objective: Optional[str] = None
+    tint: str = "amanaje"
+    layout: dict[str, Any] = Field(default_factory=dict)
+    widgets: list[dict[str, Any]] = Field(default_factory=list)
+    panel_metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+def _panel_widget_id(prefix: str = "widget") -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:10]}"
+
+
+def _coerce_panel_dict(value: Any) -> dict[str, Any]:
+    return _json_safe(value) if isinstance(value, Mapping) else {}
+
+
+def _coerce_panel_int(value: Any, default: int, *, minimum: int = 1, maximum: int = 24) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return min(max(parsed, minimum), maximum)
+
+
+def _coerce_panel_widget_size(value: Any) -> str:
+    size = str(value or "").strip().lower()
+    return "full" if size == "full" else "wide"
+
+
+def _coerce_panel_widgets(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+
+    widgets: list[dict[str, Any]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            continue
+        widget = dict(item)
+        kind = str(widget.get("kind") or widget.get("type") or "metadata").strip().lower()
+        widget["id"] = str(widget.get("id") or _panel_widget_id(f"widget_{index + 1}"))
+        widget["kind"] = kind if kind in PANEL_WIDGET_KINDS else "metadata"
+        widget["title"] = str(widget.get("title") or widget["kind"].replace("_", " ").title())
+        widget["size"] = _coerce_panel_widget_size(widget.get("size"))
+        widget["source"] = _coerce_panel_dict(widget.get("source"))
+        widget["settings"] = _coerce_panel_dict(widget.get("settings"))
+        widget["cache"] = _coerce_panel_dict(widget.get("cache"))
+        widgets.append(_json_safe(widget))
+    return widgets
+
+
+def _default_panel_widgets() -> list[dict[str, Any]]:
+    return [
+        {
+            "id": "objective_focus",
+            "kind": "metadata",
+            "title": "Objective",
+            "size": "full",
+            "source": {},
+            "settings": {"mode": "objective"},
+        },
+        {
+            "id": "dash_visualization_studio",
+            "kind": "dash_workspace",
+            "title": "Dash Visualization Studio",
+            "size": "full",
+            "source": {},
+            "settings": {
+                "path": "/",
+                "description": "Interactive Dash workspace for plots, extensions, and panel visualizations.",
+            },
+        },
+        {
+            "id": "dataset_signal",
+            "kind": "dataset",
+            "title": "Dataset Signal",
+            "size": "wide",
+            "source": {},
+            "settings": {"variant": "summary"},
+        },
+        {
+            "id": "model_signal",
+            "kind": "learning_model",
+            "title": "Learning Model Signal",
+            "size": "wide",
+            "source": {},
+            "settings": {"variant": "summary"},
+        },
+        {
+            "id": "plot_signal",
+            "kind": "plot",
+            "title": "Plot Artifact",
+            "size": "wide",
+            "source": {},
+            "settings": {"variant": "dash"},
+        },
+        {
+            "id": "metric_stack",
+            "kind": "metric",
+            "title": "Metric Stack",
+            "size": "wide",
+            "source": {},
+            "settings": {"metrics": []},
+        },
+        {
+            "id": "interpretation_notes",
+            "kind": "note",
+            "title": "Interpretation Notes",
+            "size": "wide",
+            "source": {},
+            "settings": {"text": ""},
+        },
+    ]
+
+
+def _default_panel_layout(widgets: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    resolved_widgets = widgets or _default_panel_widgets()
+    return {
+        "version": 1,
+        "columns": 12,
+        "density": "comfortable",
+        "order": [str(widget.get("id")) for widget in resolved_widgets if widget.get("id")],
+    }
+
+
+def _coerce_panel_layout(value: Any, widgets: list[dict[str, Any]]) -> dict[str, Any]:
+    layout = _coerce_panel_dict(value)
+    if not layout:
+        return _default_panel_layout(widgets)
+    layout["version"] = _coerce_panel_int(layout.get("version"), 1, maximum=99)
+    layout["columns"] = _coerce_panel_int(layout.get("columns"), 12, maximum=24)
+    order = layout.get("order")
+    if not isinstance(order, list):
+        layout["order"] = [str(widget.get("id")) for widget in widgets if widget.get("id")]
+    else:
+        layout["order"] = [str(item) for item in order if item is not None]
+    return _json_safe(layout)
+
+
+def _next_panel_version(value: Any) -> int:
+    return _coerce_panel_int(value, 1, maximum=999_999) + 1
+
+
+def _panel_dashboard_to_dict(dashboard: Any) -> dict[str, Any]:
+    widgets = _coerce_panel_widgets(getattr(dashboard, "widgets", None))
+    layout = _coerce_panel_layout(getattr(dashboard, "layout", None), widgets)
+    date_value = getattr(dashboard, "date", None)
+    return {
+        "id": getattr(dashboard, "id", None),
+        "name": getattr(dashboard, "name", None),
+        "description": getattr(dashboard, "description", None),
+        "object_type": getattr(dashboard, "object_type", "panel_dashboard"),
+        "size": getattr(dashboard, "size", 0.0),
+        "path": getattr(dashboard, "path", None),
+        "date": date_value.isoformat() if hasattr(date_value, "isoformat") else date_value,
+        "version": getattr(dashboard, "version", None),
+        "history": getattr(dashboard, "history", None) or [],
+        "objective": getattr(dashboard, "objective", None),
+        "tint": getattr(dashboard, "tint", None) or "amanaje",
+        "layout": layout,
+        "widgets": widgets,
+        "panel_metadata": getattr(dashboard, "panel_metadata", None) or {},
+    }
+
+
+def _panel_summary(dashboard: Any) -> dict[str, Any]:
+    payload = _panel_dashboard_to_dict(dashboard)
+    return {
+        "id": payload["id"],
+        "name": payload["name"],
+        "objective": payload["objective"],
+        "tint": payload["tint"],
+        "updated_at": payload["date"],
+        "widget_count": len(payload["widgets"]),
+    }
+
+
+def _panel_compact_object(obj: Any, extra: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    date_value = getattr(obj, "date", None)
+    payload = {
+        "id": getattr(obj, "id", None),
+        "name": getattr(obj, "name", None),
+        "description": getattr(obj, "description", None),
+        "object_type": getattr(obj, "object_type", None),
+        "path": getattr(obj, "path", None),
+        "date": date_value.isoformat() if hasattr(date_value, "isoformat") else date_value,
+    }
+    payload.update(dict(extra or {}))
+    return _json_safe(payload)
+
+
+def _panel_payload_for_create(payload: PanelDashboardPayload) -> dict[str, Any]:
+    widgets = _coerce_panel_widgets(payload.widgets) or _default_panel_widgets()
+    name = (payload.name or "Amanaje Panel").strip() or "Amanaje Panel"
+    return {
+        "name": name,
+        "description": payload.description or "Saved Painel Amanaje objective dashboard.",
+        "object_type": "panel_dashboard",
+        "size": 0.0,
+        "path": f"panel://{_utils._slugify(name)}-{uuid.uuid4().hex[:8]}",
+        "version": 1,
+        "history": [{"operation": "panel_dashboard_created", "created_at": datetime.now().isoformat()}],
+        "objective": payload.objective or PANEL_DEFAULT_OBJECTIVE,
+        "tint": payload.tint or "amanaje",
+        "layout": _coerce_panel_layout(payload.layout, widgets),
+        "widgets": widgets,
+        "panel_metadata": _coerce_panel_dict(payload.panel_metadata),
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 async def page_home(request: Request) -> HTMLResponse:
-    return _render_page("base_template.html", request, )
+    return _render_page("base_panel.html", request, )
+
+
+@app.get("/panel", response_class=HTMLResponse)
+async def page_panel(request: Request) -> HTMLResponse:
+    return _render_page("base_panel.html", request, )
 
 
 @app.get("/upload", response_class=HTMLResponse)
@@ -407,6 +644,184 @@ async def page_assistant(request: Request) -> HTMLResponse:
 @app.get("/settings", response_class=HTMLResponse)
 async def page_settings(request: Request) -> HTMLResponse:
     return _render_page("base_settings.html", request, )
+
+
+@app.get("/panel/context", response_class=JSONResponse)
+async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    datasets = await get_all_entries(db, DatasetORM)
+    learning_models = await get_all_entries(db, LearningORM)
+    studies = await get_all_entries(db, StudyORM)
+    inferences = await get_all_entries(db, InferenceORM)
+    code_models = await get_all_entries(db, CodeORM)
+    plots = _list_plot_artifacts()[:80]
+    runs = _utils.list_run_entries(RUN_LEDGER_DIR, limit=60)
+
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "datasets": [
+                _panel_compact_object(
+                    item,
+                    {
+                        "dataset_type": getattr(item, "dataset_type", None),
+                        "shape": getattr(item, "shape", None),
+                        "features_list": getattr(item, "features_list", None),
+                        "has_features": getattr(item, "has_features", None),
+                    },
+                )
+                for item in datasets
+            ],
+            "learning_models": [
+                _panel_compact_object(
+                    item,
+                    {
+                        "model_type": getattr(item, "model_type", None),
+                        "metrics": getattr(item, "metrics", None) or {},
+                        "parameters": getattr(item, "parameters", None) or {},
+                        "input_features": getattr(item, "input_features", None),
+                        "output_features": getattr(item, "output_features", None),
+                        "is_trained": getattr(item, "is_trained", None),
+                        "is_tested": getattr(item, "is_tested", None),
+                        "is_deployed": getattr(item, "is_deployed", None),
+                    },
+                )
+                for item in learning_models
+            ],
+            "studies": [
+                _panel_compact_object(
+                    item,
+                    {
+                        "learning_model_id": getattr(item, "learning_model_id", None),
+                        "dataset_id": getattr(item, "dataset_id", None),
+                        "sampler": getattr(item, "sampler", None),
+                        "objective": getattr(item, "objective", None),
+                        "best_trial": getattr(item, "best_trial", None),
+                        "best_params": getattr(item, "best_params", None),
+                    },
+                )
+                for item in studies
+            ],
+            "inferences": [
+                _panel_compact_object(
+                    item,
+                    {
+                        "learning_model_id": getattr(item, "learning_model_id", None),
+                        "dataset_id": getattr(item, "dataset_id", None),
+                        "input_features": getattr(item, "input_features", None),
+                        "output_features": getattr(item, "output_features", None),
+                        "inference_params": getattr(item, "inference_params", None) or {},
+                    },
+                )
+                for item in inferences
+            ],
+            "code_models": [
+                _panel_compact_object(
+                    item,
+                    {
+                        "variables": getattr(item, "variables", None) or {},
+                        "code": getattr(item, "code", None) or {},
+                    },
+                )
+                for item in code_models
+            ],
+            "plots": _json_safe(plots),
+            "runs": _json_safe(runs),
+            "widget_kinds": sorted(PANEL_WIDGET_KINDS),
+            "widget_sizes": sorted(PANEL_WIDGET_SIZES),
+        }
+    )
+
+
+@app.get("/panel/dashboards", response_class=JSONResponse)
+async def panel_list_dashboards(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    dashboards = await get_all_entries(db, PanelDashboardORM)
+    dashboards = sorted(dashboards, key=lambda item: getattr(item, "date", datetime.min) or datetime.min, reverse=True)
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "dashboards": [_panel_summary(item) for item in dashboards],
+        }
+    )
+
+
+@app.post("/panel/dashboards", response_class=JSONResponse)
+async def panel_create_dashboard(
+    payload: PanelDashboardPayload | None = Body(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    payload = payload or PanelDashboardPayload()
+    dashboard = PanelDashboardORM(**_panel_payload_for_create(payload))
+    db.add(dashboard)
+    await db.commit()
+    await db.refresh(dashboard)
+    return _utils._json_response({"status": "created", "dashboard": _panel_dashboard_to_dict(dashboard)}, status_code=201)
+
+
+@app.get("/panel/dashboards/{dashboard_id}", response_class=JSONResponse)
+async def panel_get_dashboard(dashboard_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    dashboard = await get_entry(db, PanelDashboardORM, dashboard_id)
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Panel dashboard not found")
+    return _utils._json_response({"status": "ok", "dashboard": _panel_dashboard_to_dict(dashboard)})
+
+
+@app.put("/panel/dashboards/{dashboard_id}", response_class=JSONResponse)
+async def panel_update_dashboard(
+    dashboard_id: int | str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    dashboard = await get_entry(db, PanelDashboardORM, dashboard_id)
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Panel dashboard not found")
+
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    if not isinstance(payload, Mapping):
+        return _utils._json_error("Panel dashboard payload must be a JSON object.", status_code=400)
+
+    widgets = _coerce_panel_widgets(payload.get("widgets")) if "widgets" in payload else _coerce_panel_widgets(getattr(dashboard, "widgets", None))
+    if "name" in payload:
+        dashboard.name = str(payload.get("name") or dashboard.name or "Amanaje Panel")
+    if "description" in payload:
+        dashboard.description = str(payload.get("description") or "")
+    if "objective" in payload:
+        dashboard.objective = str(payload.get("objective") or "")
+    if "tint" in payload:
+        dashboard.tint = str(payload.get("tint") or "amanaje")
+    if "widgets" in payload:
+        dashboard.widgets = widgets
+    if "layout" in payload:
+        dashboard.layout = _coerce_panel_layout(payload.get("layout"), widgets)
+    elif "widgets" in payload:
+        dashboard.layout = _coerce_panel_layout(getattr(dashboard, "layout", None), widgets)
+    if "panel_metadata" in payload:
+        dashboard.panel_metadata = _coerce_panel_dict(payload.get("panel_metadata"))
+
+    dashboard.size = 0.0
+    dashboard.object_type = "panel_dashboard"
+    dashboard.version = _next_panel_version(getattr(dashboard, "version", None))
+    dashboard.history = _utils._append_history(
+        getattr(dashboard, "history", None),
+        {"operation": "panel_dashboard_updated", "updated_at": datetime.now().isoformat()},
+    )
+
+    await db.commit()
+    await db.refresh(dashboard)
+    return _utils._json_response({"status": "ok", "dashboard": _panel_dashboard_to_dict(dashboard)})
+
+
+@app.delete("/panel/dashboards/{dashboard_id}", response_class=JSONResponse)
+async def panel_delete_dashboard(dashboard_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    dashboard = await get_entry(db, PanelDashboardORM, dashboard_id)
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Panel dashboard not found")
+    deleted_id = getattr(dashboard, "id", dashboard_id)
+    await db.delete(dashboard)
+    await db.commit()
+    return _utils._json_response({"status": "deleted", "id": deleted_id})
 
 
 def _settings_config_payload() -> dict[str, Any]:

@@ -81,6 +81,10 @@ def test_main_app_imports_and_registers_expected_routes():
 
     assert {
         "/",
+        "/panel",
+        "/panel/context",
+        "/panel/dashboards",
+        "/panel/dashboards/{dashboard_id}",
         "/upload",
         "/upload/support",
         "/create",
@@ -120,6 +124,7 @@ def test_main_app_imports_and_registers_expected_routes():
 def test_workflow_domain_route_contracts_are_registered():
     route_paths = {route.path for route in main_app.app.routes}
     workflow_domains = {
+        "panel": {"/", "/panel", "/panel/context", "/panel/dashboards", "/panel/dashboards/{dashboard_id}"},
         "upload": {"/upload", "/upload/support", "/upload/{operation_id}"},
         "create": {"/create", "/execute", "/execute/jobs"},
         "feature": {"/feature", "/features", "/features/extract", "/features/preview", "/features/materialize"},
@@ -145,6 +150,20 @@ def test_workflow_domain_route_contracts_are_registered():
     }
 
     assert missing == {}
+
+
+def test_panel_layout_coercion_handles_invalid_client_values():
+    widgets = [{"id": "objective"}, {"id": "notes"}]
+
+    layout = main_app._coerce_panel_layout(
+        {"version": "bad", "columns": "not-a-number", "order": "bad-order"},
+        widgets,
+    )
+
+    assert layout["version"] == 1
+    assert layout["columns"] == 12
+    assert layout["order"] == ["objective", "notes"]
+    assert main_app._next_panel_version("bad") == 2
 
 
 def test_queue_runtime_dependencies_are_declared_and_importable(project_root):
