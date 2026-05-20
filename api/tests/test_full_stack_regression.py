@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -140,6 +141,52 @@ def test_feature_preview_accepts_explicit_limit_transform(monkeypatch):
     assert response.status_code == 200
     assert payload["preview"]["shape_after"] == [1, 2]
     assert payload["preview_rows"] == [{"feature": 1, "target": 0}]
+
+
+def test_feature_preview_supports_normalize_math_columns_and_date_filters(monkeypatch):
+    dataset = SimpleNamespace(id=19, name="feature-rich")
+    dataframe = pd.DataFrame(
+        {
+            "feature_a": [1.0, 2.0, 3.0],
+            "feature_b": [10.0, 20.0, 30.0],
+            "event_date": ["2026-01-01", "2026-01-02", "2026-02-01"],
+            "target": [0, 1, 0],
+        }
+    )
+
+    class FakeRequest:
+        async def json(self):
+            return {
+                "datasetId": 19,
+                "transforms": [
+                    {"type": "normalize", "column": "feature_a", "min": 0, "max": 1, "target_suffix": "_scaled"},
+                    {
+                        "type": "math",
+                        "column": "feature_b",
+                        "operator": "subtract",
+                        "value_mode": "column",
+                        "right_column": "feature_a",
+                        "target": "feature_gap",
+                    },
+                    {"type": "date_range", "column": "event_date", "start": "2026-01-01", "end": "2026-01-31"},
+                ],
+            }
+
+    async def fake_dataset_read(_db, dataset_id):
+        assert dataset_id == 19
+        return dataset
+
+    monkeypatch.setattr(main_app.DatasetModel, "read", fake_dataset_read)
+    monkeypatch.setattr(main_app._utils, "_load_dataset_frame_from_record", lambda _record: dataframe.copy())
+
+    response = asyncio.run(main_app.preview_feature_workspace(FakeRequest(), db=object()))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["preview"]["shape_after"][0] == 2
+    assert payload["preview_rows"][0]["feature_a_scaled"] == 0.0
+    assert payload["preview_rows"][0]["feature_gap"] == 9.0
+    assert payload["operations"]["date_range_filters"][0]["column"] == "event_date"
 
 
 @pytest.mark.parametrize(
@@ -288,6 +335,48 @@ def test_feature_sql_materialization_records_dataset_metadata(monkeypatch, tmp_p
     assert history["source_relation"] == "source_dataset"
 
 
+def test_feature_sql_preview_passes_secondary_dataset(monkeypatch):
+    primary = SimpleNamespace(id=20, name="primary")
+    secondary = SimpleNamespace(id=21, name="secondary")
+    primary_frame = pd.DataFrame({"id": [1], "feature": [2]})
+    secondary_frame = pd.DataFrame({"id": [1], "label": ["a"]})
+    captured = {}
+
+    class FakeRequest:
+        async def json(self):
+            return {
+                "mode": "sql",
+                "datasetId": 20,
+                "secondaryDatasetId": 21,
+                "sqlQuery": "SELECT source_dataset.id, secondary_dataset.label FROM source_dataset JOIN secondary_dataset USING (id)",
+            }
+
+    async def fake_dataset_read(_db, dataset_id):
+        return primary if dataset_id == 20 else secondary
+
+    async def fake_execute_sql(_db, frame, query, *, preview_rows=None, secondary_dataframe=None):
+        captured["frame"] = frame
+        captured["secondary_dataframe"] = secondary_dataframe
+        result = pd.DataFrame({"id": [1], "label": ["a"]})
+        return result, {"shape_before": [1, 2], "shape_after": [1, 2], "steps": [], "preview_rows": result.to_dict(orient="records"), "column_explorer": []}
+
+    def fake_load_dataset(record):
+        return primary_frame.copy() if record.id == 20 else secondary_frame.copy()
+
+    monkeypatch.setattr(main_app.DatasetModel, "read", fake_dataset_read)
+    monkeypatch.setattr(main_app._utils, "_load_dataset_frame_from_record", fake_load_dataset)
+    monkeypatch.setattr(main_app._utils, "execute_feature_sql_query", fake_execute_sql)
+
+    response = asyncio.run(main_app.preview_feature_workspace(FakeRequest(), db=object()))
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert captured["frame"].equals(primary_frame)
+    assert captured["secondary_dataframe"].equals(secondary_frame)
+    assert payload["operations"]["secondary_relation"] == "secondary_dataset"
+    assert payload["secondary_dataset"]["id"] == 21
+
+
 def test_feature_visual_materialization_ignores_preview_limit_without_explicit_limit(monkeypatch, tmp_path):
     source_dataset = SimpleNamespace(id=18, name="visual-source")
     source_frame = pd.DataFrame({"feature": [1, 2, 3], "target": [0, 1, 0]})
@@ -335,6 +424,127 @@ def test_feature_template_exposes_editable_sql_mode_without_implicit_limit_push(
     assert "sqlQuery:" in template
     assert 'id="featureSqlQuery" class="sql-preview" spellcheck="false" readonly' not in template
     assert "transforms.push({ type: 'limit'" not in template
+
+
+def test_feature_transform_builder_groups_controls_and_removes_redundant_sort_checkbox():
+    template = (main_app.PROJECT_ROOT / "templates" / "base_feature.html").read_text(encoding="utf-8")
+
+    for group_class in [
+        "transform-group-core",
+        "transform-group-operand",
+        "transform-group-range",
+        "transform-group-normalize",
+        "transform-group-suffix",
+        "transform-group-operator",
+    ]:
+        assert group_class in template
+
+    assert 'data-transform-field="column" data-show-for="rename,cast,fill,filter,math,normalize,date_range,sort,drop"' in template
+    assert 'data-transform-field="right_column" data-show-for="math"' in template
+    assert 'data-transform-field="start" data-show-for="date_range"' in template
+    assert 'data-transform-field="min" data-show-for="normalize"' in template
+    assert 'data-transform-field="operator" data-show-for="filter,math,sort"' in template
+    assert "<label>Ascending</label>" not in template
+    assert 'data-field="ascending"' not in template
+    assert "refreshTransformRowState" in template
+
+
+def test_feature_transform_builder_uses_ordered_types_and_type_specific_operators():
+    template = (main_app.PROJECT_ROOT / "templates" / "base_feature.html").read_text(encoding="utf-8")
+
+    expected_order = [
+        "{ value: 'rename', label: 'Rename' }",
+        "{ value: 'cast', label: 'Change Type' }",
+        "{ value: 'fill', label: 'Fill Missing' }",
+        "{ value: 'filter', label: 'Filter' }",
+        "{ value: 'math', label: 'Math Feature' }",
+        "{ value: 'normalize', label: 'Normalize' }",
+        "{ value: 'date_range', label: 'Date/Index Range' }",
+        "{ value: 'sort', label: 'Sort' }",
+        "{ value: 'limit', label: 'Limit' }",
+        "{ value: 'drop', label: 'Drop' }",
+    ]
+    positions = [template.index(fragment) for fragment in expected_order]
+    assert positions == sorted(positions)
+
+    filter_block = re.search(r"filter: \[(.*?)\],\n    math:", template, re.S).group(1)
+    math_block = re.search(r"math: \[(.*?)\],\n    sort:", template, re.S).group(1)
+    sort_block = re.search(r"sort: \[(.*?)\]\n};", template, re.S).group(1)
+
+    assert "Contains" in filter_block
+    assert "Add" not in filter_block
+    assert "Greater than" in filter_block
+    assert "Add" in math_block
+    assert "Contains" not in math_block
+    assert "Descending" in sort_block
+    assert "Subtract" not in sort_block
+
+
+def test_panel_template_focus_filter_and_comparison_controls_are_wired():
+    panel_template = (main_app.PROJECT_ROOT / "templates" / "base_panel.html").read_text(encoding="utf-8")
+    panel_script = (main_app.PROJECT_ROOT / "static" / "js" / "panel-page.js").read_text(encoding="utf-8")
+
+    for fragment in [
+        'id="panelCenterKind"',
+        'id="panelCenterSource"',
+        'id="panelFilterColumn"',
+        'id="panelFilterStart"',
+        'id="panelFilterEnd"',
+        'id="panelFilterRangeStart"',
+        'id="panelFilterRangeEnd"',
+        'id="panelWidgetKind"',
+        'id="panelComparisonFields"',
+        'value="filter_control"',
+        'class="panel-sidebar-section panel-atlas-section panel-filter-details"',
+    ]:
+        assert fragment in panel_template
+
+    for fragment in [
+        "updateCenterOptions",
+        "panelFilterSummary",
+        "collectFilterRangeValues",
+        "renderFilterControl",
+        "renderResultValue",
+        "filter_control",
+        'kind === "comparison"',
+        "renderComparison",
+        "panelComparisonFields",
+    ]:
+        assert fragment in panel_script
+
+
+def test_training_and_production_templates_expose_rerun_schedule_and_scenario_tabs():
+    training_template = (main_app.PROJECT_ROOT / "templates" / "base_green.html").read_text(encoding="utf-8")
+    production_template = (main_app.PROJECT_ROOT / "templates" / "base_blue.html").read_text(encoding="utf-8")
+
+    assert 'data-run-rerun="true"' in training_template
+    assert "/rerun" in training_template
+    assert training_template.index("data-run-rerun") < training_template.index("data-run-control=\"pause\"")
+
+    for fragment in [
+        'id="watchScheduleFields" hidden',
+        "syncWatchScheduleVisibility",
+        "scheduleEnabled",
+        ": { enabled: false }",
+        "renderScenarioComparisonTabs",
+        "renderScenarioDetail",
+        "'Raw'",
+    ]:
+        assert fragment in production_template
+
+
+def test_target_workspace_templates_have_no_active_todo_markers():
+    template_names = [
+        "base_blue.html",
+        "base_editor.html",
+        "base_feature.html",
+        "base_green.html",
+        "base_panel.html",
+        "base_purple.html",
+    ]
+    for template_name in template_names:
+        template = (main_app.PROJECT_ROOT / "templates" / template_name).read_text(encoding="utf-8")
+        assert "TODO" not in template
 
 
 def test_registry_dependencies_route_returns_dependency_report(monkeypatch):

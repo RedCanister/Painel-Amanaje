@@ -39,6 +39,20 @@
     .plot-fill { height: 100%; background: var(--amanaje-primary-bar-gradient); }
     .history-card .pill-row, .surface .pill-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
     .watch-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1rem; }
+    .watch-schedule-shell {
+        display: grid;
+        gap: 0.75rem;
+        margin: 0.75rem 0 1rem;
+        padding: 0.85rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: var(--amanaje-primary-softer);
+    }
+    .watch-schedule-fields {
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--amanaje-primary-border-soft);
+    }
+    .watch-schedule-fields[hidden] { display: none !important; }
     .watch-card {
         background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
@@ -188,8 +202,6 @@
     <section class="global-watch-panel">
         <span class="workspace-eyebrow">MLOps domain</span>
         <h3>Global Production Watch</h3>
-    <!-- <p class="panel-subtitle">An inference pair is the production contract between one learning model and one dataset. Use this bar to keep the active watch context stable while the tabs below show monitoring, simulation, history, MLflow, and activity details.</p>
-    -->    
     <div class="inline-grid">
             <div class="form-group">
                 <label for="globalInferencePairId">Inference Pair</label>
@@ -208,6 +220,30 @@
                 <select id="globalProductionDatasetId">
                     <option value="">Select a dataset</option>
                 </select>
+            </div>
+        </div>
+        <div class="watch-schedule-shell">
+            <label class="checkbox-row" for="watchScheduleEnabled">
+                <input id="watchScheduleEnabled" type="checkbox">
+                Enable interval watch
+            </label>
+            <div class="inline-grid watch-schedule-fields" id="watchScheduleFields" hidden>
+                <div class="form-group">
+                    <label for="watchIntervalSeconds">Interval Seconds</label>
+                    <input id="watchIntervalSeconds" type="number" min="30" step="30" value="300">
+                </div>
+                <div class="form-group">
+                    <label for="watchDriftThreshold">Drift Threshold</label>
+                    <input id="watchDriftThreshold" type="number" min="0" step="0.01" value="0.15">
+                </div>
+                <div class="form-group">
+                    <label for="watchDegradationThreshold">Degradation Threshold</label>
+                    <input id="watchDegradationThreshold" type="number" min="0" step="0.01" value="0.10">
+                </div>
+                <label class="checkbox-row" for="watchAutoRetrain">
+                    <input id="watchAutoRetrain" type="checkbox">
+                    Auto retrain
+                </label>
             </div>
         </div>
         <div class="actions-row">
@@ -419,14 +455,27 @@
                 </div>
 
                 <div class="surface">
-                    <h4>Inference Results</h4>
+                    <div class="toolbar-row">
+                        <h4>Inference Results</h4>
+                        <div class="form-group">
+                            <label for="simulationResultDisplay">Display</label>
+                            <select id="simulationResultDisplay">
+                                <option value="all">All</option>
+                                <option value="summary">Summary</option>
+                                <option value="table">Step Table</option>
+                                <option value="plots">Plot Deck</option>
+                            </select>
+                        </div>
+                    </div>
                     <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
                 </div>
             </div>
+
             <div class="surface">
                 <h4>Scenario Comparison</h4>
                 <div id="simulationStepTable">The full simulation step table will appear here after a run.</div>
             </div>
+
         </div>
     </section>
 
@@ -502,6 +551,7 @@ let datasetCache = [];
 let inferenceCache = [];
 let productionHistoryCache = [];
 let simulationContextCache = null;
+let latestSimulationResult = null;
 let activeWatchContextId = '';
 let experimentRunState = { experimentId: '', offset: 0, limit: 20, hasMore: false };
 
@@ -605,9 +655,12 @@ function renderWatchlist(watchlist = {}) {
             <div class="pill-row">
                 <span class="pill">${escapeHtml(watch.status || 'idle')}</span>
                 <span class="pill">${escapeHtml(watch.watch_context_id || '')}</span>
+                ${watch.schedule?.enabled ? `<span class="pill">every ${escapeHtml(watch.schedule.interval_seconds || 300)}s</span>` : '<span class="pill">manual</span>'}
+                ${watch.schedule?.auto_retrain ? '<span class="pill">auto retrain</span>' : ''}
             </div>
             <div class="actions-row" style="margin-top:0.85rem;">
                 <button type="button" class="btn btn-ghost" data-watch-id="${escapeHtml(watch.watch_context_id || '')}" data-watch-inference="${escapeHtml(watch.inference_id || '')}" data-watch-model="${escapeHtml(watch.model_id || '')}" data-watch-dataset="${escapeHtml(watch.dataset_id || '')}">Use This Context</button>
+                <button type="button" class="btn btn-secondary" data-watch-quick="true" data-watch-id="${escapeHtml(watch.watch_context_id || '')}" data-watch-inference="${escapeHtml(watch.inference_id || '')}" data-watch-model="${escapeHtml(watch.model_id || '')}" data-watch-dataset="${escapeHtml(watch.dataset_id || '')}">Next 5</button>
             </div>
         </div>
     `).join('');
@@ -623,6 +676,20 @@ function renderWatchlist(watchlist = {}) {
             setPanel('monitor');
         });
     });
+    target.querySelectorAll('[data-watch-quick]').forEach((button) => {
+        button.addEventListener('click', () => quickNextFiveSimulation(button));
+    });
+}
+
+async function quickNextFiveSimulation(button) {
+    activeWatchContextId = button.getAttribute('data-watch-id') || activeWatchContextId;
+    globalInferencePairId.value = button.getAttribute('data-watch-inference') || '';
+    globalProductionModelId.value = button.getAttribute('data-watch-model') || '';
+    globalProductionDatasetId.value = button.getAttribute('data-watch-dataset') || '';
+    syncLocalProductionContextFromGlobal();
+    setPanel('simulation');
+    document.getElementById('simulationSteps').value = 5;
+    await runSimulation();
 }
 
 async function populateProductionOptions() {
@@ -1142,6 +1209,84 @@ function renderSimulationStepRows(simulation = {}, outputFeature = 'prediction')
     `;
 }
 
+function renderRawSimulation(simulation = {}, title = 'Raw Simulation Response') {
+    return AmanajeUI.renderCollapsibleJson
+        ? AmanajeUI.renderCollapsibleJson(simulation, { title, collapsed: true })
+        : `<div class="json-block">${escapeHtml(JSON.stringify(simulation, null, 2))}</div>`;
+}
+
+function renderScenarioDetail(simulation = {}, scenario = {}, outputFeature = 'prediction') {
+    const summary = scenario.prediction_summary || {};
+    const scenarioSimulation = {
+        ...simulation,
+        scenarios: [scenario],
+        series: scenario.series || [],
+        table_rows: scenario.table_rows || [],
+        plots: scenario.plots || [],
+    };
+    const finalPrediction = summary.final_prediction ?? (scenario.series || []).slice(-1)[0]?.prediction ?? '-';
+    return `
+        ${AmanajeUI.renderMetricCards([
+            {
+                label: outputFeature,
+                value: finalPrediction,
+                unit: simulation.family === 'recommendation' ? 'items' : 'prediction',
+                reference: scenario.name || 'scenario',
+                expected_range: simulation.family || simulation.task_type || 'model output',
+                direction: scenario.trend || simulation.trend || 'scenario dependent',
+                explanation: 'Final output for this individual simulation scenario.'
+            },
+            {
+                label: 'Delta',
+                value: summary.prediction_delta ?? '-',
+                unit: 'change',
+                reference: 'first to final step',
+                expected_range: 'scenario dependent',
+                direction: scenario.trend || 'mixed',
+                explanation: 'Movement inside this scenario only.'
+            },
+            {
+                label: 'Changed',
+                value: (scenario.changed_features || []).length,
+                unit: 'features',
+                reference: 'baseline',
+                expected_range: '0+',
+                direction: 'context_only',
+                explanation: 'How many features differ from the selected baseline.'
+            }
+        ])}
+        <div class="simulation-comparison-grid" style="margin-top:1rem;">
+            <div>
+                <h4>Changed Features</h4>
+                ${renderChangedFeatures(scenario.changed_features || [])}
+            </div>
+            <div>
+                <h4>Scenario Plots</h4>
+                ${renderPlotDeck(scenario.plots || []) || '<div class="helper-text">No plot specs were generated for this scenario.</div>'}
+            </div>
+        </div>
+        ${renderSimulationStepRows(scenarioSimulation, outputFeature)}
+        ${renderRawSimulation(scenario, 'Raw Scenario Response')}
+    `;
+}
+
+function renderScenarioComparisonTabs(simulation = {}, outputFeature = 'prediction') {
+    const scenarios = Array.isArray(simulation.scenarios) ? simulation.scenarios : [];
+    const tabs = [
+        { key: 'summary', label: 'Summary', content: renderScenarioComparisonTable(simulation) },
+        ...scenarios.map((scenario, index) => ({
+            key: `scenario_${index}`,
+            label: scenario.name || `Scenario ${index + 1}`,
+            content: renderScenarioDetail(simulation, scenario, outputFeature)
+        })),
+        { key: 'all_steps', label: 'All Steps', content: renderSimulationStepRows(simulation, outputFeature) },
+        { key: 'plots', label: 'Plots', content: renderPlotDeck(simulation.plots || []) || '<div class="helper-text">No plot deck is available for this simulation.</div>' },
+    ];
+    return AmanajeUI.renderResultTabs
+        ? AmanajeUI.renderResultTabs(tabs, { idPrefix: 'simulation_scenario_tabs' })
+        : `${renderScenarioComparisonTable(simulation)}${renderSimulationStepRows(simulation, outputFeature)}`;
+}
+
 function renderSimulationReadiness(readiness = {}) {
     const reasons = Array.isArray(readiness.disabled_reasons) ? readiness.disabled_reasons : [];
     if (readiness.ready !== false && !reasons.length) return '';
@@ -1200,6 +1345,7 @@ function renderFamilySpecificResults(simulation = {}) {
 }
 
 function renderSimulationResults(simulation = {}) {
+    latestSimulationResult = simulation;
     const scenarios = Array.isArray(simulation.scenarios) ? simulation.scenarios : [];
     const series = Array.isArray(simulation.series) && simulation.series.length
         ? simulation.series
@@ -1216,7 +1362,7 @@ function renderSimulationResults(simulation = {}) {
     const predictionSummary = simulation.prediction_summary || scenarios[0]?.prediction_summary || {};
     const primaryScenario = scenarios[0] || {};
     const primaryValue = predictionSummary.final_prediction ?? series[series.length - 1]?.prediction ?? primaryResult.value ?? '-';
-    document.getElementById('simulationResults').innerHTML = `
+    const summaryMarkup = `
         <div class="simulation-status-line">
             <span class="pill">${escapeHtml(simulation.family || simulation.task_type || 'model')}</span>
             <span class="pill">${escapeHtml(simulation.mode || 'mode')}</span>
@@ -1278,14 +1424,47 @@ function renderSimulationResults(simulation = {}) {
             </div>
         </div>
         ${renderPlotDeck(simulation.plots || [])}
-        ${AmanajeUI.renderCollapsibleJson
-            ? AmanajeUI.renderCollapsibleJson(simulation, { title: 'Raw Simulation Response', collapsed: true })
-            : `<div class="json-block">${escapeHtml(JSON.stringify(simulation, null, 2))}</div>`}
     `;
-    document.getElementById('simulationStepTable').innerHTML = `
+    const displayMode = document.getElementById('simulationResultDisplay')?.value || 'all';
+    const stepMarkup = `
         ${renderScenarioComparisonTable(simulation)}
         ${renderSimulationStepRows(simulation, outputFeature)}
     `;
+    const plotsMarkup = renderPlotDeck(simulation.plots || []) || '<div class="helper-text">No simulation plots were generated for this run.</div>';
+    const resultTabs = AmanajeUI.renderResultTabs
+        ? AmanajeUI.renderResultTabs([
+            { key: 'summary', label: 'Summary', content: summaryMarkup },
+            ...scenarios.map((scenario, index) => ({
+                key: `scenario_${index}`,
+                label: scenario.name || `Scenario ${index + 1}`,
+                content: renderScenarioDetail(simulation, scenario, outputFeature)
+            })),
+            { key: 'all_steps', label: 'All Steps', content: stepMarkup },
+            { key: 'plots', label: 'Plots', content: plotsMarkup },
+            { key: 'raw', label: 'Raw', content: renderRawSimulation(simulation) },
+        ], { idPrefix: 'simulation_result_tabs' })
+        : `${summaryMarkup}${stepMarkup}${plotsMarkup}${renderRawSimulation(simulation)}`;
+    document.getElementById('simulationResults').innerHTML = resultTabs;
+    document.getElementById('simulationStepTable').innerHTML = renderScenarioComparisonTabs(simulation, outputFeature);
+
+    if (displayMode === 'summary') {
+        document.getElementById('simulationResults').innerHTML = summaryMarkup;
+        document.getElementById('simulationStepTable').innerHTML = '<div class="helper-text">Step table hidden by the summary display mode.</div>';
+    } else if (displayMode === 'table') {
+        document.getElementById('simulationResults').innerHTML = `
+            <div class="simulation-status-line">
+                <span class="pill">${escapeHtml(outputFeature)}</span>
+                <span class="pill">${escapeHtml(`${predictionSummary.step_count ?? simulation.steps ?? series.length} steps`)}</span>
+            </div>
+            <div class="helper-text">Step table display mode is active for this simulation.</div>
+        `;
+        document.getElementById('simulationStepTable').innerHTML = stepMarkup;
+    } else if (displayMode === 'plots') {
+        document.getElementById('simulationResults').innerHTML = plotsMarkup;
+        document.getElementById('simulationStepTable').innerHTML = renderScenarioComparisonTabs(simulation, outputFeature);
+    }
+    AmanajeUI.activateTabs?.(document.getElementById('simulationResults'));
+    AmanajeUI.activateTabs?.(document.getElementById('simulationStepTable'));
     AmanajeUI.enhanceCollapsibles(document.getElementById('simulationResults'));
     AmanajeUI.enhanceCollapsibles(document.getElementById('simulationStepTable'));
 }
@@ -1408,12 +1587,29 @@ async function fetchJson(url, options = {}) {
     return data;
 }
 
+function syncWatchScheduleVisibility() {
+    const enabled = document.getElementById('watchScheduleEnabled')?.checked || false;
+    const fields = document.getElementById('watchScheduleFields');
+    if (fields) fields.hidden = !enabled;
+}
+
 function buildProductionPayload(extra = {}) {
+    const scheduleEnabled = document.getElementById('watchScheduleEnabled')?.checked || false;
+    const schedule = scheduleEnabled
+        ? {
+            enabled: true,
+            interval_seconds: Number(document.getElementById('watchIntervalSeconds')?.value || 300),
+            drift_threshold: Number(document.getElementById('watchDriftThreshold')?.value || 0.15),
+            degradation_threshold: Number(document.getElementById('watchDegradationThreshold')?.value || 0.1),
+            auto_retrain: document.getElementById('watchAutoRetrain')?.checked || false
+        }
+        : { enabled: false };
     const payload = {
         watchContextId: activeWatchContextId || null,
         inferenceId: inferencePairId.value ? Number(inferencePairId.value) : null,
         modelId: productionModelId.value ? Number(productionModelId.value) : null,
         datasetId: productionDatasetId.value ? Number(productionDatasetId.value) : null,
+        schedule,
         ...extra
     };
     if (!payload.watchContextId) delete payload.watchContextId;
@@ -1662,6 +1858,10 @@ document.getElementById('simulationMode').addEventListener('change', () => {
     const activeMode = modes.find((mode) => mode.id === document.getElementById('simulationMode').value) || {};
     document.getElementById('simulationModeDescription').textContent = activeMode.description || 'The workbench will adapt controls to the selected model.';
 });
+document.getElementById('simulationResultDisplay')?.addEventListener('change', () => {
+    if (latestSimulationResult) renderSimulationResults(latestSimulationResult);
+});
+document.getElementById('watchScheduleEnabled')?.addEventListener('change', syncWatchScheduleVisibility);
 document.getElementById('btnGlobalStartProduction').addEventListener('click', startProduction);
 document.getElementById('btnGlobalRefreshMonitoring').addEventListener('click', refreshMonitoring);
 document.getElementById('btnGlobalRunSimulation').addEventListener('click', async () => {
@@ -1688,6 +1888,7 @@ document.getElementById('btnViewExperiment').addEventListener('click', () => vie
 document.getElementById('btnLoadMoreExperimentRuns').addEventListener('click', () => viewExperiment(true));
 
 document.addEventListener('DOMContentLoaded', async () => {
+    syncWatchScheduleVisibility();
     await populateProductionOptions();
     await syncProductionStatus();
     await loadProductionHistory();

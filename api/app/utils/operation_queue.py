@@ -102,13 +102,39 @@ def enqueue_study_run(run_id: str, *, study_id: int, payload_data: Mapping[str, 
     )
 
 
-def enqueue_editor_execution(run_id: str, *, code: str) -> dict[str, Any]:
+def enqueue_editor_execution(run_id: str, *, code: str, registry_context: Mapping[str, Any] | None = None) -> dict[str, Any]:
     return enqueue_callable(
         DEFAULT_QUEUE_NAME,
         run_editor_execution_job,
         job_id=run_id,
-        kwargs={"run_id": run_id, "code": code},
+        kwargs={"run_id": run_id, "code": code, "registry_context": dict(registry_context or {})},
     )
+
+
+def cancel_rq_job(run_id: str) -> dict[str, Any]:
+    try:
+        from rq.job import Job
+        from rq.exceptions import NoSuchJobError
+    except Exception as exc:
+        raise QueueUnavailableError(f"Redis/RQ dependencies are not available: {exc}") from exc
+
+    connection = get_redis_connection()
+    try:
+        job = Job.fetch(run_id, connection=connection)
+    except NoSuchJobError:
+        return {"backend": "rq", "job_id": run_id, "cancelled": False, "reason": "job_not_found"}
+
+    job_status = str(job.get_status(refresh=True) or "unknown")
+    if job_status in {"queued", "deferred", "scheduled"}:
+        job.cancel()
+        return {"backend": "rq", "job_id": run_id, "cancelled": True, "job_status": job_status}
+    return {
+        "backend": "rq",
+        "job_id": run_id,
+        "cancelled": False,
+        "job_status": job_status,
+        "reason": "cooperative_cancel_required",
+    }
 
 
 def enqueue_assistant_operation(run_id: str, *, operation: str, payload_data: Mapping[str, Any]) -> dict[str, Any]:
@@ -226,7 +252,7 @@ def run_study_job(run_id: str, study_id: int, payload_data: Mapping[str, Any]) -
     asyncio.run(main_app._execute_study_run(run_id, study_id=study_id, payload_data=dict(payload_data)))
 
 
-def run_editor_execution_job(run_id: str, code: str) -> None:
+def run_editor_execution_job(run_id: str, code: str, registry_context: Mapping[str, Any] | None = None) -> None:
     from app.utils.editor_execution import execute_editor_code
     from app.utils.main_utils import RUN_LEDGER_DIR
     from app.utils.run_ledger import update_run_entry
@@ -239,7 +265,7 @@ def run_editor_execution_job(run_id: str, code: str) -> None:
             stage="executing",
             event_message="Editor execution started.",
         )
-        result = execute_editor_code(code)
+        result = execute_editor_code(code, registry_context=registry_context)
         if result.get("error"):
             update_run_entry(
                 RUN_LEDGER_DIR,

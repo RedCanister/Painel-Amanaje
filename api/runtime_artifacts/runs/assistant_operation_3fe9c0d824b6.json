@@ -1,0 +1,63 @@
+{
+  "run_id": "assistant_operation_3fe9c0d824b6",
+  "run_type": "assistant_operation",
+  "status": "queued",
+  "stage": "queued",
+  "created_at": "2026-05-18T19:26:30.749281",
+  "updated_at": "2026-05-18T19:26:30.805972",
+  "started_at": null,
+  "completed_at": null,
+  "context": {
+    "source": "assistant",
+    "operation": "datasets_rebuild",
+    "assistant_model_id": null
+  },
+  "parameters": {
+    "operation": "datasets_rebuild",
+    "payload_keys": [],
+    "prompt_length": 0
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "queued",
+    "latest_event": "Assistant operation enqueued on amanaje:default.",
+    "latest_timestamp": "2026-05-18T19:26:30.805972",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T19:26:30.749281",
+        "message": "assistant_operation run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T19:26:30.805972",
+        "message": "Assistant operation enqueued on amanaje:default."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T19:26:30.749281",
+      "message": "assistant_operation run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T19:26:30.805972",
+      "message": "Assistant operation enqueued on amanaje:default."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "assistant_operation_3fe9c0d824b6"
+  }
+}

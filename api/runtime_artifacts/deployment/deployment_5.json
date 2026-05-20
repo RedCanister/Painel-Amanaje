@@ -4,8 +4,8 @@
     "inference_id": 8,
     "model_name": "lstm_finance",
     "dataset_name": "stock_data",
-    "artifact_path": "/app/runtime_artifacts/training/training_5ee2752ac427/model_pytorch.pt",
-    "started_at": "2026-05-14T21:16:00.585712",
+    "artifact_path": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+    "started_at": "2026-05-19T21:06:51.314612",
     "status": "active",
     "artifact_metadata": {
         "artifact_format": ".pt",
@@ -19,7 +19,7 @@
             "monitor": false
         },
         "framework": "pytorch",
-        "source": "/app/runtime_artifacts/training/training_5ee2752ac427/model_pytorch.pt",
+        "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
         "entrypoint": null,
         "needs_companion_spec": true,
         "warnings": [
@@ -133,7 +133,7 @@
             "monitor": true
         },
         "framework": "pytorch",
-        "source": "/app/runtime_artifacts/training/training_5ee2752ac427/model_pytorch.pt",
+        "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
         "entrypoint": "forward",
         "needs_companion_spec": false,
         "warnings": [],

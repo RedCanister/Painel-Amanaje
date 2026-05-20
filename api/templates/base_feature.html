@@ -130,6 +130,64 @@
     }
     .builder-row-title { font-weight: 700; color: #7f1d1d; }
     .builder-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+    .builder-groups { display: grid; gap: 0.75rem; }
+    .transform-group {
+        --transform-accent: #e11d48;
+        --transform-soft: #fff1f2;
+        --transform-border: #fecdd3;
+        border: 1px solid var(--transform-border);
+        border-left: 4px solid var(--transform-accent);
+        border-radius: 12px;
+        background: var(--transform-soft);
+        padding: 0.75rem;
+    }
+    .transform-group[hidden],
+    .transform-field[hidden] {
+        display: none;
+    }
+    .transform-group-title {
+        margin-bottom: 0.55rem;
+        color: #7f1d1d;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .transform-group-grid {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        align-items: end;
+    }
+    .transform-group-core {
+        --transform-accent: #e11d48;
+        --transform-soft: #fff1f2;
+        --transform-border: #fecdd3;
+    }
+    .transform-group-operand {
+        --transform-accent: #4f46e5;
+        --transform-soft: #eef2ff;
+        --transform-border: #c7d2fe;
+    }
+    .transform-group-range {
+        --transform-accent: #0f766e;
+        --transform-soft: #ecfdf5;
+        --transform-border: #99f6e4;
+    }
+    .transform-group-normalize {
+        --transform-accent: #d97706;
+        --transform-soft: #fffbeb;
+        --transform-border: #fde68a;
+    }
+    .transform-group-suffix {
+        --transform-accent: #7c3aed;
+        --transform-soft: #f5f3ff;
+        --transform-border: #ddd6fe;
+    }
+    .transform-group-operator {
+        --transform-accent: #2563eb;
+        --transform-soft: #eff6ff;
+        --transform-border: #bfdbfe;
+    }
     .summary-surface {
         background: white;
         border: 1px solid #fecdd3;
@@ -259,6 +317,12 @@
                 </select>
             </div>
             <div class="form-group">
+                <label for="featureSecondaryDatasetId">Secondary SQL Dataset</label>
+                <select id="featureSecondaryDatasetId">
+                    <option value="">No secondary dataset</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="featureViewName">Materialized Name</label>
                 <input id="featureViewName" type="text" placeholder="customer_churn_feature_view">
             </div>
@@ -289,7 +353,7 @@
                     <div class="toolbar-row" style="margin-bottom:0.9rem;">
                         <div>
                             <h4 style="margin-bottom:0.2rem;">Visual Transform Builder</h4>
-                            <div class="helper-text">Add rename, cast, fill, drop, filter, sort, limit, and mathematical operations without writing JSON.</div>
+                            <div class="helper-text">Add rename, cast, fill, drop, normalize, date range, sort, limit, and mathematical operations without writing JSON.</div>
                         </div>
                         <button type="button" class="btn btn-ghost" id="btnAddTransform">Add Transform</button>
                     </div>
@@ -341,7 +405,7 @@
                 </div>
                 <div class="summary-surface">
                     <h4>Builder Notes</h4>
-                    <div class="helper-text">SQL mode is scoped to the selected dataset and must reference source_dataset.</div>
+                    <div class="helper-text">SQL mode must reference source_dataset and may join secondary_dataset when a secondary dataset is selected.</div>
                     <div id="featureSqlNotes" class="sql-note-list" style="margin-top:0.9rem;"></div>
                 </div>
             </div>
@@ -415,6 +479,7 @@
 <script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
 <script>
 const featureDatasetId = document.getElementById('featureDatasetId');
+const featureSecondaryDatasetId = document.getElementById('featureSecondaryDatasetId');
 const featureOperations = document.getElementById('featureOperations');
 const featureViewName = document.getElementById('featureViewName');
 const featureLimitRows = document.getElementById('featureLimitRows');
@@ -600,13 +665,28 @@ function serializeVisualTransforms() {
         const value = row.querySelector('[data-field="value"]')?.value || '';
         const target = row.querySelector('[data-field="target"]')?.value || '';
         const operator = row.querySelector('[data-field="operator"]')?.value || '==';
-        const ascending = row.querySelector('[data-field="ascending"]')?.checked !== false;
+        const valueMode = row.querySelector('[data-field="value_mode"]')?.value || 'literal';
+        const rightColumn = row.querySelector('[data-field="right_column"]')?.value || '';
+        const start = row.querySelector('[data-field="start"]')?.value || '';
+        const end = row.querySelector('[data-field="end"]')?.value || '';
+        const min = row.querySelector('[data-field="min"]')?.value || '';
+        const max = row.querySelector('[data-field="max"]')?.value || '';
+        const targetSuffix = row.querySelector('[data-field="target_suffix"]')?.value || '';
+        let ascending = true;
+        if (type === 'sort') ascending = operator !== 'desc';
         if (!type) return;
         transforms.push({
             type,
             column,
             operator,
             value: normalizeOperationValue(type, value),
+            value_mode: valueMode,
+            right_column: rightColumn,
+            start,
+            end,
+            min: normalizeOperationValue('math', min),
+            max: normalizeOperationValue('math', max),
+            target_suffix: targetSuffix,
             ascending,
             target
         });
@@ -645,7 +725,27 @@ function buildOperationsFromVisual() {
                 column: transform.column,
                 operator: transform.operator,
                 value: transform.value,
+                value_mode: transform.value_mode,
+                right_column: transform.right_column,
                 target: transform.target || transform.column
+            });
+        }
+        if (transform.type === 'normalize') {
+            operations.normalize = operations.normalize || [];
+            operations.normalize.push({
+                mode: transform.column ? 'selected' : 'all_numeric',
+                columns: transform.column ? [transform.column] : [],
+                min: transform.min === '' ? 0 : transform.min,
+                max: transform.max === '' ? 1 : transform.max,
+                target_suffix: transform.target_suffix || ''
+            });
+        }
+        if (transform.type === 'date_range' && transform.column) {
+            operations.date_range_filters = operations.date_range_filters || [];
+            operations.date_range_filters.push({
+                column: transform.column,
+                start: transform.start,
+                end: transform.end
             });
         }
         if (transform.type === 'sort' && transform.column) {
@@ -686,6 +786,7 @@ function parseOperationsPayload({ materialize = false } = {}) {
             mode: 'sql',
             sqlQuery: featureSqlQuery.value || ''
         };
+        if (featureSecondaryDatasetId?.value) payload.secondaryDatasetId = Number(featureSecondaryDatasetId.value);
         if (!materialize) payload.previewRows = previewRows;
         return payload;
     }
@@ -736,76 +837,219 @@ function createColumnOptions(selected = '') {
     return base.join('');
 }
 
+const transformTypeOptions = [
+    { value: 'rename', label: 'Rename' },
+    { value: 'cast', label: 'Change Type' },
+    { value: 'fill', label: 'Fill Missing' },
+    { value: 'filter', label: 'Filter' },
+    { value: 'math', label: 'Math Feature' },
+    { value: 'normalize', label: 'Normalize' },
+    { value: 'date_range', label: 'Date/Index Range' },
+    { value: 'sort', label: 'Sort' },
+    { value: 'limit', label: 'Limit' },
+    { value: 'drop', label: 'Drop' }
+];
+
+const operatorOptionsByType = {
+    filter: [
+        { value: '==', label: 'Equals' },
+        { value: '!=', label: 'Not equal' },
+        { value: '>', label: 'Greater than' },
+        { value: '>=', label: 'Greater or equal' },
+        { value: '<', label: 'Less than' },
+        { value: '<=', label: 'Less or equal' },
+        { value: 'contains', label: 'Contains' }
+    ],
+    math: [
+        { value: 'add', label: 'Add' },
+        { value: 'subtract', label: 'Subtract' },
+        { value: 'multiply', label: 'Multiply' },
+        { value: 'divide', label: 'Divide' },
+        { value: 'power', label: 'Power' },
+        { value: 'round', label: 'Round' },
+        { value: 'clip_min', label: 'Clip min' },
+        { value: 'clip_max', label: 'Clip max' },
+        { value: 'abs', label: 'Absolute value' },
+        { value: 'log1p', label: 'log1p' }
+    ],
+    sort: [
+        { value: 'asc', label: 'Ascending' },
+        { value: 'desc', label: 'Descending' }
+    ]
+};
+
+const defaultOperatorByType = {
+    filter: '==',
+    math: 'add',
+    sort: 'asc'
+};
+
+function renderSelectOptions(options = [], selected = '') {
+    return options.map((option) => {
+        const value = String(option.value ?? '');
+        const label = String(option.label ?? value);
+        return `<option value="${AmanajeUI.escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${AmanajeUI.escapeHtml(label)}</option>`;
+    }).join('');
+}
+
+function renderTransformTypeOptions(selected = 'rename') {
+    return renderSelectOptions(transformTypeOptions, selected);
+}
+
+function selectedTransformOperator(type, initial = {}) {
+    if (type === 'sort') {
+        if (initial.operator === 'desc' || initial.ascending === false) return 'desc';
+        return 'asc';
+    }
+    return initial.operator || defaultOperatorByType[type] || '';
+}
+
+function refreshTransformRowState(row) {
+    const type = row.querySelector('[data-field="type"]')?.value || 'rename';
+    const valueMode = row.querySelector('[data-field="value_mode"]')?.value || 'literal';
+    const operatorSelect = row.querySelector('[data-field="operator"]');
+    const operatorOptions = operatorOptionsByType[type] || [{ value: '', label: 'Not used' }];
+    if (operatorSelect) {
+        const previous = operatorSelect.value || operatorSelect.dataset.initialValue || defaultOperatorByType[type] || operatorOptions[0]?.value || '';
+        const selected = operatorOptions.some((option) => option.value === previous)
+            ? previous
+            : defaultOperatorByType[type] || operatorOptions[0]?.value || '';
+        operatorSelect.innerHTML = renderSelectOptions(operatorOptions, selected);
+        operatorSelect.dataset.initialValue = '';
+    }
+
+    row.querySelectorAll('[data-show-for]').forEach((element) => {
+        const types = (element.dataset.showFor || '').split(',').map((item) => item.trim()).filter(Boolean);
+        let visible = !types.length || types.includes(type);
+        if (element.dataset.transformField === 'value' && type === 'math') {
+            visible = visible && valueMode !== 'column';
+        }
+        if (element.dataset.transformField === 'right_column') {
+            visible = visible && valueMode === 'column';
+        }
+        element.hidden = !visible;
+    });
+
+    const operatorLabel = row.querySelector('[data-operator-label]');
+    if (operatorLabel) {
+        operatorLabel.textContent = type === 'sort' ? 'Sort Direction' : 'Operator';
+    }
+
+    row.querySelectorAll('.transform-group').forEach((group) => {
+        const controlledFields = Array.from(group.querySelectorAll('[data-show-for]'));
+        group.hidden = controlledFields.length > 0 && controlledFields.every((field) => field.hidden);
+    });
+}
+
 function buildTransformRow(initial = {}) {
     const wrapper = document.createElement('div');
+    const selectedType = initial.type || 'rename';
+    const selectedOperator = selectedTransformOperator(selectedType, initial);
     wrapper.className = 'builder-row';
     wrapper.innerHTML = `
         <div class="builder-row-header">
             <div class="builder-row-title">Transform Step</div>
             <button type="button" class="btn btn-ghost" data-remove-transform="true">Remove</button>
         </div>
-        <div class="builder-grid">
-            <div class="form-group">
-                <label>Type</label>
-                <select data-field="type">
-                    <option value="rename" ${initial.type === 'rename' ? 'selected' : ''}>Rename Column</option>
-                    <option value="cast" ${initial.type === 'cast' ? 'selected' : ''}>Cast Type</option>
-                    <option value="fill" ${initial.type === 'fill' ? 'selected' : ''}>Fill Missing</option>
-                    <option value="drop" ${initial.type === 'drop' ? 'selected' : ''}>Drop Column</option>
-                    <option value="filter" ${initial.type === 'filter' ? 'selected' : ''}>Filter Rows</option>
-                    <option value="sort" ${initial.type === 'sort' ? 'selected' : ''}>Sort Rows</option>
-                    <option value="limit" ${initial.type === 'limit' ? 'selected' : ''}>Limit Rows</option>
-                    <option value="math" ${initial.type === 'math' ? 'selected' : ''}>Math Operation</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Column</label>
-                <select data-field="column">${createColumnOptions(initial.column || '')}</select>
-            </div>
-            <div class="form-group">
-                <label>Value</label>
-                <input data-field="value" type="text" value="${AmanajeUI.escapeHtml(initial.value ?? '')}" placeholder="new_name, float64, 0, 1.15">
-            </div>
-            <div class="form-group">
-                <label>Target Column</label>
-                <input data-field="target" type="text" value="${AmanajeUI.escapeHtml(initial.target ?? '')}" placeholder="optional derived column name">
-            </div>
-            <div class="form-group">
-                <label>Operator</label>
-                <select data-field="operator">
-                    <option value="==" ${initial.operator === '==' ? 'selected' : ''}>equals</option>
-                    <option value="!=" ${initial.operator === '!=' ? 'selected' : ''}>not equal</option>
-                    <option value=">" ${initial.operator === '>' ? 'selected' : ''}>greater than</option>
-                    <option value=">=" ${initial.operator === '>=' ? 'selected' : ''}>greater or equal</option>
-                    <option value="<" ${initial.operator === '<' ? 'selected' : ''}>less than</option>
-                    <option value="<=" ${initial.operator === '<=' ? 'selected' : ''}>less or equal</option>
-                    <option value="contains" ${initial.operator === 'contains' ? 'selected' : ''}>contains</option>
-                    <option value="add" ${initial.operator === 'add' ? 'selected' : ''}>add</option>
-                    <option value="subtract" ${initial.operator === 'subtract' ? 'selected' : ''}>subtract</option>
-                    <option value="multiply" ${initial.operator === 'multiply' ? 'selected' : ''}>multiply</option>
-                    <option value="divide" ${initial.operator === 'divide' ? 'selected' : ''}>divide</option>
-                    <option value="power" ${initial.operator === 'power' ? 'selected' : ''}>power</option>
-                    <option value="round" ${initial.operator === 'round' ? 'selected' : ''}>round</option>
-                    <option value="clip_min" ${initial.operator === 'clip_min' ? 'selected' : ''}>clip min</option>
-                    <option value="clip_max" ${initial.operator === 'clip_max' ? 'selected' : ''}>clip max</option>
-                    <option value="abs" ${initial.operator === 'abs' ? 'selected' : ''}>absolute value</option>
-                    <option value="log1p" ${initial.operator === 'log1p' ? 'selected' : ''}>log1p</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Ascending</label>
-                <input data-field="ascending" type="checkbox" ${initial.ascending === false ? '' : 'checked'}>
-            </div>
+        <div class="builder-groups">
+            <section class="transform-group transform-group-core" data-transform-group="core">
+                <div class="transform-group-title">Core</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field">
+                        <label>Type</label>
+                        <select data-field="type">${renderTransformTypeOptions(selectedType)}</select>
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="column" data-show-for="rename,cast,fill,filter,math,normalize,date_range,sort,drop">
+                        <label>Column</label>
+                        <select data-field="column">${createColumnOptions(initial.column || '')}</select>
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="value" data-show-for="rename,cast,fill,filter,math,limit">
+                        <label>Value</label>
+                        <input data-field="value" type="text" value="${AmanajeUI.escapeHtml(initial.value ?? '')}" placeholder="new name, type, fill value, limit, or operand">
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="target" data-show-for="math">
+                        <label>Target</label>
+                        <input data-field="target" type="text" value="${AmanajeUI.escapeHtml(initial.target ?? '')}" placeholder="derived column name">
+                    </div>
+                </div>
+            </section>
+            <section class="transform-group transform-group-operand" data-transform-group="operand">
+                <div class="transform-group-title">Operand</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field" data-transform-field="value_mode" data-show-for="math">
+                        <label>Operand</label>
+                        <select data-field="value_mode">
+                            <option value="literal" ${initial.value_mode === 'column' ? '' : 'selected'}>Literal value</option>
+                            <option value="column" ${initial.value_mode === 'column' ? 'selected' : ''}>Second column</option>
+                        </select>
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="right_column" data-show-for="math">
+                        <label>Second Column</label>
+                        <select data-field="right_column">${createColumnOptions(initial.right_column || '')}</select>
+                    </div>
+                </div>
+            </section>
+            <section class="transform-group transform-group-range" data-transform-group="range">
+                <div class="transform-group-title">Range</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field" data-transform-field="start" data-show-for="date_range">
+                        <label>Start</label>
+                        <input data-field="start" type="text" value="${AmanajeUI.escapeHtml(initial.start ?? '')}" placeholder="date or index start">
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="end" data-show-for="date_range">
+                        <label>End</label>
+                        <input data-field="end" type="text" value="${AmanajeUI.escapeHtml(initial.end ?? '')}" placeholder="date or index end">
+                    </div>
+                </div>
+            </section>
+            <section class="transform-group transform-group-normalize" data-transform-group="normalize">
+                <div class="transform-group-title">Normalize</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field" data-transform-field="min" data-show-for="normalize">
+                        <label>Normalize Min</label>
+                        <input data-field="min" type="number" step="any" value="${AmanajeUI.escapeHtml(initial.min ?? '0')}">
+                    </div>
+                    <div class="form-group transform-field" data-transform-field="max" data-show-for="normalize">
+                        <label>Normalize Max</label>
+                        <input data-field="max" type="number" step="any" value="${AmanajeUI.escapeHtml(initial.max ?? '1')}">
+                    </div>
+                </div>
+            </section>
+            <section class="transform-group transform-group-suffix" data-transform-group="suffix">
+                <div class="transform-group-title">Suffix</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field" data-transform-field="target_suffix" data-show-for="normalize">
+                        <label>Output Suffix</label>
+                        <input data-field="target_suffix" type="text" value="${AmanajeUI.escapeHtml(initial.target_suffix ?? '')}" placeholder="_scaled">
+                    </div>
+                </div>
+            </section>
+            <section class="transform-group transform-group-operator" data-transform-group="operator">
+                <div class="transform-group-title">Operator</div>
+                <div class="transform-group-grid">
+                    <div class="form-group transform-field" data-transform-field="operator" data-show-for="filter,math,sort">
+                        <label data-operator-label>Operator</label>
+                        <select data-field="operator" data-initial-value="${AmanajeUI.escapeHtml(selectedOperator)}"></select>
+                    </div>
+                </div>
+            </section>
         </div>
     `;
     wrapper.querySelectorAll('input, select').forEach((element) => {
-        element.addEventListener('change', syncOperationsJson);
-        element.addEventListener('input', syncOperationsJson);
+        const handleChange = () => {
+            if (element.dataset.field === 'type' || element.dataset.field === 'value_mode') {
+                refreshTransformRowState(wrapper);
+            }
+            syncOperationsJson();
+        };
+        element.addEventListener('change', handleChange);
+        element.addEventListener('input', handleChange);
     });
     wrapper.querySelector('[data-remove-transform="true"]').addEventListener('click', () => {
         wrapper.remove();
         syncOperationsJson();
     });
+    refreshTransformRowState(wrapper);
     return wrapper;
 }
 
@@ -971,10 +1215,11 @@ async function loadFeatureProfile() {
         if (!featureViewName.value.trim()) {
             featureViewName.value = `${(result.dataset_name || 'dataset').replace(/[^a-zA-Z0-9]+/g, '_').toLowerCase()}_feature_view`;
         }
-        document.querySelectorAll('[data-field="column"]').forEach((select) => {
+        document.querySelectorAll('[data-field="column"], [data-field="right_column"]').forEach((select) => {
             const currentValue = select.value;
             select.innerHTML = createColumnOptions(currentValue);
         });
+        document.querySelectorAll('.builder-row').forEach((row) => refreshTransformRowState(row));
         renderFeatureResults(result);
         syncOperationsJson();
         setFeatureWorkspaceStatus('Dataset profile loaded.');
@@ -1152,6 +1397,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         labelField: 'name',
         valueField: 'id',
         placeholderText: 'Select a dataset'
+    });
+    await PopulateListOptions({
+        selectElement: '#featureSecondaryDatasetId',
+        endpoint: '/datasetmodel/list',
+        labelField: 'name',
+        valueField: 'id',
+        placeholderText: 'No secondary dataset'
     });
     const requestedDatasetId = new URLSearchParams(window.location.search).get('datasetId')
         || new URLSearchParams(window.location.search).get('dataset_id');

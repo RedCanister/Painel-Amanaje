@@ -32,7 +32,7 @@
                     <h3>Data</h3>
                     <p>Ingest, create, inspect, and prepare datasets and models.</p>
                     <a href="/">Panel</a>
-                    <a href="/upload">Upload</a>
+                    <!-- <a href="/upload">Upload</a> -->
                     <a href="/create">Create</a>
                     <a href="/feature">Feature</a>
                 </div>
@@ -41,7 +41,7 @@
                     <h3>Models</h3>
                     <p>Train, optimize, and prepare portable execution artifacts.</p>
                     <a href="/training">Training</a>
-                    <a href="/optimization">Optimization</a>
+                    <!-- <a href="/optimization">Optimization</a> -->
                     <a href="/onnx">ONNX</a>
                 </div>
 
@@ -86,6 +86,23 @@
             <p class="footer-meta">Full suite for AI/ML operations.</p>
         </div>
     </footer>
+
+    <aside class="global-operation-stack" id="globalOperationStack" aria-label="Operations stack">
+        <button type="button" class="global-operation-toggle" id="globalOperationToggle" aria-expanded="false" aria-controls="globalOperationBody">
+            <span>Operations</span>
+            <span class="global-operation-count" id="globalOperationCount" data-tone="idle">0</span>
+        </button>
+        <div class="global-operation-body" id="globalOperationBody" hidden>
+            <div class="global-operation-header">
+                <strong>Operations Stack</strong>
+                <button type="button" class="global-operation-refresh" id="globalOperationRefresh">Refresh</button>
+            </div>
+            <div class="global-operation-worker" id="globalOperationWorkerSummary" data-status="unknown">Workers: checking...</div>
+            <div class="global-operation-list" id="globalOperationList">
+                <div class="global-operation-empty">No operations are running.</div>
+            </div>
+        </div>
+    </aside>
 
     <script>
         window.AmanajeSettings = {{ amanaje_settings | default({"feature_flags": {"debug_mode": false, "assistant_visible": true}}, true) | tojson }};

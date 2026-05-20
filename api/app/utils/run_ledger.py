@@ -177,7 +177,7 @@ def list_run_entries(
         if item.strip()
     }
     requested_ids = {str(item) for item in run_ids or [] if str(item).strip()}
-    active_statuses = {"queued", "running"}
+    active_statuses = {"queued", "running", "paused", "cancel_requested"}
     for path in directory.glob("*.json"):
         try:
             with path.open("r", encoding="utf-8") as handle:

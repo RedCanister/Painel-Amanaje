@@ -222,6 +222,32 @@ def test_production_global_context_controls_are_present(page):
     assert page.locator("#simulationFamilyPayload").count() == 1
 
 
+def test_production_interval_schedule_fields_follow_toggle(page):
+    page.goto("/production", wait_until="domcontentloaded")
+    page.locator("main.container").wait_for(state="visible")
+
+    expect(page.locator("#watchScheduleFields")).to_be_hidden()
+    page.locator("#watchScheduleEnabled").check()
+    expect(page.locator("#watchScheduleFields")).to_be_visible()
+    page.locator("#watchScheduleEnabled").uncheck()
+    expect(page.locator("#watchScheduleFields")).to_be_hidden()
+
+
+def test_panel_display_filters_collapse_and_filter_widget_is_available(page):
+    page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
+    page.goto("/panel", wait_until="networkidle")
+    page.locator("#panelModeEdit").wait_for(state="visible")
+    page.locator("#panelModeEdit").click()
+
+    expect(page.locator(".panel-filter-details")).to_be_visible()
+    expect(page.locator("#panelFilterColumn")).to_be_visible()
+    page.locator(".panel-filter-summary-row").click()
+    expect(page.locator("#panelFilterColumn")).to_be_hidden()
+    page.locator(".panel-filter-summary-row").click()
+    expect(page.locator("#panelFilterColumn")).to_be_visible()
+    expect(page.locator("#panelWidgetKind option[value='filter_control']")).to_have_count(1)
+
+
 def test_visualization_loads_with_local_plotly_fallback_without_forcing_dashboard(page):
     page.goto("/visualization", wait_until="domcontentloaded")
     page.locator("main.container").wait_for(state="visible")

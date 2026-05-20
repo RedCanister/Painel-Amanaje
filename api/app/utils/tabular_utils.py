@@ -526,21 +526,35 @@ def apply_feature_operations(
 
             series = pd.to_numeric(frame[column_name], errors="coerce")
             raw_value = operation.get("value")
+            value_mode = str(operation.get("value_mode") or "").strip().lower()
+            right_column = str(operation.get("right_column") or operation.get("secondary_column") or "").strip()
+            right_operand = None
+            operand_label = raw_value
+            if value_mode == "column" or right_column:
+                if right_column not in frame.columns:
+                    continue
+                right_operand = pd.to_numeric(frame[right_column], errors="coerce")
+                operand_label = right_column
             numeric_value = None
-            try:
-                numeric_value = float(raw_value)
-            except (TypeError, ValueError):
-                numeric_value = None
+            if right_operand is None:
+                try:
+                    numeric_value = float(raw_value)
+                except (TypeError, ValueError):
+                    numeric_value = None
 
             result_series = None
-            if operator == "add" and numeric_value is not None:
-                result_series = series + numeric_value
-            elif operator == "subtract" and numeric_value is not None:
-                result_series = series - numeric_value
-            elif operator == "multiply" and numeric_value is not None:
-                result_series = series * numeric_value
-            elif operator == "divide" and numeric_value not in (None, 0):
-                result_series = series / numeric_value
+            if operator == "add" and (right_operand is not None or numeric_value is not None):
+                result_series = series + (right_operand if right_operand is not None else numeric_value)
+            elif operator == "subtract" and (right_operand is not None or numeric_value is not None):
+                result_series = series - (right_operand if right_operand is not None else numeric_value)
+            elif operator == "multiply" and (right_operand is not None or numeric_value is not None):
+                result_series = series * (right_operand if right_operand is not None else numeric_value)
+            elif operator == "divide":
+                if right_operand is not None:
+                    denominator = right_operand.replace(0, np.nan)
+                    result_series = series / denominator
+                elif numeric_value not in (None, 0):
+                    result_series = series / numeric_value
             elif operator == "power" and numeric_value is not None:
                 result_series = series.pow(numeric_value)
             elif operator == "round":
@@ -567,7 +581,80 @@ def apply_feature_operations(
                     "column": column_name,
                     "target": target_column,
                     "operator": operator,
-                    "value": raw_value,
+                    "value": operand_label,
+                    "value_mode": "column" if right_operand is not None else "literal",
+                }
+            )
+
+    normalizations = operations.get("normalize") or operations.get("normalizations") or []
+    if isinstance(normalizations, Mapping):
+        normalizations = [normalizations]
+    if isinstance(normalizations, list):
+        for normalization in normalizations:
+            if not isinstance(normalization, Mapping):
+                continue
+            mode = str(normalization.get("mode") or "").strip().lower()
+            raw_columns = normalization.get("columns")
+            if isinstance(raw_columns, str):
+                selected_columns = [item.strip() for item in raw_columns.split(",") if item.strip()]
+            elif isinstance(raw_columns, list):
+                selected_columns = [str(item).strip() for item in raw_columns if str(item).strip()]
+            else:
+                selected_columns = []
+            if mode in {"all", "all_numeric", "numeric"} or not selected_columns:
+                selected_columns = [str(column) for column in frame.columns if pd.api.types.is_numeric_dtype(frame[column])]
+            target_min = float(normalization.get("min", 0) if normalization.get("min") not in (None, "") else 0)
+            target_max = float(normalization.get("max", 1) if normalization.get("max") not in (None, "") else 1)
+            suffix = str(normalization.get("target_suffix") or normalization.get("suffix") or "").strip()
+            applied_columns: list[str] = []
+            for column_name in selected_columns:
+                if column_name not in frame.columns:
+                    continue
+                series = pd.to_numeric(frame[column_name], errors="coerce")
+                source_min = series.min(skipna=True)
+                source_max = series.max(skipna=True)
+                target_column = f"{column_name}{suffix}" if suffix else column_name
+                if pd.isna(source_min) or pd.isna(source_max) or source_min == source_max:
+                    frame[target_column] = target_min
+                else:
+                    frame[target_column] = ((series - source_min) / (source_max - source_min)) * (target_max - target_min) + target_min
+                applied_columns.append(target_column)
+            if applied_columns:
+                applied_steps.append(
+                    {
+                        "operation": "normalize",
+                        "columns": applied_columns,
+                        "range": [target_min, target_max],
+                    }
+                )
+
+    date_range_filters = operations.get("date_range_filters") or []
+    if isinstance(date_range_filters, list):
+        for condition in date_range_filters:
+            if not isinstance(condition, Mapping):
+                continue
+            column_name = str(condition.get("column") or "").strip()
+            if column_name not in frame.columns:
+                continue
+            parsed = pd.to_datetime(frame[column_name], errors="coerce", utc=True)
+            start_raw = condition.get("start")
+            end_raw = condition.get("end")
+            mask = parsed.notna()
+            if start_raw not in (None, ""):
+                start_value = pd.to_datetime(start_raw, errors="coerce", utc=True)
+                if not pd.isna(start_value):
+                    mask &= parsed >= start_value
+            if end_raw not in (None, ""):
+                end_value = pd.to_datetime(end_raw, errors="coerce", utc=True)
+                if not pd.isna(end_value):
+                    mask &= parsed <= end_value
+            frame = frame[mask]
+            applied_steps.append(
+                {
+                    "operation": "date_range_filter",
+                    "column": column_name,
+                    "start": start_raw,
+                    "end": end_raw,
                 }
             )
 

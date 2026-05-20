@@ -6,11 +6,68 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --amanaje-primary: #2a9d8f;
+        --amanaje-primary-strong: #115e59;
+        --amanaje-primary-soft: #ccfbf1;
+        --amanaje-primary-softer: #f0fdfa;
+        --amanaje-primary-mid: #99f6e4;
+        --amanaje-primary-border: #5eead4;
+        --amanaje-primary-border-soft: #99f6e4;
+        --amanaje-primary-accent: #14b8a6;
+        --amanaje-primary-gradient: #2a9d8f;
+        --amanaje-primary-bar-gradient: #2a9d8f;
+        --amanaje-primary-shadow: rgba(42, 157, 143, 0.08);
+        --amanaje-primary-shadow-strong: rgba(42, 157, 143, 0.2);
+        --amanaje-code-bg: #0f2f2a;
+        --amanaje-code-fg: #ccfbf1;
+        --amanaje-code-border: #115e59;
+        --amanaje-body-bg: #f7fffd;
+    }
+
     .training-shell { display: grid; gap: 1.25rem; }
+    .global-context {
+        background:
+            linear-gradient(135deg, rgba(255,255,255,0.92), rgba(247,242,234,0.78)),
+            var(--amanaje-shell-panel);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 24px;
+        padding: 1.45rem;
+        box-shadow: 0 20px 42px var(--amanaje-primary-shadow);
+    }
+    .global-context h3 {
+        margin-top: 0;
+        margin-bottom: 0.45rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: clamp(1.8rem, 2.4vw, 2.45rem);
+    }
+    .workspace-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .workspace-tab {
+        border: 1px solid var(--amanaje-primary-border);
+        background: rgba(255,255,255,0.76);
+        color: var(--amanaje-primary-strong);
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .workspace-tab.active { background: var(--amanaje-primary-gradient); color: white; border-color: transparent; }
     .training-panel {
         display: none;
+        background: var(--amanaje-surface);
+        border: 1px solid var(--amanaje-border);
+        border-radius: 22px;
+        padding: 1.5rem;
+        box-shadow: 0 18px 38px var(--amanaje-primary-shadow);
     }
     .training-panel.active { display: block; }
+    .panel-title {
+        margin: 0 0 0.45rem;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+    }
+    .panel-subtitle { margin: 0 0 1.25rem; color: #6b7280; }
     .pipeline-grid, .summary-grid, .tracking-grid { display: grid; gap: 1rem; }
     .pipeline-grid { grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr); }
     .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
@@ -47,14 +104,71 @@
         background: var(--amanaje-surface-3);
         box-sizing: border-box;
     }
+    .muted-text, .helper-text { color: #6b7280; }
     .helper-text { font-size: 0.92rem; margin-top: 0.35rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-weight: 700; color: var(--amanaje-primary-strong); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: var(--amanaje-surface-3);
+    }
     .form-group textarea { min-height: 140px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .form-group select[multiple] { min-height: 150px; }
     .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
     .toolbar-row { justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .btn {
+        padding: 0.8rem 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+    .btn-primary { background: var(--amanaje-primary-gradient); color: white; }
+    .btn-secondary { background: var(--amanaje-surface-3); color: #374151; }
+    .btn-ghost { background: rgba(255,255,255,0.8); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
     .metric-value { font-size: 1.4rem; font-weight: 800; color: var(--amanaje-primary); }
+    .compact-tabs { margin: 0 0 1rem; }
+    .run-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 1.8rem;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        background: #fff;
+        color: var(--amanaje-primary-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+    .run-tag input { margin: 0; }
+    .run-tag.status { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+    .run-tag.model { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+    .run-tag.dataset { background: #fefce8; border-color: #fde68a; color: #92400e; }
+    .run-tag.study { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
+    .run-tag.queue { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+    .run-tag.metric-quality { background: #ecfdf5; border-color: #86efac; color: #166534; }
+    .run-tag.metric-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .run-tag.metric-neutral { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
     .pill-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.9rem; }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary);
+        border: 1px solid var(--amanaje-primary-border);
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
     .timeline-list { display: grid; gap: 0.75rem; margin-top: 1rem; }
     .timeline-item {
         display: flex;
@@ -113,6 +227,21 @@
     .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
     .summary-table td:first-child { font-weight: 700; color: var(--amanaje-primary-strong); width: 38%; }
     .summary-table code { white-space: pre-wrap; word-break: break-word; }
+    .json-block {
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        padding: 1rem;
+        border-radius: 14px;
+        white-space: pre-wrap;
+        overflow: auto;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.9rem;
+    }
+    .alert { padding: 1rem; border-radius: 14px; margin-top: 1rem; }
+    .alert-success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .alert-warning { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .detail-modal {
         display: none;
         position: fixed;
@@ -163,7 +292,7 @@
     <section class="global-context">
         <span class="workspace-eyebrow">Models domain</span>
         <h3>Global Training Context</h3>
-        <p class="panel-subtitle">Keep the active inference pair, model, dataset, study, and execution framework aligned while the training workspace moves across orchestration, studies, and history.</p>
+        <p class="panel-subtitle">Select the objects to be used in training by the pair, or create new ones by simply picking. They persist among the tabs.</p>
         <div class="inline-grid">
             <div class="form-group">
                 <label for="globalInferencePairId">Inference Pair</label>
@@ -219,7 +348,6 @@
         <button class="workspace-tab" type="button" data-tab="study">Study </button>
         <button class="workspace-tab" type="button" data-tab="tracking">Tracking and ONNX</button>
         <button class="workspace-tab" type="button" data-tab="history">Run History</button>
-        <button class="workspace-tab" type="button" data-tab="ledger">Run Ledger</button>
     </div>
 
     <section class="training-panel active" id="panel-orchestration">
@@ -288,6 +416,20 @@
                             <label for="outputFeatures">Output Features</label>
                             <select id="outputFeatures" name="outputFeatures" multiple></select>
                             <div class="helper-text">Choose the target feature for training and any additional outputs you want to keep visible in the inference summary.</div>
+                        </div>
+                    </div>
+
+                    <div class="surface-card" style="margin-bottom:1rem;">
+                        <div class="toolbar-row">
+                            <div>
+                                <h4 style="margin:0;">Metrics</h4>
+                                <div class="helper-text">Choose tracked metrics and the objective used for summaries and study coordination.</div>
+                            </div>
+                        </div>
+                        <div id="trainingMetricSelection" class="pill-row"></div>
+                        <div class="form-group" style="margin-top:0.75rem;">
+                            <label for="objectiveMetric">Objective Metric</label>
+                            <select id="objectiveMetric"></select>
                         </div>
                     </div>
 
@@ -500,14 +642,17 @@
 
     <section class="training-panel" id="panel-history">
         <h3 class="panel-title">Run History</h3>
-        <p class="panel-subtitle">A simplified view of previous training and study runs, with metrics and parameters kept readable.</p>
-        <div id="runHistoryResults" class="inventory-list"></div>
-    </section>
-
-    <section class="training-panel" id="panel-ledger">
-        <h3 class="panel-title">Run Ledger</h3>
-        <p class="panel-subtitle">All of your active runs are shown here. </p>
-        <div id="runLedgerResults"></div>
+        <p class="panel-subtitle">Summary and details share one section so run state, metrics, parameters, and controls stay aligned.</p>
+        <div class="workspace-tabs compact-tabs">
+            <button class="workspace-tab active" type="button" data-history-tab="summary">Summary</button>
+            <button class="workspace-tab" type="button" data-history-tab="details">Details</button>
+        </div>
+        <div data-history-panel="summary">
+            <div id="runHistoryResults" class="inventory-list"></div>
+        </div>
+        <div data-history-panel="details" hidden>
+            <div id="runLedgerResults"></div>
+        </div>
     </section>
 </div>
 
@@ -547,6 +692,8 @@ const studyParamsJson = document.getElementById('studyParamsJson');
 const inputFeatureSelect = document.getElementById('inputFeatures');
 const outputFeatureSelect = document.getElementById('outputFeatures');
 const runtimeParameterFields = document.getElementById('runtimeParameterFields');
+const objectiveMetricSelect = document.getElementById('objectiveMetric');
+const trainingMetricSelection = document.getElementById('trainingMetricSelection');
 const studyControlBuilder = document.getElementById('studyControlBuilder');
 
 let modelCache = [];
@@ -721,21 +868,15 @@ function renderPlotDeck(plots = []) {
         : '';
 }
 
-function renderJsonValue(value, title = 'JSON') {
-    if (value && typeof value === 'object') {
-        return window.AmanajeUI?.renderJsonExplorer
-            ? AmanajeUI.renderJsonExplorer(value, { title, maxPlotlyRows: 40, maxPlotlyColumns: 14 })
-            : `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`;
-    }
-    return escapeHtml(value);
-}
-
 function buildSummaryTable(summary) {
     const rows = Object.entries(summary || {}).map(([key, value]) => {
+        const renderedValue = typeof value === 'object'
+            ? `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`
+            : escapeHtml(value);
         return `
             <tr>
                 <td>${escapeHtml(key.replace(/_/g, ' '))}</td>
-                <td>${renderJsonValue(value, key.replace(/_/g, ' '))}</td>
+                <td>${renderedValue}</td>
             </tr>
         `;
     }).join('');
@@ -842,6 +983,7 @@ function updatePipelineSummary() {
         selectedModel?.is_deployed ? '<span class="pill">deployed</span>' : '',
         `<span class="pill">${escapeHtml(`framework ${frameworkSelect.value}`)}</span>`
     ].filter(Boolean).join('');
+    renderTrainingMetricSelection();
 }
 
 function updateDeviceControls() {
@@ -933,12 +1075,14 @@ function renderRunLedger(runs = []) {
                     <div class="helper-text">Status: ${escapeHtml(run.status || 'queued')} | Stage: ${escapeHtml(run.stage || '-')} | Latest event: ${escapeHtml(run.progress?.latest_event || '-')}</div>
                 </div>
                 <div class="pill-row">
-                    ${run.context?.inference_id ? `<span class="pill">inference ${escapeHtml(run.context.inference_id)}</span>` : ''}
-                    <span class="pill">model ${escapeHtml(run.context?.model_id || '-')}</span>
-                    <span class="pill">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
-                    ${run.context?.study_id ? `<span class="pill">study ${escapeHtml(run.context.study_id)}</span>` : ''}
+                    ${run.context?.inference_id ? `<span class="run-tag source">inference ${escapeHtml(run.context.inference_id)}</span>` : ''}
+                    <span class="run-tag status">${escapeHtml(run.status || 'queued')}</span>
+                    <span class="run-tag model">model ${escapeHtml(run.context?.model_id || '-')}</span>
+                    <span class="run-tag dataset">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
+                    ${run.context?.study_id ? `<span class="run-tag study">study ${escapeHtml(run.context.study_id)}</span>` : ''}
                 </div>
             </div>
+            ${runControlButtons(run)}
             ${run.progress?.counters && Object.keys(run.progress.counters).length ? `
                 ${AmanajeUI.renderMetricCards(Object.entries(run.progress.counters).map(([key, value]) => ({
                     label: key.replace(/_/g, ' '),
@@ -958,6 +1102,90 @@ function renderRunLedger(runs = []) {
     `).join('');
 }
 
+function metricClass(name) {
+    const normalized = String(name || '').toLowerCase();
+    if (normalized.includes('loss') || normalized.includes('error') || normalized.includes('rmse') || normalized.includes('mae')) return 'metric-error';
+    if (normalized.includes('accuracy') || normalized.includes('r2') || normalized.includes('auc') || normalized.includes('f1')) return 'metric-quality';
+    return 'metric-neutral';
+}
+
+function availableMetricNames() {
+    const selectedModel = resolveModel(modelIdSelect.value);
+    const selectedStudy = resolveStudy(studyIdSelect.value || existingStudyIdSelect.value);
+    const names = new Set(['loss', 'mae', 'rmse', 'r2', 'accuracy', 'f1']);
+    Object.keys(selectedModel?.metrics || {}).forEach((name) => names.add(name));
+    Object.keys(selectedStudy?.best_trial?.values || selectedStudy?.best_params || {}).forEach((name) => {
+        if (String(name).toLowerCase().includes('metric')) names.add(String(name));
+    });
+    return Array.from(names).filter(Boolean).slice(0, 16);
+}
+
+function renderTrainingMetricSelection() {
+    const metrics = availableMetricNames();
+    if (!trainingMetricSelection || !objectiveMetricSelect) return;
+    const previouslySelected = new Set(Array.from(trainingMetricSelection.querySelectorAll('[data-training-metric]:checked')).map((item) => item.value));
+    const defaultSelected = previouslySelected.size ? previouslySelected : new Set(metrics.slice(0, 3));
+    trainingMetricSelection.innerHTML = metrics.map((metric) => `
+        <label class="run-tag metric ${metricClass(metric)}">
+            <input type="checkbox" data-training-metric value="${escapeHtml(metric)}" ${defaultSelected.has(metric) ? 'checked' : ''}>
+            ${escapeHtml(metric)}
+        </label>
+    `).join('');
+    const previousObjective = objectiveMetricSelect.value;
+    objectiveMetricSelect.innerHTML = metrics.map((metric) => `<option value="${escapeHtml(metric)}">${escapeHtml(metric)}</option>`).join('');
+    objectiveMetricSelect.value = metrics.includes(previousObjective) ? previousObjective : (metrics.includes('accuracy') ? 'accuracy' : metrics[0] || '');
+}
+
+function selectedTrainingMetrics() {
+    return Array.from(document.querySelectorAll('[data-training-metric]:checked')).map((input) => input.value).filter(Boolean);
+}
+
+async function controlTrainingRun(runId, action) {
+    if (!runId || !action) return;
+    try {
+        await window.AmanajeUI?.controlRun?.(runId, action);
+        await loadRunLedger();
+    } catch (error) {
+        renderAlert('trainingResult', 'error', error.message);
+    }
+}
+
+async function rerunTrainingRun(runId) {
+    if (!runId) return;
+    try {
+        const result = window.AmanajeUI?.fetchJson
+            ? await AmanajeUI.fetchJson(`/runs/${encodeURIComponent(runId)}/rerun`, { method: 'POST' }, { source: 'training-rerun' })
+            : await fetch(`/runs/${encodeURIComponent(runId)}/rerun`, { method: 'POST' }).then(async (response) => {
+                const payload = await response.json();
+                if (!response.ok || payload.status === 'error') throw new Error(payload.detail || `HTTP ${response.status}`);
+                return payload;
+            });
+        window.AmanajeUI?.watchRun?.(result.run_id, { source: 'training-rerun', source_run_id: runId });
+        renderAlert('trainingResult', 'info', `Re-run <code>${escapeHtml(result.run_id)}</code> was queued from <code>${escapeHtml(runId)}</code>.`);
+        await loadRunLedger();
+    } catch (error) {
+        renderAlert('trainingResult', 'error', error.message);
+    }
+}
+
+function runControlButtons(run = {}) {
+    const status = String(run.status || 'queued');
+    const runId = escapeHtml(run.run_id || '');
+    const runType = String(run.run_type || '').toLowerCase();
+    const active = ['queued', 'running', 'paused', 'cancel_requested'].includes(status);
+    const rerunnable = ['training', 'study'].includes(runType);
+    const buttons = [];
+    if (rerunnable && active) {
+        buttons.push(`<button type="button" class="btn btn-secondary" disabled title="Wait for this run to finish before cloning it.">Re-run</button>`);
+    } else if (rerunnable) {
+        buttons.push(`<button type="button" class="btn btn-primary" data-run-rerun="true" data-run-id="${runId}">Re-run</button>`);
+    }
+    if (['queued', 'running'].includes(status)) buttons.push(`<button type="button" class="btn btn-ghost" data-run-control="pause" data-run-id="${runId}">Pause</button>`);
+    if (status === 'paused') buttons.push(`<button type="button" class="btn btn-secondary" data-run-control="resume" data-run-id="${runId}">Resume</button>`);
+    if (['queued', 'running', 'paused', 'cancel_requested'].includes(status)) buttons.push(`<button type="button" class="btn btn-danger" data-run-control="cancel" data-run-id="${runId}">Cancel</button>`);
+    return buttons.length ? `<div class="actions-row">${buttons.join('')}</div>` : '';
+}
+
 function renderRunHistory(runs = []) {
     const target = document.getElementById('runHistoryResults');
     if (!target) return;
@@ -968,19 +1196,21 @@ function renderRunHistory(runs = []) {
     target.innerHTML = runs.slice(0, 25).map((run) => {
         const metrics = { ...(run.metrics || {}), ...(run.result?.metrics || {}) };
         const parameters = run.parameters || run.result?.parameters || {};
-        const metricPills = Object.entries(metrics).slice(0, 6).map(([key, value]) => `<span class="pill">${escapeHtml(`${key}: ${value}`)}</span>`).join('');
-        const parameterPills = Object.entries(parameters).slice(0, 6).map(([key, value]) => `<span class="pill">${escapeHtml(`${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)}</span>`).join('');
+        const metricPills = Object.entries(metrics).slice(0, 6).map(([key, value]) => `<span class="run-tag metric ${metricClass(key)}">${escapeHtml(`${key}: ${value}`)}</span>`).join('');
+        const parameterPills = Object.entries(parameters).slice(0, 6).map(([key, value]) => `<span class="run-tag queue">${escapeHtml(`${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`)}</span>`).join('');
         return `
             <div class="inventory-row">
                 <strong>${escapeHtml(run.run_type || 'run')} ${escapeHtml(run.run_id || '')}</strong>
                 <div class="helper-text">Status ${escapeHtml(run.status || 'queued')} at ${escapeHtml(run.stage || '-')}.</div>
                 <div class="pill-row">
-                    <span class="pill">model ${escapeHtml(run.context?.model_id || '-')}</span>
-                    <span class="pill">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
-                    ${run.context?.study_id ? `<span class="pill">study ${escapeHtml(run.context.study_id)}</span>` : ''}
+                    <span class="run-tag status">${escapeHtml(run.status || 'queued')}</span>
+                    <span class="run-tag model">model ${escapeHtml(run.context?.model_id || '-')}</span>
+                    <span class="run-tag dataset">dataset ${escapeHtml(run.context?.dataset_id || '-')}</span>
+                    ${run.context?.study_id ? `<span class="run-tag study">study ${escapeHtml(run.context.study_id)}</span>` : ''}
                 </div>
                 ${metricPills ? `<div class="pill-row">${metricPills}</div>` : '<div class="helper-text">No metrics recorded yet.</div>'}
                 ${parameterPills ? `<div class="pill-row">${parameterPills}</div>` : ''}
+                ${runControlButtons(run)}
             </div>
         `;
     }).join('');
@@ -997,10 +1227,16 @@ async function loadRunLedger() {
         if (!response.ok || result.status === 'error') throw new Error(result.detail || `HTTP ${response.status}`);
         renderRunLedger(result.runs || []);
         renderRunHistory(result.runs || []);
+        document.getElementById('panel-history')?.querySelectorAll('[data-run-control]').forEach((button) => {
+            button.addEventListener('click', () => controlTrainingRun(button.dataset.runId, button.dataset.runControl));
+        });
+        document.getElementById('panel-history')?.querySelectorAll('[data-run-rerun]').forEach((button) => {
+            button.addEventListener('click', () => rerunTrainingRun(button.dataset.runId));
+        });
         if ((result.runs || []).length) {
             renderPipelineTimeline(result.runs[0].stage || 'queued', String(result.runs[0].status || '').replace(/^./, (match) => match.toUpperCase()));
         }
-        const hasActiveRuns = (result.runs || []).some((run) => ['queued', 'running'].includes(run.status));
+        const hasActiveRuns = (result.runs || []).some((run) => ['queued', 'running', 'paused', 'cancel_requested'].includes(run.status));
         if (runLedgerPollTimer) {
             clearTimeout(runLedgerPollTimer);
             runLedgerPollTimer = null;
@@ -1598,6 +1834,9 @@ trainingForm.addEventListener('submit', async (event) => {
     };
     if (inputFeatures.length) payload.parameters.input_features = inputFeatures;
     if (outputFeatures.length) payload.parameters.output_features = outputFeatures;
+    const metricsToTrack = selectedTrainingMetrics();
+    if (metricsToTrack.length) payload.parameters.metrics_to_track = metricsToTrack;
+    if (objectiveMetricSelect.value) payload.parameters.objective_metric = objectiveMetricSelect.value;
 
     renderPipelineTimeline('training', 'Running');
     renderAlert('trainingResult', 'info', 'Submitting training job...');
@@ -1650,7 +1889,9 @@ studyForm.addEventListener('submit', async (event) => {
         best_params: null,
         study_params: {
             ...studyParams,
-            framework: frameworkSelect.value
+            framework: frameworkSelect.value,
+            metrics_to_track: selectedTrainingMetrics(),
+            objective_metric: objectiveMetricSelect.value || document.getElementById('studyObjective').value.trim()
         }
     };
 
@@ -1674,8 +1915,18 @@ studyForm.addEventListener('submit', async (event) => {
     }
 });
 
-document.querySelectorAll('.workspace-tab').forEach((button) => {
+document.querySelectorAll('.workspace-tab[data-tab]').forEach((button) => {
     button.addEventListener('click', () => setTrainingTab(button.dataset.tab));
+});
+
+document.querySelectorAll('[data-history-tab]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const active = button.dataset.historyTab;
+        document.querySelectorAll('[data-history-tab]').forEach((item) => item.classList.toggle('active', item === button));
+        document.querySelectorAll('[data-history-panel]').forEach((panel) => {
+            panel.hidden = panel.dataset.historyPanel !== active;
+        });
+    });
 });
 
 globalInferencePairIdSelect.addEventListener('change', async () => {

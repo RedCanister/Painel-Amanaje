@@ -1197,7 +1197,8 @@
     function statusTone(status) {
         if (status === "completed") return "success";
         if (status === "failed" || status === "cancelled") return "error";
-        if (status === "running") return "running";
+        if (status === "running" || status === "cancel_requested") return "running";
+        if (status === "paused") return "queued";
         return "queued";
     }
 
@@ -1231,7 +1232,7 @@
         const list = document.getElementById("globalOperationList");
         const count = document.getElementById("globalOperationCount");
         if (!list || !count) return;
-        const activeCount = runs.filter((run) => ["queued", "running"].includes(String(run.status || ""))).length;
+        const activeCount = runs.filter((run) => ["queued", "running", "paused", "cancel_requested"].includes(String(run.status || ""))).length;
         count.textContent = String(activeCount || runs.length || 0);
         count.dataset.tone = activeCount ? "active" : "idle";
 
@@ -1243,6 +1244,11 @@
         list.innerHTML = runs.slice(0, 12).map((run) => {
             const tone = statusTone(String(run.status || "queued"));
             const latestEvent = run.progress?.latest_event || run.error || "";
+            const runId = String(run.run_id || "");
+            const status = String(run.status || "queued");
+            const canPause = ["queued", "running"].includes(status);
+            const canResume = status === "paused";
+            const canCancel = ["queued", "running", "paused", "cancel_requested"].includes(status);
             return `
                 <article class="global-operation-item ${tone}">
                     <div class="global-operation-main">
@@ -1250,11 +1256,16 @@
                         <span>${escapeHtml(run.stage || run.status || "queued")}</span>
                     </div>
                     <div class="global-operation-meta">
-                        <code>${escapeHtml(run.run_id || "")}</code>
-                        <span>${escapeHtml(run.status || "queued")}</span>
-                        <button type="button" class="global-operation-dismiss" data-run-dismiss="${escapeHtml(run.run_id || "")}" aria-label="Dismiss operation">&times;</button>
+                        <code>${escapeHtml(runId)}</code>
+                        <span>${escapeHtml(status)}</span>
                     </div>
                     ${latestEvent ? `<div class="global-operation-event">${escapeHtml(latestEvent)}</div>` : ""}
+                    <div class="global-operation-actions">
+                        ${canPause ? `<button type="button" data-run-control="pause" data-run-id="${escapeHtml(runId)}">Pause</button>` : ""}
+                        ${canResume ? `<button type="button" data-run-control="resume" data-run-id="${escapeHtml(runId)}">Resume</button>` : ""}
+                        ${canCancel ? `<button type="button" data-run-control="cancel" data-run-id="${escapeHtml(runId)}">Cancel</button>` : ""}
+                        <button type="button" class="global-operation-dismiss" data-run-dismiss="${escapeHtml(runId)}" aria-label="Dismiss operation">Dismiss</button>
+                    </div>
                 </article>
             `;
         }).join("");
@@ -1262,6 +1273,21 @@
         list.querySelectorAll("[data-run-dismiss]").forEach((button) => {
             button.addEventListener("click", () => unwatchRun(button.dataset.runDismiss));
         });
+        list.querySelectorAll("[data-run-control]").forEach((button) => {
+            button.addEventListener("click", () => controlRun(button.dataset.runId, button.dataset.runControl));
+        });
+    }
+
+    async function controlRun(runId, action) {
+        const normalizedRunId = String(runId || "").trim();
+        const normalizedAction = String(action || "").trim().toLowerCase();
+        if (!normalizedRunId || !["pause", "resume", "cancel"].includes(normalizedAction)) return null;
+        const result = await fetchJson(`/runs/${encodeURIComponent(normalizedRunId)}/${normalizedAction}`, {
+            method: "POST",
+        }, { source: "operation-stack" });
+        watchRun(normalizedRunId, { source: `operation-${normalizedAction}` });
+        await loadOperationStack({ immediate: true });
+        return result;
     }
 
     async function loadOperationStack(options = {}) {
@@ -1286,7 +1312,7 @@
             const runs = mergeRuns(recent.runs || [], watched.runs || []);
             renderOperationStack(runs);
             window.dispatchEvent(new CustomEvent("amanaje:operation-stack-update", { detail: { runs } }));
-            const hasActive = runs.some((run) => ["queued", "running"].includes(String(run.status || "")));
+            const hasActive = runs.some((run) => ["queued", "running", "paused", "cancel_requested"].includes(String(run.status || "")));
             const body = document.getElementById("globalOperationBody");
             const panelOpen = Boolean(body && !body.hasAttribute("hidden"));
             if (operationPollTimer) {
@@ -1348,6 +1374,7 @@
         setAssistantStatus,
         watchRun,
         unwatchRun,
+        controlRun,
         loadOperationStack,
     };
 

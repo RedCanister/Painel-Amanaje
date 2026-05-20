@@ -81,6 +81,7 @@ from app.utils.plot_registry import (
     build_bar_plot_spec,
     build_dataset_plot_specs,
     build_line_plot_spec,
+    build_table_plot_spec,
     legacy_plot_specs_for_job,
     list_legacy_plot_artifacts,
     resolve_legacy_plot_path,
@@ -219,6 +220,7 @@ DEFAULT_RANDOM_STATE = 42
 SIMULATION_DEFAULT_STEPS = 12
 SIMULATION_MAX_STEPS = 120
 SQL_FEATURE_SOURCE_RELATION = "source_dataset"
+SQL_FEATURE_SECONDARY_RELATION = "secondary_dataset"
 SQL_FEATURE_RESULT_ALIAS = "amanaje_sql_feature_result"
 SQL_FEATURE_BLOCKED_KEYWORDS = {
     "ALTER",
@@ -459,6 +461,7 @@ class ExecuteRequest(BaseModel):
     code: str = ""
     save: bool = False
     objectName: Optional[str] = None
+    registryContext: dict[str, Any] = Field(default_factory=dict)
 
 
 class GenerateRequest(BaseModel):
@@ -997,6 +1000,17 @@ def _build_line_plot(title: str, series: list[tuple[Any, Any]], *, description: 
     return build_line_plot_spec(title, series, description=description)
 
 
+def _build_table_plot(
+    title: str,
+    rows: list[Mapping[str, Any]],
+    *,
+    description: Optional[str] = None,
+    source: Optional[Mapping[str, Any]] = None,
+    max_rows: int = 20,
+) -> dict[str, Any]:
+    return build_table_plot_spec(title, rows, description=description, source=source, max_rows=max_rows)
+
+
 def _build_dataset_plots(summary: Mapping[str, Any], dataframe: Optional[pd.DataFrame] = None) -> list[dict[str, Any]]:
     return build_dataset_plot_specs(
         summary,
@@ -1283,14 +1297,17 @@ def validate_feature_sql_query(sql_query: str) -> str:
     return statement
 
 
-def build_feature_sql_operation_metadata(sql_query: str) -> dict[str, Any]:
+def build_feature_sql_operation_metadata(sql_query: str, *, has_secondary: bool = False) -> dict[str, Any]:
     statement = validate_feature_sql_query(sql_query)
-    return {
+    metadata = {
         "mode": "sql",
         "source_relation": SQL_FEATURE_SOURCE_RELATION,
         "sql_query": statement,
         "sql_hash": _feature_sql_fingerprint(statement),
     }
+    if has_secondary:
+        metadata["secondary_relation"] = SQL_FEATURE_SECONDARY_RELATION
+    return metadata
 
 
 async def execute_feature_sql_query(
@@ -1299,6 +1316,7 @@ async def execute_feature_sql_query(
     sql_query: str,
     *,
     preview_rows: Any = None,
+    secondary_dataframe: Optional[pd.DataFrame] = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     statement = validate_feature_sql_query(sql_query)
     bind = getattr(db, "bind", None)
@@ -1320,10 +1338,19 @@ async def execute_feature_sql_query(
                 if_exists="replace",
                 index=False,
             )
+            if secondary_dataframe is not None:
+                secondary_dataframe.to_sql(
+                    SQL_FEATURE_SECONDARY_RELATION,
+                    con=sync_conn,
+                    schema="pg_temp",
+                    if_exists="replace",
+                    index=False,
+                )
             return pd.read_sql_query(text(outer_query), sync_conn)
         finally:
             try:
                 sync_conn.exec_driver_sql(f"DROP TABLE IF EXISTS pg_temp.{SQL_FEATURE_SOURCE_RELATION}")
+                sync_conn.exec_driver_sql(f"DROP TABLE IF EXISTS pg_temp.{SQL_FEATURE_SECONDARY_RELATION}")
             except Exception:
                 LOGGER.debug("Unable to drop temporary SQL feature source table.", exc_info=True)
 
@@ -1337,6 +1364,7 @@ async def execute_feature_sql_query(
             {
                 "operation": "sql_query",
                 "source_relation": SQL_FEATURE_SOURCE_RELATION,
+                "secondary_relation": SQL_FEATURE_SECONDARY_RELATION if secondary_dataframe is not None else None,
                 "sql_hash": _feature_sql_fingerprint(statement),
                 "preview_rows": row_limit,
             }
@@ -1414,7 +1442,32 @@ def _coerce_feature_operations_from_payload(payload: Mapping[str, Any]) -> dict[
                         "column": source,
                         "operator": operator,
                         "value": transform.get("value"),
+                        "value_mode": str(transform.get("value_mode") or transform.get("operand_mode") or "").strip().lower(),
+                        "right_column": str(transform.get("right_column") or transform.get("secondary_column") or "").strip(),
                         "target": str(transform.get("target") or source).strip() or source,
+                    }
+                )
+        elif transform_type == "normalize":
+            columns = transform.get("columns")
+            if columns is None and transform.get("column"):
+                columns = [transform.get("column")]
+            transformed.setdefault("normalize", []).append(
+                {
+                    "mode": str(transform.get("mode") or "").strip().lower(),
+                    "columns": columns,
+                    "min": transform.get("min", 0),
+                    "max": transform.get("max", 1),
+                    "target_suffix": transform.get("target_suffix") or transform.get("suffix") or "",
+                }
+            )
+        elif transform_type in {"date_range", "datetime_range", "index_range"}:
+            source = str(transform.get("column") or "").strip()
+            if source:
+                transformed.setdefault("date_range_filters", []).append(
+                    {
+                        "column": source,
+                        "start": transform.get("start"),
+                        "end": transform.get("end"),
                     }
                 )
 
@@ -1986,6 +2039,48 @@ def _changed_features(baseline: pd.Series, scenario_base: pd.Series) -> list[dic
     return changes
 
 
+def _plot_has_renderable_content(plot: Mapping[str, Any]) -> bool:
+    if plot.get("kind") == "legacy_image":
+        return True
+    if plot.get("figure"):
+        return True
+    if plot.get("series"):
+        return True
+    if plot.get("rows"):
+        return True
+    return False
+
+
+def _changed_feature_delta_series(changes: list[Mapping[str, Any]]) -> list[tuple[str, Any]]:
+    series: list[tuple[str, Any]] = []
+    for change in changes:
+        delta = change.get("delta")
+        try:
+            numeric_delta = abs(float(delta))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(numeric_delta):
+            continue
+        series.append((str(change.get("feature") or "feature"), numeric_delta))
+    return series
+
+
+def _simulation_step_table_plot(
+    title: str,
+    rows: list[Mapping[str, Any]],
+    *,
+    description: Optional[str] = None,
+    max_rows: int = 40,
+) -> dict[str, Any]:
+    return _build_table_plot(
+        title,
+        rows,
+        description=description or "Tabular simulation results for plot decks and saved panels.",
+        source={"domain": "production_simulation"},
+        max_rows=max_rows,
+    )
+
+
 def _build_sensitivity_summary(
     payload: Mapping[str, Any],
     *,
@@ -2520,6 +2615,7 @@ def _run_tabular_simulation_adapter(
     all_plot_points: list[tuple[str, Any]] = []
     all_table_rows: list[dict[str, Any]] = []
     drift_series: list[tuple[str, Any]] = []
+    scenario_plot_deck: list[dict[str, Any]] = []
     for scenario in scenarios:
         scenario_base = _apply_direct_overrides(baseline, scenario["overrides"])
         rows = [
@@ -2537,6 +2633,9 @@ def _run_tabular_simulation_adapter(
         predictions = np.asarray(_predict_with_result(runtime_result, simulation_frame, prepared.task_type)).reshape(-1)
         probabilities = _predict_probabilities_with_result(runtime_result, simulation_frame, prepared)
         series: list[dict[str, Any]] = []
+        scenario_plot_points: list[tuple[str, Any]] = []
+        scenario_table_rows: list[dict[str, Any]] = []
+        changed_features = _changed_features(baseline, scenario_base)
         for step_index, prediction in enumerate(predictions[: len(simulation_frame)], start=1):
             rendered_prediction = _render_simulation_prediction(prediction, prepared)
             row_payload = {
@@ -2549,16 +2648,20 @@ def _run_tabular_simulation_adapter(
             if probabilities and step_index - 1 < len(probabilities):
                 row_payload["probabilities"] = probabilities[step_index - 1]
             series.append(row_payload)
-            all_table_rows.append(
-                {
-                    "scenario": scenario["name"],
-                    "step": step_index,
-                    output_feature: rendered_prediction,
-                    "changed_features": len(_changed_features(baseline, scenario_base)),
-                }
-            )
+            table_row = {
+                "scenario": scenario["name"],
+                "step": step_index,
+                output_feature: rendered_prediction,
+                "changed_features": len(changed_features),
+            }
+            if probabilities and step_index - 1 < len(probabilities):
+                table_row["probabilities"] = probabilities[step_index - 1]
+            scenario_table_rows.append(table_row)
+            all_table_rows.append(table_row)
             if isinstance(rendered_prediction, (int, float)):
-                all_plot_points.append((f"{scenario['name']} #{step_index}", rendered_prediction))
+                point = (f"{scenario['name']} #{step_index}", rendered_prediction)
+                all_plot_points.append(point)
+                scenario_plot_points.append((f"Step {step_index}", rendered_prediction))
 
         prediction_summary = {
             "label": output_feature,
@@ -2568,12 +2671,33 @@ def _run_tabular_simulation_adapter(
             "step_count": len(series),
         }
         final_row = simulation_frame.tail(1).iloc[0] if not simulation_frame.empty else scenario_base
-        if not drift_series:
-            for feature_name in feature_columns[:8]:
-                try:
-                    drift_series.append((feature_name, abs(float(final_row[feature_name]) - float(baseline[feature_name]))))
-                except (TypeError, ValueError):
-                    continue
+        scenario_drift_series: list[tuple[str, Any]] = []
+        for feature_name in feature_columns[:8]:
+            try:
+                drift_value = abs(float(final_row[feature_name]) - float(baseline[feature_name]))
+            except (TypeError, ValueError):
+                continue
+            scenario_drift_series.append((feature_name, drift_value))
+            drift_series.append((f"{scenario['name']} · {feature_name}", drift_value))
+        scenario_plots = [
+            _build_line_plot(
+                f"{scenario['name']} Prediction Path",
+                scenario_plot_points,
+                description=f"Per-step predictions for the {scenario['name']} scenario.",
+            ),
+            _build_bar_plot(
+                f"{scenario['name']} Changed Features",
+                _changed_feature_delta_series(changed_features) or scenario_drift_series,
+                description="Feature movement applied in this scenario.",
+            ),
+            _simulation_step_table_plot(
+                f"{scenario['name']} Step Results",
+                scenario_table_rows,
+                description="Step-level simulation rows for this scenario.",
+            ),
+        ]
+        scenario_plots = [plot for plot in scenario_plots if _plot_has_renderable_content(plot)]
+        scenario_plot_deck.extend(scenario_plots)
         scenario_summaries.append(
             {
                 "name": scenario["name"],
@@ -2581,9 +2705,11 @@ def _run_tabular_simulation_adapter(
                 "trend": scenario["trend"],
                 "amplitude": scenario["amplitude"],
                 "overrides": _json_safe(scenario["overrides"]),
-                "changed_features": _changed_features(baseline, scenario_base),
+                "changed_features": changed_features,
                 "prediction_summary": prediction_summary,
                 "series": series,
+                "table_rows": scenario_table_rows,
+                "plots": scenario_plots,
             }
         )
 
@@ -2607,8 +2733,17 @@ def _run_tabular_simulation_adapter(
             description="Absolute change applied between the baseline row and the final simulated step.",
         ),
     ]
+    if all_table_rows:
+        plots.append(
+            _simulation_step_table_plot(
+                "Simulation Step Results",
+                all_table_rows,
+                description="All scenario step rows produced by the simulation.",
+            )
+        )
     plots.extend(sensitivity.get("plots", []))
-    plots = [plot for plot in plots if plot.get("series")]
+    plots.extend(scenario_plot_deck)
+    plots = [plot for plot in plots if _plot_has_renderable_content(plot)]
 
     result = {
         "model_id": getattr(model_record, "id", None),
@@ -2659,6 +2794,22 @@ def _run_tabular_simulation_adapter(
             ],
         }
         result["prediction_summary"]["final_probabilities"] = dict(final_probabilities or {})
+        probability_plots: list[dict[str, Any]] = []
+        for scenario in result.get("scenarios", []):
+            scenario_series = scenario.get("series") if isinstance(scenario, Mapping) else []
+            scenario_probabilities = (scenario_series or [{}])[-1].get("probabilities") if scenario_series else None
+            if not isinstance(scenario_probabilities, Mapping):
+                continue
+            probability_plot = _build_bar_plot(
+                f"{scenario.get('name', 'Scenario')} Class Probabilities",
+                list(scenario_probabilities.items()),
+                description="Final-step class probability distribution for this scenario.",
+            )
+            if not _plot_has_renderable_content(probability_plot):
+                continue
+            scenario.setdefault("plots", []).append(probability_plot)
+            probability_plots.append(probability_plot)
+        result["plots"] = [plot for plot in [*result.get("plots", []), *probability_plots] if _plot_has_renderable_content(plot)]
     else:
         result["regression"] = {
             "delta_explained": bool(family_payload.get("explainDeltas", True)),
@@ -2693,6 +2844,20 @@ def _simulation_readiness_result(
     output_feature = output_features[0] if output_features else getattr(prepared, "output_feature", None) or "prediction"
     family = str(simulation_profile.get("family") or "unsupported")
     reasons = list(simulation_profile.get("disabled_reasons") or [])
+    readiness_rows = [
+        {
+            "family": family,
+            "mode": mode,
+            "reason": reason,
+            "ready": False,
+        }
+        for reason in (reasons or ["Runtime capability metadata is incomplete for this simulation mode."])
+    ]
+    readiness_plot = _simulation_step_table_plot(
+        "Simulation Readiness",
+        readiness_rows,
+        description="Why this simulation mode is not ready to run.",
+    )
     return {
         "model_id": getattr(model_record, "id", None),
         "dataset_id": getattr(dataset_record, "id", None),
@@ -2738,7 +2903,7 @@ def _simulation_readiness_result(
             "max_rows": SIMULATION_MAX_ROWS,
             "max_steps": SIMULATION_MAX_STEPS,
         },
-        "plots": [],
+        "plots": [readiness_plot] if _plot_has_renderable_content(readiness_plot) else [],
     }
 
 
@@ -2831,6 +2996,28 @@ def _run_unsupervised_simulation_adapter(
             "unsupervised": result_payload,
         }
     ]
+    changed_features = _changed_features(baseline, probe_row)
+    table_rows = [
+        {
+            "scenario": series[0]["scenario"],
+            "step": 1,
+            output_feature: series[0]["prediction"],
+            "changed_features": len(changed_features),
+        }
+    ]
+    scenario_plots = [
+        _simulation_step_table_plot(
+            f"{series[0]['scenario']} Unsupervised Result",
+            [{**table_rows[0], **{key: _json_safe(value) for key, value in result_payload.items()}}],
+            description="Callable unsupervised model outputs for the probe row.",
+        ),
+        _build_bar_plot(
+            f"{series[0]['scenario']} Changed Features",
+            _changed_feature_delta_series(changed_features),
+            description="Feature changes applied to the unsupervised probe row.",
+        ),
+    ]
+    scenario_plots = [plot for plot in scenario_plots if _plot_has_renderable_content(plot)]
     return {
         "model_id": getattr(model_record, "id", None),
         "dataset_id": getattr(dataset_record, "id", None),
@@ -2854,13 +3041,23 @@ def _run_unsupervised_simulation_adapter(
         "primary_result": {"label": output_feature, "value": series[0]["prediction"], "delta": None},
         "baseline": _simulation_row_payload(baseline),
         "feature_stats": _simulation_feature_stats(prepared.feature_frame, baseline),
-        "scenarios": [{"name": series[0]["scenario"], "steps": 1, "changed_features": _changed_features(baseline, probe_row), "prediction_summary": {"final_prediction": series[0]["prediction"], "step_count": 1}, "series": series}],
+        "scenarios": [
+            {
+                "name": series[0]["scenario"],
+                "steps": 1,
+                "changed_features": changed_features,
+                "prediction_summary": {"final_prediction": series[0]["prediction"], "step_count": 1},
+                "series": series,
+                "table_rows": table_rows,
+                "plots": scenario_plots,
+            }
+        ],
         "series": series,
-        "table_rows": [{"scenario": series[0]["scenario"], "step": 1, output_feature: series[0]["prediction"], "changed_features": len(_changed_features(baseline, probe_row))}],
+        "table_rows": table_rows,
         "unsupervised": result_payload,
         "sensitivity": {"enabled": False, "features": [], "plots": []},
         "limits": {"max_scenarios": SIMULATION_MAX_SCENARIOS, "max_rows": SIMULATION_MAX_ROWS, "max_steps": SIMULATION_MAX_STEPS},
-        "plots": [],
+        "plots": scenario_plots,
     }
 
 
@@ -2916,6 +3113,16 @@ def _run_recommendation_simulation_adapter(
     if not isinstance(rows, list):
         rows = [rows]
     rows = rows[:top_n]
+    recommendation_rows = [
+        row if isinstance(row, Mapping) else {"item": row}
+        for row in rows
+    ]
+    recommendation_plot = _simulation_step_table_plot(
+        "Recommendation Results",
+        recommendation_rows,
+        description="Top recommendation rows returned by the runtime adapter.",
+    )
+    recommendation_plots = [recommendation_plot] if _plot_has_renderable_content(recommendation_plot) else []
     return {
         "model_id": getattr(model_record, "id", None),
         "dataset_id": getattr(dataset_record, "id", None),
@@ -2933,13 +3140,23 @@ def _run_recommendation_simulation_adapter(
         "primary_result": {"label": "Recommendations", "value": len(rows), "delta": None},
         "baseline": {},
         "feature_stats": _simulation_feature_stats(prepared.feature_frame, _baseline_from_source(prepared.feature_frame, "last")),
-        "scenarios": [],
+        "scenarios": [
+            {
+                "name": "Recommendations",
+                "steps": len(rows),
+                "changed_features": [],
+                "prediction_summary": {"final_prediction": rows[0] if rows else None, "step_count": len(rows)},
+                "series": [],
+                "table_rows": recommendation_rows,
+                "plots": recommendation_plots,
+            }
+        ],
         "series": [],
         "table_rows": rows,
         "recommendation": {"user_id": user_id, "top_n": top_n, "items": rows},
         "sensitivity": {"enabled": False, "features": [], "plots": []},
         "limits": {"max_scenarios": SIMULATION_MAX_SCENARIOS, "max_rows": SIMULATION_MAX_ROWS, "max_steps": SIMULATION_MAX_STEPS},
-        "plots": [],
+        "plots": recommendation_plots,
     }
 
 

@@ -10,6 +10,8 @@
         inference: ["inferences"],
         simulation: ["inferences"],
         prediction: ["inferences"],
+        filter_control: [],
+        comparison: ["plots", "datasets", "learning_models", "runs", "inferences", "studies"],
         metric: ["learning_models", "runs"],
         metadata: ["datasets", "learning_models", "studies", "inferences", "code_models", "runs"],
         note: [],
@@ -155,6 +157,9 @@
             columns: 12,
             order: normalized.widgets.map((widget) => widget.id).filter(Boolean),
         };
+        normalized.panel_metadata = normalized.panel_metadata && typeof normalized.panel_metadata === "object"
+            ? normalized.panel_metadata
+            : {};
         return normalized;
     }
 
@@ -264,6 +269,9 @@
             columns: 12,
             order: currentWidgets().map((widget) => widget.id),
         };
+        state.current.panel_metadata = state.current.panel_metadata && typeof state.current.panel_metadata === "object"
+            ? state.current.panel_metadata
+            : {};
     }
 
     function markDirty(value = true) {
@@ -316,11 +324,15 @@
         return items.find((item) => String(itemId(item)) === id) || null;
     }
 
-    function updateSourceOptions() {
-        const kind = byId("panelWidgetKind")?.value || "dataset";
-        const sourceSelect = byId("panelWidgetSource");
-        if (!sourceSelect) return;
-        const collections = SOURCE_COLLECTIONS[kind] || [];
+    function panelMetadata() {
+        if (!state.current) state.current = newLocalDashboard();
+        if (!state.current.panel_metadata || typeof state.current.panel_metadata !== "object") {
+            state.current.panel_metadata = {};
+        }
+        return state.current.panel_metadata;
+    }
+
+    function optionMarkupForCollections(collections = [], emptyLabel = "No source") {
         const options = ['<option value="">No source</option>'];
         collections.forEach((collection) => {
             const items = state.context[collection] || [];
@@ -329,7 +341,206 @@
                 options.push(`<option value="${escapeHtml(sourceValue(collection, item))}">${escapeHtml(label)}</option>`);
             });
         });
-        sourceSelect.innerHTML = options.join("");
+        options[0] = `<option value="">${escapeHtml(emptyLabel)}</option>`;
+        return options.join("");
+    }
+
+    function updateCenterOptions() {
+        const kind = byId("panelCenterKind")?.value || "inferences";
+        const target = byId("panelCenterSource");
+        if (!target) return;
+        target.innerHTML = optionMarkupForCollections([kind], "No focus source");
+        const center = panelMetadata().center || {};
+        if (center.collection === kind && center.id) target.value = `${center.collection}:${center.id}`;
+    }
+
+    function updateSourceOptions() {
+        const kind = byId("panelWidgetKind")?.value || "dataset";
+        const sourceSelect = byId("panelWidgetSource");
+        const comparisonFields = byId("panelComparisonFields");
+        if (!sourceSelect) return;
+        const collections = SOURCE_COLLECTIONS[kind] || [];
+        sourceSelect.innerHTML = optionMarkupForCollections(collections, "No source");
+        if (comparisonFields) comparisonFields.hidden = kind !== "comparison";
+        const comparisonMarkup = optionMarkupForCollections(["plots", "datasets", "learning_models", "runs", "inferences", "studies"], "Choose source");
+        ["panelComparisonSourceA", "panelComparisonSourceB"].forEach((id) => {
+            const select = byId(id);
+            if (select) select.innerHTML = comparisonMarkup;
+        });
+    }
+
+    function renderPanelFocus() {
+        const focus = byId("panelFocusSummary");
+        const center = panelMetadata().center || {};
+        const item = findSource(center);
+        if (focus) {
+            focus.innerHTML = item
+                ? `<span>${escapeHtml(collectionLabel(center.collection))}</span><strong>${escapeHtml(itemTitle(item))}</strong>`
+                : "No focus object selected.";
+        }
+        const filters = panelMetadata().filters || {};
+        const filterSummary = byId("panelFilterSummary");
+        if (filterSummary) {
+            filterSummary.textContent = filters.column
+                ? `${filters.column}: ${filters.start || "start"} to ${filters.end || "end"}`
+                : "No display filter applied.";
+        }
+        if (byId("panelFilterColumn")) byId("panelFilterColumn").value = filters.column || "";
+        if (byId("panelFilterStart")) byId("panelFilterStart").value = filters.start || "";
+        if (byId("panelFilterEnd")) byId("panelFilterEnd").value = filters.end || "";
+        updateCenterOptions();
+        updatePanelRangeControls();
+    }
+
+    function applyPanelRowFilters(rows = []) {
+        const filters = panelMetadata().filters || {};
+        const column = String(filters.column || "").trim();
+        if (!column || !Array.isArray(rows) || !rows.length) return rows;
+        const start = filters.start;
+        const end = filters.end;
+        return rows.filter((row, index) => {
+            const value = row && Object.prototype.hasOwnProperty.call(row, column) ? row[column] : index;
+            const numericValue = Number(value);
+            const numericStart = start === "" || start === undefined ? null : Number(start);
+            const numericEnd = end === "" || end === undefined ? null : Number(end);
+            if (Number.isFinite(numericValue) && (Number.isFinite(numericStart) || Number.isFinite(numericEnd))) {
+                if (Number.isFinite(numericStart) && numericValue < numericStart) return false;
+                if (Number.isFinite(numericEnd) && numericValue > numericEnd) return false;
+                return true;
+            }
+            const timeValue = Date.parse(value);
+            const timeStart = start ? Date.parse(start) : NaN;
+            const timeEnd = end ? Date.parse(end) : NaN;
+            if (Number.isFinite(timeValue) && (Number.isFinite(timeStart) || Number.isFinite(timeEnd))) {
+                if (Number.isFinite(timeStart) && timeValue < timeStart) return false;
+                if (Number.isFinite(timeEnd) && timeValue > timeEnd) return false;
+            }
+            return true;
+        });
+    }
+
+    function normalizeRows(value) {
+        if (!Array.isArray(value)) return [];
+        return value
+            .map((row) => (row && typeof row === "object" && !Array.isArray(row)) ? row : { value: row })
+            .filter(Boolean);
+    }
+
+    function collectRowsForRangeControls() {
+        const rows = [];
+        const pushRows = (value) => {
+            rows.push(...normalizeRows(value));
+        };
+        currentWidgets().forEach((widget) => {
+            pushRows(widget.cache?.analysis?.preview_rows);
+            pushRows(widget.cache?.analysis?.manifest?.preview_rows);
+            pushRows(widget.cache?.analysis?.plots?.flatMap?.((plot) => plot.rows || []) || []);
+            pushRows(widget.cache?.simulation?.table_rows);
+            pushRows(widget.cache?.simulation?.series);
+            pushRows(widget.cache?.simulation?.scenarios?.flatMap?.((scenario) => scenario.table_rows || scenario.series || []) || []);
+            const customJson = widget.settings?.json ?? widget.settings?.rows;
+            pushRows(customJson);
+        });
+        (state.context.plots || []).forEach((plot) => {
+            pushRows(plot.rows);
+        });
+        (state.context.runs || []).forEach((run) => {
+            pushRows(run.result?.table_rows);
+            pushRows(run.result?.series);
+        });
+        return rows.slice(0, 5000);
+    }
+
+    function rangeValueForRow(row, column, index) {
+        if (!column) return undefined;
+        if (row && Object.prototype.hasOwnProperty.call(row, column)) return row[column];
+        if (["index", "row", "row_index"].includes(String(column).toLowerCase())) return index;
+        return undefined;
+    }
+
+    function collectFilterRangeValues(column) {
+        const rows = collectRowsForRangeControls();
+        const rawValues = rows
+            .map((row, index) => rangeValueForRow(row, column, index))
+            .filter((value) => value !== undefined && value !== null && value !== "");
+        if (!rawValues.length) return null;
+        const numericValues = rawValues.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+        if (numericValues.length >= Math.max(1, Math.ceil(rawValues.length * 0.7))) {
+            return { type: "number", min: Math.min(...numericValues), max: Math.max(...numericValues) };
+        }
+        const dateValues = rawValues.map((value) => Date.parse(value)).filter((value) => Number.isFinite(value));
+        if (dateValues.length >= Math.max(1, Math.ceil(rawValues.length * 0.7))) {
+            return { type: "date", min: Math.min(...dateValues), max: Math.max(...dateValues) };
+        }
+        return null;
+    }
+
+    function formatRangeValue(range, value) {
+        if (!range || !Number.isFinite(Number(value))) return "";
+        if (range.type === "date") {
+            return new Date(Number(value)).toISOString().slice(0, 10);
+        }
+        return Number(value).toLocaleString("en-US", { maximumFractionDigits: 6, useGrouping: false });
+    }
+
+    function parseRangeInput(range, value, fallback) {
+        if (value === undefined || value === null || value === "") return fallback;
+        if (range?.type === "date") {
+            const parsed = Date.parse(value);
+            return Number.isFinite(parsed) ? parsed : fallback;
+        }
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function updatePanelRangeControls() {
+        const column = byId("panelFilterColumn")?.value?.trim() || "";
+        const controls = byId("panelFilterRangeControls");
+        const startRange = byId("panelFilterRangeStart");
+        const endRange = byId("panelFilterRangeEnd");
+        if (!controls || !startRange || !endRange) return;
+        const range = collectFilterRangeValues(column);
+        if (!column || !range || range.min === range.max) {
+            controls.hidden = true;
+            return;
+        }
+        controls.hidden = false;
+        controls.dataset.rangeType = range.type;
+        const step = range.type === "date" ? 86400000 : Math.max((range.max - range.min) / 100, 0.000001);
+        [startRange, endRange].forEach((input) => {
+            input.min = String(range.min);
+            input.max = String(range.max);
+            input.step = String(step);
+        });
+        const startValue = parseRangeInput(range, byId("panelFilterStart")?.value, range.min);
+        const endValue = parseRangeInput(range, byId("panelFilterEnd")?.value, range.max);
+        startRange.value = String(Math.min(Math.max(startValue, range.min), range.max));
+        endRange.value = String(Math.min(Math.max(endValue, range.min), range.max));
+        const minLabel = byId("panelFilterRangeMin");
+        const maxLabel = byId("panelFilterRangeMax");
+        if (minLabel) minLabel.textContent = formatRangeValue(range, range.min);
+        if (maxLabel) maxLabel.textContent = formatRangeValue(range, range.max);
+    }
+
+    function syncFilterInputsFromRange() {
+        const controls = byId("panelFilterRangeControls");
+        const startRange = byId("panelFilterRangeStart");
+        const endRange = byId("panelFilterRangeEnd");
+        if (!controls || controls.hidden || !startRange || !endRange) return;
+        const range = {
+            type: controls.dataset.rangeType || "number",
+            min: Number(startRange.min),
+            max: Number(startRange.max),
+        };
+        let startValue = Number(startRange.value);
+        let endValue = Number(endRange.value);
+        if (startValue > endValue) {
+            [startValue, endValue] = [endValue, startValue];
+            startRange.value = String(startValue);
+            endRange.value = String(endValue);
+        }
+        if (byId("panelFilterStart")) byId("panelFilterStart").value = formatRangeValue(range, startValue);
+        if (byId("panelFilterEnd")) byId("panelFilterEnd").value = formatRangeValue(range, endValue);
     }
 
     function renderContextSummary() {
@@ -378,6 +589,7 @@
         if (objectiveRun) objectiveRun.textContent = dashboard.objective || PANEL_OBJECTIVE;
         byId("panelCanvasTitle").textContent = dashboard.name || "Saved Objective Dashboard";
         byId("panelWidgetCount").textContent = `${currentWidgets().length} widgets`;
+        renderPanelFocus();
         renderWidgetDeck();
         renderDashboardSelect();
         applyPanelMode();
@@ -390,6 +602,8 @@
         if (!deck || !empty) return;
         empty.hidden = widgets.length > 0;
         deck.innerHTML = widgets.map((widget, index) => renderWidget(widget, index)).join("");
+        window.AmanajeUI?.activateTabs?.(deck);
+        window.AmanajeUI?.enhanceCollapsibles?.(deck);
     }
 
     function renderWidget(widget, index) {
@@ -463,6 +677,114 @@
         return options.editOnly ? `<div data-panel-edit-only="true">${content}</div>` : content;
     }
 
+    function rowsFromResult(value = {}) {
+        if (Array.isArray(value)) return normalizeRows(value);
+        if (!value || typeof value !== "object") return [];
+        return normalizeRows(value.table_rows || value.preview_rows || value.rows || value.series || []);
+    }
+
+    function renderResultRows(rows = [], title = "Rows") {
+        const normalizedRows = normalizeRows(rows);
+        if (!normalizedRows.length) return "";
+        const columns = Array.from(new Set(normalizedRows.flatMap((row) => Object.keys(row)))).slice(0, 10);
+        return `
+            <div class="panel-result-table">
+                <h5>${escapeHtml(title)}</h5>
+                ${renderTablePlot({ kind: "table", columns, rows: normalizedRows })}
+            </div>
+        `;
+    }
+
+    function renderPlotDeckValue(plots = []) {
+        if (!Array.isArray(plots) || !plots.length) return "";
+        return window.AmanajeUI?.renderPlotDeck
+            ? window.AmanajeUI.renderPlotDeck(plots)
+            : plots.map((plot) => {
+                if (plot.kind === "table") return renderTablePlot(plot);
+                if (plot.figure) return renderJson(plot.figure, plot.title || "Plot Figure");
+                return renderSeries(plot);
+            }).join("");
+    }
+
+    function renderPanelSimulationResult(result = {}) {
+        const scenarios = Array.isArray(result.scenarios) ? result.scenarios : [];
+        const summary = result.prediction_summary || result.primary_result || {};
+        const tabs = [
+            {
+                key: "summary",
+                label: "Summary",
+                content: `
+                    ${renderFacts([
+                        ["Family", result.family || result.task_type],
+                        ["Mode", result.mode],
+                        ["Output", result.output_feature || summary.label],
+                        ["Scenarios", scenarios.length || (result.series?.length ? 1 : 0)],
+                    ])}
+                    <div style="margin-top:0.75rem;">${renderMetricGrid({
+                        final_prediction: summary.final_prediction ?? result.primary_result?.value,
+                        prediction_delta: summary.prediction_delta ?? result.primary_result?.delta,
+                        step_count: summary.step_count ?? result.steps,
+                    })}</div>
+                    ${result.readiness ? renderJson(result.readiness, "Readiness") : ""}
+                `,
+            },
+            ...scenarios.map((scenario, index) => ({
+                key: `scenario_${index}`,
+                label: scenario.name || `Scenario ${index + 1}`,
+                content: `
+                    ${renderFacts([
+                        ["Steps", scenario.steps || scenario.prediction_summary?.step_count],
+                        ["Final", scenario.prediction_summary?.final_prediction],
+                        ["Delta", scenario.prediction_summary?.prediction_delta],
+                        ["Changed", (scenario.changed_features || []).length],
+                    ])}
+                    ${renderPlotDeckValue(scenario.plots || [])}
+                    ${renderResultRows(scenario.table_rows || scenario.series || [], "Scenario Rows")}
+                    ${renderJson(scenario, "Raw Scenario")}
+                `,
+            })),
+            {
+                key: "rows",
+                label: "Rows",
+                content: renderResultRows(rowsFromResult(result), "Simulation Rows") || '<div class="panel-widget-empty">No simulation rows available.</div>',
+            },
+            {
+                key: "plots",
+                label: "Plots",
+                content: renderPlotDeckValue(result.plots || []) || '<div class="panel-widget-empty">No plot deck available.</div>',
+            },
+            { key: "raw", label: "Raw", content: renderJson(result, "Raw Result") },
+        ];
+        return window.AmanajeUI?.renderResultTabs
+            ? window.AmanajeUI.renderResultTabs(tabs, { idPrefix: `panel_result_${Math.random().toString(16).slice(2)}` })
+            : tabs.map((tab) => `<section><h5>${escapeHtml(tab.label)}</h5>${tab.content}</section>`).join("");
+    }
+
+    function renderResultValue(value, title = "Result") {
+        if (value === null || value === undefined || value === "") return "";
+        if (Array.isArray(value)) return renderResultRows(value, title) || renderJson(value, title);
+        if (typeof value !== "object") return `<div class="panel-run-note">${escapeHtml(value)}</div>`;
+        if (Array.isArray(value.scenarios) || Array.isArray(value.series) || Array.isArray(value.table_rows) || value.prediction_summary || value.primary_result) {
+            return renderPanelSimulationResult(value);
+        }
+        const chunks = [];
+        if (value.metrics || value.summary?.metrics) {
+            chunks.push(renderMetricGrid(value.metrics || value.summary.metrics));
+        }
+        if (Array.isArray(value.plots) && value.plots.length) {
+            chunks.push(renderPlotDeckValue(value.plots));
+        }
+        const rows = rowsFromResult(value);
+        if (rows.length) {
+            chunks.push(renderResultRows(rows, title));
+        }
+        if (chunks.length) {
+            chunks.push(renderJson(value, `${title} Metadata`, { editOnly: true }));
+            return chunks.join("");
+        }
+        return renderJson(value, title);
+    }
+
     function renderDataset(widget) {
         const item = findSource(widget.source);
         if (!item) return sourceEmpty("dataset");
@@ -476,7 +798,7 @@
             <div class="panel-widget-actions" style="margin-top:0.75rem;">
                 <button type="button" data-panel-action="load-analysis">Load Analysis</button>
             </div>
-            ${widget.cache?.analysis ? renderJson(widget.cache.analysis, "Dataset Analysis") : ""}
+            ${widget.cache?.analysis ? renderResultValue(widget.cache.analysis, "Dataset Analysis") : ""}
         `;
     }
 
@@ -495,7 +817,7 @@
             <div class="panel-widget-actions" style="margin-top:0.75rem;">
                 <button type="button" data-panel-action="load-analysis">Load Analysis</button>
             </div>
-            ${widget.cache?.analysis ? renderJson(widget.cache.analysis, "Model Analysis") : ""}
+            ${widget.cache?.analysis ? renderResultValue(widget.cache.analysis, "Model Analysis") : ""}
         `;
     }
 
@@ -523,8 +845,13 @@
         `;
     }
 
+    function renderCellValue(value) {
+        if (value && typeof value === "object") return JSON.stringify(value);
+        return value;
+    }
+
     function renderTablePlot(plot = {}) {
-        const rows = Array.isArray(plot.rows) ? plot.rows : [];
+        const rows = applyPanelRowFilters(Array.isArray(plot.rows) ? plot.rows : []);
         const columns = Array.isArray(plot.columns) && plot.columns.length
             ? plot.columns
             : Object.keys(rows[0] || {});
@@ -535,7 +862,7 @@
                     <thead><tr>${columns.map((column) => `<th>${escapeHtml(column)}</th>`).join("")}</tr></thead>
                     <tbody>
                         ${rows.slice(0, 12).map((row) => `
-                            <tr>${columns.map((column) => `<td>${escapeHtml(row?.[column])}</td>`).join("")}</tr>
+                            <tr>${columns.map((column) => `<td>${escapeHtml(renderCellValue(row?.[column]))}</td>`).join("")}</tr>
                         `).join("")}
                     </tbody>
                 </table>
@@ -560,6 +887,47 @@
             `;
         }
         return renderSeries(plot);
+    }
+
+    function renderSourcePreview(source = {}) {
+        const item = findSource(source);
+        if (!item) return '<div class="panel-widget-empty">Choose a comparison source.</div>';
+        if (source.collection === "plots") {
+            if (item.kind === "legacy_image" && item.artifact?.url) {
+                return `<img class="panel-artifact-image" src="${escapeHtml(item.artifact.url)}" alt="${escapeHtml(item.title || "Plot artifact")}">`;
+            }
+            if (item.kind === "table") return renderTablePlot(item);
+            if (item.figure) {
+                const src = `${dashboardUrl()}/embed?figure=${encodeURIComponent(encodeFigure(item.figure))}&title=${encodeURIComponent(item.title || "Plot")}`;
+                return `<iframe class="panel-plot-frame compact" src="${escapeHtml(src)}" loading="lazy" title="${escapeHtml(item.title || "Plot")}"></iframe>`;
+            }
+            return renderSeries(item);
+        }
+        return renderFacts([
+            ["Type", collectionLabel(source.collection)],
+            ["Name", itemTitle(item)],
+            ["ID", itemId(item)],
+            ["Status", item.status || item.is_trained || item.dataset_type || ""],
+        ]);
+    }
+
+    function renderComparison(widget) {
+        const left = widget.settings?.left || widget.settings?.source_a || widget.source || {};
+        const right = widget.settings?.right || widget.settings?.source_b || {};
+        return `
+            <div class="panel-comparison-grid">
+                <section class="panel-comparison-pane">
+                    <span>${escapeHtml(collectionLabel(left.collection || "source"))}</span>
+                    <h5>${escapeHtml(itemTitle(findSource(left)) || "Compare A")}</h5>
+                    ${renderSourcePreview(left)}
+                </section>
+                <section class="panel-comparison-pane">
+                    <span>${escapeHtml(collectionLabel(right.collection || "source"))}</span>
+                    <h5>${escapeHtml(itemTitle(findSource(right)) || "Compare B")}</h5>
+                    ${renderSourcePreview(right)}
+                </section>
+            </div>
+        `;
     }
 
     function renderDashWorkspace(widget) {
@@ -630,7 +998,53 @@
             <div class="panel-widget-actions" style="margin-top:0.75rem;">
                 <button type="button" data-panel-action="run-simulation">Run Simulation</button>
             </div>
-            ${result ? renderJson(result, "Simulation Result") : ""}
+            ${result ? renderResultValue(result, "Simulation Result") : ""}
+        `;
+    }
+
+    function renderFilterControl(widget) {
+        const saved = widget.settings || {};
+        const active = panelMetadata().filters || {};
+        const column = String(saved.column || active.column || "").trim();
+        const start = String(saved.start ?? active.start ?? "");
+        const end = String(saved.end ?? active.end ?? "");
+        const range = collectFilterRangeValues(column);
+        const startValue = range ? parseRangeInput(range, start, range.min) : 0;
+        const endValue = range ? parseRangeInput(range, end, range.max) : 100;
+        return `
+            <div class="panel-filter-widget">
+                <div class="form-group">
+                    <label>Column or Index</label>
+                    <input type="text" value="${escapeHtml(column)}" placeholder="timestamp" data-panel-filter-widget-field="column">
+                </div>
+                <div class="panel-filter-grid">
+                    <div class="form-group">
+                        <label>Start</label>
+                        <input type="text" value="${escapeHtml(start)}" placeholder="start" data-panel-filter-widget-field="start">
+                    </div>
+                    <div class="form-group">
+                        <label>End</label>
+                        <input type="text" value="${escapeHtml(end)}" placeholder="end" data-panel-filter-widget-field="end">
+                    </div>
+                </div>
+                ${range && range.min !== range.max ? `
+                    <div class="panel-range-controls">
+                        <div class="panel-range-labels">
+                            <span>${escapeHtml(formatRangeValue(range, range.min))}</span>
+                            <strong>Actual range</strong>
+                            <span>${escapeHtml(formatRangeValue(range, range.max))}</span>
+                        </div>
+                        <div class="panel-range-track">
+                            <input type="range" min="${escapeHtml(range.min)}" max="${escapeHtml(range.max)}" step="${escapeHtml(range.type === "date" ? 86400000 : Math.max((range.max - range.min) / 100, 0.000001))}" value="${escapeHtml(startValue)}" data-panel-filter-widget-range="start" data-range-type="${escapeHtml(range.type)}">
+                            <input type="range" min="${escapeHtml(range.min)}" max="${escapeHtml(range.max)}" step="${escapeHtml(range.type === "date" ? 86400000 : Math.max((range.max - range.min) / 100, 0.000001))}" value="${escapeHtml(endValue)}" data-panel-filter-widget-range="end" data-range-type="${escapeHtml(range.type)}">
+                        </div>
+                    </div>
+                ` : '<div class="helper-text">A range slider appears after this column is found in saved widget results.</div>'}
+                <div class="panel-widget-actions" style="margin-top:0.75rem;">
+                    <button type="button" data-panel-action="apply-widget-filter">Apply Display Filter</button>
+                    <button type="button" data-panel-action="clear-widget-filter">Clear Filter</button>
+                </div>
+            </div>
         `;
     }
 
@@ -657,10 +1071,10 @@
 
     function renderCustomJson(widget) {
         const value = widget.settings?.json ?? widget.settings ?? {};
-        if (!isEditMode()) return renderJson(value, "Custom JSON");
+        if (!isEditMode()) return renderResultValue(value, "Custom JSON");
         return `
             <textarea data-panel-json="${escapeHtml(widget.id)}" placeholder='{"key": "value"}'>${escapeHtml(JSON.stringify(value, null, 2))}</textarea>
-            ${renderJson(value, "Custom JSON Preview", { editOnly: true })}
+            ${renderResultValue(value, "Custom JSON Preview")}
         `;
     }
 
@@ -681,9 +1095,11 @@
         if (widget.kind === "dash_workspace") return renderDashWorkspace(widget);
         if (widget.kind === "learning_model") return renderLearningModel(widget);
         if (widget.kind === "plot") return renderPlot(widget);
+        if (widget.kind === "comparison") return renderComparison(widget);
         if (widget.kind === "study") return renderStudy(widget);
         if (widget.kind === "inference") return renderInference(widget);
         if (widget.kind === "simulation" || widget.kind === "prediction") return renderSimulation(widget);
+        if (widget.kind === "filter_control") return renderFilterControl(widget);
         if (widget.kind === "metric") return renderMetric(widget);
         if (widget.kind === "note") return renderNote(widget);
         if (widget.kind === "custom_json") return renderCustomJson(widget);
@@ -694,6 +1110,7 @@
         const payload = await fetchJson("/panel/context");
         state.context = { ...emptyContext(), ...payload };
         renderContextSummary();
+        updateCenterOptions();
         updateSourceOptions();
     }
 
@@ -763,6 +1180,86 @@
         showStatus("Panel deleted.", "info");
     }
 
+    function applyCenterObject() {
+        const center = parseSourceValue(byId("panelCenterSource")?.value || "");
+        panelMetadata().center = center;
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function clearCenterObject() {
+        delete panelMetadata().center;
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function applyDisplayFilters() {
+        const column = byId("panelFilterColumn")?.value?.trim() || "";
+        const start = byId("panelFilterStart")?.value?.trim() || "";
+        const end = byId("panelFilterEnd")?.value?.trim() || "";
+        if (!column) {
+            delete panelMetadata().filters;
+        } else {
+            panelMetadata().filters = { column, start, end };
+        }
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function clearDisplayFilters() {
+        delete panelMetadata().filters;
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function readFilterFieldsFromWidget(wrapper) {
+        const field = (name) => wrapper?.querySelector(`[data-panel-filter-widget-field="${name}"]`)?.value?.trim() || "";
+        return { column: field("column"), start: field("start"), end: field("end") };
+    }
+
+    function applyFilterWidget(widget, wrapper) {
+        const filters = readFilterFieldsFromWidget(wrapper);
+        widget.settings = { ...(widget.settings || {}), ...filters, range_mode: "actual" };
+        if (!filters.column) {
+            delete panelMetadata().filters;
+        } else {
+            panelMetadata().filters = filters;
+        }
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function clearFilterWidget(widget) {
+        widget.settings = { ...(widget.settings || {}), column: "", start: "", end: "", range_mode: "actual" };
+        delete panelMetadata().filters;
+        markDirty(true);
+        renderDashboard();
+    }
+
+    function syncWidgetFilterRange(input) {
+        const wrapper = input.closest("[data-widget-id]");
+        if (!wrapper) return;
+        const startRange = wrapper.querySelector('[data-panel-filter-widget-range="start"]');
+        const endRange = wrapper.querySelector('[data-panel-filter-widget-range="end"]');
+        if (!startRange || !endRange) return;
+        const range = {
+            type: input.getAttribute("data-range-type") || "number",
+            min: Number(startRange.min),
+            max: Number(startRange.max),
+        };
+        let startValue = Number(startRange.value);
+        let endValue = Number(endRange.value);
+        if (startValue > endValue) {
+            [startValue, endValue] = [endValue, startValue];
+            startRange.value = String(startValue);
+            endRange.value = String(endValue);
+        }
+        const startField = wrapper.querySelector('[data-panel-filter-widget-field="start"]');
+        const endField = wrapper.querySelector('[data-panel-filter-widget-field="end"]');
+        if (startField) startField.value = formatRangeValue(range, startValue);
+        if (endField) endField.value = formatRangeValue(range, endValue);
+    }
+
     function parseWidgetConfig() {
         const raw = byId("panelWidgetConfig")?.value?.trim();
         if (!raw) return {};
@@ -786,6 +1283,16 @@
         const settings = parseWidgetConfig();
         if (kind === "note" && settings.text === undefined) settings.text = "";
         if (kind === "dash_workspace" && settings.path === undefined) settings.path = "/";
+        if (kind === "filter_control") {
+            Object.assign(settings, {
+                range_mode: settings.range_mode || "actual",
+                ...(panelMetadata().filters || {}),
+            });
+        }
+        if (kind === "comparison") {
+            settings.left = parseSourceValue(byId("panelComparisonSourceA")?.value || byId("panelWidgetSource")?.value || "");
+            settings.right = parseSourceValue(byId("panelComparisonSourceB")?.value || "");
+        }
         const widget = {
             id: `widget_${Date.now().toString(36)}_${Math.random().toString(16).slice(2, 8)}`,
             kind,
@@ -871,6 +1378,8 @@
         if (action === "remove") removeWidget(widgetId);
         if (action === "load-analysis") loadAnalysis(widget).catch((error) => showStatus(error.message, "error"));
         if (action === "run-simulation") runSimulation(widget).catch((error) => showStatus(error.message, "error"));
+        if (action === "apply-widget-filter") applyFilterWidget(widget, wrapper);
+        if (action === "clear-widget-filter") clearFilterWidget(widget);
     }
 
     function handleDeckChange(event) {
@@ -904,6 +1413,9 @@
                 markDirty(true);
             }
         }
+        if (event.target?.getAttribute?.("data-panel-filter-widget-range")) {
+            syncWidgetFilterRange(event.target);
+        }
     }
 
     function bindEvents() {
@@ -925,6 +1437,16 @@
         byId("panelRefreshContext")?.addEventListener("click", () => {
             loadContext().then(() => showStatus("Panel artifacts refreshed.", "success")).catch((error) => showStatus(error.message, "error"));
         });
+        byId("panelCenterKind")?.addEventListener("change", updateCenterOptions);
+        byId("panelApplyCenter")?.addEventListener("click", applyCenterObject);
+        byId("panelClearCenter")?.addEventListener("click", clearCenterObject);
+        byId("panelApplyFilters")?.addEventListener("click", applyDisplayFilters);
+        byId("panelClearFilters")?.addEventListener("click", clearDisplayFilters);
+        byId("panelFilterColumn")?.addEventListener("input", updatePanelRangeControls);
+        byId("panelFilterStart")?.addEventListener("input", updatePanelRangeControls);
+        byId("panelFilterEnd")?.addEventListener("input", updatePanelRangeControls);
+        byId("panelFilterRangeStart")?.addEventListener("input", syncFilterInputsFromRange);
+        byId("panelFilterRangeEnd")?.addEventListener("input", syncFilterInputsFromRange);
         byId("panelAddWidget")?.addEventListener("click", () => {
             try {
                 addWidget();

@@ -6,10 +6,12 @@
 
 {% block content %}
 <div class="panel-page" id="panelPage" data-panel-page>
+
     <section class="panel-hero">
         <div class="panel-hero-copy">
             <span class="workspace-eyebrow">Amanaje panel</span>
             <h2>Painel Amanaje Panel</h2>
+            <div class="panel-focus-summary" id="panelFocusSummary">No focus object selected.</div>
             <div class="panel-objective-field" data-panel-edit-only="true">
                 <label for="panelObjective">Objective</label>
                 <textarea id="panelObjective" rows="3" placeholder="What question, interest, or perspective should this panel represent?"></textarea>
@@ -27,6 +29,26 @@
                 <select id="panelDashboardSelect">
                     <option value="">Loading panels...</option>
                 </select>
+            </div>
+            <div class="panel-center-picker" data-panel-edit-only="true">
+                <div class="form-group">
+                    <label for="panelCenterKind">Focus</label>
+                    <select id="panelCenterKind">
+                        <option value="inferences">Inference Pair</option>
+                        <option value="learning_models">Model</option>
+                        <option value="datasets">Dataset</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="panelCenterSource">Source</label>
+                    <select id="panelCenterSource">
+                        <option value="">No focus source</option>
+                    </select>
+                </div>
+                <div class="panel-command-row">
+                    <button type="button" class="btn btn-secondary" id="panelApplyCenter">Apply Focus</button>
+                    <button type="button" class="btn btn-ghost" id="panelClearCenter">Clear</button>
+                </div>
             </div>
             <div class="panel-command-row">
                 <button type="button" class="btn btn-secondary" id="panelNewDashboard" data-panel-edit-only="true">New</button>
@@ -53,6 +75,42 @@
                 </div>
             </div>
 
+            <details class="panel-sidebar-section panel-atlas-section panel-filter-details" open>
+                <summary class="panel-filter-summary-row">
+                    <span>Display Filters</span>
+                    <span class="panel-filter-summary" id="panelFilterSummary">No display filter applied.</span>
+                </summary>
+                <div class="form-group">
+                    <label for="panelFilterColumn">Column or Index</label>
+                    <input id="panelFilterColumn" type="text" placeholder="timestamp">
+                </div>
+                <div class="panel-filter-grid">
+                    <div class="form-group">
+                        <label for="panelFilterStart">Start</label>
+                        <input id="panelFilterStart" type="text" placeholder="2026-01-01 or 0">
+                    </div>
+                    <div class="form-group">
+                        <label for="panelFilterEnd">End</label>
+                        <input id="panelFilterEnd" type="text" placeholder="2026-01-31 or 120">
+                    </div>
+                </div>
+                <div class="panel-range-controls" id="panelFilterRangeControls" hidden>
+                    <div class="panel-range-labels">
+                        <span id="panelFilterRangeMin">min</span>
+                        <strong>Actual range</strong>
+                        <span id="panelFilterRangeMax">max</span>
+                    </div>
+                    <div class="panel-range-track">
+                        <input id="panelFilterRangeStart" type="range" min="0" max="100" value="0" step="1">
+                        <input id="panelFilterRangeEnd" type="range" min="0" max="100" value="100" step="1">
+                    </div>
+                </div>
+                <div class="panel-command-row">
+                    <button type="button" class="btn btn-secondary" id="panelApplyFilters">Apply Filters</button>
+                    <button type="button" class="btn btn-ghost" id="panelClearFilters">Clear</button>
+                </div>
+            </details>
+
             <div class="panel-sidebar-section">
                 <h3>Add Widget</h3>
                 <div class="form-group">
@@ -66,6 +124,8 @@
                         <option value="inference">Inference</option>
                         <option value="simulation">Simulation</option>
                         <option value="prediction">Prediction</option>
+                        <option value="filter_control">Display Filter</option>
+                        <option value="comparison">Comparison</option>
                         <option value="metric">Metric</option>
                         <option value="metadata">Metadata</option>
                         <option value="note">Note</option>
@@ -77,6 +137,20 @@
                     <select id="panelWidgetSource">
                         <option value="">No source</option>
                     </select>
+                </div>
+                <div class="panel-comparison-fields" id="panelComparisonFields" hidden>
+                    <div class="form-group">
+                        <label for="panelComparisonSourceA">Compare A</label>
+                        <select id="panelComparisonSourceA">
+                            <option value="">Choose first source</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="panelComparisonSourceB">Compare B</label>
+                        <select id="panelComparisonSourceB">
+                            <option value="">Choose second source</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="panelWidgetTitle">Title</label>

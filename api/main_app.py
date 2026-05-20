@@ -88,6 +88,7 @@ from app.utils.logging import log_to_mlflow
 from app.utils.mlflow_utils import get_experiment_summary, list_experiments
 from app.utils.operation_queue import (
     QueueUnavailableError,
+    cancel_rq_job,
     enqueue_assistant_operation,
     enqueue_editor_execution,
     enqueue_study_run,
@@ -354,6 +355,7 @@ PANEL_WIDGET_KINDS = {
     "inference",
     "simulation",
     "prediction",
+    "filter_control",
     "metric",
     "metadata",
     "note",
@@ -1119,11 +1121,71 @@ async def post_execute(request: Request) -> JSONResponse:
     return _utils._json_response(execute_editor_code(code))
 
 
+def _coerce_registry_context_ids(value: Any) -> list[int]:
+    if value in (None, ""):
+        return []
+    raw_items = value if isinstance(value, list) else [value]
+    ids: list[int] = []
+    for item in raw_items:
+        try:
+            parsed = int(item)
+        except (TypeError, ValueError):
+            continue
+        if parsed not in ids:
+            ids.append(parsed)
+    return ids[:24]
+
+
+async def _build_editor_registry_context(
+    db: AsyncSession,
+    requested_context: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    requested = dict(requested_context or {})
+    dataset_ids = _coerce_registry_context_ids(requested.get("dataset_ids") or requested.get("datasetIds"))
+    model_ids = _coerce_registry_context_ids(requested.get("model_ids") or requested.get("modelIds"))
+    datasets: list[dict[str, Any]] = []
+    models: list[dict[str, Any]] = []
+    for dataset_id in dataset_ids:
+        record = await DatasetModel.read(db, dataset_id)
+        if record is not None:
+            datasets.append(_utils._serialize_dataset_summary(record))
+    for model_id in model_ids:
+        record = await LearningModel.read(db, model_id)
+        if record is not None:
+            models.append(_utils._serialize_model_summary(record))
+    return {
+        "datasets": datasets,
+        "models": models,
+        "summary": {
+            "dataset_count": len(datasets),
+            "model_count": len(models),
+            "dataset_ids": [item.get("id") for item in datasets],
+            "model_ids": [item.get("id") for item in models],
+        },
+    }
+
+
+@app.get("/editor/context", response_class=JSONResponse)
+async def editor_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    datasets = await get_all_entries(db, DatasetORM)
+    models = await get_all_entries(db, LearningORM)
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "datasets": [_utils._serialize_dataset_summary(dataset) for dataset in datasets],
+            "models": [_utils._serialize_model_summary(model) for model in models],
+        }
+    )
+
+
 @app.post("/execute/jobs", response_class=JSONResponse)
-async def post_execute_job(request: Request) -> JSONResponse:
+async def post_execute_job(request: Request, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    registry_context_request: Mapping[str, Any] = {}
     try:
-        body = _utils.ExecuteRequest.model_validate(await request.json())
+        payload = await request.json()
+        body = _utils.ExecuteRequest.model_validate(payload)
         code = body.code.strip()
+        registry_context_request = body.registryContext or {}
     except Exception:
         raw = await request.body()
         code = raw.decode("utf-8").strip() if raw else ""
@@ -1131,15 +1193,25 @@ async def post_execute_job(request: Request) -> JSONResponse:
     if not code:
         return _utils._json_error("No code provided", status_code=400)
 
+    registry_context = await _build_editor_registry_context(db, registry_context_request)
     run_entry = _utils.create_run_entry(
         RUN_LEDGER_DIR,
         run_type="editor_execution",
-        context={"source": "editor", "gpu_allowed": False},
-        parameters={"code_length": len(code)},
+        context={"source": "editor", "gpu_allowed": False, **registry_context["summary"]},
+        parameters={"code_length": len(code), "registry_context": registry_context["summary"]},
         status="queued",
     )
     try:
-        enqueue_result = enqueue_editor_execution(run_entry["run_id"], code=code)
+        try:
+            enqueue_result = enqueue_editor_execution(
+                run_entry["run_id"],
+                code=code,
+                registry_context=registry_context,
+            )
+        except TypeError as exc:
+            if "registry_context" not in str(exc):
+                raise
+            enqueue_result = enqueue_editor_execution(run_entry["run_id"], code=code)
     except QueueUnavailableError as exc:
         _utils.update_run_entry(
             RUN_LEDGER_DIR,
@@ -4173,6 +4245,202 @@ async def runs_get(run_id: str) -> JSONResponse:
     return _utils._json_response(payload)
 
 
+def _is_active_run_status(status: Any) -> bool:
+    return str(status or "queued") in {"queued", "running", "paused", "cancel_requested"}
+
+
+def _copy_rerun_payload(source_payload: Mapping[str, Any]) -> tuple[str, dict[str, Any], dict[str, Any], dict[str, Any]]:
+    run_type = str(source_payload.get("run_type") or "").strip().lower()
+    context = dict(source_payload.get("context") or {})
+    parameters = dict(source_payload.get("parameters") or {})
+    if run_type == "training":
+        model_id = _coerce_optional_int(context.get("model_id"))
+        dataset_id = _coerce_optional_int(context.get("dataset_id"))
+        if not model_id or not dataset_id:
+            raise ValueError("Training run cannot be re-run without model_id and dataset_id in its ledger context.")
+        queue_payload: dict[str, Any] = {
+            "datasetId": dataset_id,
+            "inputType": source_payload.get("input_type") or parameters.get("inputType") or "Re-run",
+            "parameters": parameters,
+            "studyId": _coerce_optional_int(context.get("study_id")),
+        }
+        inference_id = _coerce_optional_int(context.get("inference_id"))
+        if inference_id:
+            queue_payload["inferenceId"] = inference_id
+        return run_type, {"model_id": model_id, "dataset_id": dataset_id, "study_id": queue_payload.get("studyId"), "inference_id": inference_id}, parameters, queue_payload
+    if run_type == "study":
+        study_id = _coerce_optional_int(context.get("study_id"))
+        if not study_id:
+            raise ValueError("Study run cannot be re-run without study_id in its ledger context.")
+        queue_payload = dict(parameters)
+        inference_id = _coerce_optional_int(context.get("inference_id"))
+        if inference_id and "inferenceId" not in queue_payload:
+            queue_payload["inferenceId"] = inference_id
+        return run_type, {
+            "study_id": study_id,
+            "model_id": _coerce_optional_int(context.get("model_id")),
+            "dataset_id": _coerce_optional_int(context.get("dataset_id")),
+            "inference_id": inference_id,
+        }, parameters, queue_payload
+    raise TypeError(f"Run type '{run_type or 'unknown'}' does not support re-run.")
+
+
+def _rerun_run(source_run_id: str, source_payload: Mapping[str, Any]) -> JSONResponse:
+    status = str(source_payload.get("status") or "queued")
+    if _is_active_run_status(status):
+        return _utils._json_error(
+            f"Run is still {status}; wait until it finishes before re-running it.",
+            status_code=400,
+            run_id=source_run_id,
+            ledger=source_payload,
+        )
+    try:
+        run_type, context, parameters, queue_payload = _copy_rerun_payload(source_payload)
+    except TypeError as exc:
+        return _utils._json_error(str(exc), status_code=400, run_id=source_run_id, ledger=source_payload)
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=400, run_id=source_run_id, ledger=source_payload)
+
+    rerun_context = {
+        **context,
+        "rerun_of": source_run_id,
+        "rerun_requested_at": datetime.now().isoformat(),
+    }
+    rerun_parameters = {
+        **parameters,
+        "rerun_of": source_run_id,
+    }
+    run_entry = _utils.create_run_entry(
+        RUN_LEDGER_DIR,
+        run_type=run_type,
+        context=rerun_context,
+        parameters=rerun_parameters,
+        status="queued",
+    )
+    try:
+        if run_type == "training":
+            enqueue_result = enqueue_training_run(
+                run_entry["run_id"],
+                model_id=int(context["model_id"]),
+                payload_data=queue_payload,
+                prefer_gpu=_prefers_gpu_queue(parameters),
+            )
+        else:
+            enqueue_result = enqueue_study_run(
+                run_entry["run_id"],
+                study_id=int(context["study_id"]),
+                payload_data=queue_payload,
+                prefer_gpu=_prefers_gpu_queue(parameters),
+            )
+    except QueueUnavailableError as exc:
+        failed = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            run_entry["run_id"],
+            status="failed",
+            stage="failed",
+            merge={"error": str(exc), "error_code": exc.error_code, "source_run_id": source_run_id},
+            event_message=str(exc),
+        )
+        return _queue_unavailable_response(exc, run_id=run_entry["run_id"], ledger=failed)
+
+    updated = _utils.update_run_entry(
+        RUN_LEDGER_DIR,
+        run_entry["run_id"],
+        merge={"queue": enqueue_result, "source_run_id": source_run_id},
+        event_message=f"Re-run of {source_run_id} enqueued on {enqueue_result.get('queue')}.",
+    )
+    return _utils._json_response(
+        {
+            "status": "accepted",
+            "run_id": run_entry["run_id"],
+            "source_run_id": source_run_id,
+            "ledger": updated,
+            "queue": enqueue_result,
+        },
+        status_code=202,
+    )
+
+
+@app.post("/runs/{run_id}/{action}", response_class=JSONResponse)
+async def runs_control(run_id: str, action: str) -> JSONResponse:
+    normalized_action = str(action or "").strip().lower()
+    if normalized_action not in {"pause", "resume", "cancel", "rerun"}:
+        return _utils._json_error("Unsupported run action", status_code=404)
+
+    payload = _utils.read_run_entry(RUN_LEDGER_DIR, run_id)
+    if payload is None:
+        return _utils._json_error("Run not found", status_code=404)
+
+    if normalized_action == "rerun":
+        return _rerun_run(run_id, payload)
+
+    status = str(payload.get("status") or "queued")
+    terminal_statuses = {"completed", "failed", "cancelled"}
+    if status in terminal_statuses:
+        return _utils._json_error(f"Run is already {status}.", status_code=400, run_id=run_id, ledger=payload)
+
+    queue_result: dict[str, Any] | None = None
+    control_state = dict(payload.get("control") or {})
+    if normalized_action == "pause":
+        if status not in {"queued", "running"}:
+            return _utils._json_error(f"Run cannot be paused from status {status}.", status_code=400, run_id=run_id)
+        control_state.update({"pause_requested": True, "paused_at": datetime.now().isoformat()})
+        updated = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            run_id,
+            status="paused",
+            stage="paused",
+            merge={"control": control_state},
+            event_message="Pause requested for this run.",
+        )
+    elif normalized_action == "resume":
+        if status != "paused":
+            return _utils._json_error(f"Run cannot be resumed from status {status}.", status_code=400, run_id=run_id)
+        control_state.update({"pause_requested": False, "resumed_at": datetime.now().isoformat()})
+        updated = _utils.update_run_entry(
+            RUN_LEDGER_DIR,
+            run_id,
+            status="queued",
+            stage="resume_requested",
+            merge={"control": control_state},
+            event_message="Resume requested for this run.",
+        )
+    else:
+        try:
+            queue_result = cancel_rq_job(run_id)
+        except QueueUnavailableError as exc:
+            queue_result = {"backend": "rq", "cancelled": False, "error": str(exc), "error_code": exc.error_code}
+        control_state.update({"cancel_requested": True, "cancel_requested_at": datetime.now().isoformat()})
+        if status in {"queued", "paused"} or (queue_result or {}).get("cancelled"):
+            updated = _utils.update_run_entry(
+                RUN_LEDGER_DIR,
+                run_id,
+                status="cancelled",
+                stage="cancelled",
+                merge={"control": control_state, "queue": queue_result or {}},
+                event_message="Run cancelled.",
+            )
+        else:
+            updated = _utils.update_run_entry(
+                RUN_LEDGER_DIR,
+                run_id,
+                status="cancel_requested",
+                stage="cancellation_requested",
+                merge={"control": control_state, "queue": queue_result or {}},
+                event_message="Cooperative cancellation requested for this run.",
+            )
+
+    return _utils._json_response(
+        {
+            "status": updated.get("status"),
+            "action": normalized_action,
+            "run_id": run_id,
+            "ledger": updated,
+            "queue": queue_result,
+        }
+    )
+
+
 @app.get("/plots/artifacts", response_class=JSONResponse)
 async def plots_artifacts(
     job_id: Optional[str] = None,
@@ -4279,16 +4547,22 @@ async def preview_feature_workspace(request: Request, db: AsyncSession = Depends
         if dataset is None:
             return _utils._json_error("Dataset not found", status_code=404)
         dataframe = _utils._load_dataset_frame_from_record(dataset)
+        secondary_dataset = None
+        secondary_dataframe = None
+        secondary_dataset_id = _coerce_optional_int(payload.get("secondaryDatasetId") or payload.get("secondary_dataset_id"))
+        if secondary_dataset_id is not None:
+            secondary_dataset = await DatasetModel.read(db, secondary_dataset_id)
+            if secondary_dataset is None:
+                return _utils._json_error("Secondary dataset not found", status_code=404)
+            secondary_dataframe = _utils._load_dataset_frame_from_record(secondary_dataset)
         preview_row_limit = _utils._coerce_preview_row_limit(payload.get("previewRows") or payload.get("limitRows") or 20)
         if _utils._is_sql_feature_payload(payload):
             sql_query = _utils._feature_sql_query_from_payload(payload)
-            transformed, transform_summary = await _utils.execute_feature_sql_query(
-                db,
-                dataframe,
-                sql_query,
-                preview_rows=preview_row_limit,
-            )
-            operations = _utils.build_feature_sql_operation_metadata(sql_query)
+            sql_kwargs: dict[str, Any] = {"preview_rows": preview_row_limit}
+            if secondary_dataframe is not None:
+                sql_kwargs["secondary_dataframe"] = secondary_dataframe
+            transformed, transform_summary = await _utils.execute_feature_sql_query(db, dataframe, sql_query, **sql_kwargs)
+            operations = _utils.build_feature_sql_operation_metadata(sql_query, has_secondary=secondary_dataframe is not None)
         else:
             operations = _utils._coerce_feature_operations_from_payload(payload)
             transformed, transform_summary = _utils.apply_feature_operations(dataframe, operations)
@@ -4299,6 +4573,8 @@ async def preview_feature_workspace(request: Request, db: AsyncSession = Depends
             operations=operations,
             preview_row_limit=preview_row_limit,
         )
+        if secondary_dataset is not None:
+            workspace_payload["secondary_dataset"] = _utils._serialize_dataset_summary(secondary_dataset)
         return _utils._json_response(workspace_payload)
     except ValueError as exc:
         LOGGER.warning("Feature preview validation failed: %s", exc)
@@ -4319,10 +4595,21 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
 
         dataframe = _utils._load_dataset_frame_from_record(dataset)
         sql_mode = _utils._is_sql_feature_payload(payload)
+        secondary_dataset = None
+        secondary_dataframe = None
+        secondary_dataset_id = _coerce_optional_int(payload.get("secondaryDatasetId") or payload.get("secondary_dataset_id"))
+        if secondary_dataset_id is not None:
+            secondary_dataset = await DatasetModel.read(db, secondary_dataset_id)
+            if secondary_dataset is None:
+                return _utils._json_error("Secondary dataset not found", status_code=404)
+            secondary_dataframe = _utils._load_dataset_frame_from_record(secondary_dataset)
         if sql_mode:
             sql_query = _utils._feature_sql_query_from_payload(payload)
-            transformed, transform_summary = await _utils.execute_feature_sql_query(db, dataframe, sql_query)
-            operations = _utils.build_feature_sql_operation_metadata(sql_query)
+            sql_kwargs: dict[str, Any] = {}
+            if secondary_dataframe is not None:
+                sql_kwargs["secondary_dataframe"] = secondary_dataframe
+            transformed, transform_summary = await _utils.execute_feature_sql_query(db, dataframe, sql_query, **sql_kwargs)
+            operations = _utils.build_feature_sql_operation_metadata(sql_query, has_secondary=secondary_dataframe is not None)
         else:
             operations = _utils._coerce_feature_operations_from_payload(payload)
             transformed, transform_summary = _utils.apply_feature_operations(dataframe, operations)
@@ -4355,6 +4642,7 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
             "operation": "feature_materialize",
             "when": datetime.now().isoformat(),
             "source_dataset_id": dataset_id,
+            "secondary_dataset_id": secondary_dataset_id,
             "mode": "sql" if sql_mode else "structured",
             "table_name": table_name,
             "materialized_to_postgres": postgres_result["materialized"],
@@ -4404,6 +4692,7 @@ async def materialize_feature_workspace(request: Request, db: AsyncSession = Dep
                 "plots": workspace_payload.get("plots", []),
                 "transform_suggestions": workspace_payload.get("transform_suggestions", []),
                 "operations": workspace_payload.get("operations", {}),
+                "secondary_dataset": _utils._serialize_dataset_summary(secondary_dataset) if secondary_dataset is not None else None,
             }
         )
     except ValueError as exc:
@@ -4667,6 +4956,14 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
         model_id = payload.modelId
         dataset_id = payload.datasetId
         inference_id = payload_data.get("inferenceId")
+        schedule_payload = payload_data.get("schedule") if isinstance(payload_data.get("schedule"), Mapping) else {}
+        watch_schedule = {
+            "enabled": bool(schedule_payload.get("enabled", False)),
+            "interval_seconds": max(30, int(schedule_payload.get("interval_seconds") or schedule_payload.get("intervalSeconds") or 300)),
+            "drift_threshold": float(schedule_payload.get("drift_threshold") or schedule_payload.get("driftThreshold") or 0.15),
+            "degradation_threshold": float(schedule_payload.get("degradation_threshold") or schedule_payload.get("degradationThreshold") or 0.1),
+            "auto_retrain": bool(schedule_payload.get("auto_retrain", schedule_payload.get("autoRetrain", False))),
+        }
 
         if model_id is None and inference_id in (None, "", 0, "0"):
             models = await get_all_entries(db, LearningORM)
@@ -4713,6 +5010,7 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
             "artifact_path": getattr(model_record, "path", None),
             "started_at": datetime.now().isoformat(),
             "status": "active",
+            "schedule": watch_schedule,
         }
         if getattr(model_record, "path", None):
             try:
@@ -4782,6 +5080,7 @@ async def production_start(request: Request, db: AsyncSession = Depends(get_db))
             "dataset_id": dataset_id,
             "inference_id": getattr(inference_record, "id", None),
             "deployment": deployment_summary,
+            "schedule": watch_schedule,
             "active_model": _utils._serialize_model_summary(model_record),
             "active_inference": _serialize_inference_summary(inference_record),
             "updated_at": datetime.now().isoformat(),

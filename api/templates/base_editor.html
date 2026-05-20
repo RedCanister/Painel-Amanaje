@@ -230,6 +230,17 @@
         display: none !important;
     }
 
+    .editor-context-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .editor-registry-context select {
+        width: 100%;
+        min-height: 7rem;
+    }
+
     .editor-center {
         overflow: hidden;
         box-shadow: 0 24px 56px var(--amanaje-primary-shadow);
@@ -562,35 +573,47 @@
 
         <div class="editor-stage">
             <div class="editor-utility-row">
-                <div class="minimal-card">
-                    <h3>Templates</h3>
-                    <p>Quick starting points.</p>
-                    <div class="side-list">
+                <section class="minimal-collapse">
+                    <button type="button" class="collapse-toggle" data-collapse-target="templatesCollapseBody" aria-expanded="false">
+                        <div><h3>Templates</h3><span>Quick starting points.</span></div>
+                        <span class="collapse-icon">+</span>
+                    </button>
+                    <div id="templatesCollapseBody" class="collapse-body" hidden>
+                        <div class="side-list">
                         <button type="button" class="side-link" data-template="python">Python</button>
                         <button type="button" class="side-link" data-template="dataset">Dataset</button>
                         <button type="button" class="side-link" data-template="model">Model</button>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="minimal-card">
-                    <h3>Shortcuts</h3>
-                    <p>Jump to the essential panels.</p>
-                    <div class="side-list">
+                <section class="minimal-collapse">
+                    <button type="button" class="collapse-toggle" data-collapse-target="shortcutsCollapseBody" aria-expanded="false">
+                        <div><h3>Shortcuts</h3><span>Jump to the essential panels.</span></div>
+                        <span class="collapse-icon">+</span>
+                    </button>
+                    <div id="shortcutsCollapseBody" class="collapse-body" hidden>
+                        <div class="side-list">
                         <button type="button" class="side-link" id="btnFocusOutput">Output</button>
                         <button type="button" class="side-link" id="btnFocusVariables">Variables</button>
                         <button type="button" class="side-link" id="btnFocusMetadata">Metadata</button>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="minimal-card">
-                    <h3>Workspace</h3>
-                    <p>Minimal controls around the editor.</p>
-                    <div class="side-list">
+                <section class="minimal-collapse">
+                    <button type="button" class="collapse-toggle" data-collapse-target="workspaceCollapseBody" aria-expanded="false">
+                        <div><h3>Workspace</h3><span>Minimal controls around the editor.</span></div>
+                        <span class="collapse-icon">+</span>
+                    </button>
+                    <div id="workspaceCollapseBody" class="collapse-body" hidden>
+                        <div class="side-list">
                         <button type="button" class="side-link" id="btnCommandPaletteInline">Command Palette</button>
                         <button type="button" class="side-link" id="btnRefreshFiles">Refresh Files</button>
                         <button type="button" class="side-link" id="btnRefreshOutline">Refresh Outline</button>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
 
             <div class="editor-center">
@@ -604,6 +627,33 @@
 
                 <div id="monacoEditorContainer" aria-label="Monaco editor"></div>
 
+                <section class="minimal-collapse editor-registry-context">
+                    <button type="button" class="collapse-toggle" data-collapse-target="editorRegistryContextBody" aria-expanded="false">
+                        <div>
+                            <h3>Registry Context</h3>
+                            <span>Select datasets and models exposed to Python helpers.</span>
+                        </div>
+                        <span class="collapse-icon">+</span>
+                    </button>
+                    <div id="editorRegistryContextBody" class="collapse-body" hidden>
+                        <div class="editor-context-grid">
+                            <div class="form-group">
+                                <label for="editorDatasetContext">Datasets</label>
+                                <select id="editorDatasetContext" multiple size="4"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editorModelContext">Models</label>
+                                <select id="editorModelContext" multiple size="4"></select>
+                            </div>
+                        </div>
+                        <div class="side-list">
+                            <button type="button" class="side-link" id="btnRefreshEditorContext">Refresh Context</button>
+                            <button type="button" class="side-link" id="btnInsertRegistrySnippet">Insert Helper Snippet</button>
+                            <button type="button" class="side-link" id="btnClearRegistryContext">Clear Selection</button>
+                        </div>
+                        <div class="empty-state" id="editorRegistryContextSummary">Registry helpers: load_dataset(), load_model(), list_datasets(), list_models().</div>
+                    </div>
+                </section>
                 <div class="editor-status">
                     <div><strong>Cursor</strong> <span id="cursorPositionLabel">Ln 1, Col 1</span></div>
                     <div><strong>Document</strong> <span id="documentStatsLabel">0 lines | 0 chars</span></div>
@@ -816,6 +866,64 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
 
     function dom(id) {
         return document.getElementById(id);
+    }
+
+    function selectedEditorRegistryContext() {
+        const selectedValues = (selectId) => Array.from(dom(selectId)?.selectedOptions || [])
+            .map((option) => Number(option.value))
+            .filter((value) => Number.isFinite(value));
+        return {
+            dataset_ids: selectedValues("editorDatasetContext"),
+            model_ids: selectedValues("editorModelContext")
+        };
+    }
+
+    function populateRegistrySelect(selectId, items = []) {
+        const select = dom(selectId);
+        if (!select) return;
+        select.innerHTML = items.map((item) => `
+            <option value="${escapeHtml(item.id)}">${escapeHtml(item.name || `${item.id}`)}</option>
+        `).join("");
+    }
+
+    async function loadEditorRegistryContext() {
+        const response = await fetch("/editor/context");
+        const payload = await response.json();
+        if (!response.ok || payload.status === "error") throw new Error(payload.detail || `HTTP ${response.status}`);
+        populateRegistrySelect("editorDatasetContext", payload.datasets || []);
+        populateRegistrySelect("editorModelContext", payload.models || []);
+        const summary = dom("editorRegistryContextSummary");
+        if (summary) {
+            summary.textContent = `${(payload.datasets || []).length} datasets and ${(payload.models || []).length} models available to editor helpers.`;
+        }
+    }
+
+    function insertTextAtCursor(text) {
+        if (!window.editor) return;
+        const selection = window.editor.getSelection();
+        window.editor.executeEdits("registry-context", [{ range: selection, text, forceMoveMarkers: true }]);
+        window.editor.focus();
+    }
+
+    function insertRegistrySnippet() {
+        const context = selectedEditorRegistryContext();
+        const datasetId = context.dataset_ids[0] || "";
+        const modelId = context.model_ids[0] || "";
+        insertTextAtCursor(`
+
+# Registry context helpers are injected by Painel Amanaje when this script runs.
+print("Datasets:", list_datasets())
+print("Models:", list_models())
+df = load_dataset(${datasetId ? datasetId : ""})
+model = load_model(${modelId ? modelId : ""}) if list_models() else None
+print(df.head())
+`);
+    }
+
+    function clearRegistryContextSelection() {
+        ["editorDatasetContext", "editorModelContext"].forEach((selectId) => {
+            Array.from(dom(selectId)?.options || []).forEach((option) => { option.selected = false; });
+        });
     }
 
     function escapeHtml(text) {
@@ -1279,7 +1387,7 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
             const response = await fetch("/execute/jobs", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code })
+                body: JSON.stringify({ code, registryContext: selectedEditorRegistryContext() })
             });
 
             if (!response.ok) {
@@ -1657,6 +1765,9 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
         dom("btnCommandPaletteInline")?.addEventListener("click", openCommandPalette);
         dom("btnRefreshFiles")?.addEventListener("click", loadFileList);
         dom("btnRefreshOutline")?.addEventListener("click", renderOutline);
+        dom("btnRefreshEditorContext")?.addEventListener("click", () => loadEditorRegistryContext().catch(error => showStatus(error.message, "error")));
+        dom("btnInsertRegistrySnippet")?.addEventListener("click", insertRegistrySnippet);
+        dom("btnClearRegistryContext")?.addEventListener("click", clearRegistryContextSelection);
         dom("btnSyncVariables")?.addEventListener("click", parseAndDisplayEditorState);
         dom("btnSyncMetadata")?.addEventListener("click", () => displayMetadataPanel(extractMetadataFromEditor()));
         dom("btnClearOutput")?.addEventListener("click", clearExecutionOutput);
@@ -1675,6 +1786,7 @@ joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
         setRuntimeState("Idle");
         refreshWorkspaceInsights();
         loadFileList();
+        loadEditorRegistryContext().catch(error => showStatus(error.message, "warning"));
     });
 </script>
 {% endblock %}

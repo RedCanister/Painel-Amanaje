@@ -1,0 +1,60 @@
+{
+  "run_id": "editor_execution_6b22d2e4bc87",
+  "run_type": "editor_execution",
+  "status": "queued",
+  "stage": "queued",
+  "created_at": "2026-05-18T20:27:01.796425",
+  "updated_at": "2026-05-18T20:27:01.830267",
+  "started_at": null,
+  "completed_at": null,
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false
+  },
+  "parameters": {
+    "code_length": 779
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "queued",
+    "latest_event": "Editor execution enqueued on amanaje:default.",
+    "latest_timestamp": "2026-05-18T20:27:01.830267",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T20:27:01.796425",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T20:27:01.830267",
+        "message": "Editor execution enqueued on amanaje:default."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T20:27:01.796425",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T20:27:01.830267",
+      "message": "Editor execution enqueued on amanaje:default."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "editor_execution_6b22d2e4bc87"
+  }
+}

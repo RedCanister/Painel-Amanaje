@@ -5,7 +5,7 @@
     "model_name": "sample_model",
     "dataset_name": "sample_dataset",
     "artifact_path": "/models/sample_model.joblib",
-    "started_at": "2026-05-14T19:26:25.576215",
+    "started_at": "2026-05-18T20:44:41.023735",
     "status": "active",
     "artifact_metadata": {
         "artifact_format": ".joblib",

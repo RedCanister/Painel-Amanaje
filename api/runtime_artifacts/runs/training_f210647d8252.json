@@ -1,0 +1,255 @@
+{
+  "run_id": "training_f210647d8252",
+  "run_type": "training",
+  "status": "queued",
+  "stage": "queued",
+  "created_at": "2026-05-18T19:17:56.675896",
+  "updated_at": "2026-05-18T19:17:56.743386",
+  "started_at": null,
+  "completed_at": null,
+  "context": {
+    "model_id": 5,
+    "dataset_id": 4,
+    "study_id": 6,
+    "inference_id": 8
+  },
+  "parameters": {
+    "device": "cuda",
+    "epochs": 50,
+    "metric": "accuracy",
+    "dropout": 0.4,
+    "n_trials": 25,
+    "direction": "maximize",
+    "framework": "pytorch",
+    "batch_size": 32,
+    "hidden_dim": 64,
+    "input_size": 4,
+    "num_layers": 2,
+    "base_run_id": null,
+    "hidden_size": 32,
+    "output_size": 1,
+    "base_model_id": 5,
+    "hidden_layers": 4,
+    "learning_rate": 0.001,
+    "training_mode": "transfer",
+    "cuda_available": "false",
+    "input_features": [
+      "Date",
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume",
+      "Close_Return",
+      "Volatility",
+      "MA20",
+      "MA50",
+      "Momentum",
+      "RelVolume",
+      "RSI_Close",
+      "Williams_%R",
+      "CCI",
+      "Bollinger_%B",
+      "KeltnerC_%",
+      "MACD_lib",
+      "MACD_signal",
+      "MACD_Hist",
+      "Force_Index",
+      "Volume_Price_Trend",
+      "DLR",
+      "RSI_Over",
+      "RSI_Under",
+      "Williams_Over",
+      "Williams_Under",
+      "MACD_Over",
+      "MACD_Under",
+      "Data",
+      "time_idx",
+      "series_id",
+      "hl_center",
+      "hl_range",
+      "dayofweek"
+    ],
+    "output_features": [
+      "Close",
+      "Close_Return"
+    ],
+    "resolved_device": "cpu",
+    "requested_device": "auto",
+    "training_lineage": {
+      "iteration": 2,
+      "base_run_id": "training_5ee2752ac427",
+      "base_model_id": 5,
+      "latest_run_id": "training_a347e995c819",
+      "mlflow_run_id": "eb3c5e488d3f4953ab58043557f02c96",
+      "training_mode": "transfer",
+      "transfer_status": "base_loaded",
+      "new_artifact_path": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+      "transfer_strategy": "auto",
+      "base_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+      "dataset_snapshot_hash": "0733ea7bd9b4ddfd6dde303775dd2b937f4ea0644ee9757778009acff3e87415",
+      "previous_artifact_path": "/app/runtime_artifacts/training/training_5ee2752ac427/model_pytorch.pt"
+    },
+    "artifact_manifest": {
+      "loader": "torchscript",
+      "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+      "metadata": {},
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "framework": "pytorch",
+      "entrypoint": null,
+      "artifact_format": ".pt",
+      "capability_matrix": {
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        }
+      },
+      "needs_companion_spec": true,
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ]
+    },
+    "transfer_strategy": "auto",
+    "base_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+    "device_fallback_reason": "auto_selected_cpu",
+    "device_fallback_applied": "false"
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "queued",
+    "latest_event": "Training run enqueued on amanaje:gpu.",
+    "latest_timestamp": "2026-05-18T19:17:56.743386",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T19:17:56.675896",
+        "message": "training run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-18T19:17:56.743386",
+        "message": "Training run enqueued on amanaje:gpu."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T19:17:56.675896",
+      "message": "training run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-18T19:17:56.743386",
+      "message": "Training run enqueued on amanaje:gpu."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:gpu",
+    "job_id": "training_f210647d8252"
+  }
+}

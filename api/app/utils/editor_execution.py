@@ -3,10 +3,11 @@ from __future__ import annotations
 import sys
 import traceback
 from io import StringIO
+from types import SimpleNamespace
 from typing import Any
 
 
-def execute_editor_code(code: str) -> dict[str, Any]:
+def execute_editor_code(code: str, registry_context: dict[str, Any] | None = None) -> dict[str, Any]:
     import app.utils.main_utils as _utils
 
     normalized_code = str(code or "").strip()
@@ -25,6 +26,34 @@ def execute_editor_code(code: str) -> dict[str, Any]:
         except Exception:
             return None
 
+    normalized_registry_context = registry_context if isinstance(registry_context, dict) else {}
+    datasets = list(normalized_registry_context.get("datasets") or [])
+    models = list(normalized_registry_context.get("models") or [])
+
+    def _record_by_id(records: list[dict[str, Any]], identifier: Any = None) -> dict[str, Any] | None:
+        if identifier in (None, ""):
+            return records[0] if records else None
+        return next((record for record in records if str(record.get("id")) == str(identifier) or record.get("name") == identifier), None)
+
+    def list_datasets() -> list[dict[str, Any]]:
+        return [dict(record) for record in datasets if isinstance(record, dict)]
+
+    def list_models() -> list[dict[str, Any]]:
+        return [dict(record) for record in models if isinstance(record, dict)]
+
+    def load_dataset(identifier: Any = None) -> Any:
+        record = _record_by_id(list_datasets(), identifier)
+        if record is None:
+            raise ValueError("Dataset is not available in the editor registry context.")
+        return _utils._load_dataset_frame_from_record(SimpleNamespace(**record))
+
+    def load_model(identifier: Any = None) -> Any:
+        record = _record_by_id(list_models(), identifier)
+        if record is None:
+            raise ValueError("Model is not available in the editor registry context.")
+        artifact = _utils.load_runtime_artifact(record.get("path"), parameters=record.get("parameters") or {})
+        return artifact.get("model")
+
     namespace = {
         "__builtins__": __builtins__,
         "np": _safe_import("numpy"),
@@ -32,6 +61,11 @@ def execute_editor_code(code: str) -> dict[str, Any]:
         "sk": _safe_import("sklearn"),
         "torch": _safe_import("torch"),
         "ox": _safe_import("onnx"),
+        "registry_context": normalized_registry_context,
+        "list_datasets": list_datasets,
+        "list_models": list_models,
+        "load_dataset": load_dataset,
+        "load_model": load_model,
     }
 
     old_stdout = sys.stdout

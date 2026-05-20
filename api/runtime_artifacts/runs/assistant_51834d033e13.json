@@ -1,0 +1,1090 @@
+{
+  "run_id": "assistant_51834d033e13",
+  "run_type": "assistant",
+  "status": "completed",
+  "stage": "reviewed",
+  "created_at": "2026-05-17T22:08:01.442984",
+  "updated_at": "2026-05-17T22:08:01.469106",
+  "started_at": null,
+  "completed_at": "2026-05-17T22:08:01.469106",
+  "context": {
+    "session_id": null,
+    "draft_id": "draft_32d134cae1eb",
+    "draft_type": "dataset_generation",
+    "context_pack_id": "ctx_4de1751b3ba7",
+    "context_pack_hash": "27547a0b6e258a0653d8b6b520296e27094ab46f074479f878aff07e75d53dae",
+    "model_version": "registry-assistant-draft-0.1",
+    "prompt_template_version": "amanaje-assistant-template-v1",
+    "evaluation_profile": "assistant-golden-v1",
+    "requested_reference_ids": [],
+    "selected_reference_ids": [
+      "ref_system_project_schema_dataset_generation",
+      "ref_system_safety_dataset_generation",
+      "ref_system_alignment_contracts",
+      "ref_system_prompt_dataset_generation",
+      "ref_system_writing_guide",
+      "ref_system_quality_rubric",
+      "ref_system_mlflow_tracking",
+      "ref_runtime_assistant_reference_snapshot"
+    ],
+    "reference_pack_hash": "fe28185230edc9a1b199d8e6a672b25e2ee8dc15f686198abf7154bdc5ebe9d0",
+    "assistant_model_id": "28",
+    "assistant_runtime_load": {
+      "status": "load_failed",
+      "target_model": "assistant_assistantmodel",
+      "target_version": "registry-assistant-draft-0.1",
+      "error": "Assistant runtime returned HTTP 400: {\"detail\":\"assistant_model_manifest.json was not found in /app/models\"}",
+      "latency_ms": 7334.13
+    }
+  },
+  "parameters": {
+    "prompt": "Create a realistic dataset about dolphis with weight origin and color.",
+    "provider": "assistant_model_28",
+    "requested_provider": "auto",
+    "assistant_model_id": "28",
+    "assistant_model_name": "assistant_assistantmodel",
+    "target_type": "dataset_generation",
+    "safety_profile": "dataset_generation",
+    "reference_count": 0,
+    "reference_selection": "automatic"
+  },
+  "metrics": {
+    "assistant_latency_ms": 12.498,
+    "assistant_validation_passed": true,
+    "assistant_alignment_passed": true,
+    "assistant_fallback_used": true
+  },
+  "artifacts": {},
+  "result": {
+    "draft": {
+      "draft_id": "draft_32d134cae1eb",
+      "session_id": null,
+      "draft_type": "dataset_generation",
+      "title": "Generated Dataset Draft",
+      "summary": "Creates a tabular dataset and exposes it as csv_text for the existing upload/create flow.",
+      "prompt": "Create a realistic dataset about dolphis with weight origin and color.",
+      "status": "draft",
+      "provider": "assistant_model_28",
+      "created_at": "2026-05-17T22:07:59.896287",
+      "code": "# Assistant dataset draft\n# Create a realistic dataset about dolphis with weight origin and color.\n\nimport numpy as np\nimport pandas as pd\n\nrng = np.random.default_rng(42)\nrow_count = 100\ndf = pd.DataFrame({\n    \"feature_a\": rng.normal(10, 2, row_count).round(4),\n    \"feature_b\": rng.integers(0, 5, row_count),\n    \"segment\": rng.choice([\"baseline\", \"growth\", \"risk\"], row_count),\n})\ndf[\"target\"] = (df[\"feature_a\"] * 0.7 + df[\"feature_b\"] * 1.5 + rng.normal(0, 0.5, row_count)).round(4)\n\ncsv_text = df.to_csv(index=False)\nname = \"assistant_generated_dataset\"\ndescription = \"Dataset drafted by the Amanaje assistant.\"\nobject_type = \"dataset\"\ndataset_type = \"dataset\"\nversion = 1\nconnection_string = \"\"",
+      "operations": [],
+      "registry_payload": {},
+      "registry_type": null,
+      "form_payload": {},
+      "training_request": {},
+      "study_request": {},
+      "execution_profile": "dataset_generation",
+      "materialized_outputs": [
+        "csv_text",
+        "name",
+        "description",
+        "object_type",
+        "dataset_type"
+      ],
+      "artifacts": {
+        "context_pack": {
+          "id": "ctx_4de1751b3ba7",
+          "hash": "27547a0b6e258a0653d8b6b520296e27094ab46f074479f878aff07e75d53dae",
+          "version": "assistant-context-pack-v1",
+          "payload": {
+            "context_pack_id": "ctx_4de1751b3ba7",
+            "version": "assistant-context-pack-v1",
+            "prompt": "Create a realistic dataset about dolphis with weight origin and color.",
+            "workflow_goal": null,
+            "target_type": "dataset_generation",
+            "provider": "assistant_model_28",
+            "registry_type": null,
+            "form_values": {},
+            "constraints": {},
+            "safety_profile": "dataset_generation",
+            "allowed_imports": [
+              "datetime",
+              "math",
+              "numpy",
+              "pandas",
+              "random",
+              "statistics"
+            ],
+            "allowed_dependencies": [
+              "numpy",
+              "pandas"
+            ],
+            "content_references": [
+              {
+                "reference_id": "ref_system_project_schema_dataset_generation",
+                "source_type": "project_schema",
+                "name": "assistant_workflow_draft",
+                "summary": "WorkflowDraft is the structured output contract for assistant providers.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "target_type": "dataset_generation"
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884344"
+              },
+              {
+                "reference_id": "ref_system_safety_dataset_generation",
+                "source_type": "safety_profile",
+                "name": "dataset_generation",
+                "summary": "Allowed imports, dependencies, and required outputs for assistant-reviewed code.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "allowed_imports": [
+                    "numpy",
+                    "datetime",
+                    "random",
+                    "pandas",
+                    "math",
+                    "statistics"
+                  ],
+                  "allowed_dependencies": [
+                    "pandas",
+                    "numpy"
+                  ],
+                  "required_outputs": [
+                    "csv_text"
+                  ]
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884506"
+              },
+              {
+                "reference_id": "ref_system_alignment_contracts",
+                "source_type": "alignment_contracts",
+                "name": "assistant_alignment_contracts",
+                "summary": "The five alignment contracts that every private assistant draft is evaluated against.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+                  "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+                  "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+                  "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+                  "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884529"
+              },
+              {
+                "reference_id": "ref_system_prompt_dataset_generation",
+                "source_type": "prompt_template",
+                "name": "amanaje-assistant-template-v1",
+                "summary": "Draft safe Python code that creates synthetic tabular data and exposes csv_text plus dataset metadata. Use only allowed dependencies, align names with trusted internal references, and never write files.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "prompt_template_version": "amanaje-assistant-template-v1"
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884581"
+              },
+              {
+                "reference_id": "ref_system_writing_guide",
+                "source_type": "draft_writing_guide",
+                "name": "amanaje_assistant_writing_guide",
+                "summary": "Project writing guidance for draft titles, summaries, metadata, risks, assumptions, and next actions.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "voice": "Concrete, project-aware, concise, and operational.",
+                  "titles": "Name the artifact or workflow outcome, not the assistant action.",
+                  "summaries": "State what the draft creates, how it fits Painel Amanaje, and what remains for user approval.",
+                  "metadata": "Prefer registry-compatible names, versions, paths, feature names, and dependency declarations.",
+                  "risks": "Name practical limitations such as synthetic distribution mismatch, missing IDs, or untrained artifacts.",
+                  "next_actions": "Use short workflow actions that match reviewed draft, guarded run, upload, or registry submit steps.",
+                  "references": "Use internal reference summaries and cite their reference IDs in metadata when they shape the draft.",
+                  "originality": "Generate project-specific assets from the request and internal references; do not copy raw reference text."
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884635"
+              },
+              {
+                "reference_id": "ref_system_quality_rubric",
+                "source_type": "draft_quality_rubric",
+                "name": "amanaje_assistant_quality_rubric",
+                "summary": "Quality checks used to evaluate generated draft text and metadata.",
+                "trust_level": "system",
+                "uri": null,
+                "metadata": {
+                  "title_quality": "Title is specific to the requested artifact or workflow.",
+                  "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+                  "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+                  "risk_quality": "Risks and assumptions are concrete enough for user review.",
+                  "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884653"
+              },
+              {
+                "reference_id": "ref_system_mlflow_tracking",
+                "source_type": "mlflow_tracking",
+                "name": "assistant/amanaje_slm",
+                "summary": "Assistant model versions, evals, training examples, and promotion reports are tracked in MLflow.",
+                "trust_level": "system",
+                "uri": "assistant/amanaje_slm",
+                "metadata": {
+                  "experiment_name": "assistant/amanaje_slm",
+                  "evaluation_profile": "assistant-golden-v1",
+                  "context_pack_version": "assistant-context-pack-v1"
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884669"
+              },
+              {
+                "reference_id": "ref_runtime_assistant_reference_snapshot",
+                "source_type": "runtime_context",
+                "name": "assistant_reference_snapshot",
+                "summary": "keys: eval_dir, interactions_path, recent_evals, recent_examples, source_type",
+                "trust_level": "runtime",
+                "uri": null,
+                "metadata": {
+                  "source_type": "assistant_reference_snapshot",
+                  "interactions_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+                  "eval_dir": "/app/runtime_artifacts/assistant_evals",
+                  "recent_examples": [
+                    {
+                      "label": "positive",
+                      "workflow_type": "model_generation",
+                      "provider": "assistant_model_28",
+                      "model_version": "registry-assistant-draft-0.1",
+                      "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+                      "review_status": "approved"
+                    },
+                    {
+                      "label": "corrected",
+                      "workflow_type": "model_generation",
+                      "provider": "assistant_model_28",
+                      "model_version": "registry-assistant-draft-0.1",
+                      "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+                      "review_status": "approved"
+                    },
+                    {
+                      "label": "negative",
+                      "workflow_type": "registry_object",
+                      "provider": "assistant_model_28",
+                      "model_version": "registry-assistant-draft-0.1",
+                      "context_pack_hash": "f3817d549536a989c8e7cbc6873783e980359c0bf7fd3750d74c768b8d90cbad",
+                      "review_status": "needs_revision"
+                    }
+                  ],
+                  "recent_evals": [
+                    {
+                      "file": "assistant_golden_eval_20260514213540.json",
+                      "draft_type": null,
+                      "passed": true,
+                      "evaluation_profile": "assistant-golden-v1"
+                    },
+                    {
+                      "file": "draft_a2fb3ae5d66a_eval.json",
+                      "draft_type": "feature_operations",
+                      "passed": true,
+                      "evaluation_profile": "assistant-golden-v1"
+                    },
+                    {
+                      "file": "draft_db9c0b40ce86_eval.json",
+                      "draft_type": "dataset_generation",
+                      "passed": true,
+                      "evaluation_profile": "assistant-golden-v1"
+                    }
+                  ]
+                },
+                "content_hash": null,
+                "tags": [],
+                "created_at": "2026-05-17T22:07:59.884808"
+              }
+            ],
+            "reference_pack_id": "refpack_55546bf6b1aa",
+            "reference_pack_hash": "fe28185230edc9a1b199d8e6a672b25e2ee8dc15f686198abf7154bdc5ebe9d0",
+            "selected_reference_ids": [
+              "ref_system_project_schema_dataset_generation",
+              "ref_system_safety_dataset_generation",
+              "ref_system_alignment_contracts",
+              "ref_system_prompt_dataset_generation",
+              "ref_system_writing_guide",
+              "ref_system_quality_rubric",
+              "ref_system_mlflow_tracking",
+              "ref_runtime_assistant_reference_snapshot"
+            ],
+            "reference_trust_levels": {
+              "ref_system_project_schema_dataset_generation": "system",
+              "ref_system_safety_dataset_generation": "system",
+              "ref_system_alignment_contracts": "system",
+              "ref_system_prompt_dataset_generation": "system",
+              "ref_system_writing_guide": "system",
+              "ref_system_quality_rubric": "system",
+              "ref_system_mlflow_tracking": "system",
+              "ref_runtime_assistant_reference_snapshot": "runtime"
+            },
+            "compact_summary": "target=dataset_generation; references=8",
+            "pack_hash": "27547a0b6e258a0653d8b6b520296e27094ab46f074479f878aff07e75d53dae",
+            "created_at": "2026-05-17T22:07:59.885837"
+          }
+        },
+        "assistant_model_registry_payload": {
+          "name": "assistant_model_28_assistant",
+          "description": "Private assistant model service used by Painel Amanaje.",
+          "object_type": "learning_model",
+          "size": 0,
+          "path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "version": 1,
+          "model_type": "assistant_model",
+          "parameters": {
+            "assistant": {
+              "provider_type": "openai_compatible",
+              "provider": "assistant_model_28",
+              "model_version": "registry-assistant-draft-0.1",
+              "base_model_name": "local-workflow-template",
+              "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+              "prompt_template_version": "amanaje-assistant-template-v1",
+              "context_pack_version": "assistant-context-pack-v1",
+              "safety_profile_version": "assistant-safety-v1",
+              "mlflow_experiment": "assistant/amanaje_slm",
+              "supported_draft_types": [
+                "dataset_generation",
+                "model_generation",
+                "registry_object",
+                "feature_operations",
+                "training_run",
+                "study"
+              ]
+            }
+          },
+          "metrics": {
+            "evaluation_profile": "assistant-golden-v1",
+            "evaluation_score": null,
+            "fallback_provider": "local"
+          },
+          "reference_data": "runtime_artifacts/assistant_datasets/interactions.jsonl",
+          "input_features": [
+            "prompt",
+            "context_pack",
+            "target_type"
+          ],
+          "output_features": [
+            "workflow_draft"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false,
+          "history": [
+            {
+              "operation": "assistant_model_registered_payload",
+              "model_version": "registry-assistant-draft-0.1",
+              "mlflow_experiment": "assistant/amanaje_slm"
+            }
+          ]
+        },
+        "assistant_prompt_registry_payload": {
+          "name": "assistant_model_28_assistant_prompt_context",
+          "description": "Prompt templates, context-pack rules, and alignment contracts for the private assistant.",
+          "object_type": "code_model",
+          "size": 0,
+          "path": "runtime_artifacts/assistant_models/prompt_context.json",
+          "version": 1,
+          "variables": {
+            "provider": "assistant_model_28",
+            "model_version": "registry-assistant-draft-0.1",
+            "prompt_template_version": "amanaje-assistant-template-v1",
+            "context_pack_version": "assistant-context-pack-v1",
+            "safety_profile_version": "assistant-safety-v1",
+            "alignment_contracts": {
+              "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+              "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+              "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+              "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+              "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+            },
+            "mlflow_experiment": "assistant/amanaje_slm"
+          },
+          "code": {
+            "language": "json",
+            "prompt_templates": {
+              "dataset_generation": "Draft safe Python code that creates synthetic tabular data and exposes csv_text plus dataset metadata. Use only allowed dependencies, align names with trusted internal references, and never write files.",
+              "model_generation": "Draft safe Python code that creates a scikit-learn joblib artifact as base64 joblib_bytes plus LearningModel metadata. The artifact is a template, must not train on hidden data, and must match project dependency constraints.",
+              "registry_object": "Draft a form-ready registry payload for the selected registry type using internal schema references. Do not create the object; only return metadata.",
+              "feature_operations": "Draft visual feature operations that match the selected dataset context and can be previewed before materialization.",
+              "training_run": "Draft a reviewed training request that uses existing selected model and dataset identifiers.",
+              "study": "Draft an optimization study request using existing project study settings and safe defaults."
+            },
+            "context_pack_version": "assistant-context-pack-v1"
+          },
+          "history": [
+            {
+              "operation": "assistant_prompt_context_registered_payload",
+              "model_version": "registry-assistant-draft-0.1",
+              "mlflow_experiment": "assistant/amanaje_slm"
+            }
+          ]
+        },
+        "alignment_contracts": {
+          "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+          "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+          "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+          "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+          "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+        }
+      },
+      "assumptions": [
+        "The generated dataset is synthetic.",
+        "The draft only prepares csv_text; it does not write files or registry rows."
+      ],
+      "risks": [
+        "Synthetic data may not represent the target production distribution."
+      ],
+      "context": {
+        "operationId": "datasets",
+        "existing_metadata": {},
+        "assistant_model": {
+          "id": 28,
+          "name": "assistant_assistantmodel",
+          "description": "AssistantModel drafted by the Amanaje assistant.",
+          "object_type": "learning_model",
+          "size": 0.0,
+          "path": "models/artifact.json",
+          "date": "2026-05-03T00:10:47.644262",
+          "version": 1,
+          "history": [
+            {
+              "operation": "assistant_draft"
+            },
+            {
+              "when": "2026-05-03T00:10:47.612Z",
+              "status": "approved",
+              "approved": true,
+              "draft_id": "draft_9f7d065eccb8",
+              "operation": "assistant_review"
+            },
+            {
+              "when": "2026-05-03T01:08:14.123426",
+              "operation": "assistant_training_dataset_attached",
+              "dataset_id": 29,
+              "dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87"
+            },
+            {
+              "when": "2026-05-03T13:32:00.925100",
+              "operation": "assistant_training_dataset_attached",
+              "dataset_id": 29,
+              "dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87"
+            }
+          ],
+          "model_type": "assistant_model",
+          "parameters": {
+            "assistant": {
+              "enabled": true,
+              "base_url": "http://localhost:8000/v1",
+              "max_tokens": 1600,
+              "model_name": "assistant_assistantmodel",
+              "temperature": 0.2,
+              "model_version": "registry-assistant-draft-0.1",
+              "provider_type": "openai_compatible",
+              "timeout_seconds": 20,
+              "behavior_profile": {},
+              "reference_policy": {
+                "mode": "automatic_internal_repository"
+              },
+              "training_profile": {
+                "curation": "approved_and_corrected_drafts"
+              },
+              "training_dataset_id": 29,
+              "supported_draft_types": [
+                "dataset_generation",
+                "model_generation",
+                "registry_object",
+                "feature_operations",
+                "training_run",
+                "study"
+              ],
+              "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+              "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+              "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json"
+            }
+          },
+          "metrics": {
+            "status": "draft",
+            "evaluation_profile": "pending"
+          },
+          "reference_data": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+          "input_features": [
+            "prompt",
+            "context_pack",
+            "target_type"
+          ],
+          "output_features": [
+            "workflow_draft"
+          ],
+          "is_trained": false,
+          "is_tested": false,
+          "is_deployed": false,
+          "enabled": true,
+          "base_url": "http://localhost:8000/v1",
+          "max_tokens": 1600,
+          "model_name": "assistant_assistantmodel",
+          "temperature": 0.2,
+          "model_version": "registry-assistant-draft-0.1",
+          "provider_type": "openai_compatible",
+          "timeout_seconds": 20,
+          "behavior_profile": {},
+          "reference_policy": {
+            "mode": "automatic_internal_repository"
+          },
+          "training_profile": {
+            "curation": "approved_and_corrected_drafts"
+          },
+          "training_dataset_id": 29,
+          "supported_draft_types": [
+            "dataset_generation",
+            "model_generation",
+            "registry_object",
+            "feature_operations",
+            "training_run",
+            "study"
+          ],
+          "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+          "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+          "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json",
+          "assistant_config": {
+            "enabled": true,
+            "base_url": "http://localhost:8000/v1",
+            "max_tokens": 1600,
+            "model_name": "assistant_assistantmodel",
+            "temperature": 0.2,
+            "model_version": "registry-assistant-draft-0.1",
+            "provider_type": "openai_compatible",
+            "timeout_seconds": 20,
+            "behavior_profile": {},
+            "reference_policy": {
+              "mode": "automatic_internal_repository"
+            },
+            "training_profile": {
+              "curation": "approved_and_corrected_drafts"
+            },
+            "training_dataset_id": 29,
+            "supported_draft_types": [
+              "dataset_generation",
+              "model_generation",
+              "registry_object",
+              "feature_operations",
+              "training_run",
+              "study"
+            ],
+            "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+            "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+            "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json"
+          },
+          "provider_config": {
+            "name": "amanaje_slm",
+            "type": "openai_compatible",
+            "enabled": true,
+            "base_url": "http://localhost:8000/v1",
+            "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+            "health_url": "http://assistant-server:8080/health",
+            "model_name": "assistant_assistantmodel",
+            "timeout_seconds": 20.0,
+            "max_tokens": "[REDACTED]",
+            "temperature": 0.2,
+            "api_key_env": "[REDACTED]",
+            "api_key_configured": false,
+            "model_version": "registry-assistant-draft-0.1",
+            "runtime_kind": "pytorch_hf_server",
+            "base_model_name": "local-workflow-template",
+            "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+            "supports_json_mode": true,
+            "supports_remote_auth": false,
+            "supports_health_check": true,
+            "supported_draft_types": [
+              "dataset_generation",
+              "model_generation",
+              "registry_object",
+              "feature_operations",
+              "training_run",
+              "study"
+            ],
+            "fallback_provider": "local",
+            "capabilities": {
+              "registry_backed": true,
+              "assistant_model_id": 28,
+              "assistant_model_name": "assistant_assistantmodel",
+              "behavior_profile": {},
+              "reference_policy": {
+                "mode": "automatic_internal_repository"
+              },
+              "structured_workflow_draft": true,
+              "deterministic_fallback": true,
+              "openai_compatible": true,
+              "remote_server": true
+            },
+            "provider_type": "openai_compatible",
+            "behavior_profile": {},
+            "reference_policy": {
+              "mode": "automatic_internal_repository"
+            },
+            "training_profile": {
+              "curation": "approved_and_corrected_drafts"
+            },
+            "training_dataset_id": 29,
+            "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+            "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+            "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json",
+            "api_key": "",
+            "registry_model": {
+              "id": 28,
+              "name": "assistant_assistantmodel",
+              "path": "models/artifact.json",
+              "model_type": "assistant_model"
+            }
+          },
+          "provider_name": "assistant_model_28",
+          "bundle_status": {
+            "status": "missing",
+            "ready": false,
+            "runtime_kind": null,
+            "provider_type": "openai_compatible",
+            "model_name": "assistant_assistantmodel",
+            "model_version": "registry-assistant-draft-0.1",
+            "max_context_tokens": null,
+            "bundle": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "extracted_dir": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "manifest": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "model_artifact": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "tokenizer": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "tokenizer_assets": [],
+            "prompt_asset": {
+              "configured": false,
+              "exists": false,
+              "path": null
+            },
+            "has_inline_chat_template": false,
+            "server": {
+              "base_url": "http://localhost:8000/v1",
+              "health_url": null,
+              "separate_server_required": true,
+              "loads_in_fastapi": false
+            }
+          }
+        },
+        "assistant_model_id": "28",
+        "assistant_runtime_load": {
+          "status": "load_failed",
+          "target_model": "assistant_assistantmodel",
+          "target_version": "registry-assistant-draft-0.1",
+          "error": "Assistant runtime returned HTTP 400: {\"detail\":\"assistant_model_manifest.json was not found in /app/models\"}",
+          "latency_ms": 7334.13
+        },
+        "assistant_reference_snapshot": {
+          "source_type": "assistant_reference_snapshot",
+          "interactions_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+          "eval_dir": "/app/runtime_artifacts/assistant_evals",
+          "recent_examples": [
+            {
+              "label": "positive",
+              "workflow_type": "model_generation",
+              "provider": "assistant_model_28",
+              "model_version": "registry-assistant-draft-0.1",
+              "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+              "review_status": "approved"
+            },
+            {
+              "label": "corrected",
+              "workflow_type": "model_generation",
+              "provider": "assistant_model_28",
+              "model_version": "registry-assistant-draft-0.1",
+              "context_pack_hash": "5924cc0d09d219f3f12ab7122e89dc3507c2ac568b5a10f9702aff026e91389d",
+              "review_status": "approved"
+            },
+            {
+              "label": "negative",
+              "workflow_type": "registry_object",
+              "provider": "assistant_model_28",
+              "model_version": "registry-assistant-draft-0.1",
+              "context_pack_hash": "f3817d549536a989c8e7cbc6873783e980359c0bf7fd3750d74c768b8d90cbad",
+              "review_status": "needs_revision"
+            }
+          ],
+          "recent_evals": [
+            {
+              "file": "assistant_golden_eval_20260514213540.json",
+              "draft_type": null,
+              "passed": true,
+              "evaluation_profile": "assistant-golden-v1"
+            },
+            {
+              "file": "draft_a2fb3ae5d66a_eval.json",
+              "draft_type": "feature_operations",
+              "passed": true,
+              "evaluation_profile": "assistant-golden-v1"
+            },
+            {
+              "file": "draft_db9c0b40ce86_eval.json",
+              "draft_type": "dataset_generation",
+              "passed": true,
+              "evaluation_profile": "assistant-golden-v1"
+            }
+          ]
+        },
+        "content_references": []
+      },
+      "next_actions": [
+        "Review safety report",
+        "Approve draft",
+        "Execute through the guarded execution path"
+      ],
+      "model_version": "registry-assistant-draft-0.1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "context_pack_id": "ctx_4de1751b3ba7",
+      "context_pack_hash": "27547a0b6e258a0653d8b6b520296e27094ab46f074479f878aff07e75d53dae",
+      "evaluation_profile": "assistant-golden-v1",
+      "generation_provenance": {
+        "source_type": "assistant",
+        "provider": "assistant_model_28",
+        "model_version": "registry-assistant-draft-0.1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_id": "ctx_4de1751b3ba7",
+        "context_pack_hash": "27547a0b6e258a0653d8b6b520296e27094ab46f074479f878aff07e75d53dae",
+        "fallback_provider": "local",
+        "created_at": "2026-05-17T22:07:59.898011"
+      },
+      "provider_metadata": {
+        "provider": "assistant_model_28",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "allowed_dependencies": [
+          "numpy",
+          "pandas"
+        ],
+        "reference_count": 8,
+        "reference_pack_id": "refpack_55546bf6b1aa",
+        "reference_pack_hash": "fe28185230edc9a1b199d8e6a672b25e2ee8dc15f686198abf7154bdc5ebe9d0",
+        "selected_reference_ids": [
+          "ref_system_project_schema_dataset_generation",
+          "ref_system_safety_dataset_generation",
+          "ref_system_alignment_contracts",
+          "ref_system_prompt_dataset_generation",
+          "ref_system_writing_guide",
+          "ref_system_quality_rubric",
+          "ref_system_mlflow_tracking",
+          "ref_runtime_assistant_reference_snapshot"
+        ],
+        "reference_trust_levels": {
+          "ref_system_project_schema_dataset_generation": "system",
+          "ref_system_safety_dataset_generation": "system",
+          "ref_system_alignment_contracts": "system",
+          "ref_system_prompt_dataset_generation": "system",
+          "ref_system_writing_guide": "system",
+          "ref_system_quality_rubric": "system",
+          "ref_system_mlflow_tracking": "system",
+          "ref_runtime_assistant_reference_snapshot": "runtime"
+        },
+        "reference_hashes": [],
+        "fallback_provider": "local",
+        "latency_ms": 12.498,
+        "cache_hit": false,
+        "mlflow_experiment": "assistant/amanaje_slm",
+        "alignment_contracts": [
+          "output_alignment",
+          "safety_alignment",
+          "registry_alignment",
+          "dependency_alignment",
+          "mlflow_alignment"
+        ],
+        "runtime": "bootstrap",
+        "fallback_reason": "SLM runtime returned HTTP 503: {\"detail\":\"assistant_model_manifest.json was not found in /app/runtime_artifacts/assistant_models/bundles\"}",
+        "serving_mode": "separate-service-ready",
+        "provider_config": {
+          "name": "amanaje_slm",
+          "type": "openai_compatible",
+          "enabled": true,
+          "base_url": "http://localhost:8000/v1",
+          "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+          "health_url": "http://assistant-server:8080/health",
+          "model_name": "assistant_assistantmodel",
+          "timeout_seconds": 20.0,
+          "max_tokens": "[REDACTED]",
+          "temperature": 0.2,
+          "api_key_env": "[REDACTED]",
+          "api_key_configured": false,
+          "model_version": "registry-assistant-draft-0.1",
+          "runtime_kind": "pytorch_hf_server",
+          "base_model_name": "local-workflow-template",
+          "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "supports_json_mode": true,
+          "supports_remote_auth": false,
+          "supports_health_check": true,
+          "supported_draft_types": [
+            "dataset_generation",
+            "model_generation",
+            "registry_object",
+            "feature_operations",
+            "training_run",
+            "study"
+          ],
+          "fallback_provider": "local",
+          "capabilities": {
+            "registry_backed": true,
+            "assistant_model_id": 28,
+            "assistant_model_name": "assistant_assistantmodel",
+            "behavior_profile": {},
+            "reference_policy": {
+              "mode": "automatic_internal_repository"
+            },
+            "structured_workflow_draft": true,
+            "deterministic_fallback": true,
+            "openai_compatible": true,
+            "remote_server": true
+          },
+          "provider_type": "openai_compatible",
+          "behavior_profile": {},
+          "reference_policy": {
+            "mode": "automatic_internal_repository"
+          },
+          "training_profile": {
+            "curation": "approved_and_corrected_drafts"
+          },
+          "training_dataset_id": 29,
+          "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+          "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+          "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json",
+          "api_key": "",
+          "registry_model": {
+            "id": 28,
+            "name": "assistant_assistantmodel",
+            "path": "models/artifact.json",
+            "model_type": "assistant_model"
+          }
+        },
+        "slm_config": {
+          "name": "amanaje_slm",
+          "type": "openai_compatible",
+          "enabled": true,
+          "base_url": "http://localhost:8000/v1",
+          "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+          "health_url": "http://assistant-server:8080/health",
+          "model_name": "assistant_assistantmodel",
+          "timeout_seconds": 20.0,
+          "max_tokens": "[REDACTED]",
+          "temperature": 0.2,
+          "api_key_env": "[REDACTED]",
+          "api_key_configured": false,
+          "model_version": "registry-assistant-draft-0.1",
+          "runtime_kind": "pytorch_hf_server",
+          "base_model_name": "local-workflow-template",
+          "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+          "supports_json_mode": true,
+          "supports_remote_auth": false,
+          "supports_health_check": true,
+          "supported_draft_types": [
+            "dataset_generation",
+            "model_generation",
+            "registry_object",
+            "feature_operations",
+            "training_run",
+            "study"
+          ],
+          "fallback_provider": "local",
+          "capabilities": {
+            "registry_backed": true,
+            "assistant_model_id": 28,
+            "assistant_model_name": "assistant_assistantmodel",
+            "behavior_profile": {},
+            "reference_policy": {
+              "mode": "automatic_internal_repository"
+            },
+            "structured_workflow_draft": true,
+            "deterministic_fallback": true,
+            "openai_compatible": true,
+            "remote_server": true
+          },
+          "provider_type": "openai_compatible",
+          "behavior_profile": {},
+          "reference_policy": {
+            "mode": "automatic_internal_repository"
+          },
+          "training_profile": {
+            "curation": "approved_and_corrected_drafts"
+          },
+          "training_dataset_id": 29,
+          "training_dataset_hash": "45c26b2ea8b6fb2010bb6b76999c374a88d3553ceee889f5f8cd57e57ff64e87",
+          "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354.jsonl",
+          "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260503_010354_manifest.json",
+          "api_key": "",
+          "registry_model": {
+            "id": 28,
+            "name": "assistant_assistantmodel",
+            "path": "models/artifact.json",
+            "model_type": "assistant_model"
+          }
+        }
+      }
+    },
+    "review": {
+      "status": "approved",
+      "approved": true,
+      "safety": {
+        "ok": true,
+        "risk_level": "low",
+        "profile": "dataset_generation",
+        "violations": [],
+        "warnings": [],
+        "allowed_imports": [
+          "datetime",
+          "math",
+          "numpy",
+          "pandas",
+          "random",
+          "statistics"
+        ],
+        "allowed_dependencies": [
+          "numpy",
+          "pandas"
+        ],
+        "blocked_names": [
+          "__import__",
+          "breakpoint",
+          "compile",
+          "delattr",
+          "dir",
+          "eval",
+          "exec",
+          "getattr",
+          "globals",
+          "input",
+          "locals",
+          "open",
+          "setattr",
+          "vars"
+        ],
+        "materialized_output_checks": {
+          "csv_text": true
+        }
+      },
+      "messages": [
+        "Dataset code is review-safe and ready for explicit execution approval."
+      ],
+      "required_actions": [],
+      "reviewed_at": "2026-05-17T22:07:59.906259"
+    },
+    "evaluation": {
+      "evaluation_profile": "assistant-golden-v1",
+      "draft_type": "dataset_generation",
+      "passed": true,
+      "checks": {
+        "valid_workflow_draft": true,
+        "has_context_pack": true,
+        "has_model_version": true,
+        "has_prompt_template_version": true,
+        "review_approved": true,
+        "csv_text": true
+      },
+      "draft_quality": {
+        "title_quality": true,
+        "summary_quality": true,
+        "risk_or_assumption_quality": true,
+        "next_action_quality": true,
+        "reference_traceability": true
+      },
+      "draft_quality_rubric": {
+        "title_quality": "Title is specific to the requested artifact or workflow.",
+        "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+        "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+        "risk_quality": "Risks and assumptions are concrete enough for user review.",
+        "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+      },
+      "alignment_contracts": {
+        "output_alignment": true,
+        "safety_alignment": true,
+        "registry_alignment": true,
+        "dependency_alignment": true,
+        "mlflow_alignment": true
+      },
+      "alignment_contract_descriptions": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+      }
+    },
+    "artifact_paths": {
+      "context_pack_path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_4de1751b3ba7.json",
+      "evaluation_path": "/app/runtime_artifacts/assistant_evals/draft_32d134cae1eb_eval.json",
+      "promotion_report_path": "/app/runtime_artifacts/assistant_models/promotion_reports/registry-assistant-draft-0.1_draft_32d134cae1eb_promotion.json"
+    },
+    "training_example_path": null,
+    "mlflow_tracking": {
+      "status": "logged",
+      "experiment_name": "assistant/amanaje_slm",
+      "run_id": "7cb45fae4e364a14bea1250bd35d0aac",
+      "artifact_paths": {
+        "context_pack_path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_4de1751b3ba7.json",
+        "evaluation_path": "/app/runtime_artifacts/assistant_evals/draft_32d134cae1eb_eval.json",
+        "promotion_report_path": "/app/runtime_artifacts/assistant_models/promotion_reports/registry-assistant-draft-0.1_draft_32d134cae1eb_promotion.json"
+      }
+    },
+    "selected_references": []
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "reviewed",
+    "latest_event": "Assistant draft created and reviewed.",
+    "latest_timestamp": "2026-05-17T22:08:01.469106",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-17T22:08:01.442984",
+        "message": "assistant run created."
+      },
+      {
+        "status": "completed",
+        "stage": "reviewed",
+        "timestamp": "2026-05-17T22:08:01.469106",
+        "message": "Assistant draft created and reviewed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-17T22:08:01.442984",
+      "message": "assistant run created."
+    },
+    {
+      "status": "completed",
+      "stage": "reviewed",
+      "timestamp": "2026-05-17T22:08:01.469106",
+      "message": "Assistant draft created and reviewed."
+    }
+  ]
+}

@@ -358,11 +358,6 @@
                 </select>
             </div>
 
-            <div class="form-group" id="artifactFileGroup">
-                <label for="artifactFile">Artifact File</label>
-                <input type="file" id="artifactFile" name="file" accept=".csv,.tsv,.json,.jsonl,.joblib,.pkl,.pt,.pth,.onnx,.zip">
-                <div class="small-text">Optional for generated datasets/models. Required for AssistantModel bundles unless the editor provides base64 zip bytes.</div>
-            </div>
 
             <div class="editor-controls">
                 <button type="button" id="btnExecuteScript" class="success">Execute</button>
@@ -411,6 +406,8 @@
 
             <div id="editor">
                 <h3>Write your creation script here.</h3>
+
+
                 <div id="editorContainer"></div>
                 <br>
                 <div id="output"></div>
@@ -427,11 +424,20 @@
                     <div id="variableList"></div>
                 </div>
 
+                <!--
                 <div id="metadataPanel" style="display:none;">
                     <h3>Parsed Metadata</h3>
                     <p id="metadataHint" class="small-text">Run the script or parse the editor to build a save-ready document.</p>
                     <div id="metadataContent"></div>
                 </div>
+                -->
+
+            </div>
+
+            <div class="form-group" id="artifactFileGroup">
+                <label for="artifactFile">Artifact File</label>
+                <input type="file" id="artifactFile" name="file" accept=".csv,.tsv,.json,.jsonl,.joblib,.pkl,.pt,.pth,.onnx,.zip">
+                <div class="small-text">Optional for generated datasets/models. Required for AssistantModel bundles unless the editor provides base64 zip bytes.</div>
             </div>
         </form>
 

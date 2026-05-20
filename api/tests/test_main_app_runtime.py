@@ -101,12 +101,14 @@ def test_main_app_imports_and_registers_expected_routes():
         "/runtime/accelerators",
         "/runtime/workers",
         "/execute/jobs",
+        "/editor/context",
         "/assistant/jobs/{operation}",
         "/production/status",
         "/production/simulation/context",
         "/production/simulate",
         "/runs/list",
         "/runs/get/{run_id}",
+        "/runs/{run_id}/{action}",
         "/plots/artifacts",
         "/plots/artifacts/{plot_id}/file",
         "/registry/dependencies/{registry_type}/{item_id}",
@@ -126,7 +128,7 @@ def test_workflow_domain_route_contracts_are_registered():
     workflow_domains = {
         "panel": {"/", "/panel", "/panel/context", "/panel/dashboards", "/panel/dashboards/{dashboard_id}"},
         "upload": {"/upload", "/upload/support", "/upload/{operation_id}"},
-        "create": {"/create", "/execute", "/execute/jobs"},
+        "create": {"/create", "/execute", "/execute/jobs", "/editor/context"},
         "feature": {"/feature", "/features", "/features/extract", "/features/preview", "/features/materialize"},
         "training": {"/training", "/training/{model_id}", "/studies/{study_id}/optimize"},
         "production": {
@@ -150,6 +152,15 @@ def test_workflow_domain_route_contracts_are_registered():
     }
 
     assert missing == {}
+
+
+def test_shared_templates_render_global_operation_stack():
+    client = TestClient(main_app.app)
+    for route_path in ["/", "/feature", "/training", "/production", "/registry", "/editor"]:
+        response = client.get(route_path)
+        assert response.status_code == 200
+        assert 'id="globalOperationStack"' in response.text
+        assert 'id="globalOperationList"' in response.text
 
 
 def test_panel_layout_coercion_handles_invalid_client_values():
@@ -218,6 +229,96 @@ def test_execute_job_endpoint_enqueues_and_records_ledger(monkeypatch, tmp_path)
     assert captured["code"] == "x = 1"
     assert ledger["run_type"] == "editor_execution"
     assert ledger["queue"]["queue"] == "amanaje:default"
+
+
+def test_execute_job_endpoint_accepts_registry_context(monkeypatch, tmp_path):
+    captured = {}
+    dataset_record = SimpleNamespace(id=3, name="dataset-a", path="dataset.csv")
+    model_record = SimpleNamespace(id=5, name="model-a", path="model.pkl", parameters={"framework": "sklearn"})
+
+    async def fake_dataset_read(_db, dataset_id):
+        assert dataset_id == 3
+        return dataset_record
+
+    async def fake_model_read(_db, model_id):
+        assert model_id == 5
+        return model_record
+
+    def fake_enqueue(run_id, *, code, registry_context=None):
+        captured["run_id"] = run_id
+        captured["code"] = code
+        captured["registry_context"] = registry_context
+        return {"backend": "rq", "queue": "amanaje:default", "job_id": run_id}
+
+    monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
+    monkeypatch.setattr(main_app.DatasetModel, "read", fake_dataset_read)
+    monkeypatch.setattr(main_app.LearningModel, "read", fake_model_read)
+    monkeypatch.setattr(main_app, "enqueue_editor_execution", fake_enqueue)
+
+    response = TestClient(main_app.app).post(
+        "/execute/jobs",
+        json={"code": "df = load_dataset()", "registryContext": {"dataset_ids": [3], "model_ids": [5]}},
+    )
+    payload = response.json()
+    ledger = main_app._utils.read_run_entry(tmp_path, payload["run_id"])
+
+    assert response.status_code == 202
+    assert captured["registry_context"]["datasets"][0]["id"] == 3
+    assert captured["registry_context"]["models"][0]["id"] == 5
+    assert ledger["context"]["dataset_ids"] == [3]
+    assert ledger["context"]["model_ids"] == [5]
+
+
+def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
+    monkeypatch.setattr(main_app, "cancel_rq_job", lambda run_id: {"backend": "rq", "job_id": run_id, "cancelled": True})
+    monkeypatch.setattr(
+        main_app,
+        "enqueue_training_run",
+        lambda run_id, *, model_id, payload_data, prefer_gpu=False: {
+            "backend": "rq",
+            "queue": "amanaje:test",
+            "job_id": run_id,
+            "model_id": model_id,
+            "payload_dataset_id": payload_data["datasetId"],
+            "prefer_gpu": prefer_gpu,
+        },
+    )
+    queued = create_run_entry(tmp_path, run_type="training", status="queued")
+    completed = create_run_entry(
+        tmp_path,
+        run_type="training",
+        status="completed",
+        context={"model_id": 5, "dataset_id": 7, "study_id": None, "inference_id": 9},
+        parameters={"framework": "sklearn", "alpha": 0.1},
+    )
+    unsupported = create_run_entry(tmp_path, run_type="editor_execution", status="completed")
+    client = TestClient(main_app.app)
+
+    paused = client.post(f"/runs/{queued['run_id']}/pause")
+    resumed = client.post(f"/runs/{queued['run_id']}/resume")
+    cancelled = client.post(f"/runs/{queued['run_id']}/cancel")
+    completed_cancel = client.post(f"/runs/{completed['run_id']}/cancel")
+    rerun = client.post(f"/runs/{completed['run_id']}/rerun")
+    active_rerun = client.post(f"/runs/{queued['run_id']}/rerun")
+    unsupported_rerun = client.post(f"/runs/{unsupported['run_id']}/rerun")
+    missing = client.post("/runs/missing_run/cancel")
+
+    assert paused.status_code == 200
+    assert paused.json()["status"] == "paused"
+    assert resumed.status_code == 200
+    assert resumed.json()["status"] == "queued"
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+    assert completed_cancel.status_code == 400
+    assert rerun.status_code == 202
+    assert rerun.json()["status"] == "accepted"
+    assert rerun.json()["source_run_id"] == completed["run_id"]
+    assert rerun.json()["ledger"]["context"]["rerun_of"] == completed["run_id"]
+    assert read_run_entry(tmp_path, rerun.json()["run_id"])["context"]["model_id"] == 5
+    assert active_rerun.status_code == 400
+    assert unsupported_rerun.status_code == 400
+    assert missing.status_code == 404
 
 
 def test_execute_job_endpoint_returns_structured_queue_error(monkeypatch, tmp_path):
@@ -1089,6 +1190,9 @@ def test_production_simulate_supports_named_scenarios_and_sensitivity(monkeypatc
     assert len(payload["simulation"]["scenarios"]) == 2
     assert payload["simulation"]["scenarios"][0]["name"] == "Category Boost"
     assert payload["simulation"]["scenarios"][0]["prediction_summary"]["final_prediction"] == 15.0
+    assert payload["simulation"]["plots"]
+    assert payload["simulation"]["scenarios"][0]["plots"]
+    assert any(plot["title"] == "Category Boost Prediction Path" for plot in payload["simulation"]["scenarios"][0]["plots"])
     assert payload["simulation"]["sensitivity"]["enabled"] is True
     assert payload["simulation"]["sensitivity"]["features"][0]["feature"] == "numeric_feature"
     assert '"category_feature":"boost"' in payload_text
@@ -1170,6 +1274,7 @@ def test_production_simulate_supports_classification_probabilities(monkeypatch):
     assert payload["simulation"]["classification"]["threshold"] == 0.4
     assert payload["simulation"]["classification"]["top_classes"][0]["class"] == "yes"
     assert payload["simulation"]["prediction_summary"]["final_probabilities"]["yes"] == 0.8
+    assert any("Class Probabilities" in plot["title"] for plot in payload["simulation"]["scenarios"][0]["plots"])
 
 
 def test_production_simulation_context_respects_saved_family_profile(monkeypatch):
