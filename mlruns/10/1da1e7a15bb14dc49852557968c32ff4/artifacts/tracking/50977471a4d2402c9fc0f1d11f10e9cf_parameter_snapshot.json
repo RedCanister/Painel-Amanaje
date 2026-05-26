@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "framework": "sklearn",
+        "estimator_class": "RandomForestRegressor",
+        "artifact_manifest": "{\"artifact_format\": \".joblib\", \"capability_matrix\": {\".joblib\": {\"inspect\": true, \"label\": \"scikit-learn Joblib\", \"monitor\": true, \"predict\": true, \"register\": true, \"simulate\": true, \"train\": false}, \".json\": {\"inspect\": true, \"label\": \"JSON Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".onnx\": {\"inspect\": true, \"label\": \"ONNX\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".pickle\": {\"inspect\": true, \"label\": \"Python Pickle\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pkl\": {\"inspect\": true, \"label\": \"Python Pickle\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pt\": {\"inspect\": true, \"label\": \"PyTorch Artifact\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".pth\": {\"inspect\": true, \"label\": \"PyTorch Artifact\", \"monitor\": \"guarded\", \"predict\": \"guarded\", \"register\": true, \"simulate\": \"guarded\", \"train\": false}, \".yaml\": {\"inspect\": true, \"label\": \"YAML Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}, \".yml\": {\"inspect\": true, \"label\": \"YAML Config\", \"monitor\": false, \"predict\": false, \"register\": true, \"simulate\": false, \"train\": false}}, \"entrypoint\": null, \"framework\": \"sklearn\", \"loader\": \"joblib\", \"metadata\": {}, \"needs_companion_spec\": false, \"runtime_capabilities\": {\"inspect\": true, \"monitor\": true, \"predict\": true, \"register\": true, \"simulate\": true, \"train\": false}, \"source\": \"/models/RFR.joblib\", \"supported_file_types\": [\".joblib\", \".json\", \".onnx\", \".pickle\", \".pkl\", \".pt\", \".pth\", \".yaml\", \".yml\"], \"warnings\": [\"Joblib support is available for runtime loading.\"]}",
+        "epochs": "50",
+        "batch_size": "32",
+        "learning_rate": "0.001",
+        "device": "cpu",
+        "input_features": "[\"0\", \"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\", \"9\", \"10\", \"11\", \"12\", \"13\", \"14\", \"15\", \"16\", \"17\", \"18\", \"19\", \"20\", \"21\", \"22\", \"23\", \"24\", \"25\", \"26\", \"27\", \"28\", \"29\", \"30\", \"31\", \"32\", \"33\", \"34\", \"35\", \"36\", \"37\", \"38\", \"39\", \"40\", \"41\", \"42\", \"43\", \"44\", \"45\", \"46\", \"47\", \"48\", \"49\", \"50\", \"51\", \"52\", \"53\", \"54\", \"55\", \"56\", \"57\", \"58\", \"59\", \"60\", \"61\", \"62\", \"63\", \"64\", \"65\", \"66\", \"67\", \"68\", \"69\", \"70\", \"71\", \"72\", \"73\", \"74\", \"75\", \"76\", \"77\", \"78\", \"79\", \"80\", \"81\", \"82\", \"83\", \"84\", \"85\", \"86\", \"87\", \"88\", \"89\", \"90\", \"91\", \"92\", \"93\", \"94\", \"95\", \"96\", \"97\", \"98\"]",
+        "output_features": "[\"96\", \"97\", \"98\", \"99\"]",
+        "metrics_to_track": "[\"loss\", \"mae\", \"rmse\", \"accuracy\"]",
+        "objective_metric": "accuracy",
+        "training_mode": "transfer",
+        "transfer_strategy": "auto",
+        "base_model_id": "88",
+        "base_artifact_path": "/models/RFR.joblib",
+        "base_run_id": ""
+    },
+    "skipped_conflicts": {}
+}

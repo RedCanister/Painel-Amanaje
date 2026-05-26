@@ -1,0 +1,256 @@
+{
+    "framework": "sklearn",
+    "metrics": {
+        "fit_duration_sec": 0.7659605349981575,
+        "eval_rmse": 0.28798563937852073,
+        "eval_mse": 0.08293572848825538,
+        "eval_mae": 0.24625399070833337,
+        "eval_mape": 75.76964861337531,
+        "eval_r2": -0.07494262421592834
+    },
+    "history": {},
+    "parameters": {
+        "verbose": 0,
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "criterion": "squared_error",
+        "oob_score": false,
+        "warm_start": true,
+        "max_features": 1.0,
+        "n_estimators": 60,
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "min_impurity_decrease": 0.0,
+        "min_weight_fraction_leaf": 0.0
+    },
+    "run_id": "8c31cd9eff5f4a2984e9049a4bdc90c0",
+    "artifact_paths": [],
+    "metadata": {
+        "fit_duration_sec": 0.7659605349981575,
+        "estimator_family": "regressor",
+        "estimator_capabilities": {
+            "fit": true,
+            "predict": true,
+            "predict_proba": false,
+            "fit_predict": false,
+            "transform": false,
+            "fit_transform": false,
+            "score": true,
+            "score_samples": false,
+            "decision_function": false
+        },
+        "fit": {
+            "fit_uses_target": true,
+            "multi_output": false,
+            "multi_output_strategy": null
+        },
+        "output": {
+            "output_method": "predict"
+        },
+        "metric_compatibility": {
+            "requested_metrics": [
+                "loss",
+                "mae",
+                "rmse"
+            ],
+            "accepted_metrics": [
+                "mae",
+                "rmse"
+            ],
+            "ignored_incompatible_metrics": [
+                "loss"
+            ],
+            "objective_metric": "accuracy",
+            "resolved_objective_metric": "rmse"
+        },
+        "accepted_estimator_params": {
+            "verbose": 0,
+            "bootstrap": true,
+            "ccp_alpha": 0.0,
+            "criterion": "squared_error",
+            "oob_score": false,
+            "warm_start": true,
+            "max_features": 1.0,
+            "n_estimators": 60,
+            "min_samples_leaf": 1,
+            "min_samples_split": 2,
+            "min_impurity_decrease": 0.0,
+            "min_weight_fraction_leaf": 0.0
+        },
+        "ignored_estimator_params": {},
+        "valid_estimator_params": [
+            "bootstrap",
+            "ccp_alpha",
+            "criterion",
+            "max_depth",
+            "max_features",
+            "max_leaf_nodes",
+            "max_samples",
+            "min_impurity_decrease",
+            "min_samples_leaf",
+            "min_samples_split",
+            "min_weight_fraction_leaf",
+            "monotonic_cst",
+            "n_estimators",
+            "n_jobs",
+            "oob_score",
+            "random_state",
+            "verbose",
+            "warm_start"
+        ],
+        "warnings": [
+            "Ignored incompatible metrics for regression: loss"
+        ],
+        "sklearn": {
+            "requested_estimator_class": "RandomForestRegressor",
+            "resolved_estimator_class": "RandomForestRegressor",
+            "resolved_estimator_module": "sklearn.ensemble._forest",
+            "estimator_family": "regressor",
+            "estimator_capabilities": {
+                "fit": true,
+                "predict": true,
+                "predict_proba": false,
+                "fit_predict": false,
+                "transform": false,
+                "fit_transform": false,
+                "score": true,
+                "score_samples": false,
+                "decision_function": false
+            },
+            "accepted_estimator_params": {
+                "verbose": 0,
+                "bootstrap": true,
+                "ccp_alpha": 0.0,
+                "criterion": "squared_error",
+                "oob_score": false,
+                "warm_start": true,
+                "max_features": 1.0,
+                "n_estimators": 60,
+                "min_samples_leaf": 1,
+                "min_samples_split": 2,
+                "min_impurity_decrease": 0.0,
+                "min_weight_fraction_leaf": 0.0
+            },
+            "ignored_unknown_params": {},
+            "valid_estimator_params": [
+                "bootstrap",
+                "ccp_alpha",
+                "criterion",
+                "max_depth",
+                "max_features",
+                "max_leaf_nodes",
+                "max_samples",
+                "min_impurity_decrease",
+                "min_samples_leaf",
+                "min_samples_split",
+                "min_weight_fraction_leaf",
+                "monotonic_cst",
+                "n_estimators",
+                "n_jobs",
+                "oob_score",
+                "random_state",
+                "verbose",
+                "warm_start"
+            ],
+            "fit_kwargs": {},
+            "training_metadata": {
+                "fit_duration_sec": 0.7659605349981575,
+                "estimator_family": "regressor",
+                "estimator_capabilities": {
+                    "fit": true,
+                    "predict": true,
+                    "predict_proba": false,
+                    "fit_predict": false,
+                    "transform": false,
+                    "fit_transform": false,
+                    "score": true,
+                    "score_samples": false,
+                    "decision_function": false
+                },
+                "fit": {
+                    "fit_uses_target": true,
+                    "multi_output": false,
+                    "multi_output_strategy": null
+                },
+                "output": {
+                    "output_method": "predict"
+                },
+                "metric_compatibility": {
+                    "requested_metrics": [
+                        "loss",
+                        "mae",
+                        "rmse"
+                    ],
+                    "accepted_metrics": [
+                        "mae",
+                        "rmse"
+                    ],
+                    "ignored_incompatible_metrics": [
+                        "loss"
+                    ],
+                    "objective_metric": "accuracy",
+                    "resolved_objective_metric": "rmse"
+                },
+                "accepted_estimator_params": {
+                    "verbose": 0,
+                    "bootstrap": true,
+                    "ccp_alpha": 0.0,
+                    "criterion": "squared_error",
+                    "oob_score": false,
+                    "warm_start": true,
+                    "max_features": 1.0,
+                    "n_estimators": 60,
+                    "min_samples_leaf": 1,
+                    "min_samples_split": 2,
+                    "min_impurity_decrease": 0.0,
+                    "min_weight_fraction_leaf": 0.0
+                },
+                "ignored_estimator_params": {},
+                "valid_estimator_params": [
+                    "bootstrap",
+                    "ccp_alpha",
+                    "criterion",
+                    "max_depth",
+                    "max_features",
+                    "max_leaf_nodes",
+                    "max_samples",
+                    "min_impurity_decrease",
+                    "min_samples_leaf",
+                    "min_samples_split",
+                    "min_weight_fraction_leaf",
+                    "monotonic_cst",
+                    "n_estimators",
+                    "n_jobs",
+                    "oob_score",
+                    "random_state",
+                    "verbose",
+                    "warm_start"
+                ],
+                "warnings": [
+                    "Ignored incompatible metrics for regression: loss"
+                ]
+            },
+            "prediction_output": {
+                "output_method": "predict"
+            }
+        },
+        "ignored_unknown_params": {},
+        "transfer_learning": {
+            "training_mode": "transfer",
+            "transfer_strategy": "auto",
+            "base_model_id": 88,
+            "base_run_id": "training_36ef91cf8e99",
+            "base_artifact_path": "/models/RFR.joblib",
+            "dataset_snapshot_hash": "e6fc30a4d8300a214daebc64a2d56f767e6da958deb2d56ad759ad2e11f4e8cd",
+            "transfer_status": "base_loaded",
+            "base_model_loaded": true,
+            "base_artifact_manifest": {
+                "artifact_format": ".joblib",
+                "framework": "sklearn",
+                "loader": "joblib",
+                "warnings": []
+            },
+            "loaded_framework": "sklearn"
+        }
+    }
+}

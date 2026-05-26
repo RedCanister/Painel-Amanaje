@@ -1,0 +1,495 @@
+{
+  "run_id": "assistant_operation_0a544bca6542",
+  "run_type": "assistant_operation",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-20T19:13:26.317112",
+  "updated_at": "2026-05-21T22:26:20.352159",
+  "started_at": "2026-05-21T22:26:19.411595",
+  "completed_at": "2026-05-21T22:26:20.352159",
+  "context": {
+    "source": "assistant",
+    "operation": "model_runtime_load",
+    "assistant_model_id": "38"
+  },
+  "parameters": {
+    "operation": "model_runtime_load",
+    "payload_keys": [
+      "assistant_model_id"
+    ],
+    "prompt_length": 0
+  },
+  "metrics": {
+    "assistant_operation_completed": 1.0,
+    "assistant_operation_result_size": 14274.0
+  },
+  "artifacts": {},
+  "result": {
+    "status": "load_failed",
+    "assistant_model": {
+      "id": 38,
+      "name": "Gemma Assistant",
+      "description": "Hugging Face AssistantModel imported from google/gemma-4-31B-it-assistant.",
+      "object_type": "learning_model",
+      "size": 0.0,
+      "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "date": "2026-05-20T19:11:01.775765",
+      "version": 1,
+      "history": [
+        {
+          "when": "2026-05-20T19:11:01.775787",
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "revision": null,
+          "operation": "assistant_model_huggingface_imported",
+          "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5"
+        }
+      ],
+      "model_type": "assistant_model",
+      "parameters": {
+        "assistant": {
+          "dtype": "auto",
+          "device": "auto",
+          "base_url": "http://assistant-server:8080/v1",
+          "health_url": "http://assistant-server:8080/health",
+          "max_tokens": 1600,
+          "model_name": "Gemma Assistant",
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "temperature": 0.2,
+          "adapter_path": null,
+          "capabilities": {
+            "registry_backed": true,
+            "loads_in_fastapi": false,
+            "pytorch_hf_bundle": true,
+            "separate_server_required": true,
+            "huggingface_directory_bundle": true
+          },
+          "quantization": null,
+          "runtime_kind": "pytorch_hf_server",
+          "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+          "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+          "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "model_version": "huggingface-import",
+          "provider_type": "openai_compatible",
+          "runtime_config": {
+            "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+            "runtime_kind": "pytorch_hf_server",
+            "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+            "load_in_fastapi": false,
+            "server_contract": "openai_compatible_chat_completions"
+          },
+          "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+          "base_model_name": "google/gemma-4-31B-it-assistant",
+          "timeout_seconds": 20.0,
+          "tokenizer_assets": [
+            "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+            "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+          ],
+          "generation_config": {},
+          "chat_template_path": null,
+          "max_context_tokens": 4096,
+          "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+          "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+          "context_pack_version": "assistant-context-pack-v1",
+          "supported_draft_types": [
+            "dataset_generation",
+            "feature_operations",
+            "model_generation",
+            "registry_object",
+            "study",
+            "training_run"
+          ],
+          "bundle_manifest_member": "assistant_model_manifest.json",
+          "safety_profile_version": "assistant-safety-v1",
+          "prompt_template_version": "amanaje-assistant-template-v1"
+        },
+        "huggingface": {
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "revision": null,
+          "local_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "token_configured": false
+        },
+        "artifact_manifest": {
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "base_url": "http://assistant-server:8080/v1",
+          "revision": null,
+          "model_name": "Gemma Assistant",
+          "display_name": "Gemma Assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+          "model_version": "huggingface-import",
+          "provider_type": "openai_compatible",
+          "tokenizer_path": "[REDACTED]",
+          "base_model_name": "google/gemma-4-31B-it-assistant",
+          "generation_config": {},
+          "max_context_tokens": "[REDACTED]",
+          "model_artifact_path": "model.safetensors",
+          "supported_draft_types": [
+            "dataset_generation",
+            "feature_operations",
+            "model_generation",
+            "registry_object",
+            "study",
+            "training_run"
+          ],
+          "prompt_template_version": "amanaje-assistant-template-v1"
+        }
+      },
+      "metrics": {
+        "status": "imported",
+        "contract": "workflow_draft_json",
+        "bundle_status": "valid"
+      },
+      "reference_data": "",
+      "input_features": [
+        "prompt",
+        "context_pack",
+        "target_type"
+      ],
+      "output_features": [
+        "workflow_draft"
+      ],
+      "is_trained": false,
+      "is_tested": false,
+      "is_deployed": false,
+      "dtype": "auto",
+      "device": "auto",
+      "base_url": "http://assistant-server:8080/v1",
+      "health_url": "http://assistant-server:8080/health",
+      "max_tokens": 1600,
+      "model_name": "Gemma Assistant",
+      "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "temperature": 0.2,
+      "capabilities": {
+        "registry_backed": true,
+        "loads_in_fastapi": false,
+        "pytorch_hf_bundle": true,
+        "separate_server_required": true,
+        "huggingface_directory_bundle": true
+      },
+      "runtime_kind": "pytorch_hf_server",
+      "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+      "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+      "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+      "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "model_version": "huggingface-import",
+      "provider_type": "openai_compatible",
+      "runtime_config": {
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "runtime_kind": "pytorch_hf_server",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions"
+      },
+      "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+      "base_model_name": "google/gemma-4-31B-it-assistant",
+      "timeout_seconds": 20.0,
+      "tokenizer_assets": [
+        "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+        "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+      ],
+      "generation_config": {},
+      "max_context_tokens": 4096,
+      "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+      "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+      "context_pack_version": "assistant-context-pack-v1",
+      "supported_draft_types": [
+        "dataset_generation",
+        "feature_operations",
+        "model_generation",
+        "registry_object",
+        "study",
+        "training_run"
+      ],
+      "bundle_manifest_member": "assistant_model_manifest.json",
+      "safety_profile_version": "assistant-safety-v1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "assistant_config": {
+        "dtype": "auto",
+        "device": "auto",
+        "base_url": "http://assistant-server:8080/v1",
+        "health_url": "http://assistant-server:8080/health",
+        "max_tokens": 1600,
+        "model_name": "Gemma Assistant",
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "temperature": 0.2,
+        "adapter_path": null,
+        "capabilities": {
+          "registry_backed": true,
+          "loads_in_fastapi": false,
+          "pytorch_hf_bundle": true,
+          "separate_server_required": true,
+          "huggingface_directory_bundle": true
+        },
+        "quantization": null,
+        "runtime_kind": "pytorch_hf_server",
+        "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+        "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+        "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "model_version": "huggingface-import",
+        "provider_type": "openai_compatible",
+        "runtime_config": {
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "load_in_fastapi": false,
+          "server_contract": "openai_compatible_chat_completions"
+        },
+        "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+        "base_model_name": "google/gemma-4-31B-it-assistant",
+        "timeout_seconds": 20.0,
+        "tokenizer_assets": [
+          "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+          "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+        ],
+        "generation_config": {},
+        "chat_template_path": null,
+        "max_context_tokens": 4096,
+        "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+        "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+        "context_pack_version": "assistant-context-pack-v1",
+        "supported_draft_types": [
+          "dataset_generation",
+          "feature_operations",
+          "model_generation",
+          "registry_object",
+          "study",
+          "training_run"
+        ],
+        "bundle_manifest_member": "assistant_model_manifest.json",
+        "safety_profile_version": "assistant-safety-v1",
+        "prompt_template_version": "amanaje-assistant-template-v1"
+      },
+      "provider_config": {
+        "name": "amanaje_slm",
+        "type": "openai_compatible",
+        "enabled": false,
+        "base_url": "http://assistant-server:8080/v1",
+        "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+        "health_url": "http://assistant-server:8080/health",
+        "model_name": "Gemma Assistant",
+        "timeout_seconds": 20.0,
+        "max_tokens": "[REDACTED]",
+        "temperature": 0.2,
+        "api_key_env": "[REDACTED]",
+        "api_key_configured": false,
+        "model_version": "huggingface-import",
+        "runtime_kind": "pytorch_hf_server",
+        "base_model_name": "google/gemma-4-31B-it-assistant",
+        "adapter_path": null,
+        "supports_json_mode": true,
+        "supports_remote_auth": false,
+        "supports_health_check": true,
+        "supported_draft_types": [
+          "dataset_generation",
+          "feature_operations",
+          "model_generation",
+          "registry_object",
+          "study",
+          "training_run"
+        ],
+        "fallback_provider": "local",
+        "capabilities": {
+          "registry_backed": true,
+          "assistant_model_id": 38,
+          "assistant_model_name": "Gemma Assistant",
+          "behavior_profile": {},
+          "reference_policy": {},
+          "loads_in_fastapi": false,
+          "pytorch_hf_bundle": true,
+          "separate_server_required": true,
+          "huggingface_directory_bundle": true
+        },
+        "dtype": "auto",
+        "device": "auto",
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "quantization": null,
+        "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+        "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "provider_type": "openai_compatible",
+        "runtime_config": {
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "load_in_fastapi": false,
+          "server_contract": "openai_compatible_chat_completions"
+        },
+        "tokenizer_path": "[REDACTED]",
+        "tokenizer_assets": "[REDACTED]",
+        "generation_config": {},
+        "chat_template_path": null,
+        "max_context_tokens": "[REDACTED]",
+        "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+        "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+        "context_pack_version": "assistant-context-pack-v1",
+        "bundle_manifest_member": "assistant_model_manifest.json",
+        "safety_profile_version": "assistant-safety-v1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions",
+        "api_key": "",
+        "registry_model": {
+          "id": 38,
+          "name": "Gemma Assistant",
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "model_type": "assistant_model"
+        }
+      },
+      "provider_name": "assistant_model_38",
+      "bundle_status": {
+        "status": "ready",
+        "ready": true,
+        "runtime_kind": "pytorch_hf_server",
+        "provider_type": "openai_compatible",
+        "model_name": "Gemma Assistant",
+        "model_version": "huggingface-import",
+        "max_context_tokens": 4096,
+        "bundle": {
+          "configured": true,
+          "exists": true,
+          "is_dir": true,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant"
+        },
+        "extracted_dir": {
+          "configured": true,
+          "exists": true,
+          "is_dir": true,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant"
+        },
+        "manifest": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json"
+        },
+        "model_artifact": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors"
+        },
+        "tokenizer": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json"
+        },
+        "tokenizer_assets": [
+          {
+            "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+            "exists": true
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json",
+            "exists": true
+          }
+        ],
+        "prompt_asset": {
+          "configured": false,
+          "exists": false,
+          "path": null
+        },
+        "has_inline_chat_template": true,
+        "server": {
+          "base_url": "http://assistant-server:8080/v1",
+          "health_url": "http://assistant-server:8080/health",
+          "separate_server_required": true,
+          "loads_in_fastapi": false
+        }
+      }
+    },
+    "runtime_load": {
+      "status": "load_failed",
+      "target_model": "Gemma Assistant",
+      "target_version": "huggingface-import",
+      "error": "Assistant runtime is unavailable: [Errno 111] Connection refused",
+      "latency_ms": 5.947
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Assistant operation 'model_runtime_load' completed.",
+    "latest_timestamp": "2026-05-21T22:26:20.352159",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-20T19:13:26.317112",
+        "message": "assistant_operation run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-20T19:13:26.357617",
+        "message": "Assistant operation enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "model_runtime_load",
+        "timestamp": "2026-05-21T22:26:19.411595",
+        "message": "Assistant operation 'model_runtime_load' started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-21T22:26:20.352159",
+        "message": "Assistant operation 'model_runtime_load' completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-20T19:13:26.317112",
+      "message": "assistant_operation run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-20T19:13:26.357617",
+      "message": "Assistant operation enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "model_runtime_load",
+      "timestamp": "2026-05-21T22:26:19.411595",
+      "message": "Assistant operation 'model_runtime_load' started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-21T22:26:20.352159",
+      "message": "Assistant operation 'model_runtime_load' completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "assistant_operation_0a544bca6542"
+  },
+  "terminal": {
+    "cap": 2000,
+    "next_index": 2,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-21T22:26:19.411595",
+        "stream": "system",
+        "stage": "model_runtime_load",
+        "message": "Assistant operation 'model_runtime_load' started."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-21T22:26:20.352159",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Assistant operation 'model_runtime_load' completed."
+      }
+    ]
+  }
+}

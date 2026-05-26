@@ -1,0 +1,790 @@
+{
+  "run_id": "editor_execution_7fe334dc07a8",
+  "run_type": "editor_execution",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-25T18:51:16.736415",
+  "updated_at": "2026-05-25T18:51:30.489278",
+  "started_at": "2026-05-25T18:51:29.556971",
+  "completed_at": "2026-05-25T18:51:30.489278",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false,
+    "dataset_count": 0,
+    "model_count": 0,
+    "dataset_ids": [],
+    "model_ids": []
+  },
+  "parameters": {
+    "code_length": 950,
+    "registry_context": {
+      "dataset_count": 0,
+      "model_count": 0,
+      "dataset_ids": [],
+      "model_ids": []
+    }
+  },
+  "metrics": {
+    "variable_count": 23
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "registry_context": {
+        "name": "registry_context",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "metadata": null,
+        "raw_value": {
+          "datasets": [],
+          "models": [],
+          "summary": {
+            "dataset_count": 0,
+            "model_count": 0,
+            "dataset_ids": [],
+            "model_ids": []
+          }
+        }
+      },
+      "list_datasets": {
+        "name": "list_datasets",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>",
+        "preview": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>"
+      },
+      "list_models": {
+        "name": "list_models",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>",
+        "preview": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>"
+      },
+      "load_dataset": {
+        "name": "load_dataset",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>",
+        "preview": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>"
+      },
+      "load_model": {
+        "name": "load_model",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>",
+        "preview": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>"
+      },
+      "RandomForestRegressor": {
+        "name": "RandomForestRegressor",
+        "type": "ABCMeta",
+        "python_type": "abc.ABCMeta",
+        "kind": "object",
+        "value": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>",
+        "preview": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>"
+      },
+      "model": {
+        "name": "model",
+        "type": "RandomForestRegressor",
+        "python_type": "sklearn.ensemble._forest.RandomForestRegressor",
+        "kind": "object",
+        "value": "RandomForestRegressor(n_estimators=80, random_state=42)",
+        "preview": "RandomForestRegressor(n_estimators=80, random_state=42)",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "RandomForestRegressor(n_estimators=80, random_state=42)"
+      },
+      "buffer": {
+        "name": "buffer",
+        "type": "BytesIO",
+        "python_type": "_io.BytesIO",
+        "kind": "object",
+        "value": "<_io.BytesIO object at 0x75509826e4d0>",
+        "preview": "<_io.BytesIO object at 0x75509826e4d0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<_io.BytesIO object at 0x75509826e4d0>"
+      },
+      "joblib_bytes": {
+        "name": "joblib_bytes",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4=",
+        "preview": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4=",
+        "metadata": null,
+        "raw_value": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4="
+      },
+      "name": {
+        "name": "name",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "assistant_generated_model",
+        "preview": "assistant_generated_model",
+        "metadata": null,
+        "raw_value": "assistant_generated_model"
+      },
+      "description": {
+        "name": "description",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+        "preview": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+        "metadata": null,
+        "raw_value": "Scikit-learn model artifact drafted by the Amanaje assistant."
+      },
+      "object_type": {
+        "name": "object_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "learning_model",
+        "preview": "learning_model",
+        "metadata": null,
+        "raw_value": "learning_model"
+      },
+      "path": {
+        "name": "path",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "generated/assistant_generated_model.joblib",
+        "preview": "generated/assistant_generated_model.joblib",
+        "metadata": null,
+        "raw_value": "generated/assistant_generated_model.joblib"
+      },
+      "version": {
+        "name": "version",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "1",
+        "preview": "1",
+        "metadata": null,
+        "raw_value": 1
+      },
+      "model_type": {
+        "name": "model_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "supervised_model",
+        "preview": "supervised_model",
+        "metadata": null,
+        "raw_value": "supervised_model"
+      },
+      "parameters": {
+        "name": "parameters",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}",
+        "preview": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}",
+        "metadata": null,
+        "raw_value": {
+          "framework": "sklearn",
+          "estimator_class": "RandomForestRegressor",
+          "n_estimators": 80,
+          "random_state": 42
+        }
+      },
+      "metrics": {
+        "name": "metrics",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"task\": \"regression\", \"status\": \"untrained_template\"}",
+        "preview": "{\"task\": \"regression\", \"status\": \"untrained_template\"}",
+        "metadata": null,
+        "raw_value": {
+          "task": "regression",
+          "status": "untrained_template"
+        }
+      },
+      "reference_data": {
+        "name": "reference_data",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "assistant_generated_dataset.csv",
+        "preview": "assistant_generated_dataset.csv",
+        "metadata": null,
+        "raw_value": "assistant_generated_dataset.csv"
+      },
+      "input_features": {
+        "name": "input_features",
+        "type": "list",
+        "python_type": "builtins.list",
+        "kind": "sequence",
+        "value": "[\"feature_a\", \"feature_b\"]",
+        "preview": "[\"feature_a\", \"feature_b\"]",
+        "metadata": null,
+        "raw_value": [
+          "feature_a",
+          "feature_b"
+        ]
+      },
+      "output_features": {
+        "name": "output_features",
+        "type": "list",
+        "python_type": "builtins.list",
+        "kind": "sequence",
+        "value": "[\"target\"]",
+        "preview": "[\"target\"]",
+        "metadata": null,
+        "raw_value": [
+          "target"
+        ]
+      },
+      "is_trained": {
+        "name": "is_trained",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      },
+      "is_tested": {
+        "name": "is_tested",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      },
+      "is_deployed": {
+        "name": "is_deployed",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      }
+    },
+    "metadata": {
+      "output_features": [
+        "target"
+      ],
+      "model_type": "supervised_model",
+      "is_deployed": false,
+      "description": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+      "reference_data": "assistant_generated_dataset.csv",
+      "is_tested": false,
+      "is_trained": false,
+      "path": "generated/assistant_generated_model.joblib",
+      "input_features": [
+        "feature_a",
+        "feature_b"
+      ],
+      "parameters": {
+        "framework": "sklearn",
+        "estimator_class": "RandomForestRegressor",
+        "n_estimators": 80,
+        "random_state": 42
+      },
+      "object_type": "learning_model",
+      "version": 1,
+      "name": "assistant_generated_model",
+      "metrics": {
+        "task": "regression",
+        "status": "untrained_template"
+      }
+    },
+    "document": {
+      "name": "assistant_generated_model",
+      "description": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+      "object_type": "learning_model",
+      "size": 0.0,
+      "path": "generated/assistant_generated_model.joblib",
+      "date": "2026-05-25T18:51:30.481895",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-25T18:51:30.481895"
+        }
+      ],
+      "variables": {
+        "registry_context": {
+          "name": "registry_context",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "metadata": null,
+          "raw_value": {
+            "datasets": [],
+            "models": [],
+            "summary": {
+              "dataset_count": 0,
+              "model_count": 0,
+              "dataset_ids": [],
+              "model_ids": []
+            }
+          }
+        },
+        "list_datasets": {
+          "name": "list_datasets",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>",
+          "preview": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x755097b47ce0>"
+        },
+        "list_models": {
+          "name": "list_models",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>",
+          "preview": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_models at 0x755097b47d80>"
+        },
+        "load_dataset": {
+          "name": "load_dataset",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>",
+          "preview": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x755097b47e20>"
+        },
+        "load_model": {
+          "name": "load_model",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>",
+          "preview": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_model at 0x755097b47ec0>"
+        },
+        "RandomForestRegressor": {
+          "name": "RandomForestRegressor",
+          "type": "ABCMeta",
+          "python_type": "abc.ABCMeta",
+          "kind": "object",
+          "value": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>",
+          "preview": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<class 'sklearn.ensemble._forest.RandomForestRegressor'>"
+        },
+        "model": {
+          "name": "model",
+          "type": "RandomForestRegressor",
+          "python_type": "sklearn.ensemble._forest.RandomForestRegressor",
+          "kind": "object",
+          "value": "RandomForestRegressor(n_estimators=80, random_state=42)",
+          "preview": "RandomForestRegressor(n_estimators=80, random_state=42)",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "RandomForestRegressor(n_estimators=80, random_state=42)"
+        },
+        "buffer": {
+          "name": "buffer",
+          "type": "BytesIO",
+          "python_type": "_io.BytesIO",
+          "kind": "object",
+          "value": "<_io.BytesIO object at 0x75509826e4d0>",
+          "preview": "<_io.BytesIO object at 0x75509826e4d0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<_io.BytesIO object at 0x75509826e4d0>"
+        },
+        "joblib_bytes": {
+          "name": "joblib_bytes",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4=",
+          "preview": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4=",
+          "metadata": null,
+          "raw_value": "gASViAIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFVJhbmRvbUZvcmVzdFJlZ3Jlc3NvcpSTlCmBlH2UKIwJZXN0aW1hdG9ylIwVc2tsZWFybi50cmVlLl9jbGFzc2VzlIwVRGVjaXNpb25UcmVlUmVncmVzc29ylJOUKYGUfZQojAljcml0ZXJpb26UjA1zcXVhcmVkX2Vycm9ylIwIc3BsaXR0ZXKUjARiZXN0lIwJbWF4X2RlcHRolE6MEW1pbl9zYW1wbGVzX3NwbGl0lEsCjBBtaW5fc2FtcGxlc19sZWFmlEsBjBhtaW5fd2VpZ2h0X2ZyYWN0aW9uX2xlYWaURwAAAAAAAAAAjAxtYXhfZmVhdHVyZXOUTowObWF4X2xlYWZfbm9kZXOUTowMcmFuZG9tX3N0YXRllE6MFW1pbl9pbXB1cml0eV9kZWNyZWFzZZRHAAAAAAAAAACMDGNsYXNzX3dlaWdodJROjAljY3BfYWxwaGGURwAAAAAAAAAAjA1tb25vdG9uaWNfY3N0lE6MEF9za2xlYXJuX3ZlcnNpb26UjAUxLjcuMpR1YowMbl9lc3RpbWF0b3JzlEtQjBBlc3RpbWF0b3JfcGFyYW1zlChoC2gPaBBoEWgSaBNoFGgWaBVoGGgZdJSMCWJvb3RzdHJhcJSIjAlvb2Jfc2NvcmWUiYwGbl9qb2JzlE5oFUsqjAd2ZXJib3NllEsAjAp3YXJtX3N0YXJ0lIloF06MC21heF9zYW1wbGVzlE5oC2gMaA9OaBBLAmgRSwFoEkcAAAAAAAAAAGgTRz/wAAAAAAAAaBROaBZHAAAAAAAAAABoGEcAAAAAAAAAAGgZTmgaaBt1Yi4="
+        },
+        "name": {
+          "name": "name",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "assistant_generated_model",
+          "preview": "assistant_generated_model",
+          "metadata": null,
+          "raw_value": "assistant_generated_model"
+        },
+        "description": {
+          "name": "description",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+          "preview": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+          "metadata": null,
+          "raw_value": "Scikit-learn model artifact drafted by the Amanaje assistant."
+        },
+        "object_type": {
+          "name": "object_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "learning_model",
+          "preview": "learning_model",
+          "metadata": null,
+          "raw_value": "learning_model"
+        },
+        "path": {
+          "name": "path",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "generated/assistant_generated_model.joblib",
+          "preview": "generated/assistant_generated_model.joblib",
+          "metadata": null,
+          "raw_value": "generated/assistant_generated_model.joblib"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "1",
+          "preview": "1",
+          "metadata": null,
+          "raw_value": 1
+        },
+        "model_type": {
+          "name": "model_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "supervised_model",
+          "preview": "supervised_model",
+          "metadata": null,
+          "raw_value": "supervised_model"
+        },
+        "parameters": {
+          "name": "parameters",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}",
+          "preview": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}",
+          "metadata": null,
+          "raw_value": {
+            "framework": "sklearn",
+            "estimator_class": "RandomForestRegressor",
+            "n_estimators": 80,
+            "random_state": 42
+          }
+        },
+        "metrics": {
+          "name": "metrics",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"task\": \"regression\", \"status\": \"untrained_template\"}",
+          "preview": "{\"task\": \"regression\", \"status\": \"untrained_template\"}",
+          "metadata": null,
+          "raw_value": {
+            "task": "regression",
+            "status": "untrained_template"
+          }
+        },
+        "reference_data": {
+          "name": "reference_data",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "assistant_generated_dataset.csv",
+          "preview": "assistant_generated_dataset.csv",
+          "metadata": null,
+          "raw_value": "assistant_generated_dataset.csv"
+        },
+        "input_features": {
+          "name": "input_features",
+          "type": "list",
+          "python_type": "builtins.list",
+          "kind": "sequence",
+          "value": "[\"feature_a\", \"feature_b\"]",
+          "preview": "[\"feature_a\", \"feature_b\"]",
+          "metadata": null,
+          "raw_value": [
+            "feature_a",
+            "feature_b"
+          ]
+        },
+        "output_features": {
+          "name": "output_features",
+          "type": "list",
+          "python_type": "builtins.list",
+          "kind": "sequence",
+          "value": "[\"target\"]",
+          "preview": "[\"target\"]",
+          "metadata": null,
+          "raw_value": [
+            "target"
+          ]
+        },
+        "is_trained": {
+          "name": "is_trained",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        },
+        "is_tested": {
+          "name": "is_tested",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        },
+        "is_deployed": {
+          "name": "is_deployed",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        }
+      },
+      "metadata": {
+        "output_features": [
+          "target"
+        ],
+        "model_type": "supervised_model",
+        "is_deployed": false,
+        "description": "Scikit-learn model artifact drafted by the Amanaje assistant.",
+        "reference_data": "assistant_generated_dataset.csv",
+        "is_tested": false,
+        "is_trained": false,
+        "path": "generated/assistant_generated_model.joblib",
+        "input_features": [
+          "feature_a",
+          "feature_b"
+        ],
+        "parameters": {
+          "framework": "sklearn",
+          "estimator_class": "RandomForestRegressor",
+          "n_estimators": 80,
+          "random_state": 42
+        },
+        "object_type": "learning_model",
+        "version": 1,
+        "name": "assistant_generated_model",
+        "metrics": {
+          "task": "regression",
+          "status": "untrained_template"
+        }
+      },
+      "code": {
+        "script": "# Assistant model draft\n# make a model about regression\n\nimport base64\nimport io\nimport joblib\nfrom sklearn.ensemble import RandomForestRegressor\n\nmodel = RandomForestRegressor(n_estimators=80, random_state=42)\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\njoblib_bytes = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nname = \"assistant_generated_model\"\ndescription = \"Scikit-learn model artifact drafted by the Amanaje assistant.\"\nobject_type = \"learning_model\"\npath = \"generated/assistant_generated_model.joblib\"\nversion = 1\nmodel_type = \"supervised_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}\nmetrics = {\"task\": \"regression\", \"status\": \"untrained_template\"}\nreference_data = \"assistant_generated_dataset.csv\"\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\nis_trained = False\nis_tested = False\nis_deployed = False",
+        "language": "python",
+        "line_count": 28
+      }
+    },
+    "summary": {
+      "variable_count": 23,
+      "defined_name_count": 17,
+      "defined_names": [
+        "model",
+        "buffer",
+        "joblib_bytes",
+        "name",
+        "description",
+        "object_type",
+        "path",
+        "version",
+        "model_type",
+        "parameters",
+        "metrics",
+        "reference_data",
+        "input_features",
+        "output_features",
+        "is_trained",
+        "is_tested",
+        "is_deployed"
+      ],
+      "has_error": false
+    },
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-25T18:51:30.489278",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T18:51:16.736415",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T18:51:16.922811",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-25T18:51:29.556971",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-25T18:51:30.489278",
+        "message": "Editor execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T18:51:16.736415",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T18:51:16.922811",
+      "message": "Editor execution enqueued on amanaje:interactive."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-25T18:51:29.556971",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-25T18:51:30.489278",
+      "message": "Editor execution completed."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 4,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-25T18:51:16.736415",
+        "stream": "system",
+        "stage": "queued",
+        "message": "editor_execution run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-25T18:51:16.922811",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-25T18:51:29.556971",
+        "stream": "system",
+        "stage": "executing",
+        "message": "Editor execution started."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-25T18:51:30.489278",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Editor execution completed."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:interactive",
+    "job_id": "editor_execution_7fe334dc07a8"
+  },
+  "rerun_payload": {
+    "run_type": "editor_execution",
+    "code": "# Assistant model draft\n# make a model about regression\n\nimport base64\nimport io\nimport joblib\nfrom sklearn.ensemble import RandomForestRegressor\n\nmodel = RandomForestRegressor(n_estimators=80, random_state=42)\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\njoblib_bytes = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nname = \"assistant_generated_model\"\ndescription = \"Scikit-learn model artifact drafted by the Amanaje assistant.\"\nobject_type = \"learning_model\"\npath = \"generated/assistant_generated_model.joblib\"\nversion = 1\nmodel_type = \"supervised_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}\nmetrics = {\"task\": \"regression\", \"status\": \"untrained_template\"}\nreference_data = \"assistant_generated_dataset.csv\"\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\nis_trained = False\nis_tested = False\nis_deployed = False",
+    "queue_payload": {
+      "code": "# Assistant model draft\n# make a model about regression\n\nimport base64\nimport io\nimport joblib\nfrom sklearn.ensemble import RandomForestRegressor\n\nmodel = RandomForestRegressor(n_estimators=80, random_state=42)\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\njoblib_bytes = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nname = \"assistant_generated_model\"\ndescription = \"Scikit-learn model artifact drafted by the Amanaje assistant.\"\nobject_type = \"learning_model\"\npath = \"generated/assistant_generated_model.joblib\"\nversion = 1\nmodel_type = \"supervised_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestRegressor\", \"n_estimators\": 80, \"random_state\": 42}\nmetrics = {\"task\": \"regression\", \"status\": \"untrained_template\"}\nreference_data = \"assistant_generated_dataset.csv\"\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\nis_trained = False\nis_tested = False\nis_deployed = False",
+      "registry_context": {
+        "datasets": [],
+        "models": [],
+        "summary": {
+          "dataset_count": 0,
+          "model_count": 0,
+          "dataset_ids": [],
+          "model_ids": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1498 @@
+{
+  "run_id": "assistant_operation_e4e67d8944e8",
+  "run_type": "assistant_operation",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-22T20:55:40.705111",
+  "updated_at": "2026-05-22T20:55:51.836901",
+  "started_at": "2026-05-22T20:55:51.174651",
+  "completed_at": "2026-05-22T20:55:51.836901",
+  "context": {
+    "source": "assistant",
+    "operation": "model_training_attach",
+    "assistant_model_id": "38"
+  },
+  "parameters": {
+    "operation": "model_training_attach",
+    "payload_keys": [
+      "assistant_model_id"
+    ],
+    "prompt_length": 0
+  },
+  "metrics": {
+    "assistant_operation_completed": 1.0,
+    "assistant_operation_result_size": 54114.0
+  },
+  "artifacts": {},
+  "result": {
+    "status": "attached",
+    "assistant_model": {
+      "id": 38,
+      "name": "Gemma Assistant",
+      "description": "Hugging Face AssistantModel imported from google/gemma-4-31B-it-assistant.",
+      "object_type": "learning_model",
+      "size": 0.0,
+      "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "date": "2026-05-20T19:11:01.775765",
+      "version": 1,
+      "history": [
+        {
+          "when": "2026-05-20T19:11:01.775787",
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "revision": null,
+          "operation": "assistant_model_huggingface_imported",
+          "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5"
+        },
+        {
+          "when": "2026-05-22T20:49:11.205619",
+          "operation": "assistant_model_training_curated",
+          "curated_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+          "record_count": 363,
+          "manifest_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+          "reference_records": 0,
+          "project_example_records": 360
+        },
+        {
+          "when": "2026-05-22T20:55:51.685700",
+          "operation": "assistant_training_dataset_attached",
+          "dataset_id": 47,
+          "dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+          "tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+          "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+          "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl"
+        }
+      ],
+      "model_type": "assistant_model",
+      "parameters": {
+        "assistant": {
+          "dtype": "auto",
+          "device": "auto",
+          "base_url": "http://assistant-server:8080/v1",
+          "health_url": "http://assistant-server:8080/health",
+          "max_tokens": 1600,
+          "model_name": "Gemma Assistant",
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "temperature": 0.2,
+          "adapter_path": null,
+          "capabilities": {
+            "registry_backed": true,
+            "loads_in_fastapi": false,
+            "pytorch_hf_bundle": true,
+            "separate_server_required": true,
+            "huggingface_directory_bundle": true
+          },
+          "quantization": null,
+          "runtime_kind": "pytorch_hf_server",
+          "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+          "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+          "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "model_version": "huggingface-import",
+          "provider_type": "openai_compatible",
+          "runtime_config": {
+            "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+            "runtime_kind": "pytorch_hf_server",
+            "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+            "load_in_fastapi": false,
+            "server_contract": "openai_compatible_chat_completions"
+          },
+          "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+          "base_model_name": "google/gemma-4-31B-it-assistant",
+          "timeout_seconds": 20.0,
+          "tokenizer_assets": [
+            "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+            "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+          ],
+          "generation_config": {},
+          "chat_template_path": null,
+          "max_context_tokens": 4096,
+          "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+          "training_dataset_id": 47,
+          "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+          "context_pack_version": "assistant-context-pack-v1",
+          "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+          "supported_draft_types": [
+            "dataset_generation",
+            "feature_operations",
+            "model_generation",
+            "registry_object",
+            "study",
+            "training_run"
+          ],
+          "training_dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+          "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+          "bundle_manifest_member": "assistant_model_manifest.json",
+          "safety_profile_version": "assistant-safety-v1",
+          "prompt_template_version": "amanaje-assistant-template-v1",
+          "project_examples_version": "painel-amanaje-example-catalog-v1",
+          "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+          "training_dataset_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+          "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+          "training_dataset_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+          "curated_training_record_count": 363,
+          "project_examples_sample_count": 360,
+          "training_dataset_tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+          "curated_training_reference_records": 0,
+          "curated_training_interaction_records": 3,
+          "curated_training_ready_for_fine_tuning": true,
+          "curated_training_project_example_records": 360
+        },
+        "huggingface": {
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "revision": null,
+          "local_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "token_configured": false
+        },
+        "artifact_manifest": {
+          "repo_id": "google/gemma-4-31B-it-assistant",
+          "base_url": "http://assistant-server:8080/v1",
+          "revision": null,
+          "model_name": "Gemma Assistant",
+          "display_name": "Gemma Assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+          "model_version": "huggingface-import",
+          "provider_type": "openai_compatible",
+          "tokenizer_path": "[REDACTED]",
+          "base_model_name": "google/gemma-4-31B-it-assistant",
+          "generation_config": {},
+          "max_context_tokens": "[REDACTED]",
+          "model_artifact_path": "model.safetensors",
+          "supported_draft_types": [
+            "dataset_generation",
+            "feature_operations",
+            "model_generation",
+            "registry_object",
+            "study",
+            "training_run"
+          ],
+          "prompt_template_version": "amanaje-assistant-template-v1"
+        }
+      },
+      "metrics": {
+        "status": "imported",
+        "contract": "workflow_draft_json",
+        "bundle_status": "valid"
+      },
+      "reference_data": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+      "input_features": [
+        "prompt",
+        "context_pack",
+        "target_type"
+      ],
+      "output_features": [
+        "workflow_draft"
+      ],
+      "is_trained": false,
+      "is_tested": false,
+      "is_deployed": false,
+      "dtype": "auto",
+      "device": "auto",
+      "base_url": "http://assistant-server:8080/v1",
+      "health_url": "http://assistant-server:8080/health",
+      "max_tokens": 1600,
+      "model_name": "Gemma Assistant",
+      "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "temperature": 0.2,
+      "capabilities": {
+        "registry_backed": true,
+        "loads_in_fastapi": false,
+        "pytorch_hf_bundle": true,
+        "separate_server_required": true,
+        "huggingface_directory_bundle": true
+      },
+      "runtime_kind": "pytorch_hf_server",
+      "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+      "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+      "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+      "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "model_version": "huggingface-import",
+      "provider_type": "openai_compatible",
+      "runtime_config": {
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "runtime_kind": "pytorch_hf_server",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions"
+      },
+      "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+      "base_model_name": "google/gemma-4-31B-it-assistant",
+      "timeout_seconds": 20.0,
+      "tokenizer_assets": [
+        "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+        "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+      ],
+      "generation_config": {},
+      "max_context_tokens": 4096,
+      "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+      "training_dataset_id": 47,
+      "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+      "context_pack_version": "assistant-context-pack-v1",
+      "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+      "supported_draft_types": [
+        "dataset_generation",
+        "feature_operations",
+        "model_generation",
+        "registry_object",
+        "study",
+        "training_run"
+      ],
+      "training_dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+      "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+      "bundle_manifest_member": "assistant_model_manifest.json",
+      "safety_profile_version": "assistant-safety-v1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "project_examples_version": "painel-amanaje-example-catalog-v1",
+      "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+      "training_dataset_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+      "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+      "training_dataset_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+      "curated_training_record_count": 363,
+      "project_examples_sample_count": 360,
+      "training_dataset_tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+      "curated_training_reference_records": 0,
+      "curated_training_interaction_records": 3,
+      "curated_training_ready_for_fine_tuning": true,
+      "curated_training_project_example_records": 360,
+      "assistant_config": {
+        "dtype": "auto",
+        "device": "auto",
+        "base_url": "http://assistant-server:8080/v1",
+        "health_url": "http://assistant-server:8080/health",
+        "max_tokens": 1600,
+        "model_name": "Gemma Assistant",
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "temperature": 0.2,
+        "adapter_path": null,
+        "capabilities": {
+          "registry_backed": true,
+          "loads_in_fastapi": false,
+          "pytorch_hf_bundle": true,
+          "separate_server_required": true,
+          "huggingface_directory_bundle": true
+        },
+        "quantization": null,
+        "runtime_kind": "pytorch_hf_server",
+        "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+        "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+        "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "model_version": "huggingface-import",
+        "provider_type": "openai_compatible",
+        "runtime_config": {
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "load_in_fastapi": false,
+          "server_contract": "openai_compatible_chat_completions"
+        },
+        "tokenizer_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+        "base_model_name": "google/gemma-4-31B-it-assistant",
+        "timeout_seconds": 20.0,
+        "tokenizer_assets": [
+          "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+          "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json"
+        ],
+        "generation_config": {},
+        "chat_template_path": null,
+        "max_context_tokens": 4096,
+        "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+        "training_dataset_id": 47,
+        "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+        "context_pack_version": "assistant-context-pack-v1",
+        "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+        "supported_draft_types": [
+          "dataset_generation",
+          "feature_operations",
+          "model_generation",
+          "registry_object",
+          "study",
+          "training_run"
+        ],
+        "training_dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+        "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+        "bundle_manifest_member": "assistant_model_manifest.json",
+        "safety_profile_version": "assistant-safety-v1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "project_examples_version": "painel-amanaje-example-catalog-v1",
+        "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+        "training_dataset_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+        "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+        "training_dataset_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+        "curated_training_record_count": 363,
+        "project_examples_sample_count": 360,
+        "training_dataset_tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+        "curated_training_reference_records": 0,
+        "curated_training_interaction_records": 3,
+        "curated_training_ready_for_fine_tuning": true,
+        "curated_training_project_example_records": 360
+      },
+      "provider_config": {
+        "name": "amanaje_slm",
+        "type": "openai_compatible",
+        "enabled": false,
+        "base_url": "http://assistant-server:8080/v1",
+        "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+        "health_url": "http://assistant-server:8080/health",
+        "model_name": "Gemma Assistant",
+        "timeout_seconds": 20.0,
+        "max_tokens": "[REDACTED]",
+        "temperature": 0.2,
+        "api_key_env": "[REDACTED]",
+        "api_key_configured": false,
+        "model_version": "huggingface-import",
+        "runtime_kind": "pytorch_hf_server",
+        "base_model_name": "google/gemma-4-31B-it-assistant",
+        "adapter_path": null,
+        "supports_json_mode": true,
+        "supports_remote_auth": false,
+        "supports_health_check": true,
+        "supported_draft_types": [
+          "dataset_generation",
+          "feature_operations",
+          "model_generation",
+          "registry_object",
+          "study",
+          "training_run"
+        ],
+        "fallback_provider": "local",
+        "capabilities": {
+          "registry_backed": true,
+          "assistant_model_id": 38,
+          "assistant_model_name": "Gemma Assistant",
+          "behavior_profile": {},
+          "reference_policy": {},
+          "loads_in_fastapi": false,
+          "pytorch_hf_bundle": true,
+          "separate_server_required": true,
+          "huggingface_directory_bundle": true
+        },
+        "dtype": "auto",
+        "device": "auto",
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "quantization": null,
+        "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+        "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "provider_type": "openai_compatible",
+        "runtime_config": {
+          "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "runtime_kind": "pytorch_hf_server",
+          "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "load_in_fastapi": false,
+          "server_contract": "openai_compatible_chat_completions"
+        },
+        "tokenizer_path": "[REDACTED]",
+        "tokenizer_assets": "[REDACTED]",
+        "generation_config": {},
+        "chat_template_path": null,
+        "max_context_tokens": "[REDACTED]",
+        "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+        "training_dataset_id": 47,
+        "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+        "context_pack_version": "assistant-context-pack-v1",
+        "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+        "training_dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+        "training_dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+        "bundle_manifest_member": "assistant_model_manifest.json",
+        "safety_profile_version": "assistant-safety-v1",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "project_examples_version": "painel-amanaje-example-catalog-v1",
+        "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+        "training_dataset_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+        "training_dataset_manifest": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+        "training_dataset_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+        "curated_training_record_count": 363,
+        "project_examples_sample_count": 360,
+        "training_dataset_tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+        "curated_training_reference_records": 0,
+        "curated_training_interaction_records": 3,
+        "curated_training_ready_for_fine_tuning": true,
+        "curated_training_project_example_records": 360,
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions",
+        "api_key": "",
+        "registry_model": {
+          "id": 38,
+          "name": "Gemma Assistant",
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+          "model_type": "assistant_model"
+        }
+      },
+      "provider_name": "assistant_model_38",
+      "bundle_status": {
+        "status": "ready",
+        "ready": true,
+        "runtime_kind": "pytorch_hf_server",
+        "provider_type": "openai_compatible",
+        "model_name": "Gemma Assistant",
+        "model_version": "huggingface-import",
+        "max_context_tokens": 4096,
+        "bundle": {
+          "configured": true,
+          "exists": true,
+          "is_dir": true,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant"
+        },
+        "extracted_dir": {
+          "configured": true,
+          "exists": true,
+          "is_dir": true,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant"
+        },
+        "manifest": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json"
+        },
+        "model_artifact": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors"
+        },
+        "tokenizer": {
+          "configured": true,
+          "exists": true,
+          "is_dir": false,
+          "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json"
+        },
+        "tokenizer_assets": [
+          {
+            "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer.json",
+            "exists": true
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/tokenizer_config.json",
+            "exists": true
+          }
+        ],
+        "prompt_asset": {
+          "configured": false,
+          "exists": false,
+          "path": null
+        },
+        "has_inline_chat_template": true,
+        "server": {
+          "base_url": "http://assistant-server:8080/v1",
+          "health_url": "http://assistant-server:8080/health",
+          "separate_server_required": true,
+          "loads_in_fastapi": false
+        }
+      }
+    },
+    "dataset": {
+      "id": 47,
+      "name": "assistant_training_dataset_latest",
+      "description": "Redacted JSONL snapshot for training Painel Amanaje AssistantModel entries.",
+      "object_type": "dataset",
+      "size": 0.5999460220336914,
+      "path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+      "date": "2026-05-22T20:55:25.052658",
+      "version": 3,
+      "history": [
+        {
+          "when": "2026-05-21T22:24:48.700016",
+          "operation": "assistant_training_dataset_rebuild",
+          "dataset_hash": "be954ff748081c5eed9a2c8ef75fef7caa1ccb65cc01d7cc5ff4577effaf233b",
+          "record_count": 157,
+          "tabular_hash": "7a767c591a00fff03fa5629f96b2065239a53382951d4f8c62fc557ea5ddcd53",
+          "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260521_222437.csv",
+          "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260521_222437.jsonl"
+        },
+        {
+          "when": "2026-05-21T22:27:07.506453",
+          "operation": "assistant_training_dataset_rebuild",
+          "dataset_hash": "a787ba16b90a43fdf6ca4d96f80d090bb229f98b46b41cd0b73e7737cc61b3e1",
+          "record_count": 157,
+          "tabular_hash": "7a767c591a00fff03fa5629f96b2065239a53382951d4f8c62fc557ea5ddcd53",
+          "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260521_222656.csv",
+          "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260521_222656.jsonl"
+        },
+        {
+          "when": "2026-05-22T20:55:25.052631",
+          "operation": "assistant_training_dataset_rebuild",
+          "dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+          "record_count": 166,
+          "tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+          "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+          "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl"
+        }
+      ],
+      "legacy_name": "assistant_training_dataset_latest",
+      "dataset_type": "assistant_training_dataset",
+      "shape": [
+        166,
+        16
+      ],
+      "has_features": true,
+      "features_list": [
+        "source_type",
+        "label",
+        "workflow_type",
+        "prompt",
+        "context_pack_hash",
+        "asset_summary",
+        "content",
+        "registry_metadata",
+        "source_path",
+        "source_hash",
+        "draft",
+        "review",
+        "user_edits",
+        "quality_signals",
+        "assistant_success",
+        "assistant_quality_label"
+      ],
+      "connection_string": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+      "manifest": {
+        "recorded_at": "2026-05-22T20:55:25.006965",
+        "dataset_type": "assistant_training_dataset",
+        "materialization_format": "jsonl+csv",
+        "dataset_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+        "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+        "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+        "manifest_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519_manifest.json",
+        "dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+        "tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+        "record_count": 166,
+        "feature_count": 16,
+        "features_list": [
+          "source_type",
+          "label",
+          "workflow_type",
+          "prompt",
+          "context_pack_hash",
+          "asset_summary",
+          "content",
+          "registry_metadata",
+          "source_path",
+          "source_hash",
+          "draft",
+          "review",
+          "user_edits",
+          "quality_signals",
+          "assistant_success",
+          "assistant_quality_label"
+        ],
+        "shape": [
+          166,
+          16
+        ],
+        "generic_training_target": "assistant_quality_label",
+        "source_files": [
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+            "sha256": "353af4c015e299facf85bc1fd2995057883b1eba07a7c57264f5df1244c6d7cb",
+            "source_type": "assistant_interactions"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_9dec5171fb68.json",
+            "sha256": "b452ba8ee0616e0231b280ee785123ba0389c1e99898a63e65df6294d1676ac4",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_d0aed8f61e0b.json",
+            "sha256": "04fa09de4d2557631de284a8cff1817f59e92ca3542651caa5f25d7c51a7b5e3",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_b1009f2be84e.json",
+            "sha256": "87a7681578919c906ca49d736dc11c76627d77c285abfdd4eef782c55c1955c0",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_202ca8a7e93f.json",
+            "sha256": "76f219cca7ce1632fa53c16455a1b8cd38c897fe3a1e9da2268cbff2f0372697",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_873186be7901.json",
+            "sha256": "ebc03b483afc32921c5a4ca7c9391c3e58fd8e834a06879c3bdfec7ae5e67bee",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_835b5d2e7e7d.json",
+            "sha256": "51e400e9b284a033582c959916ed9fc869f3cc1ef78a85dc69bc13919d6cff68",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_4de1751b3ba7.json",
+            "sha256": "ae2f18f6a6d1aba58b44af7cf77775f8617d6da8e76e36dc2fd3a58f749a2297",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_082be8838d98.json",
+            "sha256": "338766122a909f1864c86d48cc98556c7a9f60b5ac90d8ad1164730b3ba80443",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_965c32f48336.json",
+            "sha256": "d9316d91809c9e75a5afb6cb7db16d6db4bfa6e4faf41f6c3ab526ee2a647897",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_ffb9d2489520.json",
+            "sha256": "12f2a27666b931b2b0bd9e552568a1849b568802e15f663b4d0e21b75497f48b",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_f07091433d6c.json",
+            "sha256": "1bc840744c3de31a5d05c825bfe1637b3248be753748291661a31c4b7ec99743",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_e911621c07ce.json",
+            "sha256": "ac718258179bf71cd5e62be87cad36de54f233cfe70e9fda9c6d1ea2a8db7d6f",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_e0c9b8eda547.json",
+            "sha256": "0a8571cdba4fd1bf259955e17e6553f680b189080c1b8e1ef434934f5741805e",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_d605a2de0c8a.json",
+            "sha256": "3348dbd3d033754e26f32600de0e6d5571aba92c0fb464eba63873f3fe612617",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_d14cbf7d7f7b.json",
+            "sha256": "9a284b3e10a028797194489888d6f63d88a0152982105419e9206cc62a27a3ee",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_c1f96ff53bd3.json",
+            "sha256": "a6f733079a26e16a4cbde5282d42d8b1e1b6fdc5fd57b8b8c35869756eae4b3f",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_c1ed885e6c7a.json",
+            "sha256": "24f9bf7a27fea6e8e406174cdf75e77fc97aee3f4e43d0b8265f5d75827d9c7c",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_bda6dbbad0f0.json",
+            "sha256": "86aa14be99c7a4881b4bacea4468e97fd9f9ffc8b5dbaf7bafb438233e5a3827",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_b8a4a60bcf6e.json",
+            "sha256": "1ecb68847e266c665eefa7847edcf41b67d6f98c9f10ab2b6234b7a3862851c3",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_b61cfa589550.json",
+            "sha256": "3ec5042f25437e0ac74d548481b27b6c9ef6347d6d9a5787dbe053de2f99c397",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_aa993866a852.json",
+            "sha256": "faab24f84bcdd8fab4c9ae0d40f768e1c9417c2c9f0894b41d3b57b148bff67a",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_9e355ac30c2a.json",
+            "sha256": "83047eb85d37f9d09799d074d6f9dbfce830da691d1aba3823986f1848b0b1c6",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_93bce0250c15.json",
+            "sha256": "937b59ce0ecea823528e4abaf56d7f958a76af0987776d82d53c5adb00f93d4c",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_67d5a42213d5.json",
+            "sha256": "185c54bf24c0acf116cf122378067121d1ce58909ee292c2931865628ced98d4",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_5608c5f323ee.json",
+            "sha256": "42988aae2898c5f77edbd8181de3158db4347c20fa4408311f5d0dca7072effe",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_581d3eb42362.json",
+            "sha256": "b2f0c3599f9787ee08b684ac86e5f587fcc069467dc687d212959f22e68ae133",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_51585eadddb5.json",
+            "sha256": "5554d0927417d64938ca3e749397e6a5e645389861e3d1b8d171e8b6fcd0bbc7",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_465dde78acc3.json",
+            "sha256": "2f5fcb91aaf175102c342c5ce8df34105a1d0952d75a1e8d3055405f3aef0810",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_44d010ce081a.json",
+            "sha256": "169bc1604555bb4e7c9d57be7fa9765a41ca0ad82a6c7a4c35992fe799ed2e59",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_43d5db79505f.json",
+            "sha256": "c21144871d1f500b738424ecacd48b216c17942586a70185639fe06669f2b4ab",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_3bb85c7e0ba6.json",
+            "sha256": "85efb45ee9dfce0736bd51bb0b1708637e0e9b57c7376c2074a96cd7fcdc89a7",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_318ad95fe886.json",
+            "sha256": "44671c1ebf72dcd30cbf5910b6171ef5d3cdcd722cef7f7d9e691e957fc29c45",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_2455160a405b.json",
+            "sha256": "7387158e64b6a681d06d322123289985a028844def447932b1e7140160ab0771",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_21ef6e3a9ec6.json",
+            "sha256": "c897d95eeb25bd0156fc8bda02e17a498955f4d20f44385ed15dcbc1e192ee9c",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_datasets/context_packs/ctx_0b82b58a47a3.json",
+            "sha256": "e459f937c330924c561f88f6af88609ed0cffe226229fd0722b441673d99646b",
+            "source_type": "context_pack"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_60b037ec8490_eval.json",
+            "sha256": "cabead4da56822b3d482b00bc24db85a55243be5e486a6161da4b2d998b7538f",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_4987281b1a80_eval.json",
+            "sha256": "2042a829d13e49f05e0697dd3af120f51c2533d5e6c71673764c049c72e6feae",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_20cd35351011_eval.json",
+            "sha256": "04376d70f0e3e25f2aaf5faf4e59f2b764e9eed7674778c00e11d4200899611b",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_4c8877462420_eval.json",
+            "sha256": "2af2c9a60d500d1d27bdd6cf0bdc842f401d352c41813866d5c8cbada6818bb0",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_b4e324fde39a_eval.json",
+            "sha256": "06a1d46892e92b007bb00179a91757778e727991493b91ff3c70d31c39273a4a",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_b9142f674c17_eval.json",
+            "sha256": "6e34da7b0df82285a4e50bdff91debf2a8081895f651662210f6ef0c9dc97f38",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_32d134cae1eb_eval.json",
+            "sha256": "1af57c6d557587dde5efdafa618860950e0815c2ce5087f5c8a67e75ce2cacbc",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260514213540.json",
+            "sha256": "530e067a29362b4ddf78eb1f0581095630f4f5a5bc811409a8931bac5b593e32",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_a2fb3ae5d66a_eval.json",
+            "sha256": "ae26657a049766639106ee607d89a0b3c14b83445e2eee61a76f8831f4c1f3da",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_db9c0b40ce86_eval.json",
+            "sha256": "b4166209b6240b647181cf209d218bed302896e9aca3f8da0fd85d0eeb4063ed",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_fdd67650f779_eval.json",
+            "sha256": "0391c5ac7d02394a463ac9fa0703728e0ba8a80864c8d64139259cf0a104943a",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_f15deb5c5aa4_eval.json",
+            "sha256": "c87549543af778a9729c4e49bb3cc0f205a79b6289ede639d0d05534bf7965bc",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_e39c8db6f2b2_eval.json",
+            "sha256": "16e2dc237ea9d69309f38774c25310c0302b1bc48989f49bba82673f8feb8e47",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_e2f086b16407_eval.json",
+            "sha256": "0e7f5def0222d379d221b0f7a8adb206706a00fc4f82c64fa061e0ab68d61214",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_da7b78dc55ac_eval.json",
+            "sha256": "bb78416dd468eac01b4250424bd17392a89289624e5d3c6130b2f78865fe48c8",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_cbf487d5d426_eval.json",
+            "sha256": "8288e94361f7c9a8a2bb91d06cd8b2d199ff7e011ce2a125141c13bd414a8f98",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_bb81741dc02d_eval.json",
+            "sha256": "1473ef08157bea3bcd0f8bab34593b50b178409d2ffda27b70326ed05cbb6f93",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_b783d05ded36_eval.json",
+            "sha256": "db1a9de1017d1a6569514c62fb28d141061fabac87c53c6652af6b0f297fab18",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_b06eaa7073a1_eval.json",
+            "sha256": "e338052e77f3e370d8c40ac7b6a460657f01236ab580ee194c0be94b04a451bd",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_a6806f81d20d_eval.json",
+            "sha256": "5b8b3468a3ed92e643f5fcb7652d25047f929515b2f109ef87f3a0120d598c2f",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_a5af108cf892_eval.json",
+            "sha256": "e3dfd183c2ca0e3cd53406453212a82b879bc54854fef7bc46777628ed8a8635",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_9f7d065eccb8_eval.json",
+            "sha256": "8133848835cb5e50315e084647fe75a0f4bc77d827e4cf994216b52d8e0a6d87",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_75e8680bd3b7_eval.json",
+            "sha256": "f9d8dd706bb666fb4649028921dd558e5a53bbffe6051c0f01aba576e1bcea6f",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_75818f297d80_eval.json",
+            "sha256": "90e38a9379099bc2c2513848d14d19fd181157f47bbc124d6a2275e907cb5166",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_74d97532a840_eval.json",
+            "sha256": "a920de9187894e775a7b27472dbe65d952dc6ab8b1fc90a10adb7bf73830f16f",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_688139d63d24_eval.json",
+            "sha256": "8293b3356e08f2e252c1d0a8deb9a7d0e64b1a924bcf9d1ae18352658fe5f081",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_6025bf012ca7_eval.json",
+            "sha256": "7f4458ec6374456e8aae36567d02c38dce30bee6634f245f3cbe8f0a65f1140d",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_5eec14546243_eval.json",
+            "sha256": "ed5856ec0bfa552adee172b99e570087dce8ce80dae77d0c53f7a486752ad29c",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_4bee2bf636d6_eval.json",
+            "sha256": "e4a291bc0726fafa43e4608f53ebd86a139952aaefdba4a4f76472db3ae608f1",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_47b256a1a886_eval.json",
+            "sha256": "224de1b96391f9e63ae4fd272462499434c4300ff1f06a63afc20c84c87e4f59",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_3e993ddd578b_eval.json",
+            "sha256": "e5c9f9b5a2776d756ba392f844f4a2dd08a31fb8df045e4315ba561755097500",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_2f983b78c89d_eval.json",
+            "sha256": "fb9236d8537bacd7edd70e5d9107a5849f5d0cfbe1932d52dbf364b959a08459",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_1d0ea7d0737a_eval.json",
+            "sha256": "bd8578b86f812c23350e6103467052fed00b952e7b3322a5be2a466d6b63c2f2",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_1c6b0d9283c5_eval.json",
+            "sha256": "51b8f8e0a6bcc7a91c95eba62cd5efdf91f1a983eb7bf1c645cda39907f92923",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_19c0d5e74d86_eval.json",
+            "sha256": "05bbdf040a626901cbb6e3ee02198f4ecaf32a3267456fbff75e0e40d3f00794",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/draft_032d14e583e8_eval.json",
+            "sha256": "a9f3be79dcea1913a7ceca7969a813986787fad4cbcf2c015b8e6d899628520e",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260504033635.json",
+            "sha256": "7ccde1c40b12ad50ff5b4b2be65938cb98177fbf87a8b59ac23fd8d6be55e3f0",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503133748.json",
+            "sha256": "1daf2e92421f938e74a7ab8b9103ecd168b2bb460e0b726f64e1fa06be73b8eb",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012524.json",
+            "sha256": "24bbacb686b76c19080c0ddb8e5f1247f7d66cb256d469615c400ea80bf45743",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012518.json",
+            "sha256": "effdd2afbc1f7e8a62c0ef80d05ac3e783863f56aac01db6a4f49b5a0fc013d0",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503012456.json",
+            "sha256": "e4286d119cb043ba6bfb18a9169d4992a6cdac65b358e391533845752f8e2843",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/assistant_evals/assistant_golden_eval_20260503010544.json",
+            "sha256": "975d565df3e72807e5dbf64b8489554f9dc637b3ae728ba7560227decab02047",
+            "source_type": "assistant_eval"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_0728483f9951.json",
+            "sha256": "49f28fcb8ab826ebe841053763e57f78f739db8fa4832e385da0c3b57073ea3d",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_9d9316483379.json",
+            "sha256": "9ca6ff258914281d8a3db0f866815e1f0f84d9572d90e2d76263df3cdd317bcb",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_0c97c298a612.json",
+            "sha256": "8301e8e8150da4c31f9cd3bb14b1653a629e997a96d8c9a3b7b263fa1a68baa1",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_f210647d8252.json",
+            "sha256": "13676efcbbbf9dcfb42b6104b1a73ce98ff8d549388aecfc5e8f628b8ba231e0",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_4516ecc94aa4.json",
+            "sha256": "aa9afeb45dde87aef5196d87a3a3a1f411dad3263e3d5a4f6f48adfeb7bad8a8",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_40cc586e899b.json",
+            "sha256": "e23e3c348ca0e37abc86636bfcbc71018fa851e3c64cc3cd13ccce7b9bdc2ef2",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_c3a51570a109.json",
+            "sha256": "343b12e0b776d94aacb8d40cad866d9b4e102ae334a4e9922719c95d6a9cd481",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_124bd1a517a5.json",
+            "sha256": "56fdadadcdce47234aba5b4560e7e14763b389369b52fe8328f6438bb507a781",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_51834d033e13.json",
+            "sha256": "85a02515d49e4fd44d870c96d5c43de1b228964231646db3ac0584ee0f0e89cc",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_a347e995c819.json",
+            "sha256": "073369151acf132e1d75e9812a894085d9fc94457619e52f8838fb2fd4371316",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_b341b4e57eb6.json",
+            "sha256": "b9cf264a2eb1d87f6c3a43449698574d0a49d9b2ce5374d6521f0b54a3ec2428",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_fe360af3eb9c.json",
+            "sha256": "2440d928ea9f17580d8e59510c68b8f6bd5ec58eefc4d6b2cd8618461878ce25",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_f35c6f6f7026.json",
+            "sha256": "f4c03cf2b588203d1188512cce449a303eae4511819a214f4a25862f450a4045",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_6c82dd774e87.json",
+            "sha256": "0d63ef978876e4cad7b8ff5c0df0b919178c88b9e1bdc991f6c005d5abb86bfd",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_5ee2752ac427.json",
+            "sha256": "8bd72fe4a97be8f28b7866c411f6f7e9900b3b94f6241d394fddbf41f992ea49",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_bae6212ccf15.json",
+            "sha256": "e80511df0aa2b54ec17375dd6d73233437a6679ad4158d4d631ba8a00409afe8",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_9d25d5505bc3.json",
+            "sha256": "aa846574f53bd89b7d8b3322326389d16659f82eddd8e1bb71f5d41da4cdb04e",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_e902df32c77a.json",
+            "sha256": "6498f4951506b64ddfd961c38b81b469bf2af7db3243ed4c5576a0dc88eb5c8b",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_45b04ec44124.json",
+            "sha256": "6d9ecd2771e3c365a696d7670ce5895f9693cb3b1628fa674247cd8b14678544",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_71814a7f2244.json",
+            "sha256": "cef5fb009ff7186ddeed6fd1926e043402ea8ec53881d7708167dba487b9416a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_60046eabb531.json",
+            "sha256": "ec802e771d9dfe1477893a14de2f648a1dac3b32f128cbe5aad3dfc72dc2b692",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_31fddd2c903b.json",
+            "sha256": "07aef02e7d3ca5e28d10beb6ab59374f3a9b85c2c80d16a377f79e6259d7d2fd",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_530976985a5c.json",
+            "sha256": "548ec06206108750c898032627aeddbc7fa02411f08a4315e492c6aa70d61847",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_e27b89eb2965.json",
+            "sha256": "aa37320b7ced938c0d88752ccb347087d318e6010ae688a0efe110c9bc9412f0",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_d90e65ee2d27.json",
+            "sha256": "2dc89a9164351e16a615a75d8d3558e6a841d46672dee0fde37b2cce3fa2723a",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_c59dd667c9c1.json",
+            "sha256": "ff8d8b2c15621b490df97a6ac0d44fc5f28aa2357c202d001ee9fb668f642788",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_bd377016052d.json",
+            "sha256": "021a74088f0a01d4d900ffb2b99073a31bfbf648d4df098378dc23f0862d5573",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_b2e0bc09e0d3.json",
+            "sha256": "534a115123be284c7d5c5f728311ecce6ba053732ba23945aaa37b1fb3eee38c",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_9b751e60e831.json",
+            "sha256": "04892f5a92a824d9b1423420b12c1876271bd50b851f2b403cf7ece26da8a44d",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_5c0e65e02802.json",
+            "sha256": "fdd1ea73f7dd9bf06bb170e9bc2fdc89c7b4bd77a90fa5fbd714dc5c257f7003",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_4f59147fb253.json",
+            "sha256": "fba9b754139a5fd6d7180b304f33a7a4cb0d64cfc4f116ff5eb919c3bb958a3c",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/training_356479201f42.json",
+            "sha256": "e78b603918783ecd58f7147de7e9709fb6f7d9c5812d02c9592328c357fc4957",
+            "source_type": "training_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_e1e363a697f2.json",
+            "sha256": "69b1002bde7c97d51cf67fc5d499306a38a1baf3c8a5e93115e148b191bcb1ac",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_e58a3698db57.json",
+            "sha256": "bd89c4cf846716aea57549b6911c9375fdfbdc9332ed7f2c85e7ade609b4dc12",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_382c816fbcea.json",
+            "sha256": "725edcb90f7b6079c50ca00d364bccd83d289ea87c6480ed852febafcbd1f1fc",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/study_2454e64618bb.json",
+            "sha256": "682f2f8918bed9236e140f1a3989a044e027f0709db8100bb5181e6c9686c269",
+            "source_type": "study_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_fe78266846c0.json",
+            "sha256": "2ef362f1be16a8af5c026c93e9efa6d343eaea2a5e674e79a90454e8712b051b",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_f49fc53352c8.json",
+            "sha256": "c0dd28ef5ca913905875c141a908c0cfa3f1f4a7020e255f7460133d9708c4b0",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_f31801765519.json",
+            "sha256": "9a65dd8663ab2469baccfd54df927618f894c3b9ed64f840c69cf548a51ace6a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_ec1dec2b76b3.json",
+            "sha256": "a34a9895e6072289b4cd7e656883bd1957824d5178a9303ba8fc419afe455ad5",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_e9323a17f365.json",
+            "sha256": "8697a694f3af664a1c1788961906e69dc90db3085460ee4e0b68b5895ee63e30",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_df2d2d4fbf7a.json",
+            "sha256": "250fde601d8ac77715de1a2425f18b8e694b11295c54bcb2ff85d7e87573dc38",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_de6242458b41.json",
+            "sha256": "b3e31df3ac1f134e82c1123bb310d158176537309fd2341b425ed46981e4f46c",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_d8b75168f192.json",
+            "sha256": "60b1fafc503760e78760e8e022a89c6989c11e8822de5f4477c7d9cfbb614d1a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_d73badf81498.json",
+            "sha256": "7dfe55fcd375c9216e365118046420a1f4e55c0d68f17612b25a6b4132da1a4e",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_c65069a884ad.json",
+            "sha256": "18c083d0669f7778baaa2aef39459974e1d1a4e96fd7f5f7ba3eb37a66fd3dee",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_c25cb466a976.json",
+            "sha256": "c101908cc90eb877f7862cf9b991cfe1b2cbc4068ee1e5dfd25701265a03a52a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_c1746a19cbbe.json",
+            "sha256": "77264283dad67a1328e2b7315934030cfda18e434c56cbd054bdbf159d99eb93",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_b9cac8814828.json",
+            "sha256": "5e4ac01d0e3f62140f451347c356142b206bf03f4f5ccb74d1778879db724294",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_b1822953f487.json",
+            "sha256": "4c0fb6e3cc2225f8debe7ef005a5ff6fa63d299b6cebbf6340694428a74f04b5",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_b0a5bb6e6358.json",
+            "sha256": "d2f8ac328ceb624ac076346525d4ec80d147e5437efa0bbbaff8c1d93b6a0390",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_a2724f8cec6f.json",
+            "sha256": "f1de72bd618354a20ecd660642954dd90a258a0ef9b88bb8cc511b098e12d59e",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_9e0d9dadba6a.json",
+            "sha256": "e2e800280e2145edc4f71a6b0137de763862de31577502c91c518a3f0c788228",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_9c3b5afe032b.json",
+            "sha256": "9be71928d9e23b7f7f8bee3eacd9067f65b560df3a90faaaf7212f29c4618f1a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_959d4f5245ea.json",
+            "sha256": "1353a572808a7c97687c3db290b2e084d1ba4f314912a6163d957911adc7f6b9",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_87dbae7a65f2.json",
+            "sha256": "59a4f5ee0b3c9bb87095494349c486f8a81ed7f9a9c8e0ace0f0bc921090b834",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_878f52aca266.json",
+            "sha256": "8b49418a6084c2296ecb5cb8688a1aca93aafbfe1d074fd5019cf9f43112b74d",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_81bf90152a6f.json",
+            "sha256": "ef483d01801a6fdcc688c34c95e8180cdfb240808defbe237844f6bbbb7c310c",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_816ea459ad02.json",
+            "sha256": "b80e7033a56f933622d4af15a6a764745b497183efc1aa176b2106ac9586e1b3",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_6c0d9f894321.json",
+            "sha256": "ce22e2da564b4ee0daf9b5dd1bb92702e3d8f2e38ef47ccab95b369a19247f7a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_61d09ecd109e.json",
+            "sha256": "00c6dad5ba6ce9a7d5efe1564a311806d06243e5cbdfca859da16684b20eaccb",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_5616f8d66a38.json",
+            "sha256": "dc7247797e80d0837b46b129a83d908937951c7084e9862a12edbd431ca1b017",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_47187723958a.json",
+            "sha256": "d035034f24d084d923f1fec78d37395f6d723315da0659a59dde45b8c1d61c4d",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_439bbe7ebc7e.json",
+            "sha256": "bbb17458eff1a05bbc720388e40f4d7e4103985493f3e9ab392efe916e9c0195",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_4382bf126802.json",
+            "sha256": "af66743a246221091f00f29b81797dcb14c88ad8e0c3813d2cc3b18c453261a3",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_2f18768b6d6a.json",
+            "sha256": "3543897185268e7a95d9f5eaf92866f32c39825b99e3b6b02cded6f8643cda15",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_1f9d9cd331d9.json",
+            "sha256": "63c16eebdd19c1330fd29cd4bb95e242cec0175b87e8d2459709b1f0b118a673",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_1d112ed0adaf.json",
+            "sha256": "448df382a9c38ad4a925658fd4dddc98f540fbb7e64b0f044f72c3980168763d",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_1ae0441f062d.json",
+            "sha256": "1536686d5e98f67a04fa1e3e487d02e7ca0bff7fb6e8284a29eb30c7602562b7",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_12bdf0c09757.json",
+            "sha256": "fb4abc9f4fa354bec2090bc5518ef6faf4f5d6ce90ebfb8361a1770d1ca0e73e",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_12b98d383155.json",
+            "sha256": "f84a3119b81c99f93eb059d5c1ffee0a3512274447ef3001a61d624f429683e8",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_0fdc1e610d12.json",
+            "sha256": "91ffe56a47ae547cdda28beed3436f7aa9d11cf11df7d1409d256b584a01eb57",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "/app/runtime_artifacts/runs/assistant_025490877773.json",
+            "sha256": "65bbcba5fd0d83c9c1741d5200f53d338dc55664ef3e230168d4825663eccf4a",
+            "source_type": "assistant_run"
+          },
+          {
+            "path": "registry://datasets",
+            "sha256": "1590007757e5f81626a7651db37f46b9be4e965b8cefc8fd144924eb82053943",
+            "source_type": "registry_datasets",
+            "record_count": 4
+          },
+          {
+            "path": "registry://assistant_models",
+            "sha256": "e33b58e0c69488274a4f033fe90bba3ec3962e2f12c016a96f4d859d4cf21e1e",
+            "source_type": "registry_assistant_models",
+            "record_count": 1
+          },
+          {
+            "path": "registry://code_models",
+            "sha256": "f46e28dbc9722826e76dec61bf4507744dc7ee5bc93a6109dcc24f1c699766f5",
+            "source_type": "registry_code_models",
+            "record_count": 2
+          },
+          {
+            "path": "registry://inference_models",
+            "sha256": "e6972daf47ebb9a1390a2aed4def7e4d4294e74d0488135cab9c7df0f243d2cc",
+            "source_type": "registry_inference_models",
+            "record_count": 3
+          },
+          {
+            "path": "registry://study_models",
+            "sha256": "b0be84e596c2ebc38fbb4fc6f61833885ee5962e7a70bacb7f12831e5d9a730d",
+            "source_type": "registry_study_models",
+            "record_count": 3
+          }
+        ],
+        "source_file_count": 156,
+        "registry_record_counts": {
+          "datasets": 4,
+          "assistant_models": 1,
+          "code_models": 2,
+          "inference_models": 3,
+          "study_models": 3
+        },
+        "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted."
+      },
+      "dataset_hash": "222fa743ba9477a7462702309bcf9b21962377f7c1c7ea8c4d5a29f4a7835add",
+      "canonical_jsonl_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.jsonl",
+      "tabular_csv_path": "/app/runtime_artifacts/assistant_datasets/snapshots/assistant_training_dataset_20260522_205519.csv",
+      "tabular_hash": "54f69afbaefabdd172180f6e538fdc2aa52ce13af974c9c8a8e30030720dc3d3",
+      "materialization_format": "jsonl+csv",
+      "generic_training_target": "assistant_quality_label",
+      "record_count": 166
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Assistant operation 'model_training_attach' completed.",
+    "latest_timestamp": "2026-05-22T20:55:51.836901",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-22T20:55:40.705111",
+        "message": "assistant_operation run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-22T20:55:40.753967",
+        "message": "Assistant operation enqueued on amanaje:assistant."
+      },
+      {
+        "status": "running",
+        "stage": "model_training_attach",
+        "timestamp": "2026-05-22T20:55:51.174651",
+        "message": "Assistant operation 'model_training_attach' started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-22T20:55:51.836901",
+        "message": "Assistant operation 'model_training_attach' completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-22T20:55:40.705111",
+      "message": "assistant_operation run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-22T20:55:40.753967",
+      "message": "Assistant operation enqueued on amanaje:assistant."
+    },
+    {
+      "status": "running",
+      "stage": "model_training_attach",
+      "timestamp": "2026-05-22T20:55:51.174651",
+      "message": "Assistant operation 'model_training_attach' started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-22T20:55:51.836901",
+      "message": "Assistant operation 'model_training_attach' completed."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 4,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-22T20:55:40.705111",
+        "stream": "system",
+        "stage": "queued",
+        "message": "assistant_operation run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-22T20:55:40.753967",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Assistant operation enqueued on amanaje:assistant."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-22T20:55:51.174651",
+        "stream": "system",
+        "stage": "model_training_attach",
+        "message": "Assistant operation 'model_training_attach' started."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-22T20:55:51.836901",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Assistant operation 'model_training_attach' completed."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:assistant",
+    "job_id": "assistant_operation_e4e67d8944e8"
+  },
+  "rerun_payload": {
+    "run_type": "assistant_operation",
+    "operation": "model_training_attach",
+    "queue_payload": {
+      "operation": "model_training_attach",
+      "payload_data": {
+        "assistant_model_id": "38"
+      }
+    }
+  }
+}

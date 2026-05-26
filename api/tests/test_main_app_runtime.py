@@ -2,6 +2,7 @@ import asyncio
 import importlib.util
 import json
 import logging
+import os
 import shutil
 import uuid
 from types import SimpleNamespace
@@ -12,8 +13,9 @@ from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from app.utils import log_stream
-from app.utils.operation_queue import QueueUnavailableError, run_editor_execution_job
-from app.utils.run_ledger import create_run_entry, read_run_entry
+from app.utils import operation_queue
+from app.utils.operation_queue import QueueUnavailableError, build_worker_name, run_editor_execution_job
+from app.utils.run_ledger import create_run_entry, read_run_entry, update_run_entry
 import main_app
 
 
@@ -88,16 +90,31 @@ def test_main_app_imports_and_registers_expected_routes():
         "/upload",
         "/upload/support",
         "/create",
+        "/store",
         "/feature",
         "/training",
         "/onnx",
+        "/onnx/netron/{model_id}/status",
+        "/onnx/netron/{model_id}/open",
+        "/onnx/netron/stop",
         "/production",
+        "/operations",
         "/visualization",
         "/plot",
         "/registry",
         "/settings",
         "/settings/config",
         "/settings/logs",
+        "/store/providers",
+        "/store/providers/{provider_id}/default",
+        "/store/providers/{provider_id}/test",
+        "/store/providers/{provider_id}",
+        "/store/catalog",
+        "/store/catalog/{external_id}",
+        "/store/preview",
+        "/store/materialize",
+        "/store/datasets/{dataset_id}/validate-live",
+        "/store/datasets/{dataset_id}/refresh",
         "/runtime/accelerators",
         "/runtime/workers",
         "/execute/jobs",
@@ -109,6 +126,11 @@ def test_main_app_imports_and_registers_expected_routes():
         "/runs/list",
         "/runs/get/{run_id}",
         "/runs/{run_id}/{action}",
+        "/operations/summary",
+        "/operations/queues",
+        "/operations/runs",
+        "/operations/runs/{run_id}/terminal",
+        "/operations/runs/{run_id}/analysis",
         "/plots/artifacts",
         "/plots/artifacts/{plot_id}/file",
         "/registry/dependencies/{registry_type}/{item_id}",
@@ -129,8 +151,22 @@ def test_workflow_domain_route_contracts_are_registered():
         "panel": {"/", "/panel", "/panel/context", "/panel/dashboards", "/panel/dashboards/{dashboard_id}"},
         "upload": {"/upload", "/upload/support", "/upload/{operation_id}"},
         "create": {"/create", "/execute", "/execute/jobs", "/editor/context"},
+        "store": {
+            "/store",
+            "/store/providers",
+            "/store/providers/{provider_id}/default",
+            "/store/providers/{provider_id}/test",
+            "/store/providers/{provider_id}",
+            "/store/catalog",
+            "/store/catalog/{external_id}",
+            "/store/preview",
+            "/store/materialize",
+            "/store/datasets/{dataset_id}/validate-live",
+            "/store/datasets/{dataset_id}/refresh",
+        },
         "feature": {"/feature", "/features", "/features/extract", "/features/preview", "/features/materialize"},
         "training": {"/training", "/training/{model_id}", "/studies/{study_id}/optimize"},
+        "onnx": {"/onnx", "/onnx/netron/{model_id}/status", "/onnx/netron/{model_id}/open", "/onnx/netron/stop"},
         "production": {
             "/production",
             "/production/status",
@@ -138,6 +174,14 @@ def test_workflow_domain_route_contracts_are_registered():
             "/production/simulate",
             "/production/start",
             "/production/stop",
+        },
+        "operations": {
+            "/operations",
+            "/operations/summary",
+            "/operations/queues",
+            "/operations/runs",
+            "/operations/runs/{run_id}/terminal",
+            "/operations/runs/{run_id}/analysis",
         },
         "visualization": {"/visualization", "/plot", "/plots/artifacts", "/plots/artifacts/{plot_id}/file"},
         "registry": {"/registry", "/registry/dependencies/{registry_type}/{item_id}"},
@@ -154,13 +198,79 @@ def test_workflow_domain_route_contracts_are_registered():
     assert missing == {}
 
 
+def test_onnx_netron_status_accepts_registered_onnx_fixture(monkeypatch, fixture_root):
+    artifact_path = fixture_root / "manual" / "models" / "identity.onnx"
+
+    async def fake_model_read(_db, model_id):
+        return SimpleNamespace(id=model_id, name="identity-onnx", path=str(artifact_path), parameters={})
+
+    monkeypatch.setattr(main_app.LearningModel, "read", fake_model_read)
+
+    response = asyncio.run(main_app.onnx_netron_status(21, db=object()))
+    payload = _payload(response)
+
+    assert response.status_code == 200
+    assert payload["status"] == "ready"
+    assert payload["viewable"] is True
+    assert payload["artifact_name"] == "identity.onnx"
+    assert "path" not in payload
+
+
+def test_onnx_netron_status_reports_missing_artifact(monkeypatch, tmp_path):
+    missing_path = tmp_path / "missing.onnx"
+
+    async def fake_model_read(_db, model_id):
+        return SimpleNamespace(id=model_id, name="missing-onnx", path=str(missing_path), parameters={})
+
+    monkeypatch.setattr(main_app.LearningModel, "read", fake_model_read)
+
+    response = asyncio.run(main_app.onnx_netron_status(22, db=object()))
+    payload = _payload(response)
+
+    assert response.status_code == 200
+    assert payload["status"] == "not_viewable"
+    assert payload["viewable"] is False
+    assert payload["warnings"]
+    assert "path" not in payload
+
+
+def test_onnx_netron_open_returns_viewer_url_without_path_leak(monkeypatch, fixture_root):
+    artifact_path = fixture_root / "manual" / "models" / "identity.onnx"
+
+    async def fake_model_read(_db, model_id):
+        return SimpleNamespace(id=model_id, name="identity-onnx", path=str(artifact_path), parameters={})
+
+    def fake_start_netron_viewer(*, artifact_path, status_payload):
+        assert "path" not in status_payload
+        assert artifact_path.name == "identity.onnx"
+        return {
+            **status_payload,
+            "status": "running",
+            "viewer_active": True,
+            "viewer_url": "http://localhost:8082",
+        }
+
+    monkeypatch.setattr(main_app.LearningModel, "read", fake_model_read)
+    monkeypatch.setattr(main_app, "start_netron_viewer", fake_start_netron_viewer)
+
+    response = asyncio.run(main_app.onnx_netron_open(23, db=object()))
+    payload = _payload(response)
+
+    assert response.status_code == 200
+    assert payload["status"] == "running"
+    assert payload["viewer_url"] == "http://localhost:8082"
+    assert payload["artifact_name"] == "identity.onnx"
+    assert "path" not in payload
+
+
 def test_shared_templates_render_global_operation_stack():
     client = TestClient(main_app.app)
-    for route_path in ["/", "/feature", "/training", "/production", "/registry", "/editor"]:
+    for route_path in ["/", "/store", "/feature", "/training", "/production", "/operations", "/registry", "/editor"]:
         response = client.get(route_path)
         assert response.status_code == 200
         assert 'id="globalOperationStack"' in response.text
         assert 'id="globalOperationList"' in response.text
+        assert 'href="/operations"' in response.text
 
 
 def test_panel_layout_coercion_handles_invalid_client_values():
@@ -284,6 +394,28 @@ def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
             "prefer_gpu": prefer_gpu,
         },
     )
+    monkeypatch.setattr(
+        main_app,
+        "enqueue_editor_execution",
+        lambda run_id, *, code, registry_context=None: {
+            "backend": "rq",
+            "queue": "amanaje:test",
+            "job_id": run_id,
+            "code": code,
+            "registry_context": registry_context or {},
+        },
+    )
+    monkeypatch.setattr(
+        main_app,
+        "enqueue_assistant_operation",
+        lambda run_id, *, operation, payload_data: {
+            "backend": "rq",
+            "queue": "amanaje:test",
+            "job_id": run_id,
+            "operation": operation,
+            "payload_data": payload_data,
+        },
+    )
     queued = create_run_entry(tmp_path, run_type="training", status="queued")
     completed = create_run_entry(
         tmp_path,
@@ -293,6 +425,16 @@ def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
         parameters={"framework": "sklearn", "alpha": 0.1},
     )
     unsupported = create_run_entry(tmp_path, run_type="editor_execution", status="completed")
+    editor = update_run_entry(
+        tmp_path,
+        create_run_entry(tmp_path, run_type="editor_execution", status="completed")["run_id"],
+        merge={"rerun_payload": {"queue_payload": {"code": "x = 1", "registry_context": {"summary": "ok"}}}},
+    )
+    assistant = update_run_entry(
+        tmp_path,
+        create_run_entry(tmp_path, run_type="assistant_operation", status="completed", context={"operation": "draft"})["run_id"],
+        merge={"rerun_payload": {"queue_payload": {"operation": "draft", "payload_data": {"prompt": "again"}}}},
+    )
     client = TestClient(main_app.app)
 
     paused = client.post(f"/runs/{queued['run_id']}/pause")
@@ -302,6 +444,8 @@ def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
     rerun = client.post(f"/runs/{completed['run_id']}/rerun")
     active_rerun = client.post(f"/runs/{queued['run_id']}/rerun")
     unsupported_rerun = client.post(f"/runs/{unsupported['run_id']}/rerun")
+    editor_rerun = client.post(f"/runs/{editor['run_id']}/rerun")
+    assistant_rerun = client.post(f"/runs/{assistant['run_id']}/rerun")
     missing = client.post("/runs/missing_run/cancel")
 
     assert paused.status_code == 200
@@ -318,7 +462,118 @@ def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
     assert read_run_entry(tmp_path, rerun.json()["run_id"])["context"]["model_id"] == 5
     assert active_rerun.status_code == 400
     assert unsupported_rerun.status_code == 400
+    assert editor_rerun.status_code == 202
+    assert read_run_entry(tmp_path, editor_rerun.json()["run_id"])["rerun_payload"]["queue_payload"]["code"] == "x = 1"
+    assert assistant_rerun.status_code == 202
+    assert read_run_entry(tmp_path, assistant_rerun.json()["run_id"])["context"]["operation"] == "draft"
     assert missing.status_code == 404
+
+
+def test_operations_console_api_buckets_terminal_and_analysis(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
+    cpu_run = create_run_entry(tmp_path, run_type="training", parameters={"framework": "sklearn"}, status="queued")
+    gpu_run = create_run_entry(tmp_path, run_type="training", parameters={"framework": "pytorch", "device": "cuda"}, status="queued")
+    update_run_entry(tmp_path, cpu_run["run_id"], status="running", stage="training", event_message="CPU training started.")
+    update_run_entry(tmp_path, gpu_run["run_id"], status="running", stage="training", event_message="GPU training started.")
+    client = TestClient(main_app.app)
+
+    listing = client.get("/operations/runs?limit=20")
+    terminal = client.get(f"/operations/runs/{cpu_run['run_id']}/terminal?cursor=0&tail=20")
+    analysis = client.get(f"/operations/runs/{cpu_run['run_id']}/analysis")
+    missing = client.get("/operations/runs/missing/terminal")
+
+    assert listing.status_code == 200
+    payload = listing.json()
+    assert {run["run_id"] for run in payload["groups"]["cpu"]} == {cpu_run["run_id"]}
+    assert {run["run_id"] for run in payload["groups"]["gpu"]} == {gpu_run["run_id"]}
+    assert payload["groups"]["cpu"][0]["actions"]["pause"] is True
+    assert terminal.status_code == 200
+    assert any(line["message"] == "CPU training started." for line in terminal.json()["lines"])
+    assert terminal.json()["next_cursor"] >= 2
+    assert analysis.status_code == 200
+    assert analysis.json()["analysis"]["raw"]["run_id"] == cpu_run["run_id"]
+    assert missing.status_code == 404
+
+
+def test_operations_summary_view_is_lightweight_and_keeps_queue_diagnostics(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
+    positions = {}
+    monkeypatch.setattr(
+        main_app,
+        "get_queue_runtime_snapshot",
+        lambda limit=50: {
+            "status": "ok",
+            "summary": {"queued_jobs": 1, "started_jobs": 0, "failed_jobs": 0},
+            "queues": [{"name": "amanaje:interactive", "queued_jobs": 1, "jobs": []}],
+            "positions": positions,
+        },
+    )
+    monkeypatch.setattr(
+        main_app,
+        "get_worker_runtime_status",
+        lambda: {"status": "ok", "summary": {"live_workers": 1, "stale_workers": 0, "queued_jobs": 1}, "queues": []},
+    )
+    monkeypatch.setattr(
+        main_app,
+        "_cached_torch_accelerator_status",
+        lambda: {"torch_available": False, "cuda_available": False, "device_count": 0, "devices": []},
+    )
+    run = create_run_entry(tmp_path, run_type="editor_execution", status="queued")
+    positions[run["run_id"]] = {"queue": "amanaje:interactive", "position": 1, "job_id": run["run_id"]}
+    update_run_entry(
+        tmp_path,
+        run["run_id"],
+        merge={
+            "result": {"stdout": "large output", "variables": {"x": {"value": 1}}},
+            "terminal": {"next_index": 99, "lines": [{"index": 98, "message": "hidden"}]},
+        },
+    )
+
+    listing = TestClient(main_app.app).get("/operations/runs?view=summary&limit=10")
+    summary = TestClient(main_app.app).get("/operations/summary?limit=10")
+    full = TestClient(main_app.app).get(f"/runs/get/{run['run_id']}")
+
+    assert listing.status_code == 200
+    listed_run = listing.json()["runs"][0]
+    assert "result" not in listed_run
+    assert "terminal" not in listed_run
+    assert listed_run["result_summary"]["key_count"] == 2
+    assert listed_run["queue_diagnostics"]["position"] == 1
+    assert summary.status_code == 200
+    assert summary.json()["summary"]["queued_jobs"] == 1
+    assert full.status_code == 200
+    assert full.json()["result"]["stdout"] == "large output"
+
+
+def test_operation_queue_routes_jobs_by_worker_lane(monkeypatch):
+    captured = []
+
+    def fake_enqueue(queue_name, callable_, *, job_id, kwargs):
+        captured.append((queue_name, callable_.__name__, job_id, kwargs))
+        return {"backend": "rq", "queue": queue_name, "job_id": job_id}
+
+    monkeypatch.setattr(operation_queue, "enqueue_callable", fake_enqueue)
+
+    operation_queue.enqueue_editor_execution("editor-run", code="x = 1")
+    operation_queue.enqueue_assistant_operation("assistant-run", operation="draft", payload_data={})
+    operation_queue.enqueue_training_run("training-run", model_id=1, payload_data={}, prefer_gpu=False)
+    operation_queue.enqueue_study_run("study-run", study_id=2, payload_data={}, prefer_gpu=True)
+
+    assert [item[0] for item in captured] == [
+        operation_queue.INTERACTIVE_QUEUE_NAME,
+        operation_queue.ASSISTANT_QUEUE_NAME,
+        operation_queue.DEFAULT_QUEUE_NAME,
+        operation_queue.GPU_QUEUE_NAME,
+    ]
+
+
+def test_worker_name_generation_is_unique_for_same_host_identity():
+    left = build_worker_name(["amanaje:default"], base_name="amanaje-compose-cpu")
+    right = build_worker_name(["amanaje:default"], base_name="amanaje-compose-cpu")
+
+    assert left != right
+    assert left.startswith("amanaje-compose-cpu-amanaje-default-")
+    assert right.startswith("amanaje-compose-cpu-amanaje-default-")
 
 
 def test_execute_job_endpoint_returns_structured_queue_error(monkeypatch, tmp_path):
@@ -377,6 +632,19 @@ def test_editor_execution_worker_records_result(monkeypatch, tmp_path):
     assert ledger["status"] == "completed"
     assert ledger["result"]["status"] == "success"
     assert "x" in ledger["result"]["variables"]
+
+
+def test_editor_execution_worker_records_failure_traceback(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_app._utils, "RUN_LEDGER_DIR", tmp_path)
+    entry = create_run_entry(tmp_path, run_type="editor_execution", status="queued")
+
+    run_editor_execution_job(entry["run_id"], "raise ValueError('boom')")
+    ledger = read_run_entry(tmp_path, entry["run_id"])
+
+    assert ledger["status"] == "failed"
+    assert ledger["failure"]["type"] == "EditorExecutionError"
+    assert "ValueError: boom" in ledger["failure"]["traceback"]
+    assert any("ValueError: boom" in line["message"] for line in ledger["terminal"]["lines"])
 
 
 def test_runtime_accelerators_endpoint_is_stable_when_torch_missing(monkeypatch):
@@ -579,6 +847,33 @@ def test_settings_defaults_persist_and_hot_apply(monkeypatch):
         _cleanup_settings_test_path(settings_path)
 
 
+def test_settings_dashboard_extensions_toggle_persists_environment_override(monkeypatch):
+    settings_path = _settings_test_path()
+    monkeypatch.setattr(main_app._utils, "SETTINGS_STATE_PATH", settings_path)
+    monkeypatch.delenv("AMANAJE_DASH_EXTENSIONS_ENABLED", raising=False)
+
+    try:
+        response = asyncio.run(main_app.settings_config())
+        payload = _payload(response)
+        assert payload["services"]["dashboard_extensions_enabled"] is False
+
+        response = asyncio.run(
+            main_app.settings_update_config(
+                _settings_request(),
+                {"env_overrides": {"AMANAJE_DASH_EXTENSIONS_ENABLED": "true"}},
+            )
+        )
+        payload = _payload(response)
+        env_by_key = {row["key"]: row for row in payload["environment_variables"]}
+
+        assert response.status_code == 200
+        assert payload["services"]["dashboard_extensions_enabled"] is True
+        assert env_by_key["AMANAJE_DASH_EXTENSIONS_ENABLED"]["saved_override"] == "true"
+        assert env_by_key["AMANAJE_DASH_EXTENSIONS_ENABLED"]["restart_required"] is True
+    finally:
+        _cleanup_settings_test_path(settings_path)
+
+
 def test_settings_reject_secret_like_environment_keys(monkeypatch):
     settings_path = _settings_test_path()
     monkeypatch.setattr(main_app._utils, "SETTINGS_STATE_PATH", settings_path)
@@ -601,6 +896,59 @@ def test_settings_reject_secret_like_environment_keys(monkeypatch):
         assert payload["errors"][0]["reason"] == "secret_key_blocked"
         assert not settings_path.exists()
     finally:
+        _cleanup_settings_test_path(settings_path)
+
+
+def test_store_provider_token_env_var_registers_settings_override(monkeypatch, tmp_path):
+    settings_path = _settings_test_path()
+    providers_path = tmp_path / "providers.json"
+    token_key = f"PYTEST_STORE_TOKEN_{uuid.uuid4().hex[:8].upper()}"
+    monkeypatch.setattr(main_app._utils, "SETTINGS_STATE_PATH", settings_path)
+    monkeypatch.setattr(main_app, "STORE_PROVIDERS_PATH", providers_path)
+
+    class FakeProviderRequest:
+        async def json(self):
+            return {
+                "name": "Pytest Store Provider",
+                "provider_type": "generic_rest",
+                "base_url": "https://example.gov",
+                "token_env_var": token_key,
+                "auth": {"type": "header", "header_name": "x-api-token"},
+                "mappings": {"catalog_path": "/catalog"},
+            }
+
+    try:
+        save_response = asyncio.run(main_app.store_save_provider(FakeProviderRequest()))
+        save_payload = _payload(save_response)
+
+        assert save_response.status_code == 200
+        assert save_payload["settings_env_registered"] == token_key
+        assert save_payload["provider"]["token_env_var"] == token_key
+
+        config_payload = _payload(asyncio.run(main_app.settings_config()))
+        rows = {row["key"]: row for row in config_payload["environment_variables"]}
+        assert rows[token_key]["category"] == "Data Store"
+        assert rows[token_key]["redacted"] is True
+
+        update_response = asyncio.run(
+            main_app.settings_update_config(
+                _settings_request(),
+                {"env_overrides": {token_key: "secret-store-token"}},
+            )
+        )
+        update_payload = _payload(update_response)
+        rows = {row["key"]: row for row in update_payload["environment_variables"]}
+
+        assert update_response.status_code == 200
+        assert rows[token_key]["saved_override"] == "[REDACTED]"
+        assert rows[token_key]["value"] == "[REDACTED]"
+        assert os.environ[token_key] == "secret-store-token"
+        assert json.loads(settings_path.read_text(encoding="utf-8"))["env_overrides"][token_key] == "secret-store-token"
+    finally:
+        os.environ.pop(token_key, None)
+        main_app._utils.apply_runtime_settings_state(
+            {"feature_flags": {"debug_mode": False, "assistant_visible": True}, "env_overrides": {}}
+        )
         _cleanup_settings_test_path(settings_path)
 
 

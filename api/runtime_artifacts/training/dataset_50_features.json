@@ -1,0 +1,562 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "Nome da base de dados",
+            "Descrição da base",
+            "2024"
+        ],
+        "target_candidate": "Unnamed: 3",
+        "numeric_feature_count": 0,
+        "categorical_feature_count": 4,
+        "datetime_feature_count": 0
+    },
+    "manifest": {
+        "dataset_id": 50,
+        "dataset_name": "patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufam_por_ano",
+        "table_name": "dataset_50_patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufam_por_ano",
+        "shape": [
+            24,
+            4
+        ],
+        "columns": [
+            {
+                "name": "Nome da base de dados",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 23,
+                "null_ratio": 0.958333,
+                "unique_count": 1,
+                "unique_ratio": 0.041667,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "\"Patrimônio Genético Nacional\" que foram envolvidos em pesquisas realizadas na UFAM por ano",
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "name": "Descrição da base",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 23,
+                "null_ratio": 0.958333,
+                "unique_count": 1,
+                "unique_ratio": 0.041667,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "name": "2024",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 24,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Espécies",
+                    "Piper marginatum",
+                    "Mansoa alliacea",
+                    "Copaifera Langsdorffii ",
+                    "Plasmodium Berghei"
+                ]
+            },
+            {
+                "name": "Unnamed: 3",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 24,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Nome comum",
+                    "Capeba, malvarisco, pimenta-do-mato, capeba-cheirosa",
+                    "Cipó-alho",
+                    "Copaíba, óleo-de-copaíba, copaibeira-de-minas, óleo vermelho e pau-de-óleo",
+                    "Parasita que causa a malária"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "Nome da base de dados": "\"Patrimônio Genético Nacional\" que foram envolvidos em pesquisas realizadas na UFAM por ano",
+                "Descrição da base": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                "2024": "Espécies",
+                "Unnamed: 3": "Nome comum"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Piper marginatum",
+                "Unnamed: 3": "Capeba, malvarisco, pimenta-do-mato, capeba-cheirosa"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Mansoa alliacea",
+                "Unnamed: 3": "Cipó-alho"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Copaifera Langsdorffii ",
+                "Unnamed: 3": "Copaíba, óleo-de-copaíba, copaibeira-de-minas, óleo vermelho e pau-de-óleo"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Plasmodium Berghei",
+                "Unnamed: 3": "Parasita que causa a malária"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Bertholletia excelsa",
+                "Unnamed: 3": "Castanha-do-Brasil ou Castanha-do-Pará"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Euterpe oleracea mart.",
+                "Unnamed: 3": "Açaí"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Myrciaria dubia ",
+                "Unnamed: 3": "Camu-camu"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Paullinia cupana",
+                "Unnamed: 3": "Guaraná"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Brycon amazonicus",
+                "Unnamed: 3": "Matrinxâ"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Astyanax altiparanae",
+                "Unnamed: 3": "Lambari-tambiú"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Bacillus licheniformis",
+                "Unnamed: 3": "Bactéria"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Aspergilus awamori",
+                "Unnamed: 3": "Fungo"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Pichia pastoris",
+                "Unnamed: 3": "Levedura"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Manihot esculenta ",
+                "Unnamed: 3": "Mandioca, aipim"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Aniba rosiodora",
+                "Unnamed: 3": "pau-rosa"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Cenostigma tocantinum",
+                "Unnamed: 3": "Pau-pretinho"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Oreochromis niloticus",
+                "Unnamed: 3": "Tilápia-do-nilo / espécie introduzida"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Eugenia stipitata",
+                "Unnamed: 3": "Araça-boi"
+            },
+            {
+                "Nome da base de dados": null,
+                "Descrição da base": null,
+                "2024": "Solanum sessiflorum",
+                "Unnamed: 3": "Cubiu"
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 24,
+            "columns": 4,
+            "column_names": [
+                "Nome da base de dados",
+                "Descrição da base",
+                "2024",
+                "Unnamed: 3"
+            ],
+            "dtypes": {
+                "Nome da base de dados": "object",
+                "Descrição da base": "object",
+                "2024": "object",
+                "Unnamed: 3": "object"
+            },
+            "missing_values": 46,
+            "stats": {
+                "Nome da base de dados": {
+                    "type": "categorical",
+                    "null_count": 23,
+                    "unique_values": 1,
+                    "sample_values": [
+                        "\"Patrimônio Genético Nacional\" que foram envolvidos em pesquisas realizadas na UFAM por ano",
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "\"Patrimônio Genético Nacional\" que foram envolvidos em pesquisas realizadas na UFAM por ano"
+                },
+                "Descrição da base": {
+                    "type": "categorical",
+                    "null_count": 23,
+                    "unique_values": 1,
+                    "sample_values": [
+                        "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano"
+                },
+                "2024": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 24,
+                    "sample_values": [
+                        "Espécies",
+                        "Piper marginatum",
+                        "Mansoa alliacea",
+                        "Copaifera Langsdorffii ",
+                        "Plasmodium Berghei"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "Aniba rosiodora"
+                },
+                "Unnamed: 3": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 24,
+                    "sample_values": [
+                        "Nome comum",
+                        "Capeba, malvarisco, pimenta-do-mato, capeba-cheirosa",
+                        "Cipó-alho",
+                        "Copaíba, óleo-de-copaíba, copaibeira-de-minas, óleo vermelho e pau-de-óleo",
+                        "Parasita que causa a malária"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "22"
+                }
+            },
+            "path": "/app/runtime_artifacts/store/datasets/patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufa_9cbd36f8.csv",
+            "profile": {
+                "numeric_columns": [],
+                "categorical_columns": [
+                    "Nome da base de dados",
+                    "Descrição da base",
+                    "2024",
+                    "Unnamed: 3"
+                ],
+                "datetime_columns": [],
+                "recommended_target": "Unnamed: 3",
+                "recommended_inputs": [
+                    "Nome da base de dados",
+                    "Descrição da base",
+                    "2024"
+                ]
+            },
+            "parser_report": {
+                "file_name": "patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufa_9cbd36f8.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 24,
+                "columns": 4,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "Nome da base de dados",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 23,
+                    "null_ratio": 0.958333,
+                    "unique_count": 1,
+                    "unique_ratio": 0.041667,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "\"Patrimônio Genético Nacional\" que foram envolvidos em pesquisas realizadas na UFAM por ano",
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "Descrição da base",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 23,
+                    "null_ratio": 0.958333,
+                    "unique_count": 1,
+                    "unique_ratio": 0.041667,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "2024",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 24,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Espécies",
+                        "Piper marginatum",
+                        "Mansoa alliacea",
+                        "Copaifera Langsdorffii ",
+                        "Plasmodium Berghei"
+                    ]
+                },
+                {
+                    "name": "Unnamed: 3",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 24,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Nome comum",
+                        "Capeba, malvarisco, pimenta-do-mato, capeba-cheirosa",
+                        "Cipó-alho",
+                        "Copaíba, óleo-de-copaíba, copaibeira-de-minas, óleo vermelho e pau-de-óleo",
+                        "Parasita que causa a malária"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [],
+                "categorical": [
+                    "Nome da base de dados",
+                    "Descrição da base",
+                    "2024",
+                    "Unnamed: 3"
+                ],
+                "datetime": []
+            },
+            "top_warnings": [
+                "Column '2024' has high cardinality and may need filtering or encoding.",
+                "Column 'Unnamed: 3' has high cardinality and may need filtering or encoding."
+            ]
+        }
+    }
+}

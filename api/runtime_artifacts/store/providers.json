@@ -1,0 +1,22 @@
+{
+    "providers": {
+        "dados_abertos": {
+            "id": "dados_abertos",
+            "name": "Dados Abertos",
+            "provider_type": "dados_gov_br",
+            "base_url": "https://dados.gov.br",
+            "openapi_url": "https://dados.gov.br/v3/api-docs",
+            "token_env_var": "CHAVE_API",
+            "auth": {
+                "type": "header",
+                "header_name": "chave-api-dados-abertos"
+            },
+            "mappings": {},
+            "built_in": false,
+            "created_at": "2026-05-22T21:19:29Z",
+            "updated_at": "2026-05-22T22:28:27Z"
+        }
+    },
+    "default_provider_id": "dados_abertos",
+    "updated_at": "2026-05-24T06:53:24Z"
+}

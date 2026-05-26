@@ -1,0 +1,549 @@
+{
+  "run_id": "editor_execution_8da99a921fed",
+  "run_type": "editor_execution",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-20T19:52:32.763644",
+  "updated_at": "2026-05-21T22:26:37.216189",
+  "started_at": "2026-05-21T22:26:36.900413",
+  "completed_at": "2026-05-21T22:26:37.216189",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false,
+    "dataset_count": 0,
+    "model_count": 0,
+    "dataset_ids": [],
+    "model_ids": []
+  },
+  "parameters": {
+    "code_length": 357,
+    "registry_context": {
+      "dataset_count": 0,
+      "model_count": 0,
+      "dataset_ids": [],
+      "model_ids": []
+    }
+  },
+  "metrics": {
+    "variable_count": 14
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "registry_context": {
+        "name": "registry_context",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "metadata": null,
+        "raw_value": {
+          "datasets": [],
+          "models": [],
+          "summary": {
+            "dataset_count": 0,
+            "model_count": 0,
+            "dataset_ids": [],
+            "model_ids": []
+          }
+        }
+      },
+      "list_datasets": {
+        "name": "list_datasets",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+        "preview": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>"
+      },
+      "list_models": {
+        "name": "list_models",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+        "preview": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>"
+      },
+      "load_dataset": {
+        "name": "load_dataset",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+        "preview": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>"
+      },
+      "load_model": {
+        "name": "load_model",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+        "preview": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>"
+      },
+      "df": {
+        "name": "df",
+        "type": "DataFrame",
+        "python_type": "pandas.core.frame.DataFrame",
+        "kind": "dataframe",
+        "value": "DataFrame rows=3",
+        "preview": "DataFrame rows=3",
+        "metadata": {
+          "rows": 3,
+          "columns": [
+            "value",
+            "category"
+          ],
+          "shape": [
+            3,
+            2
+          ],
+          "dtypes": {
+            "value": "int64",
+            "category": "object"
+          }
+        },
+        "raw_value": [
+          {
+            "value": 10,
+            "category": "a"
+          },
+          {
+            "value": 20,
+            "category": "b"
+          },
+          {
+            "value": 30,
+            "category": "c"
+          }
+        ]
+      },
+      "csv_text": {
+        "name": "csv_text",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "value,category\n10,a\n20,b\n30,c\n",
+        "preview": "value,category\n10,a\n20,b\n30,c\n",
+        "metadata": null,
+        "raw_value": "value,category\n10,a\n20,b\n30,c\n"
+      },
+      "name": {
+        "name": "name",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "sample_dataset",
+        "preview": "sample_dataset",
+        "metadata": null,
+        "raw_value": "sample_dataset"
+      },
+      "description": {
+        "name": "description",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "Dataset created from the editor",
+        "preview": "Dataset created from the editor",
+        "metadata": null,
+        "raw_value": "Dataset created from the editor"
+      },
+      "object_type": {
+        "name": "object_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "dataset",
+        "preview": "dataset",
+        "metadata": null,
+        "raw_value": "dataset"
+      },
+      "path": {
+        "name": "path",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "generated/sample_dataset.csv",
+        "preview": "generated/sample_dataset.csv",
+        "metadata": null,
+        "raw_value": "generated/sample_dataset.csv"
+      },
+      "version": {
+        "name": "version",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "1",
+        "preview": "1",
+        "metadata": null,
+        "raw_value": 1
+      },
+      "dataset_type": {
+        "name": "dataset_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "dataset",
+        "preview": "dataset",
+        "metadata": null,
+        "raw_value": "dataset"
+      },
+      "connection_string": {
+        "name": "connection_string",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "",
+        "preview": "",
+        "metadata": null,
+        "raw_value": ""
+      }
+    },
+    "metadata": {
+      "description": "Dataset created from the editor",
+      "path": "generated/sample_dataset.csv",
+      "name": "sample_dataset",
+      "object_type": "dataset",
+      "csv_text": "value,category\n10,a\n20,b\n30,c\n",
+      "dataset_type": "dataset",
+      "version": 1,
+      "connection_string": ""
+    },
+    "document": {
+      "name": "sample_dataset",
+      "description": "Dataset created from the editor",
+      "object_type": "dataset",
+      "size": 0.0,
+      "path": "generated/sample_dataset.csv",
+      "date": "2026-05-21T22:26:37.149648",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-21T22:26:37.149648"
+        }
+      ],
+      "variables": {
+        "registry_context": {
+          "name": "registry_context",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "metadata": null,
+          "raw_value": {
+            "datasets": [],
+            "models": [],
+            "summary": {
+              "dataset_count": 0,
+              "model_count": 0,
+              "dataset_ids": [],
+              "model_ids": []
+            }
+          }
+        },
+        "list_datasets": {
+          "name": "list_datasets",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+          "preview": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>"
+        },
+        "list_models": {
+          "name": "list_models",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+          "preview": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>"
+        },
+        "load_dataset": {
+          "name": "load_dataset",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+          "preview": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>"
+        },
+        "load_model": {
+          "name": "load_model",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+          "preview": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>"
+        },
+        "df": {
+          "name": "df",
+          "type": "DataFrame",
+          "python_type": "pandas.core.frame.DataFrame",
+          "kind": "dataframe",
+          "value": "DataFrame rows=3",
+          "preview": "DataFrame rows=3",
+          "metadata": {
+            "rows": 3,
+            "columns": [
+              "value",
+              "category"
+            ],
+            "shape": [
+              3,
+              2
+            ],
+            "dtypes": {
+              "value": "int64",
+              "category": "object"
+            }
+          },
+          "raw_value": [
+            {
+              "value": 10,
+              "category": "a"
+            },
+            {
+              "value": 20,
+              "category": "b"
+            },
+            {
+              "value": 30,
+              "category": "c"
+            }
+          ]
+        },
+        "csv_text": {
+          "name": "csv_text",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "value,category\n10,a\n20,b\n30,c\n",
+          "preview": "value,category\n10,a\n20,b\n30,c\n",
+          "metadata": null,
+          "raw_value": "value,category\n10,a\n20,b\n30,c\n"
+        },
+        "name": {
+          "name": "name",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "sample_dataset",
+          "preview": "sample_dataset",
+          "metadata": null,
+          "raw_value": "sample_dataset"
+        },
+        "description": {
+          "name": "description",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "Dataset created from the editor",
+          "preview": "Dataset created from the editor",
+          "metadata": null,
+          "raw_value": "Dataset created from the editor"
+        },
+        "object_type": {
+          "name": "object_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "dataset",
+          "preview": "dataset",
+          "metadata": null,
+          "raw_value": "dataset"
+        },
+        "path": {
+          "name": "path",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "generated/sample_dataset.csv",
+          "preview": "generated/sample_dataset.csv",
+          "metadata": null,
+          "raw_value": "generated/sample_dataset.csv"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "1",
+          "preview": "1",
+          "metadata": null,
+          "raw_value": 1
+        },
+        "dataset_type": {
+          "name": "dataset_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "dataset",
+          "preview": "dataset",
+          "metadata": null,
+          "raw_value": "dataset"
+        },
+        "connection_string": {
+          "name": "connection_string",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "",
+          "preview": "",
+          "metadata": null,
+          "raw_value": ""
+        }
+      },
+      "metadata": {
+        "description": "Dataset created from the editor",
+        "path": "generated/sample_dataset.csv",
+        "name": "sample_dataset",
+        "object_type": "dataset",
+        "csv_text": "value,category\n10,a\n20,b\n30,c\n",
+        "dataset_type": "dataset",
+        "version": 1,
+        "connection_string": ""
+      },
+      "code": {
+        "script": "# Data creation template\nimport pandas as pd\n\ndf = pd.DataFrame({\n    \"value\": [10, 20, 30],\n    \"category\": [\"a\", \"b\", \"c\"]\n})\n\ncsv_text = df.to_csv(index=False)\n\nname = \"sample_dataset\"\ndescription = \"Dataset created from the editor\"\nobject_type = \"dataset\"\npath = \"generated/sample_dataset.csv\"\nversion = 1\ndataset_type = \"dataset\"\nconnection_string = \"\"",
+        "language": "python",
+        "line_count": 17
+      }
+    },
+    "summary": {
+      "variable_count": 14,
+      "defined_name_count": 9,
+      "defined_names": [
+        "df",
+        "csv_text",
+        "name",
+        "description",
+        "object_type",
+        "path",
+        "version",
+        "dataset_type",
+        "connection_string"
+      ],
+      "has_error": false
+    },
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-21T22:26:37.216189",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-20T19:52:32.763644",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-20T19:52:32.811821",
+        "message": "Editor execution enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-21T22:26:36.900413",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-21T22:26:37.216189",
+        "message": "Editor execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-20T19:52:32.763644",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-20T19:52:32.811821",
+      "message": "Editor execution enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-21T22:26:36.900413",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-21T22:26:37.216189",
+      "message": "Editor execution completed."
+    }
+  ],
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "editor_execution_8da99a921fed"
+  },
+  "terminal": {
+    "cap": 2000,
+    "next_index": 2,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-21T22:26:36.900413",
+        "stream": "system",
+        "stage": "executing",
+        "message": "Editor execution started."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-21T22:26:37.216189",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Editor execution completed."
+      }
+    ]
+  }
+}

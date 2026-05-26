@@ -223,6 +223,15 @@ def _apply_predictable_runtime_capabilities(manifest: dict[str, Any], loaded_obj
     supports_predict = hasattr(loaded_object, "predict") or callable(getattr(loaded_object, "forward", None))
     if manifest["framework"] == "pytorch" and callable(loaded_object):
         supports_predict = True
+    capabilities = {
+        "predict": hasattr(loaded_object, "predict"),
+        "predict_proba": hasattr(loaded_object, "predict_proba"),
+        "transform": hasattr(loaded_object, "transform"),
+        "fit_predict": hasattr(loaded_object, "fit_predict"),
+        "score_samples": hasattr(loaded_object, "score_samples"),
+        "decision_function": hasattr(loaded_object, "decision_function"),
+        "forward": callable(getattr(loaded_object, "forward", None)),
+    }
     manifest["runtime_capabilities"].update(
         {
             "predict": bool(supports_predict),
@@ -230,8 +239,30 @@ def _apply_predictable_runtime_capabilities(manifest: dict[str, Any], loaded_obj
             "monitor": bool(supports_predict),
         }
     )
-    manifest["entrypoint"] = "predict" if hasattr(loaded_object, "predict") else "forward"
+    if hasattr(loaded_object, "predict"):
+        manifest["entrypoint"] = "predict"
+    elif hasattr(loaded_object, "transform"):
+        manifest["entrypoint"] = "transform"
+    elif hasattr(loaded_object, "fit_predict"):
+        manifest["entrypoint"] = "fit_predict"
+    elif hasattr(loaded_object, "score_samples"):
+        manifest["entrypoint"] = "score_samples"
+    else:
+        manifest["entrypoint"] = "forward"
     manifest["metadata"]["public_methods"] = _safe_public_methods(loaded_object)
+    manifest["metadata"]["sklearn_capabilities"] = capabilities
+    if hasattr(loaded_object, "get_params"):
+        try:
+            estimator_params = {}
+            for key, value in loaded_object.get_params(deep=False).items():
+                try:
+                    json.dumps(value)
+                    estimator_params[key] = value
+                except TypeError:
+                    estimator_params[key] = repr(value)
+            manifest["metadata"]["estimator_params"] = estimator_params
+        except Exception:
+            pass
     return manifest
 
 

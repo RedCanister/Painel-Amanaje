@@ -516,6 +516,7 @@ def test_panel_template_focus_filter_and_comparison_controls_are_wired():
 def test_training_and_production_templates_expose_rerun_schedule_and_scenario_tabs():
     training_template = (main_app.PROJECT_ROOT / "templates" / "base_green.html").read_text(encoding="utf-8")
     production_template = (main_app.PROJECT_ROOT / "templates" / "base_blue.html").read_text(encoding="utf-8")
+    operations_template = (main_app.PROJECT_ROOT / "templates" / "base_operations.html").read_text(encoding="utf-8")
 
     assert 'data-run-rerun="true"' in training_template
     assert "/rerun" in training_template
@@ -532,6 +533,15 @@ def test_training_and_production_templates_expose_rerun_schedule_and_scenario_ta
     ]:
         assert fragment in production_template
 
+    for fragment in [
+        'id="operationsCpuList"',
+        'id="operationsGpuList"',
+        'id="operationsTerminal"',
+        'data-operations-tab="analysis"',
+        "operations-page.js",
+    ]:
+        assert fragment in operations_template
+
 
 def test_target_workspace_templates_have_no_active_todo_markers():
     template_names = [
@@ -539,6 +549,7 @@ def test_target_workspace_templates_have_no_active_todo_markers():
         "base_editor.html",
         "base_feature.html",
         "base_green.html",
+        "base_operations.html",
         "base_panel.html",
         "base_purple.html",
     ]

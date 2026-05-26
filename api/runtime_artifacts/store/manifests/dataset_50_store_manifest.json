@@ -1,0 +1,292 @@
+{
+    "dataset_id": 50,
+    "dataset_name": "patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufam_por_ano",
+    "snapshot_path": "/app/runtime_artifacts/store/datasets/patrimonio_genetico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufa_9cbd36f8.csv",
+    "connection_string": "store://dados_abertos/3fc794a6-4217-4038-9b9d-b0ac7335efc3/ac0e2b3e-d56d-4687-bda4-999720fa32e9",
+    "provider": {
+        "id": "dados_abertos",
+        "name": "Dados Abertos",
+        "provider_type": "dados_gov_br",
+        "base_url": "https://dados.gov.br",
+        "openapi_url": "https://dados.gov.br/v3/api-docs",
+        "token_env_var": "CHAVE_API",
+        "auth": {
+            "type": "header",
+            "header_name": "chave-api-dados-abertos"
+        },
+        "mappings": {},
+        "built_in": false,
+        "created_at": "2026-05-22T21:19:29Z",
+        "updated_at": "2026-05-22T22:28:27Z",
+        "token_configured": true,
+        "raw_token_returned": false
+    },
+    "external_dataset": {
+        "external_id": "3fc794a6-4217-4038-9b9d-b0ac7335efc3",
+        "title": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+        "name": "patrimonio-genetico-nacional-que-foram-envolvidas-em-pesquisas-realizadas-na-ufam-por-ano",
+        "description": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+        "category": "",
+        "categories": [],
+        "organization": "fundacao-universidade-do-amazonas",
+        "license": "other-open",
+        "periodicity": "",
+        "visibility": "PUBLICA",
+        "updated_at": "07/02/2025 19:59:50",
+        "resources": [
+            {
+                "external_id": "ac0e2b3e-d56d-4687-bda4-999720fa32e9",
+                "title": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                "description": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                "url": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+                "format": "XLSX",
+                "type": "",
+                "size": 9505,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "07/02/2025",
+                "raw": {
+                    "dataCatalogacao": "07/02/2025",
+                    "dataUltimaAtualizacaoArquivo": "07/02/2025",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "tipo": null,
+                    "numOrdem": null,
+                    "descricao": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                    "titulo": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                    "formato": "XLSX",
+                    "idConjuntoDados": "3fc794a6-4217-4038-9b9d-b0ac7335efc3",
+                    "link": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+                    "tamanho": 9505,
+                    "id": "ac0e2b3e-d56d-4687-bda4-999720fa32e9"
+                }
+            }
+        ],
+        "tags": [],
+        "raw": {
+            "id": "3fc794a6-4217-4038-9b9d-b0ac7335efc3",
+            "titulo": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+            "nome": "patrimonio-genetico-nacional-que-foram-envolvidas-em-pesquisas-realizadas-na-ufam-por-ano",
+            "organizacao": "fundacao-universidade-do-amazonas",
+            "descricao": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+            "licenca": "other-open",
+            "responsavel": "Rafael Lima Medeiros Ferreira",
+            "emailResponsavel": "rafaelmedeiros@ufam.edu.br",
+            "periodicidade": null,
+            "temas": [],
+            "tags": [],
+            "coberturaTemporalInicio": null,
+            "coberturaTemporalFim": null,
+            "coberturaEspacial": null,
+            "valorCoberturaEspacial": null,
+            "granularidadeEspacial": null,
+            "versao": "",
+            "atualizacaoVersao": false,
+            "visibilidade": "PUBLICA",
+            "descontinuado": false,
+            "dataDescontinuacao": null,
+            "reuso": false,
+            "recursos": [
+                {
+                    "dataCatalogacao": "07/02/2025",
+                    "dataUltimaAtualizacaoArquivo": "07/02/2025",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "tipo": null,
+                    "numOrdem": null,
+                    "descricao": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                    "titulo": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+                    "formato": "XLSX",
+                    "idConjuntoDados": "3fc794a6-4217-4038-9b9d-b0ac7335efc3",
+                    "link": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+                    "tamanho": 9505,
+                    "id": "ac0e2b3e-d56d-4687-bda4-999720fa32e9"
+                }
+            ],
+            "conjuntoDadosAssociados": [],
+            "dataUltimaAtualizacaoMetadados": "07/02/2025 19:59:50",
+            "dataUltimaAtualizacaoArquivo": "07/02/2025 19:59:50",
+            "dataCatalogacao": "08/02/2025 13:42:46",
+            "atualizado": "Atualização não verificável",
+            "dadosRacaEtnia": null,
+            "dadosGenero": null,
+            "observanciaLegal": null,
+            "dadosAbertos": "Sim",
+            "selo": "Nenhum",
+            "origemCadastro": "Harvest"
+        }
+    },
+    "resource": {
+        "external_id": "ac0e2b3e-d56d-4687-bda4-999720fa32e9",
+        "title": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+        "description": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+        "url": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+        "format": "XLSX",
+        "type": "",
+        "size": 9505,
+        "download_count": null,
+        "file_name": "",
+        "order": null,
+        "updated_at": "07/02/2025",
+        "raw": {
+            "dataCatalogacao": "07/02/2025",
+            "dataUltimaAtualizacaoArquivo": "07/02/2025",
+            "quantidadeDownloads": null,
+            "nomeArquivo": null,
+            "tipo": null,
+            "numOrdem": null,
+            "descricao": "Relação das espécies do \"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+            "titulo": "\"Patrimônio Genético Nacional\" que foram envolvidas em pesquisas realizadas na UFAM por ano",
+            "formato": "XLSX",
+            "idConjuntoDados": "3fc794a6-4217-4038-9b9d-b0ac7335efc3",
+            "link": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+            "tamanho": 9505,
+            "id": "ac0e2b3e-d56d-4687-bda4-999720fa32e9"
+        },
+        "catalog_url": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+        "file_extension": ".xlsx",
+        "download": {
+            "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content_length": "9505",
+            "final_url": "https://dadosabertos.ufam.edu.br/dataset/3fc794a6-4217-4038-9b9d-b0ac7335efc3/resource/ac0e2b3e-d56d-4687-bda4-999720fa32e9/download/protec-4.xlsx",
+            "downloaded_bytes": 9505
+        }
+    },
+    "parser_report": {
+        "file_name": "patrim_nio_gen_tico_nacional_que_foram_envolvidas_em_pesquisas_realizadas_na_ufa.xlsx",
+        "file_type": ".xlsx",
+        "supported_file_types": [
+            ".csv",
+            ".json",
+            ".jsonl",
+            ".parquet",
+            ".tsv",
+            ".txt",
+            ".xls",
+            ".xlsx"
+        ],
+        "capability_matrix": {
+            ".csv": {
+                "label": "CSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                ]
+            },
+            ".tsv": {
+                "label": "TSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                ]
+            },
+            ".txt": {
+                "label": "Delimited Text",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                ]
+            },
+            ".json": {
+                "label": "JSON",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                ]
+            },
+            ".jsonl": {
+                "label": "JSON Lines",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Each non-empty line must contain one JSON object."
+                ]
+            },
+            ".parquet": {
+                "label": "Parquet",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                ]
+            },
+            ".xlsx": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                ]
+            },
+            ".xls": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                ]
+            }
+        },
+        "warnings": [
+            "1 column(s) contain mixed Python value types."
+        ],
+        "loader": "excel",
+        "rows": 24,
+        "columns": 4,
+        "mixed_type_columns": [
+            {
+                "name": "Unnamed: 3",
+                "types": [
+                    "int",
+                    "str"
+                ]
+            }
+        ]
+    },
+    "live": {
+        "enabled": false,
+        "interval_seconds": 86400,
+        "mode": "manual_refresh",
+        "status": "snapshot"
+    },
+    "manifest_path": "/app/runtime_artifacts/store/manifests/dataset_50_store_manifest.json",
+    "created_at": "2026-05-24T07:02:00Z",
+    "updated_at": "2026-05-24T07:02:00Z"
+}

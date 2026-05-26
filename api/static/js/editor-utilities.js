@@ -1,4 +1,5 @@
 let extractedVariables = {};
+let markerState = [];
 
 async function editorFetchJson(url, options = {}) {
     if (window.AmanajeUI?.fetchJson) {
@@ -24,6 +25,274 @@ async function editorFetchJson(url, options = {}) {
     return payload;
 }
 
+function dom(id) {
+    return document.getElementById(id);
+}
+
+function selectedEditorRegistryContext() {
+    const selectedValues = (selectId) => Array.from(dom(selectId)?.selectedOptions || [])
+        .map((option) => Number(option.value))
+        .filter((value) => Number.isFinite(value));
+    return {
+        dataset_ids: selectedValues('editorDatasetContext'),
+        model_ids: selectedValues('editorModelContext')
+    };
+}
+
+function populateRegistrySelect(selectId, items = []) {
+    const select = dom(selectId);
+    if (!select) return;
+    select.innerHTML = items.map((item) => `
+        <option value="${escapeHtml(item.id)}">${escapeHtml(item.name || `${item.id}`)}</option>
+    `).join('');
+}
+
+async function loadEditorRegistryContext() {
+    if (!dom('editorDatasetContext') && !dom('editorModelContext')) return;
+    const payload = await editorFetchJson('/editor/context');
+    populateRegistrySelect('editorDatasetContext', payload.datasets || []);
+    populateRegistrySelect('editorModelContext', payload.models || []);
+    const summary = dom('editorRegistryContextSummary');
+    if (summary) {
+        summary.textContent = `${(payload.datasets || []).length} datasets and ${(payload.models || []).length} models available to editor helpers.`;
+    }
+}
+
+function insertTextAtCursor(text) {
+    if (!window.editor) return;
+    if (typeof window.editor.executeEdits === 'function' && typeof window.editor.getSelection === 'function') {
+        const selection = window.editor.getSelection();
+        window.editor.executeEdits('registry-context', [{ range: selection, text, forceMoveMarkers: true }]);
+        window.editor.focus?.();
+        refreshCreateWorkspaceInsights();
+        return;
+    }
+
+    window.editor.setValue(`${window.editor.getValue() || ''}${text}`);
+    window.editor.focus?.();
+    refreshCreateWorkspaceInsights();
+}
+
+function insertRegistrySnippet() {
+    const context = selectedEditorRegistryContext();
+    const datasetId = context.dataset_ids[0] || '';
+    const modelId = context.model_ids[0] || '';
+    insertTextAtCursor(`
+
+# Registry context helpers are injected by Painel Amanaje when this script runs.
+print("Datasets:", list_datasets())
+print("Models:", list_models())
+df = load_dataset(${datasetId ? datasetId : ''})
+model = load_model(${modelId ? modelId : ''}) if list_models() else None
+print(df.head())
+`);
+}
+
+function clearRegistryContextSelection() {
+    ['editorDatasetContext', 'editorModelContext'].forEach((selectId) => {
+        Array.from(dom(selectId)?.options || []).forEach((option) => { option.selected = false; });
+    });
+    const summary = dom('editorRegistryContextSummary');
+    if (summary) summary.textContent = 'Registry context selection cleared.';
+}
+
+function setRuntimeState(label) {
+    const target = dom('runtimeStateLabel');
+    if (target) target.textContent = label;
+}
+
+function updateCursorStatus() {
+    if (!window.editor || typeof window.editor.getPosition !== 'function') return;
+    const position = window.editor.getPosition();
+    if (!position) return;
+    const target = dom('cursorPositionLabel');
+    if (target) target.textContent = `Ln ${position.lineNumber}, Col ${position.column}`;
+}
+
+function updateDocumentStats() {
+    const code = window.editor ? window.editor.getValue() : '';
+    const lineCount = code ? code.split('\n').length : 0;
+    const target = dom('documentStatsLabel');
+    if (target) target.textContent = `${lineCount} lines | ${code.length} chars`;
+}
+
+function updateHeaderMetadata() {
+    const metadata = extractMetadataFromEditor();
+    const fileLabel = dom('editorFileLabel');
+    const subtitle = dom('editorSubtitle');
+    if (fileLabel) fileLabel.textContent = metadata.path || 'generated/create_workspace.py';
+    if (subtitle) subtitle.textContent = metadata.description || 'Ready for dataset and model creation scripts.';
+}
+
+function buildOutlineEntries() {
+    if (!window.editor) return [];
+    const lines = window.editor.getValue().split('\n');
+    const outline = [];
+
+    lines.forEach((line, index) => {
+        const functionMatch = line.match(/^def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/);
+        const classMatch = line.match(/^class\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[:(]/);
+        const assignmentMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=/);
+
+        if (functionMatch) outline.push({ name: functionMatch[1], detail: 'Function', line: index + 1 });
+        else if (classMatch) outline.push({ name: classMatch[1], detail: 'Class', line: index + 1 });
+        else if (assignmentMatch && !/^\s/.test(line)) outline.push({ name: assignmentMatch[1], detail: 'Assignment', line: index + 1 });
+    });
+
+    return outline.slice(0, 18);
+}
+
+function revealEditorLine(lineNumber) {
+    if (!window.editor) return;
+    if (typeof window.editor.revealLineInCenter === 'function') {
+        window.editor.revealLineInCenter(lineNumber);
+    }
+    if (typeof window.editor.setPosition === 'function') {
+        window.editor.setPosition({ lineNumber, column: 1 });
+    }
+    window.editor.focus?.();
+}
+
+function renderOutline() {
+    const outlineList = dom('outlineList');
+    if (!outlineList) return;
+    const outline = buildOutlineEntries();
+
+    if (!outline.length) {
+        outlineList.innerHTML = '<div class="empty-state">Outline appears here.</div>';
+        return;
+    }
+
+    outlineList.innerHTML = outline.map(item => `
+        <button type="button" class="outline-item" data-line="${item.line}">
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${escapeHtml(item.detail)} - line ${item.line}</span>
+        </button>
+    `).join('');
+
+    outlineList.querySelectorAll('[data-line]').forEach(button => {
+        button.addEventListener('click', () => revealEditorLine(Number(button.getAttribute('data-line')) || 1));
+    });
+}
+
+function renderProblems(problemEntries) {
+    const problemsList = dom('problemsList');
+    if (!problemsList) return;
+    const issues = Array.isArray(problemEntries) ? problemEntries : [];
+    markerState = issues;
+
+    if (!issues.length) {
+        problemsList.innerHTML = '<div class="empty-state">No diagnostics yet.</div>';
+        return;
+    }
+
+    problemsList.innerHTML = issues.map((issue, index) => `
+        <button type="button" class="problem-item ${escapeHtml(issue.level || 'info')}" data-problem-index="${index}">
+            <strong>${escapeHtml(issue.title || 'Issue')}</strong>
+            <span>${escapeHtml(issue.message || '')}</span>
+        </button>
+    `).join('');
+
+    problemsList.querySelectorAll('[data-problem-index]').forEach(button => {
+        button.addEventListener('click', () => {
+            const issue = markerState[Number(button.getAttribute('data-problem-index')) || 0];
+            if (issue) revealEditorLine(issue.line || 1);
+        });
+    });
+}
+
+function pushMonacoMarkers(problemEntries) {
+    if (window.editor && window.monaco && typeof window.editor.getModel === 'function') {
+        const severityMap = {
+            error: monaco.MarkerSeverity.Error,
+            warning: monaco.MarkerSeverity.Warning,
+            info: monaco.MarkerSeverity.Info
+        };
+        const markers = (problemEntries || []).map(issue => ({
+            startLineNumber: issue.line || 1,
+            startColumn: issue.column || 1,
+            endLineNumber: issue.endLine || issue.line || 1,
+            endColumn: issue.endColumn || Math.max((issue.column || 1) + 1, 2),
+            message: issue.message || 'Issue',
+            severity: severityMap[issue.level || 'info'] || monaco.MarkerSeverity.Info
+        }));
+        monaco.editor.setModelMarkers(window.editor.getModel(), 'amanaje-create-editor', markers);
+    }
+    renderProblems(problemEntries);
+}
+
+function extractProblemsFromExecution(result) {
+    const issues = [];
+    const traceback = result?.error || result?.stderr || '';
+    const lineMatch = traceback.match(/line (\d+)/);
+    const lineNumber = lineMatch ? Number(lineMatch[1]) : 1;
+
+    if (result?.error) {
+        issues.push({
+            level: 'error',
+            title: 'Execution error',
+            message: result.error.trim().split('\n').slice(-1)[0] || 'Execution error',
+            line: lineNumber,
+            column: 1
+        });
+    }
+
+    return issues;
+}
+
+function refreshCreateWorkspaceInsights() {
+    updateCursorStatus();
+    updateDocumentStats();
+    updateHeaderMetadata();
+    renderOutline();
+}
+
+function focusPanel(panelId) {
+    const panel = dom(panelId);
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openCommandPalette() {
+    if (!window.editor) return;
+    window.editor.focus?.();
+    if (typeof window.editor.trigger === 'function') {
+        window.editor.trigger('keyboard', 'editor.action.quickCommand', {});
+    }
+}
+
+function toggleCollapse(targetId, toggleButton) {
+    const body = dom(targetId);
+    if (!body || !toggleButton) return;
+
+    const expanded = toggleButton.getAttribute('aria-expanded') === 'true';
+    body.hidden = expanded;
+    toggleButton.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+
+    const icon = toggleButton.querySelector('.collapse-icon');
+    if (icon) icon.textContent = expanded ? '+' : '-';
+}
+
+function wireCreateEditorShellControls() {
+    dom('btnCommandPalette')?.addEventListener('click', openCommandPalette);
+    dom('btnRefreshEditorContext')?.addEventListener('click', () => loadEditorRegistryContext().catch(error => showStatus(error.message, 'error')));
+    dom('btnInsertRegistrySnippet')?.addEventListener('click', insertRegistrySnippet);
+    dom('btnClearRegistryContext')?.addEventListener('click', clearRegistryContextSelection);
+    dom('btnClearOutput')?.addEventListener('click', clearExecutionOutput);
+    dom('btnClearProblems')?.addEventListener('click', () => pushMonacoMarkers([]));
+    dom('btnSyncVariables')?.addEventListener('click', parseAndDisplayEditorState);
+    dom('btnSyncMetadata')?.addEventListener('click', () => displayMetadataPanel(getUploadMetadata()));
+    dom('btnFocusOutput')?.addEventListener('click', () => focusPanel('outputPanel'));
+    dom('btnFocusVariables')?.addEventListener('click', () => focusPanel('variablesPanel'));
+    dom('btnFocusMetadata')?.addEventListener('click', () => focusPanel('metadataPanel'));
+    document.querySelectorAll('[data-collapse-target]').forEach(button => {
+        button.addEventListener('click', () => toggleCollapse(button.getAttribute('data-collapse-target'), button));
+    });
+    refreshCreateWorkspaceInsights();
+    pushMonacoMarkers([]);
+    clearExecutionOutput();
+    loadEditorRegistryContext().catch(error => showStatus(error.message, 'warning'));
+}
+
 function buildEditorDocumentPayload(filename) {
     const metadata = getUploadMetadata();
     const script = window.editor ? window.editor.getValue() : '';
@@ -40,15 +309,19 @@ function buildEditorDocumentPayload(filename) {
         version: Number.isFinite(version) ? version : 1,
         history: Array.isArray(metadata.history) ? metadata.history : [{ operation: 'save_script', when: new Date().toISOString() }],
         variables: extractedVariables || {},
+        metadata,
         code: {
             script,
             language: 'python',
-            metadata
+            metadata,
+            line_count: script ? script.split('\n').length : 0
         }
     };
 }
 
 async function executeCode() {
+    await window.editorReady;
+
     if (!window.editor) {
         showStatus('Please wait for Monaco Editor to finish loading.', 'error');
         return;
@@ -61,36 +334,51 @@ async function executeCode() {
     }
 
     try {
+        setRuntimeState('Queued');
         showStatus('Queueing code execution...', 'info');
         clearExecutionOutput();
 
         const accepted = await editorFetchJson('/execute/jobs', {
             method: 'POST',
-            body: JSON.stringify({ code })
+            body: JSON.stringify({ code, registryContext: selectedEditorRegistryContext() })
         });
-        window.AmanajeUI?.watchRun?.(accepted.run_id, { source: 'editor-utilities' });
+        window.AmanajeUI?.watchRun?.(accepted.run_id, { source: 'create-editor' });
+        setRuntimeState('Running');
         const result = await waitForEditorExecutionRun(accepted.run_id);
 
+        window.editorExecution = result || null;
         window.executedVariables = result.variables || {};
+        window.editorDocument = result.document || buildEditorDocumentPayload(getUploadMetadata().name);
+        window.editorMetadata = result.metadata || getUploadMetadata();
+        extractedVariables = result.variables || {};
 
-        if (result.stdout || result.stderr) {
-            displayExecutionOutput(result.stdout, result.stderr);
-        }
+        displayExecutionOutput(
+            result.stdout,
+            result.stderr,
+            result.status === 'success' ? 'Execution finished.' : 'Execution completed with errors.'
+        );
+        displayExtractedVariables(result.variables || {});
+        displayMetadataPanel(window.editorMetadata);
+        pushMonacoMarkers(extractProblemsFromExecution(result));
 
         if (result.variables && Object.keys(result.variables).length > 0) {
-            displayExtractedVariables(result.variables);
-            displayMetadataPanel(getUploadMetadata());
-            showStatus('Code executed successfully. Variables extracted.', 'success');
+            setRuntimeState(result.error ? 'Execution failed' : 'Last run succeeded');
+            showStatus(`Execution finished. ${Object.keys(result.variables || {}).length} variables are available.`, result.error ? 'error' : 'success');
         } else if (result.error) {
+            setRuntimeState('Execution failed');
             showStatus(`Execution error: ${result.error}`, 'error');
         } else {
-            displayMetadataPanel(getUploadMetadata());
+            setRuntimeState('Last run succeeded');
             showStatus('Code executed successfully.', 'success');
         }
 
         loadFileList();
+        refreshCreateWorkspaceInsights();
     } catch (error) {
         console.error('Execution error:', error);
+        setRuntimeState('Execution failed');
+        pushMonacoMarkers([{ level: 'error', title: 'Request failed', message: error.message || String(error), line: 1, column: 1 }]);
+        displayExecutionOutput('', String(error), 'Backend request failed.');
         showStatus(`Execution failed: ${error.message}`, 'error');
     }
 }
@@ -115,52 +403,130 @@ async function waitForEditorExecutionRun(runId) {
     throw new Error('The background execution did not finish within the polling window.');
 }
 
-function displayExecutionOutput(stdout, stderr) {
+function displayExecutionOutput(stdout, stderr, infoMessage = '') {
     const outputContainer = document.getElementById('executionOutput');
-    const outputContent = document.getElementById('outputContent');
-    if (!outputContainer || !outputContent) return;
+    if (!outputContainer) return;
 
-    outputContent.innerHTML = '';
+    const chunks = [];
+    if (infoMessage) chunks.push(`<div class="output-line"><span class="output-title">Status</span>${escapeHtml(infoMessage)}</div>`);
+    if (stdout && stdout.trim()) chunks.push(`<div class="output-line"><span class="output-title">Stdout</span>${escapeHtml(stdout)}</div>`);
+    if (stderr && stderr.trim()) chunks.push(`<div class="output-line error"><span class="output-title">Stderr</span>${escapeHtml(stderr)}</div>`);
 
-    if (stdout && stdout.trim()) {
-        const stdoutLine = document.createElement('div');
-        stdoutLine.className = 'output-line success';
-        stdoutLine.textContent = `Output:\n${stdout}`;
-        outputContent.appendChild(stdoutLine);
+    if (!chunks.length) {
+        outputContainer.classList.add('empty');
+        outputContainer.classList.remove('visible');
+        outputContainer.textContent = 'Run the current script to inspect standard output and backend execution errors.';
+        return;
     }
 
-    if (stderr && stderr.trim()) {
-        const stderrLine = document.createElement('div');
-        stderrLine.className = 'output-line error';
-        stderrLine.textContent = `Errors:\n${stderr}`;
-        outputContent.appendChild(stderrLine);
-    }
-
+    outputContainer.classList.remove('empty');
     outputContainer.classList.add('visible');
+    outputContainer.innerHTML = chunks.join('');
 }
 
 function clearExecutionOutput() {
     const outputContainer = document.getElementById('executionOutput');
-    const outputContent = document.getElementById('outputContent');
-    if (!outputContainer || !outputContent) return;
+    if (!outputContainer) return;
 
-    outputContent.innerHTML = '';
+    outputContainer.textContent = 'Run the current script to inspect standard output and backend execution errors.';
+    outputContainer.classList.add('empty');
     outputContainer.classList.remove('visible');
+}
+
+function isEscaped(text, index) {
+    let backslashes = 0;
+    for (let cursor = index - 1; cursor >= 0 && text[cursor] === '\\'; cursor -= 1) backslashes += 1;
+    return backslashes % 2 === 1;
+}
+
+function countBracketDelta(line) {
+    let delta = 0;
+    let quote = null;
+
+    for (let index = 0; index < line.length; index += 1) {
+        const current = line[index];
+        const nextThree = line.slice(index, index + 3);
+
+        if (!quote && current === '#') break;
+        if (!quote && (nextThree === '"""' || nextThree === "'''")) {
+            quote = nextThree;
+            index += 2;
+            continue;
+        }
+        if (quote && nextThree === quote) {
+            quote = null;
+            index += 2;
+            continue;
+        }
+        if (quote === '"' || quote === "'") {
+            if (current === quote && !isEscaped(line, index)) quote = null;
+            continue;
+        }
+        if (!quote && (current === '"' || current === "'")) {
+            quote = current;
+            continue;
+        }
+        if (quote) continue;
+        if ('([{'.includes(current)) delta += 1;
+        if (')]}'.includes(current)) delta -= 1;
+    }
+
+    return delta;
 }
 
 function parseVariableAssignmentsFromText() {
     if (!window.editor) return [];
 
     const code = window.editor.getValue();
+    const lines = code.split('\n');
     const assignments = [];
-    const assignmentRegex = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+?)(?=\n|$)/gm;
-    let match;
+    let currentAssignment = null;
+    let bracketDepth = 0;
 
-    while ((match = assignmentRegex.exec(code)) !== null) {
+    lines.forEach((line, index) => {
+        const trimmed = line.trim();
+
+        if (!currentAssignment) {
+            if (!trimmed || trimmed.startsWith('#')) return;
+            if (/^\s+/.test(line)) return;
+
+            const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+?)\s*$/);
+            if (!match) return;
+
+            currentAssignment = { name: match[1], expressionLines: [match[2]], line: index + 1 };
+            bracketDepth = countBracketDelta(match[2]);
+
+            if (bracketDepth <= 0 && !match[2].trim().endsWith('\\')) {
+                assignments.push({
+                    name: currentAssignment.name,
+                    expression: currentAssignment.expressionLines.join('\n').trim(),
+                    line: currentAssignment.line
+                });
+                currentAssignment = null;
+                bracketDepth = 0;
+            }
+            return;
+        }
+
+        currentAssignment.expressionLines.push(line);
+        bracketDepth += countBracketDelta(line);
+
+        if (bracketDepth <= 0 && !trimmed.endsWith('\\')) {
+            assignments.push({
+                name: currentAssignment.name,
+                expression: currentAssignment.expressionLines.join('\n').trim(),
+                line: currentAssignment.line
+            });
+            currentAssignment = null;
+            bracketDepth = 0;
+        }
+    });
+
+    if (currentAssignment) {
         assignments.push({
-            name: match[1],
-            expression: match[2].trim(),
-            line: code.substring(0, match.index).split('\n').length
+            name: currentAssignment.name,
+            expression: currentAssignment.expressionLines.join('\n').trim(),
+            line: currentAssignment.line
         });
     }
 
@@ -168,18 +534,21 @@ function parseVariableAssignmentsFromText() {
 }
 
 function buildVariablePayloadFromAssignment(assignment) {
-    const parsedValue = parsePythonLiteral(assignment.expression);
-    const kind = inferVariableKind(parsedValue, assignment.expression);
+    const expression = String(assignment.expression ?? '');
+    const parsedValue = parsePythonLiteral(expression);
+    const kind = inferVariableKind(parsedValue, expression);
     const preview = serializeVariableForDisplay(parsedValue, kind);
 
     return {
-        expression: assignment.expression,
+        name: assignment.name,
+        expression,
         kind,
-        type: kind,
+        type: kind === 'number' ? (Number.isInteger(parsedValue) ? 'int' : 'float') : Array.isArray(parsedValue) ? 'list' : parsedValue === null ? 'NoneType' : typeof parsedValue,
         line: assignment.line,
-        value: parsedValue,
+        value: preview,
         raw_value: parsedValue,
-        preview
+        preview,
+        metadata: { source: 'editor', line: assignment.line, expression }
     };
 }
 
@@ -191,9 +560,23 @@ function parseAndDisplayEditorState() {
         return collection;
     }, {});
 
+    extractedVariables = parsedVariables;
+    window.executedVariables = parsedVariables;
     window.editorMetadata = metadata || {};
+    window.editorDocument = buildEditorDocumentPayload(metadata.name);
     displayExtractedVariables(parsedVariables);
     displayMetadataPanel(window.editorMetadata);
+    pushMonacoMarkers([]);
+
+    if (assignments.length > 0 || Object.keys(metadata).length > 0) {
+        setRuntimeState('Parsed locally');
+        showStatus(`Parsed ${assignments.length} assignments and ${Object.keys(metadata).length} metadata fields.`, 'success');
+    } else {
+        setRuntimeState('Idle');
+        showStatus('No top-level variable assignments were found in the editor.', 'info');
+    }
+
+    refreshCreateWorkspaceInsights();
 
     return {
         assignments,
@@ -205,36 +588,32 @@ function parseAndDisplayEditorState() {
 function displayExtractedVariables(variables) {
     const panel = document.getElementById('variablePanel');
     const list = document.getElementById('variableList');
-    if (!list || !panel) return;
+    if (!list) return;
 
-    list.innerHTML = '';
     extractedVariables = variables || {};
 
     if (!variables || Object.keys(variables).length === 0) {
-        list.innerHTML = '<p style="color: #777;">No variables extracted.</p>';
-        panel.style.display = 'block';
+        list.innerHTML = '<div class="empty-state">Parse or run the script to collect variables.</div>';
+        if (panel) panel.style.display = 'block';
         return;
     }
 
-    Object.entries(variables).forEach(([name, info]) => {
-        const item = document.createElement('div');
-        item.className = 'variable-item';
-        item.innerHTML = `
-            <span class="var-name">${escapeHtml(name)}</span>
-            <span class="var-type">${escapeHtml(info.kind || info.type || '')}</span>
-            <span class="var-value">${escapeHtml(stringifyVariableValue(info.preview ?? info.raw_value ?? info.value ?? ''))}</span>
-        `;
-        list.appendChild(item);
-    });
+    list.innerHTML = Object.entries(variables).map(([name, info]) => `
+        <article class="variable-card">
+            <strong>${escapeHtml(name)}</strong>
+            <div class="variable-meta">${escapeHtml(info.kind || info.type || 'value')} - line ${escapeHtml(String(info.metadata?.line || info.line || '-'))}</div>
+            <p class="variable-preview">${escapeHtml(stringifyVariableValue(info.preview ?? info.value ?? info.raw_value ?? ''))}</p>
+        </article>
+    `).join('');
 
-    panel.style.display = 'block';
+    if (panel) panel.style.display = 'block';
 }
 
 function stringifyVariableValue(value) {
     if (typeof value === 'string') return value;
 
     try {
-        return JSON.stringify(value);
+        return JSON.stringify(value, null, 2);
     } catch (error) {
         return String(value);
     }
@@ -353,8 +732,17 @@ async function loadVariableFileFromList(filename) {
         }
 
         window.executedVariables = data.variables || {};
+        window.editorExecution = null;
+        window.editorMetadata = data.metadata || {};
+        window.editorDocument = {
+            ...data,
+            metadata: data.metadata || {},
+            code: typeof data.code === 'object' && data.code !== null ? data.code : { script: codeText || '', language: 'python' }
+        };
         displayExtractedVariables(data.variables || {});
-        displayMetadataPanel(getUploadMetadata());
+        displayMetadataPanel(window.editorMetadata);
+        pushMonacoMarkers([]);
+        refreshCreateWorkspaceInsights();
         showStatus(`Loaded ${filename}.`, 'success');
     } catch (error) {
         console.error('Load error details:', error);
@@ -493,7 +881,6 @@ function isQuotedPythonString(rawValue) {
 function extractMetadataFromEditor(allowedFields = null) {
     if (!window.editor) return {};
 
-    const code = window.editor.getValue();
     const metadata = {};
     const defaultFields = [
         'name',
@@ -533,20 +920,17 @@ function extractMetadataFromEditor(allowedFields = null) {
     ];
 
     const fieldsToExtract = allowedFields || defaultFields;
-    const assignmentRegex = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+?)(?=\n|$)/gm;
-    let match;
-
-    while ((match = assignmentRegex.exec(code)) !== null) {
-        const varName = match[1];
-        const varValue = match[2].trim();
+    parseVariableAssignmentsFromText().forEach((assignment) => {
+        const varName = assignment.name;
+        const varValue = String(assignment.expression ?? '').trim();
         const parsedValue = parsePythonLiteral(varValue);
 
-        if (!fieldsToExtract.includes(varName)) continue;
+        if (!varName || !varValue || !fieldsToExtract.includes(varName)) return;
         if (isMaterializedEditorField(varName) && parsedValue === varValue && !isQuotedPythonString(varValue)) {
-            continue;
+            return;
         }
         metadata[varName] = parsedValue;
-    }
+    });
 
     return metadata;
 }
@@ -583,7 +967,7 @@ function displayMetadataPanel(metadata) {
     }
 
     if (!metadata || Object.keys(metadata).length === 0) {
-        content.innerHTML = '<p style="color: #999;">No metadata variables defined in the editor.</p>';
+        content.innerHTML = '<div class="empty-state">Define metadata variables in the script to preview a save-ready document.</div>';
     } else {
         const rows = Object.entries(metadata).map(([key, value]) => `
             <tr>
@@ -594,8 +978,8 @@ function displayMetadataPanel(metadata) {
 
         content.innerHTML = `
             <table class="metadata-table">
-                <tr><th>Field</th><th>Value</th></tr>
-                ${rows}
+                <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                <tbody>${rows}</tbody>
             </table>
         `;
     }
@@ -609,19 +993,36 @@ function loadMetadataTemplate(operationId) {
 import pandas as pd
 
 df = pd.DataFrame({
-    "value": [10, 20, 30],
-    "category": ["a", "b", "c"]
+    "feature_a": [1.0, 2.0, 3.0, 4.0],
+    "feature_b": [10.0, 20.0, 30.0, 40.0],
+    "segment": ["north", "south", "north", "west"],
+    "target": [0, 1, 0, 1]
 })
 
 csv_text = df.to_csv(index=False)
 
+
+# Name of the dataset.
 name = "sample_dataset"
+
+# Description of the dataset.
 description = "Dataset created from the editor"
+
+# Object type. To define the payload to be used in the dataset.
 object_type = "dataset"
+
+# Path of the dataset. Between, generated, model and dataset.
 path = "generated/sample_dataset.csv"
+
+# Version of the dataset. To be used in further updates on the dataset.
 version = 1
-dataset_type = "dataset"
+
+# Dataset type. Between numerical, categorical, time series, image, videoaudio, text, mixed.
+dataset_type = "mixed_dataset"
+
+# Connection string. To be used in datasets that use live updates.
 connection_string = ""
+
 `;
 
     const modelTemplate = `# Model creation template
@@ -633,26 +1034,55 @@ import io
 import joblib
 from sklearn.ensemble import RandomForestRegressor
 
+
+# Write the code for your learning model below:
+
 model = RandomForestRegressor(n_estimators=50, random_state=42)
 buffer = io.BytesIO()
 joblib.dump(model, buffer)
 buffer.seek(0)
 
+
+# Name of the model.
 name = "sample_model"
+
+# Description of the model.
 description = "Model created from the editor"
+
+# Object type. To define the payload to be used in the model.
 object_type = "learning_model"
+
+# Path of the model. Between, generated, model and dataset.
 path = "generated/sample_model.joblib"
+
+# Version of the model. To be used in further updates on the model.
 version = 1
+
+# Model type. Between, supervised, un-supervised, generation, classification, regression, deep learning.
 model_type = "supervised_model"
+
+# Parameters. The parameters, to be hydrated automatically, on the training and study of the model.
 parameters = {"framework": "sklearn", "estimator_class": "RandomForestRegressor"}
+
+# Metrics. The metrics to be used in the training of the model.
 metrics = {"task": "regression"}
+
+# Reference data. The standard dataset to look at when training the model.
 reference_data = "sample_dataset.csv"
+
+# I/O Features. The standard features/columns to look at when selecting the input and output.
 input_features = ["input"]
 output_features = ["output"]
+
+# Pre-training model conditions. To be updated whenever there is an operation performed on the dataset.
 is_trained = False
 is_tested = False
 is_deployed = False
+
+# Binary data. The binary used to write in or out the learning model object used in training.
 joblib_bytes = base64.b64encode(buffer.read()).decode("utf-8")
+
+
 
 # PyTorch TorchScript alternative:
 # import torch
@@ -713,8 +1143,16 @@ is_deployed = False
 
     window.editor.setValue(operationId === 'assistant-models' ? assistantModelTemplate : (operationId === 'models' ? modelTemplate : dataTemplate));
     window.executedVariables = {};
+    extractedVariables = {};
+    window.editorExecution = null;
+    window.editorDocument = null;
+    pushMonacoMarkers([]);
+    clearExecutionOutput();
+    displayExtractedVariables({});
     displayMetadataPanel(getUploadMetadata());
+    setRuntimeState('Template loaded');
     showStatus('Template loaded. Update the metadata values before creating the object.', 'success');
+    refreshCreateWorkspaceInsights();
 }
 
 function parseAndDisplayMetadata() {
@@ -745,15 +1183,17 @@ function clearEditor() {
     if (confirm('Clear editor content?')) {
         window.editor.setValue('');
         window.executedVariables = {};
+        window.editorExecution = null;
+        window.editorDocument = null;
+        window.editorMetadata = {};
         extractedVariables = {};
 
-        const variablePanel = document.getElementById('variablePanel');
-        if (variablePanel) variablePanel.style.display = 'none';
-
-        const metadataPanel = document.getElementById('metadataPanel');
-        if (metadataPanel) metadataPanel.style.display = 'none';
-
         clearExecutionOutput();
+        displayExtractedVariables({});
+        displayMetadataPanel({});
+        pushMonacoMarkers([]);
+        setRuntimeState('Idle');
         showStatus('Editor cleared.', 'success');
+        refreshCreateWorkspaceInsights();
     }
 }

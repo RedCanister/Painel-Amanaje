@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import base64
 import hashlib
+import importlib
+import inspect
 import json
 import math
 import os
@@ -88,13 +90,23 @@ from app.utils.plot_registry import (
 )
 from app.utils.plotting import plot_loss_curve, plot_metric_comparison, plot_predictions_vs_actual
 from app.utils.retrain_utils import monitor_and_retrain, should_retrain
-from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
+from app.utils.run_ledger import (
+    append_run_terminal_line,
+    build_run_terminal_lines,
+    create_run_entry,
+    list_run_entries,
+    read_run_entry,
+    summarize_run_entry,
+    update_run_entry,
+)
 from app.utils.serialization import to_json
 from app.utils.settings import (
     apply_debug_logging,
+    apply_env_overrides,
     apply_saved_env_overrides,
     build_client_settings,
     load_settings_state,
+    register_provider_token_env_var,
 )
 from app.utils.tabular_utils import (
     apply_feature_operations,
@@ -201,6 +213,7 @@ PLOT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "plots")
 SERVING_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "serving")
 EXPORT_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "exports")
 FEATURE_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "features")
+STORE_ARTIFACT_DIR = ensure_dir(RUNTIME_DIR / "store")
 RUN_LEDGER_DIR = ensure_dir(RUNTIME_DIR / "runs")
 ASSISTANT_MODEL_DIR = ensure_dir(RUNTIME_DIR / "assistant_models")
 ASSISTANT_DATASET_DIR = ensure_dir(RUNTIME_DIR / "assistant_datasets")
@@ -209,7 +222,29 @@ ASSISTANT_EVAL_DIR = ensure_dir(RUNTIME_DIR / "assistant_evals")
 LOG_DIR = ensure_dir(PROJECT_ROOT / "logs")
 MLRUNS_DIR = ensure_dir(PROJECT_ROOT / "mlruns")
 ACTIVITY_LOG_PATH = MONITORING_ARTIFACT_DIR / "activity_log.jsonl"
-apply_saved_env_overrides(SETTINGS_STATE_PATH)
+
+
+def _register_store_provider_token_env_vars() -> None:
+    providers_path = STORE_ARTIFACT_DIR / "providers.json"
+    if not providers_path.exists():
+        return
+    try:
+        payload = json.loads(providers_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    providers = payload.get("providers") if isinstance(payload, Mapping) else {}
+    if not isinstance(providers, Mapping):
+        return
+    for provider in providers.values():
+        if not isinstance(provider, Mapping):
+            continue
+        token_env_var = str(provider.get("token_env_var") or "").strip()
+        if not token_env_var:
+            continue
+        try:
+            register_provider_token_env_var(token_env_var, provider_name=str(provider.get("name") or ""))
+        except Exception:
+            APP_LOGGER.warning("Ignoring invalid Store provider token_env_var while loading settings.", exc_info=True)
 
 DATASET_OPERATION = "datasets"
 MODEL_OPERATION = "models"
@@ -322,6 +357,9 @@ CONTROL_PARAMETER_KEYS = {
     "test_size",
     "random_state",
     "estimator_class",
+    "estimator_params",
+    "fit_params",
+    "fit_kwargs",
     "experiment_name",
     "run_name",
     "task_type",
@@ -336,9 +374,13 @@ CONTROL_PARAMETER_KEYS = {
     "metric",
     "search_space",
     "objective_metric",
+    "metrics_to_track",
     "plot_results",
     "training_mode",
+    "training_backend",
+    "base_framework",
     "device",
+    "algorithm",
     "base_model_id",
     "base_artifact_path",
     "base_run_id",
@@ -347,9 +389,26 @@ CONTROL_PARAMETER_KEYS = {
     "training_lineage",
     "artifact_manifest",
 }
+SKLEARN_SUPERVISED_FAMILIES = {"classifier", "regressor"}
+SKLEARN_UNSUPERVISED_FAMILIES = {"clustering", "clusterer", "transformer", "outlier", "unsupervised", "estimator"}
+SKLEARN_UNSUPERVISED_TASK_TYPES = {
+    "clustering",
+    "clusterer",
+    "cluster",
+    "transformer",
+    "outlier",
+    "outlier_detection",
+    "anomaly",
+    "anomaly_detection",
+    "unsupervised",
+    "estimator",
+}
+SKLEARN_ESTIMATOR_LOOKUP_CACHE: dict[str, Any] | None = None
 
 APP_LOGGER = init_global_logging(log_dir=str(LOG_DIR), logger_name="painel_amanaje")
 LOGGER = get_logger("main_app", log_file=str(LOG_DIR / "main_app.log"))
+_register_store_provider_token_env_vars()
+apply_saved_env_overrides(SETTINGS_STATE_PATH)
 apply_debug_logging(
     bool(load_settings_state(SETTINGS_STATE_PATH).get("feature_flags", {}).get("debug_mode")),
     (APP_LOGGER, LOGGER),
@@ -404,6 +463,9 @@ def _build_runtime_config() -> dict[str, Any]:
             "optuna_dir": str(OPTUNA_ARTIFACT_DIR),
             "plots_dir": str(PLOT_ARTIFACT_DIR),
             "serving_dir": str(SERVING_ARTIFACT_DIR),
+            "exports_dir": str(EXPORT_ARTIFACT_DIR),
+            "features_dir": str(FEATURE_ARTIFACT_DIR),
+            "store_dir": str(STORE_ARTIFACT_DIR),
             "assistant_models_dir": str(ASSISTANT_MODEL_DIR),
             "assistant_datasets_dir": str(ASSISTANT_DATASET_DIR),
             "assistant_evals_dir": str(ASSISTANT_EVAL_DIR),
@@ -511,15 +573,16 @@ class ProductionMonitorRequest(BaseModel):
 class PreparedDataset:
     dataframe: pd.DataFrame
     feature_frame: pd.DataFrame
-    target_series: pd.Series
+    target_series: pd.Series | pd.DataFrame
     x_train: pd.DataFrame
     x_test: pd.DataFrame
-    y_train: pd.Series
-    y_test: pd.Series
+    y_train: pd.Series | pd.DataFrame
+    y_test: pd.Series | pd.DataFrame
     input_features: list[str]
     output_feature: str
     task_type: str
-    label_mapping: dict[str, int] = field(default_factory=dict)
+    output_features: list[str] = field(default_factory=list)
+    label_mapping: dict[str, Any] = field(default_factory=dict)
 
 
 PRODUCTION_STATE: dict[str, Any] = {
@@ -543,6 +606,7 @@ PRODUCTION_STATE: dict[str, Any] = {
 
 def apply_runtime_settings_state(state: Mapping[str, Any] | None = None) -> dict[str, Any]:
     resolved_state = dict(state or load_settings_state(SETTINGS_STATE_PATH))
+    apply_env_overrides(resolved_state)
     feature_flags = resolved_state.get("feature_flags", {}) if isinstance(resolved_state, Mapping) else {}
     apply_debug_logging(bool(feature_flags.get("debug_mode")), (APP_LOGGER, LOGGER))
     return resolved_state
@@ -1550,18 +1614,23 @@ def _resolve_training_feature_selection(
     dataframe: pd.DataFrame,
     model_record: Any,
     parameters: Mapping[str, Any],
-) -> tuple[list[str], str]:
+) -> tuple[list[str], list[str]]:
     requested_input_features = _coerce_feature_list(parameters.get("input_features"))
     requested_output_features = _coerce_feature_list(parameters.get("output_features"))
     stored_input_features = _coerce_feature_list(getattr(model_record, "input_features", None))
     stored_output_features = _coerce_feature_list(getattr(model_record, "output_features", None))
+    unsupervised = _is_unsupervised_sklearn_request(parameters)
 
     output_features = requested_output_features or stored_output_features
-    output_feature = output_features[0] if output_features else _default_output_feature(dataframe)
+    if not output_features and not unsupervised:
+        output_features = [_default_output_feature(dataframe)]
+    output_feature_set = {str(feature) for feature in output_features}
     input_features = requested_input_features or stored_input_features
     if not input_features:
-        input_features = [column for column in dataframe.columns if str(column) != output_feature]
-    return input_features, output_feature
+        input_features = [column for column in dataframe.columns if str(column) not in output_feature_set]
+    else:
+        input_features = [column for column in input_features if str(column) not in output_feature_set]
+    return input_features, output_features
 
 
 def _build_training_preflight(
@@ -1571,11 +1640,12 @@ def _build_training_preflight(
 ) -> dict[str, Any]:
     dataframe = _load_dataset_frame_from_record(dataset_record)
     available_columns = [str(column) for column in dataframe.columns]
-    input_features, output_feature = _resolve_training_feature_selection(dataframe, model_record, parameters)
-    required_columns = [*input_features, output_feature]
+    input_features, output_features = _resolve_training_feature_selection(dataframe, model_record, parameters)
+    output_feature = output_features[0] if output_features else None
+    required_columns = [*input_features, *output_features]
     missing_columns = [column for column in required_columns if column not in available_columns]
 
-    recommended_output = _default_output_feature(dataframe) if available_columns else None
+    recommended_output = None if _is_unsupervised_sklearn_request(parameters) else (_default_output_feature(dataframe) if available_columns else None)
     recommended_inputs = [column for column in available_columns if column != recommended_output]
     return {
         "ok": not missing_columns,
@@ -1585,6 +1655,7 @@ def _build_training_preflight(
         "model_name": getattr(model_record, "name", None),
         "input_features": input_features,
         "output_feature": output_feature,
+        "output_features": output_features,
         "required_columns": required_columns,
         "available_columns": available_columns,
         "missing_columns": missing_columns,
@@ -3293,6 +3364,7 @@ def _build_training_tracking_context(
         "dataset_profile": {
             "input_features": list(prepared.input_features),
             "output_feature": prepared.output_feature,
+            "output_features": list(prepared.output_features or ([prepared.output_feature] if prepared.output_feature else [])),
             "feature_count": len(prepared.input_features),
             "train_shape": [int(train_rows), int(train_columns)],
             "test_shape": [int(test_rows), int(test_columns)],
@@ -3703,10 +3775,97 @@ def _default_output_feature(df: pd.DataFrame) -> str:
     return str(df.columns[-1])
 
 
+def _safe_sklearn_estimator_family(estimator_or_class: Any) -> str:
+    estimator_type = str(getattr(estimator_or_class, "_estimator_type", "") or "").strip().lower()
+    if estimator_type == "classifier":
+        return "classifier"
+    if estimator_type == "regressor":
+        return "regressor"
+    if estimator_type in {"clusterer", "cluster"}:
+        return "clustering"
+    if estimator_type in {"outlier_detector", "outlier"}:
+        return "outlier"
+
+    try:
+        from sklearn.base import is_classifier, is_regressor
+
+        if is_classifier(estimator_or_class):
+            return "classifier"
+        if is_regressor(estimator_or_class):
+            return "regressor"
+    except Exception:
+        pass
+
+    if hasattr(estimator_or_class, "transform") or hasattr(estimator_or_class, "fit_transform"):
+        return "transformer"
+    if hasattr(estimator_or_class, "fit_predict"):
+        return "clustering"
+    if hasattr(estimator_or_class, "score_samples") or hasattr(estimator_or_class, "decision_function"):
+        return "outlier"
+    return "estimator"
+
+
+def _normalise_sklearn_task_family(value: str) -> str:
+    normalized = str(value or "").strip().lower()
+    aliases = {
+        "classification": "classifier",
+        "regression": "regressor",
+        "classifier": "classifier",
+        "regressor": "regressor",
+        "cluster": "clustering",
+        "clusterer": "clustering",
+        "clustering": "clustering",
+        "outlier_detection": "outlier",
+        "anomaly": "outlier",
+        "anomaly_detection": "outlier",
+        "unsupervised": "unsupervised",
+        "transform": "transformer",
+        "transformer": "transformer",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _is_unsupervised_sklearn_request(parameters: Mapping[str, Any]) -> bool:
+    explicit_task = _normalise_sklearn_task_family(str(parameters.get("task_type") or ""))
+    if explicit_task in SKLEARN_UNSUPERVISED_FAMILIES:
+        return True
+    framework = str(parameters.get("framework") or "sklearn").strip().lower()
+    if framework not in {"sklearn", "scikit-learn", "scikitlearn"}:
+        return False
+    estimator_class = parameters.get("estimator_class") or parameters.get("algorithm")
+    if not estimator_class:
+        return False
+    try:
+        estimator = _select_sklearn_estimator(str(estimator_class), task_type="regression")
+        return _safe_sklearn_estimator_family(estimator) in SKLEARN_UNSUPERVISED_FAMILIES
+    except Exception:
+        return False
+
+
 def _infer_task_type(target: pd.Series, model_record: Any, parameters: Mapping[str, Any]) -> str:
     explicit = str(parameters.get("task_type") or "").strip().lower()
-    if explicit in {"classification", "regression"}:
-        return explicit
+    explicit_family = _normalise_sklearn_task_family(explicit)
+    if explicit_family == "classifier":
+        return "classification"
+    if explicit_family == "regressor":
+        return "regression"
+    if explicit_family in SKLEARN_UNSUPERVISED_FAMILIES:
+        return explicit_family
+
+    if str(parameters.get("framework") or "sklearn").strip().lower() in {"sklearn", "scikit-learn", "scikitlearn"}:
+        estimator_class = parameters.get("estimator_class") or parameters.get("algorithm")
+        if estimator_class:
+            try:
+                estimator = _select_sklearn_estimator(str(estimator_class), task_type="regression")
+                family = _safe_sklearn_estimator_family(estimator)
+                if family == "classifier":
+                    return "classification"
+                if family == "regressor":
+                    return "regression"
+                if family in SKLEARN_UNSUPERVISED_FAMILIES:
+                    return family
+            except Exception:
+                pass
 
     metrics = getattr(model_record, "metrics", {}) or {}
     metric_keys = {str(key).lower() for key in metrics.keys()}
@@ -3762,6 +3921,27 @@ def _encode_target(target: pd.Series, task_type: str) -> tuple[pd.Series, dict[s
     numeric_target = pd.to_numeric(target, errors="coerce")
     fill_value = float(numeric_target.median()) if numeric_target.notna().any() else 0.0
     return numeric_target.fillna(fill_value).astype(float), {}
+
+
+def _encode_training_target(
+    target: pd.Series | pd.DataFrame,
+    task_type: str,
+) -> tuple[pd.Series | pd.DataFrame, dict[str, Any]]:
+    if isinstance(target, pd.DataFrame):
+        if task_type == "classification":
+            encoded_columns: dict[str, pd.Series] = {}
+            mappings: dict[str, dict[str, int]] = {}
+            for column in target.columns:
+                encoded, mapping = _encode_target(target[column], task_type)
+                encoded_columns[str(column)] = encoded
+                mappings[str(column)] = mapping
+            return pd.DataFrame(encoded_columns, index=target.index), mappings
+
+        numeric = target.apply(pd.to_numeric, errors="coerce")
+        fill_values = numeric.median(numeric_only=True).fillna(0.0)
+        return numeric.fillna(fill_values).fillna(0.0).astype(float), {}
+
+    return _encode_target(target, task_type)
 
 
 def _read_assistant_training_manifest(dataset_record: Any) -> dict[str, Any]:
@@ -3839,14 +4019,22 @@ def _prepare_dataset_for_training(
     parameters: Mapping[str, Any],
 ) -> PreparedDataset:
     dataframe = _load_dataset_frame_from_record(dataset_record)
-    input_features, output_feature = _resolve_training_feature_selection(dataframe, model_record, parameters)
+    input_features, output_features = _resolve_training_feature_selection(dataframe, model_record, parameters)
+    output_feature = output_features[0] if output_features else ""
 
-    validate_dataframe_columns(dataframe, [*input_features, output_feature])
+    validate_dataframe_columns(dataframe, [*input_features, *output_features])
 
     feature_frame = _normalize_feature_frame(dataframe[input_features])
-    target_series = dataframe[output_feature]
-    task_type = _infer_task_type(target_series, model_record, parameters)
-    encoded_target, label_mapping = _encode_target(target_series, task_type)
+    first_target = dataframe[output_feature] if output_feature else pd.Series(index=dataframe.index, dtype=float, name="")
+    task_type = _infer_task_type(first_target, model_record, parameters)
+    is_unsupervised = task_type in SKLEARN_UNSUPERVISED_FAMILIES
+    if is_unsupervised:
+        target_series: pd.Series | pd.DataFrame = pd.Series(index=dataframe.index, dtype=float, name=output_feature)
+        encoded_target: pd.Series | pd.DataFrame = target_series
+        label_mapping: dict[str, Any] = {}
+    else:
+        target_series = dataframe[output_features] if len(output_features) > 1 else dataframe[output_feature]
+        encoded_target, label_mapping = _encode_training_target(target_series, task_type)
 
     from sklearn.model_selection import train_test_split
 
@@ -3856,19 +4044,29 @@ def _prepare_dataset_for_training(
         raise ValueError("test_size must be between 0 and 1.")
 
     stratify = None
-    if task_type == "classification" and encoded_target.nunique() > 1:
+    if task_type == "classification" and isinstance(encoded_target, pd.Series) and encoded_target.nunique() > 1:
         value_counts = encoded_target.value_counts()
         if not value_counts.empty and int(value_counts.min()) > 1:
             stratify = encoded_target
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        feature_frame,
-        encoded_target,
-        test_size=test_size,
-        random_state=random_state,
-        shuffle=True,
-        stratify=stratify,
-    )
+    if is_unsupervised:
+        x_train, x_test = train_test_split(
+            feature_frame,
+            test_size=test_size,
+            random_state=random_state,
+            shuffle=True,
+        )
+        y_train = pd.Series(index=x_train.index, dtype=float, name=output_feature)
+        y_test = pd.Series(index=x_test.index, dtype=float, name=output_feature)
+    else:
+        x_train, x_test, y_train, y_test = train_test_split(
+            feature_frame,
+            encoded_target,
+            test_size=test_size,
+            random_state=random_state,
+            shuffle=True,
+            stratify=stratify,
+        )
 
     return PreparedDataset(
         dataframe=dataframe,
@@ -3880,6 +4078,7 @@ def _prepare_dataset_for_training(
         y_test=y_test,
         input_features=[str(item) for item in input_features],
         output_feature=str(output_feature),
+        output_features=[str(item) for item in output_features],
         task_type=task_type,
         label_mapping=label_mapping,
     )
@@ -3893,32 +4092,156 @@ def _extract_model_hyperparameters(parameters: Mapping[str, Any]) -> dict[str, A
     }
 
 
+def _sklearn_all_estimator_lookup() -> dict[str, Any]:
+    global SKLEARN_ESTIMATOR_LOOKUP_CACHE
+    if SKLEARN_ESTIMATOR_LOOKUP_CACHE is not None:
+        return dict(SKLEARN_ESTIMATOR_LOOKUP_CACHE)
+    try:
+        from sklearn.utils import all_estimators
+    except Exception as exc:
+        raise RuntimeError(f"scikit-learn is required for sklearn estimator discovery: {exc}") from exc
+
+    lookup: dict[str, Any] = {}
+    for estimator_name, estimator_class in all_estimators():
+        keys = {
+            estimator_name.lower(),
+            estimator_name.replace("_", "").lower(),
+            f"{estimator_class.__module__}.{estimator_class.__name__}".lower(),
+        }
+        for key in keys:
+            lookup[key] = estimator_class
+    SKLEARN_ESTIMATOR_LOOKUP_CACHE = dict(lookup)
+    return lookup
+
+
+def _safe_import_sklearn_estimator(reference: str) -> Any | None:
+    if not reference or "." not in reference:
+        return None
+    module_name, _, class_name = reference.rpartition(".")
+    if not module_name.startswith("sklearn."):
+        return None
+    module = importlib.import_module(module_name)
+    estimator = getattr(module, class_name, None)
+    if inspect.isclass(estimator) and callable(getattr(estimator, "fit", None)):
+        return estimator
+    return None
+
+
 def _select_sklearn_estimator(estimator_class: Optional[str], task_type: str) -> Any:
-    from sklearn.ensemble import (
-        GradientBoostingClassifier,
-        GradientBoostingRegressor,
-        RandomForestClassifier,
-        RandomForestRegressor,
-    )
-    from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression, Ridge
-
-    estimator_lookup = {
-        "gradientboostingclassifier": GradientBoostingClassifier,
-        "gradientboostingregressor": GradientBoostingRegressor,
-        "lasso": Lasso,
-        "linearregression": LinearRegression,
-        "logisticregression": LogisticRegression,
-        "randomforestclassifier": RandomForestClassifier,
-        "randomforestregressor": RandomForestRegressor,
-        "ridge": Ridge,
-    }
-
     if estimator_class:
-        estimator = estimator_lookup.get(estimator_class.replace(".", "").lower())
+        reference = str(estimator_class).strip()
+        estimator = _safe_import_sklearn_estimator(reference)
         if estimator is not None:
             return estimator
+        lookup = _sklearn_all_estimator_lookup()
+        normalized = reference.lower()
+        estimator = lookup.get(normalized) or lookup.get(reference.replace(".", "").replace("_", "").lower())
+        if estimator is not None:
+            return estimator
+        raise ValueError(f"Unknown sklearn estimator_class '{estimator_class}'.")
 
-    return LogisticRegression if task_type == "classification" else RandomForestRegressor
+    from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+    return RandomForestClassifier if task_type == "classification" else RandomForestRegressor
+
+
+def _sklearn_constructor_param_names(estimator_or_class: Any) -> set[str] | None:
+    if hasattr(estimator_or_class, "get_params"):
+        try:
+            return set(estimator_or_class.get_params(deep=True).keys())
+        except Exception:
+            pass
+    try:
+        signature = inspect.signature(estimator_or_class)
+    except (TypeError, ValueError):
+        return None
+    names: set[str] = set()
+    for name, parameter in signature.parameters.items():
+        if name == "self":
+            continue
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            return None
+        if parameter.kind in {inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY}:
+            names.add(name)
+    return names
+
+
+def _mapping_parameter(parameters: Mapping[str, Any], *keys: str) -> dict[str, Any]:
+    merged: dict[str, Any] = {}
+    for key in keys:
+        value = parameters.get(key)
+        if isinstance(value, Mapping):
+            merged.update(dict(value))
+    return merged
+
+
+def _partition_sklearn_parameters(
+    parameters: Mapping[str, Any],
+    estimator_or_class: Any,
+) -> dict[str, Any]:
+    valid_names = _sklearn_constructor_param_names(estimator_or_class)
+    explicit_estimator_params = _mapping_parameter(parameters, "estimator_params")
+    legacy_candidates = {
+        key: value
+        for key, value in parameters.items()
+        if key not in CONTROL_PARAMETER_KEYS and value is not None
+    }
+
+    accepted: dict[str, Any] = {}
+    ignored: dict[str, Any] = {}
+    for source in (legacy_candidates, explicit_estimator_params):
+        for key, value in source.items():
+            if valid_names is None or key in valid_names:
+                accepted[key] = value
+            else:
+                ignored[key] = value
+
+    fit_kwargs = _mapping_parameter(parameters, "fit_params", "fit_kwargs")
+    return {
+        "estimator_params": accepted,
+        "fit_kwargs": fit_kwargs,
+        "ignored_params": ignored,
+        "valid_param_names": sorted(valid_names or []),
+        "explicit_estimator_params": explicit_estimator_params,
+        "legacy_estimator_candidates": legacy_candidates,
+    }
+
+
+def _sklearn_estimator_capabilities(estimator_or_class: Any) -> dict[str, bool]:
+    return {
+        "fit": hasattr(estimator_or_class, "fit"),
+        "predict": hasattr(estimator_or_class, "predict"),
+        "predict_proba": hasattr(estimator_or_class, "predict_proba"),
+        "fit_predict": hasattr(estimator_or_class, "fit_predict"),
+        "transform": hasattr(estimator_or_class, "transform"),
+        "fit_transform": hasattr(estimator_or_class, "fit_transform"),
+        "score": hasattr(estimator_or_class, "score"),
+        "score_samples": hasattr(estimator_or_class, "score_samples"),
+        "decision_function": hasattr(estimator_or_class, "decision_function"),
+    }
+
+
+def _sklearn_prediction_outputs(model: Any, features: pd.DataFrame, task_type: str) -> tuple[np.ndarray, dict[str, Any]]:
+    family = _normalise_sklearn_task_family(task_type)
+    if hasattr(model, "predict"):
+        return np.asarray(model.predict(features)), {"output_method": "predict"}
+    if family == "transformer" and hasattr(model, "transform"):
+        return np.asarray(model.transform(features)), {"output_method": "transform"}
+    if hasattr(model, "score_samples"):
+        return np.asarray(model.score_samples(features)), {"output_method": "score_samples"}
+    if hasattr(model, "decision_function"):
+        return np.asarray(model.decision_function(features)), {"output_method": "decision_function"}
+    if hasattr(model, "fit_predict"):
+        return np.asarray(model.fit_predict(features)), {
+            "output_method": "fit_predict",
+            "warning": "fit_predict was used because the estimator does not expose predict.",
+        }
+    if family == "transformer" and hasattr(model, "fit_transform"):
+        return np.asarray(model.fit_transform(features)), {
+            "output_method": "fit_transform",
+            "warning": "fit_transform was used because the estimator does not expose transform.",
+        }
+    return np.asarray([]), {"output_method": None, "warning": "Estimator does not expose prediction-like outputs."}
 
 
 def _normalise_training_mode(value: Any) -> str:
@@ -4084,7 +4407,10 @@ def _log_model_artifact_to_mlflow(model: Any, framework: str) -> Optional[str]:
 
 def _predict_with_result(result: TrainingResult, features: pd.DataFrame, task_type: str) -> np.ndarray:
     if result.framework == "sklearn":
-        return np.asarray(result.model.predict(features))
+        predictions, metadata = _sklearn_prediction_outputs(result.model, features, task_type)
+        if predictions.size == 0:
+            raise ValueError(metadata.get("warning") or "The selected sklearn model does not expose prediction outputs.")
+        return predictions
 
     if result.framework != "pytorch":
         raise ValueError(f"Unsupported training framework: {result.framework}")
@@ -4122,13 +4448,13 @@ def _train_with_sklearn(
     transfer_context: Optional[Mapping[str, Any]] = None,
     progress_callback: Optional[Callable[[Mapping[str, Any]], None]] = None,
 ) -> tuple[TrainingResult, np.ndarray]:
-    estimator_class = parameters.get("estimator_class")
+    estimator_class = parameters.get("estimator_class") or parameters.get("algorithm")
     estimator_factory = _select_sklearn_estimator(
         estimator_class=str(estimator_class) if estimator_class else None,
         task_type=prepared.task_type,
     )
     transfer_context = dict(transfer_context or {})
-    estimator_instance = estimator_factory()
+    estimator_target: Any = estimator_factory
     clone_estimator = True
     if transfer_context.get("base_model_loaded"):
         transferred_estimator, sklearn_transfer_status = _prepare_sklearn_transfer_estimator(
@@ -4136,12 +4462,26 @@ def _train_with_sklearn(
             parameters,
         )
         if transferred_estimator is not None:
-            estimator_instance = transferred_estimator
+            estimator_target = transferred_estimator
             clone_estimator = False
             transfer_context["transfer_status"] = sklearn_transfer_status
-    hyperparameters = _extract_model_hyperparameters(parameters)
+    partitioned_params = _partition_sklearn_parameters(parameters, estimator_target)
+    hyperparameters = dict(partitioned_params["estimator_params"])
     if estimator_factory.__name__ == "LogisticRegression":
         hyperparameters.setdefault("max_iter", 1000)
+
+    estimator_family = _safe_sklearn_estimator_family(estimator_factory)
+    estimator_metadata = {
+        "requested_estimator_class": str(estimator_class) if estimator_class else None,
+        "resolved_estimator_class": estimator_factory.__name__,
+        "resolved_estimator_module": estimator_factory.__module__,
+        "estimator_family": estimator_family,
+        "estimator_capabilities": _sklearn_estimator_capabilities(estimator_factory),
+        "accepted_estimator_params": dict(hyperparameters),
+        "ignored_unknown_params": dict(partitioned_params["ignored_params"]),
+        "valid_estimator_params": list(partitioned_params["valid_param_names"]),
+        "fit_kwargs": dict(partitioned_params["fit_kwargs"]),
+    }
 
     experiment_name = str(parameters.get("experiment_name") or f"{model_record.name}_training")
     run_name = str(parameters.get("run_name") or f"{model_record.name}_{uuid.uuid4().hex[:8]}")
@@ -4156,11 +4496,12 @@ def _train_with_sklearn(
         progress_callback({"stage": "training", "message": "Fitting the scikit-learn estimator."})
     result = run_training_pipeline(
         lambda: train_sklearn(
-            estimator_instance,
+            estimator_target,
             prepared.x_train,
             prepared.y_train,
             params=hyperparameters,
             random_state=int(parameters.get("random_state", DEFAULT_RANDOM_STATE)),
+            fit_kwargs=partitioned_params["fit_kwargs"],
             eval_data=(prepared.x_test, prepared.y_test),
             task_type=prepared.task_type,
             experiment_name=None,
@@ -4168,6 +4509,8 @@ def _train_with_sklearn(
             tags=None,
             log_to_mlflow=True,
             clone_estimator=clone_estimator,
+            metrics_to_track=parameters.get("metrics_to_track"),
+            objective_metric=parameters.get("objective_metric"),
         ),
         experiment_name=experiment_name,
         run_name=run_name,
@@ -4175,6 +4518,16 @@ def _train_with_sklearn(
         tags=tags,
         log_to_mlflow=True,
     )
+    result.metadata["sklearn"] = {
+        **estimator_metadata,
+        "training_metadata": dict(result.metadata),
+    }
+    result.metadata["ignored_unknown_params"] = dict(partitioned_params["ignored_params"])
+    if partitioned_params["ignored_params"]:
+        result.metadata.setdefault("warnings", [])
+        result.metadata["warnings"] = list(result.metadata["warnings"]) + [
+            f"Ignored unknown sklearn parameters: {', '.join(sorted(partitioned_params['ignored_params']))}"
+        ]
 
     if progress_callback is not None:
         progress_callback(
@@ -4184,7 +4537,8 @@ def _train_with_sklearn(
                 "counters": {"fit_duration_sec": result.metrics.get("fit_duration_sec")},
             }
         )
-    predictions = np.asarray(result.model.predict(prepared.x_test))
+    predictions, prediction_metadata = _sklearn_prediction_outputs(result.model, prepared.x_test, prepared.task_type)
+    result.metadata["sklearn"]["prediction_output"] = prediction_metadata
     _log_training_tracking_context(
         result,
         prepared,
@@ -4438,6 +4792,7 @@ def _generate_training_artifacts(
                 "artifact_format": ".pt",
                 "input_features": list(prepared.input_features),
                 "output_feature": prepared.output_feature,
+                "output_features": list(prepared.output_features or ([prepared.output_feature] if prepared.output_feature else [])),
                 "task_type": prepared.task_type,
                 "label_mapping": dict(prepared.label_mapping),
                 "accelerator": dict(result.metadata.get("accelerator") or {}),
@@ -4484,10 +4839,15 @@ def _generate_training_artifacts(
 
     if prepared.task_type == "regression":
         try:
+            actual_values = np.asarray(prepared.y_test)
+            predicted_values = np.asarray(predictions)
+            if actual_values.ndim > 1:
+                actual_values = actual_values.reshape(-1)
+                predicted_values = predicted_values.reshape(-1)
             artifact_paths.append(
                 plot_predictions_vs_actual(
-                    prepared.y_test.to_numpy(),
-                    predictions,
+                    actual_values,
+                    predicted_values,
                     title="Predictions vs Actual",
                     output_dir=str(plot_dir),
                     log_to_mlflow=log_to_mlflow,

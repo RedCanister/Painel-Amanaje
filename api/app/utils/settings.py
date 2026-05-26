@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -98,6 +99,14 @@ SAFE_ENVIRONMENT_VARIABLES: dict[str, dict[str, Any]] = {
         "category": "Assistant",
         "restart_required": True,
         "default": "true",
+    },
+    "AMANAJE_DADOS_GOV_TOKEN": {
+        "label": "dados.gov.br API Token",
+        "description": "Token sent to dados.gov.br using the chave-api-dados-abertos header.",
+        "category": "Data Store",
+        "restart_required": False,
+        "default": "",
+        "redacted": True,
     },
 }
 
@@ -205,6 +214,57 @@ def is_secret_like_key(key: str) -> bool:
     return any(marker in normalized for marker in SECRET_KEY_MARKERS)
 
 
+def normalize_env_override_key(key: str) -> str:
+    normalized = re.sub(r"[^a-zA-Z0-9_]+", "_", str(key or "").strip()).strip("_").upper()
+    if not normalized or not re.fullmatch(r"[A-Z_][A-Z0-9_]*", normalized):
+        raise SettingsValidationError(
+            "Invalid environment variable override.",
+            [{"field": f"env_overrides.{normalized or '<empty>'}", "reason": "invalid_key"}],
+        )
+    return normalized
+
+
+def register_environment_override_key(
+    key: str,
+    *,
+    label: str | None = None,
+    description: str | None = None,
+    category: str = "Data Store",
+    restart_required: bool = False,
+    redacted: bool = False,
+) -> str:
+    normalized = normalize_env_override_key(key)
+    metadata = dict(SAFE_ENVIRONMENT_VARIABLES.get(normalized) or {})
+    metadata.update(
+        {
+            "label": label or metadata.get("label") or normalized,
+            "description": description or metadata.get("description") or "Environment override registered by a Store provider.",
+            "category": category or metadata.get("category") or "Data Store",
+            "restart_required": restart_required,
+            "default": metadata.get("default", ""),
+            "redacted": bool(redacted or metadata.get("redacted") or is_secret_like_key(normalized)),
+        }
+    )
+    SAFE_ENVIRONMENT_VARIABLES[normalized] = metadata
+    return normalized
+
+
+def register_provider_token_env_var(key: str, *, provider_name: str | None = None) -> str:
+    normalized = normalize_env_override_key(key)
+    if normalized in SAFE_ENVIRONMENT_VARIABLES:
+        SAFE_ENVIRONMENT_VARIABLES[normalized]["redacted"] = True
+        SAFE_ENVIRONMENT_VARIABLES[normalized].setdefault("default", "")
+        return normalized
+    return register_environment_override_key(
+        normalized,
+        label=f"{provider_name or 'Store provider'} Token",
+        description=f"Token used by the {provider_name or 'Store provider'} connector. Values are redacted in settings responses.",
+        category="Data Store",
+        restart_required=False,
+        redacted=True,
+    )
+
+
 def _coerce_bool(value: Any, key: str) -> bool:
     if isinstance(value, bool):
         return value
@@ -220,8 +280,21 @@ def _coerce_bool(value: Any, key: str) -> bool:
     )
 
 
+def _coerce_env_bool(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "off"}:
+        return False
+    return default
+
+
 def _validate_env_key(key: str) -> str:
-    normalized = str(key or "").strip().upper()
+    normalized = normalize_env_override_key(key)
     if normalized in SAFE_ENVIRONMENT_VARIABLES:
         return normalized
 
@@ -261,6 +334,8 @@ def update_settings_state(payload: Mapping[str, Any], path: str | Path | None = 
                     env_key = _validate_env_key(str(key))
                 except SettingsValidationError as exc:
                     errors.extend(exc.errors)
+                    continue
+                if SAFE_ENVIRONMENT_VARIABLES.get(env_key, {}).get("redacted") and str(value).strip() == "[REDACTED]":
                     continue
                 if value is None or str(value).strip() == "":
                     state["env_overrides"].pop(env_key, None)
@@ -332,6 +407,12 @@ def _redact_runtime_value(key: str, value: Any) -> Any:
     return value
 
 
+def _display_env_value(key: str, value: Any, *, redacted: bool) -> Any:
+    if value in (None, ""):
+        return "" if redacted else value
+    return "[REDACTED]" if redacted else value
+
+
 def redact_runtime_config(runtime_config: Mapping[str, Any] | None) -> dict[str, Any]:
     return {
         str(key): _redact_runtime_value(str(key), value)
@@ -342,6 +423,14 @@ def redact_runtime_config(runtime_config: Mapping[str, Any] | None) -> dict[str,
 def build_client_settings(state: Mapping[str, Any] | None = None) -> dict[str, Any]:
     resolved = state or load_settings_state()
     flags = _json_safe_mapping(resolved.get("feature_flags"))
+    env_overrides = _json_safe_mapping(resolved.get("env_overrides"))
+    dash_extensions_value = env_overrides.get(
+        "AMANAJE_DASH_EXTENSIONS_ENABLED",
+        os.getenv(
+            "AMANAJE_DASH_EXTENSIONS_ENABLED",
+            SAFE_ENVIRONMENT_VARIABLES["AMANAJE_DASH_EXTENSIONS_ENABLED"].get("default", "false"),
+        ),
+    )
     return {
         "feature_flags": {
             "debug_mode": bool(flags.get("debug_mode", DEFAULT_FEATURE_FLAGS["debug_mode"])),
@@ -349,6 +438,7 @@ def build_client_settings(state: Mapping[str, Any] | None = None) -> dict[str, A
         },
         "services": {
             "plotly_dashboard_url": os.getenv("AMANAJE_DASHBOARD_PUBLIC_URL", "http://localhost:8050"),
+            "dashboard_extensions_enabled": _coerce_env_bool(dash_extensions_value),
         },
         "assistant": _json_safe_mapping(resolved.get("assistant")),
         "updated_at": resolved.get("updated_at"),
@@ -362,7 +452,8 @@ def build_settings_response(
     path: str | Path | None = None,
 ) -> dict[str, Any]:
     resolved = state or load_settings_state(path)
-    flags = build_client_settings(resolved)["feature_flags"]
+    client_settings = build_client_settings(resolved)
+    flags = client_settings["feature_flags"]
     saved_overrides = _json_safe_mapping(resolved.get("env_overrides"))
     env_rows: list[dict[str, Any]] = []
     restart_keys: list[str] = []
@@ -372,6 +463,7 @@ def build_settings_response(
         process_value = os.getenv(key)
         effective_value = saved_value if saved_value is not None else process_value
         source = "saved_override" if saved_value is not None else ("process" if process_value is not None else "default")
+        redacted = bool(metadata.get("redacted"))
         if saved_value is not None and metadata.get("restart_required"):
             restart_keys.append(key)
         env_rows.append(
@@ -380,13 +472,13 @@ def build_settings_response(
                 "label": metadata["label"],
                 "description": metadata["description"],
                 "category": metadata["category"],
-                "value": effective_value if effective_value is not None else metadata.get("default", ""),
-                "saved_override": saved_value,
-                "process_value": process_value,
+                "value": _display_env_value(key, effective_value if effective_value is not None else metadata.get("default", ""), redacted=redacted),
+                "saved_override": _display_env_value(key, saved_value, redacted=redacted),
+                "process_value": _display_env_value(key, process_value, redacted=redacted),
                 "source": source,
                 "editable": True,
                 "restart_required": bool(metadata.get("restart_required")),
-                "redacted": False,
+                "redacted": redacted,
             }
         )
 
@@ -397,6 +489,7 @@ def build_settings_response(
     return {
         "status": "ok",
         "feature_flags": flags,
+        "services": client_settings["services"],
         "environment_variables": env_rows,
         "runtime_config": redact_runtime_config(runtime_config),
         "assistant": _json_safe_mapping(resolved.get("assistant")),

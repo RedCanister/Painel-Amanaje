@@ -3,9 +3,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import sys
 import textwrap
 import traceback
+import time
 import uuid
 from datetime import datetime
 from io import StringIO
@@ -86,16 +88,30 @@ from app.utils.io import save_json
 from app.utils.log_stream import LogSourceValidationError, collect_log_snapshot
 from app.utils.logging import log_to_mlflow
 from app.utils.mlflow_utils import get_experiment_summary, list_experiments
+from app.utils.netron_viewer import (
+    NetronUnavailableError,
+    build_netron_status,
+    start_netron_viewer,
+    stop_netron_viewer,
+)
 from app.utils.operation_queue import (
     QueueUnavailableError,
     cancel_rq_job,
+    get_queue_runtime_snapshot,
     enqueue_assistant_operation,
     enqueue_editor_execution,
     enqueue_study_run,
     enqueue_training_run,
     get_worker_runtime_status,
 )
-from app.utils.settings import SettingsValidationError, build_settings_response, load_settings_state, update_settings_state
+from app.utils.settings import (
+    SettingsValidationError,
+    build_settings_response,
+    load_settings_state,
+    register_provider_token_env_var,
+    update_settings_state,
+)
+from app.utils import store_utils
 from app.utils.utils import build_payload_data, build_payload_model, get_upload_dir, recover_model_params, save_file_to_disk
 from app.utils.validation import validate_input, validate_required_keys
 import app.utils.main_utils as _utils
@@ -108,12 +124,17 @@ TRAINING_ARTIFACT_DIR = _utils.TRAINING_ARTIFACT_DIR
 DEPLOYMENT_ARTIFACT_DIR = _utils.DEPLOYMENT_ARTIFACT_DIR
 EXPORT_ARTIFACT_DIR = _utils.EXPORT_ARTIFACT_DIR
 FEATURE_ARTIFACT_DIR = _utils.FEATURE_ARTIFACT_DIR
+STORE_ARTIFACT_DIR = _utils.STORE_ARTIFACT_DIR
 RUN_LEDGER_DIR = _utils.RUN_LEDGER_DIR
 ASSISTANT_MODEL_DIR = _utils.ASSISTANT_MODEL_DIR
 ASSISTANT_DATASET_DIR = _utils.ASSISTANT_DATASET_DIR
 ASSISTANT_EVAL_DIR = _utils.ASSISTANT_EVAL_DIR
 ASSISTANT_REFERENCE_DIR = ASSISTANT_DATASET_DIR / "references"
 PRODUCTION_STATE = _utils.PRODUCTION_STATE
+ACCELERATOR_STATUS_CACHE: dict[str, Any] = {"expires_at": 0.0, "payload": None}
+SECRET_TRACEBACK_PATTERN = re.compile(
+    r"(?i)(token|password|passwd|secret|api[_-]?key|authorization)(\s*[:=]\s*)([^\s,;]+)"
+)
 DATASET_OPERATION = _utils.DATASET_OPERATION
 MODEL_OPERATION = _utils.MODEL_OPERATION
 ASSISTANT_MODEL_OPERATION = _utils.ASSISTANT_MODEL_OPERATION
@@ -141,6 +162,9 @@ _json_safe = _utils._json_safe
 _normalize_registry_type = _utils._normalize_registry_type
 _resolve_runtime_context = _utils._resolve_runtime_context
 _prepare_runtime_execution = _utils._prepare_runtime_execution
+STORE_DATASET_DIR = STORE_ARTIFACT_DIR / "datasets"
+STORE_MANIFEST_DIR = STORE_ARTIFACT_DIR / "manifests"
+STORE_PROVIDERS_PATH = STORE_ARTIFACT_DIR / "providers.json"
 
 
 def _queue_unavailable_response(
@@ -602,6 +626,11 @@ async def page_feature(request: Request) -> HTMLResponse:
     return _render_page("base_feature.html", request, )
 
 
+@app.get("/store", response_class=HTMLResponse)
+async def page_store(request: Request) -> HTMLResponse:
+    return _render_page("base_store.html", request, )
+
+
 @app.get("/training", response_class=HTMLResponse)
 async def page_training(request: Request) -> HTMLResponse:
     return _render_page("base_green.html", request, )
@@ -625,6 +654,11 @@ async def page_editor(request: Request) -> HTMLResponse:
 @app.get("/production", response_class=HTMLResponse)
 async def page_production(request: Request) -> HTMLResponse:
     return _render_page("base_blue.html", request, )
+
+
+@app.get("/operations", response_class=HTMLResponse)
+async def page_operations(request: Request) -> HTMLResponse:
+    return _render_page("base_operations.html", request, )
 
 
 @app.get("/visualization", response_class=HTMLResponse)
@@ -826,7 +860,24 @@ async def panel_delete_dashboard(dashboard_id: int | str, db: AsyncSession = Dep
     return _utils._json_response({"status": "deleted", "id": deleted_id})
 
 
+def _sync_store_provider_token_env_vars() -> list[str]:
+    registered: list[str] = []
+    try:
+        providers = store_utils.list_providers(STORE_PROVIDERS_PATH)
+    except Exception:
+        LOGGER.warning("Unable to load Store providers while syncing Settings environment keys.", exc_info=True)
+        return registered
+
+    for provider in providers:
+        token_env_var = str(provider.get("token_env_var") or "").strip()
+        if not token_env_var:
+            continue
+        registered.append(register_provider_token_env_var(token_env_var, provider_name=str(provider.get("name") or "")))
+    return registered
+
+
 def _settings_config_payload() -> dict[str, Any]:
+    _sync_store_provider_token_env_vars()
     state = _utils.apply_runtime_settings_state()
     return build_settings_response(
         _utils.RUNTIME_CONFIG,
@@ -846,6 +897,7 @@ async def settings_update_config(
     payload: dict[str, Any] | None = Body(default=None),
 ) -> JSONResponse:
     try:
+        _sync_store_provider_token_env_vars()
         state = update_settings_state(payload or {}, _utils.SETTINGS_STATE_PATH)
         _utils.apply_runtime_settings_state(state)
         return _utils._json_response(
@@ -887,6 +939,347 @@ async def settings_logs(
         )
 
 
+def _store_error_response(exc: Exception, request: Request | None = None) -> JSONResponse:
+    if isinstance(exc, store_utils.StoreValidationError):
+        return _utils._json_error(str(exc), status_code=exc.status_code, exc=exc, request=request, errors=exc.errors)
+    LOGGER.exception("Store operation failed.")
+    return _utils._json_error(str(exc), status_code=500, exc=exc, request=request)
+
+
+def _store_live_metadata(payload: Mapping[str, Any]) -> dict[str, Any]:
+    live_payload = payload.get("live") if isinstance(payload.get("live"), Mapping) else {}
+    raw_live = payload.get("live")
+    live_enabled = bool(
+        live_payload.get("enabled")
+        or (raw_live if not isinstance(raw_live, Mapping) else False)
+        or payload.get("isLive")
+        or payload.get("live_dataset")
+    )
+    interval_value = (
+        live_payload.get("interval_seconds")
+        or live_payload.get("intervalSeconds")
+        or payload.get("refreshIntervalSeconds")
+        or payload.get("refresh_interval_seconds")
+        or 86400
+    )
+    try:
+        interval_seconds = max(int(interval_value), 60)
+    except (TypeError, ValueError):
+        interval_seconds = 86400
+    return {
+        "enabled": live_enabled,
+        "interval_seconds": interval_seconds,
+        "mode": "manual_refresh",
+        "status": "pending_validation" if live_enabled else "snapshot",
+    }
+
+
+def _store_dataset_summary(dataset: Any) -> dict[str, Any]:
+    summary = _utils._serialize_dataset_summary(dataset)
+    summary["connection_string"] = getattr(dataset, "connection_string", None)
+    summary["history"] = getattr(dataset, "history", None)
+    return summary
+
+
+@app.get("/store/providers", response_class=JSONResponse)
+async def store_providers() -> JSONResponse:
+    try:
+        providers = store_utils.list_providers(STORE_PROVIDERS_PATH)
+        default_provider = next((provider for provider in providers if provider.get("is_default")), None)
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "providers": providers,
+                "default_provider_id": (default_provider or {}).get("id"),
+            }
+        )
+    except Exception as exc:
+        return _store_error_response(exc)
+
+
+@app.post("/store/providers", response_class=JSONResponse)
+async def store_save_provider(request: Request) -> JSONResponse:
+    try:
+        payload = await request.json()
+        provider = store_utils.save_provider(payload if isinstance(payload, Mapping) else {}, STORE_PROVIDERS_PATH)
+        registered_env_var = None
+        token_env_var = str(provider.get("token_env_var") or "").strip()
+        if token_env_var:
+            registered_env_var = register_provider_token_env_var(token_env_var, provider_name=str(provider.get("name") or ""))
+        return _utils._json_response({"status": "ok", "provider": provider, "settings_env_registered": registered_env_var})
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.post("/store/providers/{provider_id}/default", response_class=JSONResponse)
+async def store_set_default_provider(provider_id: str, request: Request) -> JSONResponse:
+    try:
+        provider = store_utils.set_default_provider(provider_id, STORE_PROVIDERS_PATH)
+        return _utils._json_response({"status": "ok", "provider": provider, "default_provider_id": provider.get("id")})
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.delete("/store/providers/{provider_id}", response_class=JSONResponse)
+async def store_delete_provider(provider_id: str, request: Request) -> JSONResponse:
+    try:
+        deleted = store_utils.delete_provider(provider_id, STORE_PROVIDERS_PATH)
+        providers = store_utils.list_providers(STORE_PROVIDERS_PATH)
+        default_provider = next((provider for provider in providers if provider.get("is_default")), None)
+        return _utils._json_response(
+            {
+                "status": "deleted",
+                "provider": deleted,
+                "providers": providers,
+                "default_provider_id": (default_provider or {}).get("id"),
+            }
+        )
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.post("/store/providers/{provider_id}/test", response_class=JSONResponse)
+async def store_test_provider(provider_id: str, request: Request) -> JSONResponse:
+    try:
+        provider = store_utils.resolve_provider(provider_id, STORE_PROVIDERS_PATH)
+        catalog = await store_utils.list_catalog(provider, page=1)
+        detail_checked = False
+        first_item = next((item for item in catalog.get("items") or [] if item.get("external_id")), None)
+        if first_item is not None:
+            await store_utils.get_dataset_detail(provider, str(first_item["external_id"]))
+            detail_checked = True
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "provider": catalog.get("provider"),
+                "sample_count": len(catalog.get("items") or []),
+                "detail_checked": detail_checked,
+                "message": "Provider connection validated.",
+            }
+        )
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.get("/store/catalog", response_class=JSONResponse)
+async def store_catalog(
+    provider_id: str,
+    query: str = "",
+    category: str = "",
+    page: int = 1,
+) -> JSONResponse:
+    try:
+        provider = store_utils.resolve_provider(provider_id, STORE_PROVIDERS_PATH)
+        catalog = await store_utils.list_catalog(provider, query=query, category=category, page=page)
+        return _utils._json_response({"status": "ok", **catalog})
+    except Exception as exc:
+        return _store_error_response(exc)
+
+
+@app.get("/store/catalog/{external_id}", response_class=JSONResponse)
+async def store_catalog_detail(external_id: str, provider_id: str) -> JSONResponse:
+    try:
+        provider = store_utils.resolve_provider(provider_id, STORE_PROVIDERS_PATH)
+        detail = await store_utils.get_dataset_detail(provider, external_id)
+        return _utils._json_response({"status": "ok", "provider": store_utils.redact_provider(provider), "dataset": detail})
+    except Exception as exc:
+        return _store_error_response(exc)
+
+
+@app.post("/store/preview", response_class=JSONResponse)
+async def store_preview(request: Request) -> JSONResponse:
+    try:
+        payload = await request.json()
+        provider = store_utils.resolve_provider(str(payload.get("provider_id") or payload.get("providerId") or ""), STORE_PROVIDERS_PATH)
+        result = await store_utils.preview_resource(
+            provider,
+            str(payload.get("dataset_external_id") or payload.get("datasetExternalId") or ""),
+            str(payload.get("resource_external_id") or payload.get("resourceExternalId") or ""),
+        )
+        return _utils._json_response(result)
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.post("/store/materialize", response_class=JSONResponse)
+async def store_materialize(request: Request, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        payload = await request.json()
+        if not isinstance(payload, Mapping):
+            raise store_utils.StoreValidationError("Store materialize payload must be an object.")
+        provider_id = str(payload.get("provider_id") or payload.get("providerId") or "")
+        dataset_external_id = str(payload.get("dataset_external_id") or payload.get("datasetExternalId") or "")
+        resource_external_id = str(payload.get("resource_external_id") or payload.get("resourceExternalId") or "")
+        provider = store_utils.resolve_provider(provider_id, STORE_PROVIDERS_PATH)
+        live = _store_live_metadata(payload)
+        validation_result = None
+        if live["enabled"]:
+            validation_result = await store_utils.validate_resource_connection(provider, dataset_external_id, resource_external_id)
+            live = {**live, "status": "validated", "validated_at": validation_result.get("validated_at")}
+
+        dataset_name = str(payload.get("name") or payload.get("datasetName") or "store_dataset").strip() or "store_dataset"
+        materialized = await store_utils.materialize_resource_files(
+            provider,
+            dataset_external_id,
+            resource_external_id,
+            dataset_name=dataset_name,
+            dataset_dir=STORE_DATASET_DIR,
+        )
+        output_path = Path(materialized["output_path"])
+        dataframe = materialized["dataframe"]
+        history_entry = {
+            "operation": "store_materialize",
+            "when": datetime.now().isoformat(),
+            "provider_id": provider_id,
+            "dataset_external_id": dataset_external_id,
+            "resource_external_id": resource_external_id,
+            "resource_title": materialized["resource"].get("title"),
+            "live": live,
+        }
+        dataset_payload = {
+            "name": dataset_name,
+            "description": str(payload.get("description") or materialized["dataset"].get("description") or "Dataset materialized from Store workspace."),
+            "object_type": "dataset",
+            "size": round(output_path.stat().st_size / (1024 * 1024), 4),
+            "path": str(output_path),
+            "date": datetime.now(),
+            "version": int(payload.get("version") or 1),
+            "history": [history_entry],
+            "dataset_type": str(payload.get("dataset_type") or payload.get("datasetType") or "dataset"),
+            "shape": [int(dataframe.shape[0]), int(dataframe.shape[1])],
+            "has_features": bool(len(dataframe.columns)),
+            "features_list": [str(column) for column in dataframe.columns],
+            "connection_string": materialized["connection_string"],
+        }
+        created_dataset = await create_entry(db, DatasetORM, dataset_payload)
+        manifest = store_utils.build_store_manifest(
+            dataset_id=int(getattr(created_dataset, "id")),
+            dataset_name=dataset_name,
+            output_path=output_path,
+            connection_string=materialized["connection_string"],
+            provider=provider,
+            external_dataset=materialized["dataset"],
+            resource=materialized["resource"],
+            parser_report=materialized["parser_report"],
+            live=live,
+            manifest_dir=STORE_MANIFEST_DIR,
+        )
+        updated_history = _utils._append_history(
+            getattr(created_dataset, "history", None),
+            {
+                "operation": "store_manifest_created",
+                "when": datetime.now().isoformat(),
+                "manifest_path": manifest.get("manifest_path"),
+                "connection_string": materialized["connection_string"],
+            },
+        )
+        created_dataset = await update_entry(db, DatasetORM, getattr(created_dataset, "id"), {"history": updated_history})
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "dataset": _store_dataset_summary(created_dataset),
+                "manifest": manifest,
+                "preview_rows": materialized["preview_rows"],
+                "columns": materialized["columns"],
+                "parser_report": materialized["parser_report"],
+                "live_validation": validation_result,
+            }
+        )
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.post("/store/datasets/{dataset_id}/validate-live", response_class=JSONResponse)
+async def store_validate_live_dataset(dataset_id: int, request: Request, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        dataset = await DatasetModel.read(db, dataset_id)
+        if dataset is None:
+            raise store_utils.StoreValidationError("Dataset not found.", status_code=404)
+        connection = store_utils.parse_connection_string(str(getattr(dataset, "connection_string", "") or ""))
+        provider = store_utils.resolve_provider(connection["provider_id"], STORE_PROVIDERS_PATH)
+        result = await store_utils.validate_resource_connection(
+            provider,
+            connection["dataset_external_id"],
+            connection["resource_external_id"],
+        )
+        return _utils._json_response({"status": "ok", "dataset": _store_dataset_summary(dataset), "validation": result})
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
+@app.post("/store/datasets/{dataset_id}/refresh", response_class=JSONResponse)
+async def store_refresh_dataset(dataset_id: int, request: Request, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        dataset = await DatasetModel.read(db, dataset_id)
+        if dataset is None:
+            raise store_utils.StoreValidationError("Dataset not found.", status_code=404)
+        connection = store_utils.parse_connection_string(str(getattr(dataset, "connection_string", "") or ""))
+        provider = store_utils.resolve_provider(connection["provider_id"], STORE_PROVIDERS_PATH)
+        output_path = _utils._resolve_fs_path(getattr(dataset, "path", None), default_parent=_utils.REPO_ROOT)
+        if output_path is None:
+            output_path = STORE_DATASET_DIR / f"dataset_{dataset_id}.csv"
+        refreshed = await store_utils.refresh_resource_file(
+            provider,
+            connection["dataset_external_id"],
+            connection["resource_external_id"],
+            output_path=Path(output_path),
+        )
+        dataframe = refreshed["dataframe"]
+        manifest = {}
+        try:
+            manifest = store_utils.load_store_manifest(dataset, STORE_MANIFEST_DIR)
+        except store_utils.StoreValidationError:
+            pass
+        manifest.update(
+            {
+                "dataset_id": dataset_id,
+                "dataset_name": getattr(dataset, "name", None),
+                "snapshot_path": str(output_path),
+                "connection_string": getattr(dataset, "connection_string", None),
+                "provider": refreshed["provider"],
+                "external_dataset": refreshed["dataset"],
+                "resource": refreshed["resource"],
+                "parser_report": refreshed["parser_report"],
+                "updated_at": datetime.now().isoformat(),
+            }
+        )
+        manifest_path = STORE_MANIFEST_DIR / f"dataset_{dataset_id}_store_manifest.json"
+        manifest["manifest_path"] = str(manifest_path)
+        save_json(manifest, manifest_path)
+        history_entry = {
+            "operation": "store_refresh",
+            "when": datetime.now().isoformat(),
+            "provider_id": connection["provider_id"],
+            "dataset_external_id": connection["dataset_external_id"],
+            "resource_external_id": connection["resource_external_id"],
+            "manifest_path": str(manifest_path),
+        }
+        updated = await update_entry(
+            db,
+            DatasetORM,
+            dataset_id,
+            {
+                "size": round(Path(output_path).stat().st_size / (1024 * 1024), 4),
+                "shape": [int(dataframe.shape[0]), int(dataframe.shape[1])],
+                "has_features": bool(len(dataframe.columns)),
+                "features_list": [str(column) for column in dataframe.columns],
+                "history": _utils._append_history(getattr(dataset, "history", None), history_entry),
+            },
+        )
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "dataset": _store_dataset_summary(updated),
+                "manifest": manifest,
+                "preview_rows": refreshed["preview_rows"],
+                "columns": refreshed["columns"],
+                "parser_report": refreshed["parser_report"],
+            }
+        )
+    except Exception as exc:
+        return _store_error_response(exc, request)
+
+
 @app.get("/upload/support", response_class=JSONResponse)
 async def upload_support() -> JSONResponse:
     return _utils._json_response(
@@ -914,12 +1307,28 @@ async def upload_support() -> JSONResponse:
 
 @app.get("/runtime/accelerators", response_class=JSONResponse)
 async def runtime_accelerators() -> JSONResponse:
-    return _utils._json_response(get_torch_accelerator_status())
+    return _utils._json_response(_cached_torch_accelerator_status())
 
 
 @app.get("/runtime/workers", response_class=JSONResponse)
 async def runtime_workers() -> JSONResponse:
     return _utils._json_response(get_worker_runtime_status())
+
+
+def _cached_torch_accelerator_status() -> dict[str, Any]:
+    ttl = float(os.getenv("AMANAJE_ACCELERATOR_STATUS_TTL_SECONDS", "15") or "15")
+    now = time.monotonic()
+    source_id = id(get_torch_accelerator_status)
+    cached_payload = ACCELERATOR_STATUS_CACHE.get("payload")
+    if (
+        cached_payload is not None
+        and ACCELERATOR_STATUS_CACHE.get("source_id") == source_id
+        and now < float(ACCELERATOR_STATUS_CACHE.get("expires_at") or 0)
+    ):
+        return dict(cached_payload)
+    payload = get_torch_accelerator_status()
+    ACCELERATOR_STATUS_CACHE.update({"payload": payload, "expires_at": now + ttl, "source_id": source_id})
+    return dict(payload)
 
 
 @app.get("/examples/catalog", response_class=JSONResponse)
@@ -1226,7 +1635,17 @@ async def post_execute_job(request: Request, db: AsyncSession = Depends(get_db))
     _utils.update_run_entry(
         RUN_LEDGER_DIR,
         run_entry["run_id"],
-        merge={"queue": enqueue_result},
+        merge={
+            "queue": enqueue_result,
+            "rerun_payload": {
+                "run_type": "editor_execution",
+                "code": code,
+                "queue_payload": {
+                    "code": code,
+                    "registry_context": registry_context,
+                },
+            },
+        },
         event_message=f"Editor execution enqueued on {enqueue_result.get('queue')}.",
     )
     return _utils._json_response(
@@ -1486,7 +1905,17 @@ async def post_assistant_job(operation: str, request: Request) -> JSONResponse:
     _utils.update_run_entry(
         RUN_LEDGER_DIR,
         run_entry["run_id"],
-        merge={"queue": enqueue_result},
+        merge={
+            "queue": enqueue_result,
+            "rerun_payload": {
+                "run_type": "assistant_operation",
+                "operation": normalized_operation,
+                "queue_payload": {
+                    "operation": normalized_operation,
+                    "payload_data": payload_data,
+                },
+            },
+        },
         event_message=f"Assistant operation enqueued on {enqueue_result.get('queue')}.",
     )
     return _utils._json_response(
@@ -3657,6 +4086,28 @@ def _update_run_progress(
     )
 
 
+def _redact_traceback_text(value: str) -> str:
+    return SECRET_TRACEBACK_PATTERN.sub(lambda match: f"{match.group(1)}{match.group(2)}[redacted]", str(value or ""))
+
+
+def _record_run_exception(run_id: str, exc: BaseException, *, stage: str = "failed") -> dict[str, Any]:
+    traceback_text = _redact_traceback_text("".join(traceback.format_exception(type(exc), exc, exc.__traceback__)))
+    failure = {
+        "type": exc.__class__.__name__,
+        "message": _redact_traceback_text(str(exc)),
+        "traceback": traceback_text,
+        "worker_name": os.getenv("AMANAJE_EFFECTIVE_WORKER_NAME") or os.getenv("AMANAJE_WORKER_NAME"),
+        "queue": os.getenv("AMANAJE_WORKER_QUEUE"),
+        "job_id": run_id,
+        "failed_at": datetime.now().isoformat(),
+    }
+    try:
+        _utils.append_run_terminal_line(RUN_LEDGER_DIR, run_id, message=traceback_text, stream="stderr", stage=stage)
+    except Exception:
+        LOGGER.exception("Unable to append failure traceback to run terminal for %s.", run_id)
+    return failure
+
+
 async def _execute_training_run(
     run_id: str,
     *,
@@ -3784,7 +4235,7 @@ async def _execute_training_run(
                     "metrics": result.metrics,
                     "reference_data": getattr(dataset_model, "name", None),
                     "input_features": prepared.input_features,
-                    "output_features": [prepared.output_feature],
+                    "output_features": prepared.output_features or ([prepared.output_feature] if prepared.output_feature else []),
                     "is_trained": True,
                     "is_tested": True,
                     "path": artifacts["model_artifact_path"] or getattr(learning_model, "path", None),
@@ -3810,7 +4261,7 @@ async def _execute_training_run(
                 model_record=updated_model,
                 dataset_record=dataset_model,
                 input_features=prepared.input_features,
-                output_features=[prepared.output_feature],
+                output_features=prepared.output_features or ([prepared.output_feature] if prepared.output_feature else []),
                 inference_updates={
                     "status": "trained",
                     "framework": result.framework,
@@ -3911,12 +4362,13 @@ async def _execute_training_run(
             log_to_mlflow(LOGGER, f"Completed training job {run_id} for model {model_id}.")
     except Exception as exc:
         LOGGER.exception("Training failed for model_id=%s.", model_id)
+        failure = _record_run_exception(run_id, exc)
         _utils.update_run_entry(
             RUN_LEDGER_DIR,
             run_id,
             status="failed",
             stage="failed",
-            merge={"error": str(exc)},
+            merge={"error": str(exc), "failure": failure},
             event_message=str(exc),
         )
     finally:
@@ -4014,6 +4466,7 @@ async def _execute_study_run(
             )
     except Exception as exc:
         LOGGER.exception("Optuna optimization failed for study_id=%s.", study_id)
+        failure = _record_run_exception(run_id, exc)
         _utils.update_run_entry(
             RUN_LEDGER_DIR,
             run_id,
@@ -4021,6 +4474,7 @@ async def _execute_study_run(
             stage="failed",
             merge={
                 "error": str(exc),
+                "failure": failure,
                 "progress": {"latest_event": str(exc)},
             },
             event_message=str(exc),
@@ -4093,7 +4547,15 @@ async def post_training(
         _utils.update_run_entry(
             RUN_LEDGER_DIR,
             run_entry["run_id"],
-            merge={"queue": enqueue_result},
+            merge={
+                "queue": enqueue_result,
+                "rerun_payload": {
+                    "run_type": "training",
+                    "model_id": model_id,
+                    "payload_data": validated_payload.model_dump(),
+                    "parameters": merged_parameters,
+                },
+            },
             event_message=f"Training run enqueued on {enqueue_result.get('queue')}.",
         )
         return _utils._json_response(
@@ -4181,7 +4643,15 @@ async def post_optimize_study(
         _utils.update_run_entry(
             RUN_LEDGER_DIR,
             run_entry["run_id"],
-            merge={"queue": enqueue_result},
+            merge={
+                "queue": enqueue_result,
+                "rerun_payload": {
+                    "run_type": "study",
+                    "study_id": study_id,
+                    "payload_data": payload.model_dump(),
+                    "parameters": study_queue_parameters,
+                },
+            },
             event_message=f"Study run enqueued on {enqueue_result.get('queue')}.",
         )
         return _utils._json_response(
@@ -4213,26 +4683,31 @@ async def runs_list(
     dataset_id: Optional[int] = None,
     study_id: Optional[int] = None,
     inference_id: Optional[int] = None,
+    view: str = "detail",
 ) -> JSONResponse:
     parsed_run_ids = [
         item.strip()
         for item in str(run_ids or "").split(",")
         if item.strip()
     ]
+    runs = _utils.list_run_entries(
+        RUN_LEDGER_DIR,
+        run_type=run_type,
+        status=status,
+        active_only=active_only,
+        run_ids=parsed_run_ids,
+        model_id=model_id,
+        dataset_id=dataset_id,
+        study_id=study_id,
+        inference_id=inference_id,
+        limit=limit,
+    )
+    if str(view or "").strip().lower() == "summary":
+        runs = [_utils.summarize_run_entry(run) for run in runs]
     return _utils._json_response(
         {
-            "runs": _utils.list_run_entries(
-                RUN_LEDGER_DIR,
-                run_type=run_type,
-                status=status,
-                active_only=active_only,
-                run_ids=parsed_run_ids,
-                model_id=model_id,
-                dataset_id=dataset_id,
-                study_id=study_id,
-                inference_id=inference_id,
-                limit=limit,
-            )
+            "runs": runs,
+            "view": "summary" if str(view or "").strip().lower() == "summary" else "detail",
         }
     )
 
@@ -4249,10 +4724,186 @@ def _is_active_run_status(status: Any) -> bool:
     return str(status or "queued") in {"queued", "running", "paused", "cancel_requested"}
 
 
+def _run_lookup_values(value: Any) -> list[str]:
+    values: list[str] = []
+    if isinstance(value, Mapping):
+        for child_value in value.values():
+            values.extend(_run_lookup_values(child_value))
+    elif isinstance(value, list):
+        for child_value in value:
+            values.extend(_run_lookup_values(child_value))
+    elif value not in (None, ""):
+        values.append(str(value).strip().lower())
+    return values
+
+
+def _operation_compute_target(run: Mapping[str, Any]) -> tuple[str, str]:
+    queue_payload = dict(run.get("queue") or {})
+    queue_name = str(queue_payload.get("queue") or queue_payload.get("name") or "").lower()
+    if "gpu" in queue_name or "cuda" in queue_name:
+        return "gpu", f"queue:{queue_name}"
+    if "cpu" in queue_name:
+        return "cpu", f"queue:{queue_name}"
+
+    parameters = dict(run.get("parameters") or {})
+    result = dict(run.get("result") or {})
+    context = dict(run.get("context") or {})
+    lookup_groups = [
+        ("parameters", parameters),
+        ("result", result),
+        ("context", context),
+        ("rerun_payload", dict(run.get("rerun_payload") or {})),
+    ]
+    for source, payload in lookup_groups:
+        for value in _run_lookup_values(payload):
+            if value in {"cuda", "gpu"} or "cuda:" in value or value.startswith("gpu"):
+                return "gpu", f"{source}:device"
+            if value == "cpu":
+                return "cpu", f"{source}:device"
+
+    if context.get("prefer_gpu") or context.get("gpu_allowed") is True:
+        return "gpu", "context:gpu"
+    return "cpu", "default:cpu"
+
+
+def _run_rerun_capability(run: Mapping[str, Any]) -> tuple[bool, str]:
+    run_type = str(run.get("run_type") or "").strip().lower()
+    rerun_payload = dict(run.get("rerun_payload") or {})
+    context = dict(run.get("context") or {})
+    if rerun_payload:
+        if run_type not in {"training", "study", "editor_execution", "assistant_operation"}:
+            return False, "This run type does not support re-run."
+        if run_type == "editor_execution" and not (rerun_payload.get("code") or dict(rerun_payload.get("queue_payload") or {}).get("code")):
+            return False, "Editor rerun payload is missing code."
+        if run_type == "assistant_operation" and not (rerun_payload.get("operation") or dict(rerun_payload.get("queue_payload") or {}).get("operation")):
+            return False, "Assistant rerun payload is missing operation."
+        return True, "Payload-backed rerun is available."
+    if run_type == "training" and context.get("model_id") and context.get("dataset_id"):
+        return True, "Training context can be reconstructed."
+    if run_type == "study" and context.get("study_id"):
+        return True, "Study context can be reconstructed."
+    return False, "This historical run does not include enough payload to re-run."
+
+
+def _operation_action_capabilities(run: Mapping[str, Any]) -> dict[str, Any]:
+    status = str(run.get("status") or "queued")
+    active = _is_active_run_status(status)
+    can_rerun, rerun_reason = _run_rerun_capability(run)
+    return {
+        "pause": status in {"queued", "running"},
+        "resume": status == "paused",
+        "cancel": status in {"queued", "running", "paused", "cancel_requested"},
+        "rerun": (not active) and can_rerun,
+        "analyze": True,
+        "rerun_reason": rerun_reason,
+    }
+
+
+def _operation_title(run: Mapping[str, Any]) -> str:
+    run_type = str(run.get("run_type") or "operation").replace("_", " ")
+    context = dict(run.get("context") or {})
+    parts = []
+    if context.get("operation"):
+        parts.append(str(context["operation"]).replace("_", " "))
+    if context.get("model_id"):
+        parts.append(f"model {context['model_id']}")
+    if context.get("dataset_id"):
+        parts.append(f"dataset {context['dataset_id']}")
+    if context.get("study_id"):
+        parts.append(f"study {context['study_id']}")
+    return f"{run_type}{' - ' + ' - '.join(parts) if parts else ''}"
+
+
+def _enrich_operation_run(
+    run: Mapping[str, Any],
+    *,
+    view: str = "summary",
+    queue_positions: Mapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    full_payload = _json_safe(dict(run))
+    payload = full_payload if str(view or "").lower() == "detail" else _utils.summarize_run_entry(full_payload)
+    compute_target, compute_reason = _operation_compute_target(full_payload)
+    run_id = str(full_payload.get("run_id") or "")
+    queue_position = dict((queue_positions or {}).get(run_id) or {})
+    terminal_summary = dict(payload.get("terminal_summary") or {})
+    terminal_summary.setdefault("line_count", len(_utils.build_run_terminal_lines(full_payload)))
+    terminal_summary["next_index"] = dict(full_payload.get("terminal") or {}).get("next_index")
+    payload.update(
+        {
+            "title": _operation_title(payload),
+            "compute_target": compute_target,
+            "compute_reason": compute_reason,
+            "actions": _operation_action_capabilities(full_payload),
+            "terminal_summary": terminal_summary,
+            "queue_diagnostics": queue_position,
+        }
+    )
+    return payload
+
+
+def _run_matches_operation_query(run: Mapping[str, Any], query: str) -> bool:
+    if not query:
+        return True
+    progress = run.get("progress", {}) if isinstance(run.get("progress"), Mapping) else {}
+    failure = run.get("failure", {}) if isinstance(run.get("failure"), Mapping) else {}
+    haystack = " ".join(
+        [
+            str(run.get("run_id") or ""),
+            str(run.get("run_type") or ""),
+            str(run.get("title") or ""),
+            str(run.get("status") or ""),
+            str(run.get("stage") or ""),
+            str(run.get("compute_reason") or ""),
+            str(progress.get("latest_event") or ""),
+            str(run.get("error") or ""),
+            str(failure.get("message") or ""),
+        ]
+    ).lower()
+    return query in haystack
+
+
+def _merge_runs_by_id(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: dict[str, dict[str, Any]] = {}
+    for group in groups:
+        for run in group:
+            run_id = str(run.get("run_id") or "")
+            if run_id:
+                merged[run_id] = run
+    return sorted(
+        merged.values(),
+        key=lambda item: str(item.get("updated_at") or item.get("created_at") or ""),
+        reverse=True,
+    )
+
+
 def _copy_rerun_payload(source_payload: Mapping[str, Any]) -> tuple[str, dict[str, Any], dict[str, Any], dict[str, Any]]:
     run_type = str(source_payload.get("run_type") or "").strip().lower()
     context = dict(source_payload.get("context") or {})
     parameters = dict(source_payload.get("parameters") or {})
+    rerun_payload = dict(source_payload.get("rerun_payload") or {})
+    if run_type == "editor_execution":
+        queue_payload = dict(rerun_payload.get("queue_payload") or rerun_payload)
+        code = str(queue_payload.get("code") or "")
+        if not code:
+            raise TypeError("Run type 'editor_execution' does not support re-run without stored code.")
+        registry_context = dict(queue_payload.get("registry_context") or {})
+        rerun_context = {
+            "source": context.get("source") or "editor",
+            "gpu_allowed": False,
+            **{key: value for key, value in context.items() if key.endswith("_ids") or key in {"dataset_ids", "model_ids"}},
+        }
+        return run_type, rerun_context, parameters, {"code": code, "registry_context": registry_context}
+    if run_type == "assistant_operation":
+        queue_payload = dict(rerun_payload.get("queue_payload") or rerun_payload)
+        operation = str(queue_payload.get("operation") or context.get("operation") or "").strip()
+        payload_data = dict(queue_payload.get("payload_data") or queue_payload.get("payload") or {})
+        if not operation:
+            raise TypeError("Run type 'assistant_operation' does not support re-run without stored operation.")
+        return run_type, {
+            "source": "assistant",
+            "operation": operation,
+            "assistant_model_id": context.get("assistant_model_id"),
+        }, parameters, {"operation": operation, "payload_data": payload_data}
     if run_type == "training":
         model_id = _coerce_optional_int(context.get("model_id"))
         dataset_id = _coerce_optional_int(context.get("dataset_id"))
@@ -4325,12 +4976,29 @@ def _rerun_run(source_run_id: str, source_payload: Mapping[str, Any]) -> JSONRes
                 payload_data=queue_payload,
                 prefer_gpu=_prefers_gpu_queue(parameters),
             )
-        else:
+        elif run_type == "study":
             enqueue_result = enqueue_study_run(
                 run_entry["run_id"],
                 study_id=int(context["study_id"]),
                 payload_data=queue_payload,
                 prefer_gpu=_prefers_gpu_queue(parameters),
+            )
+        elif run_type == "editor_execution":
+            try:
+                enqueue_result = enqueue_editor_execution(
+                    run_entry["run_id"],
+                    code=str(queue_payload["code"]),
+                    registry_context=dict(queue_payload.get("registry_context") or {}),
+                )
+            except TypeError as exc:
+                if "registry_context" not in str(exc):
+                    raise
+                enqueue_result = enqueue_editor_execution(run_entry["run_id"], code=str(queue_payload["code"]))
+        else:
+            enqueue_result = enqueue_assistant_operation(
+                run_entry["run_id"],
+                operation=str(queue_payload["operation"]),
+                payload_data=dict(queue_payload.get("payload_data") or {}),
             )
     except QueueUnavailableError as exc:
         failed = _utils.update_run_entry(
@@ -4346,7 +5014,14 @@ def _rerun_run(source_run_id: str, source_payload: Mapping[str, Any]) -> JSONRes
     updated = _utils.update_run_entry(
         RUN_LEDGER_DIR,
         run_entry["run_id"],
-        merge={"queue": enqueue_result, "source_run_id": source_run_id},
+        merge={
+            "queue": enqueue_result,
+            "source_run_id": source_run_id,
+            "rerun_payload": {
+                "source_run_id": source_run_id,
+                "queue_payload": queue_payload,
+            },
+        },
         event_message=f"Re-run of {source_run_id} enqueued on {enqueue_result.get('queue')}.",
     )
     return _utils._json_response(
@@ -4437,6 +5112,204 @@ async def runs_control(run_id: str, action: str) -> JSONResponse:
             "run_id": run_id,
             "ledger": updated,
             "queue": queue_result,
+        }
+    )
+
+
+@app.get("/operations/queues", response_class=JSONResponse)
+async def operations_queues(limit: int = 50) -> JSONResponse:
+    return _utils._json_response(get_queue_runtime_snapshot(limit=max(1, min(int(limit or 50), 200))))
+
+
+@app.get("/operations/summary", response_class=JSONResponse)
+async def operations_summary(limit: int = 12, run_ids: Optional[str] = None) -> JSONResponse:
+    result_limit = max(1, min(int(limit or 12), 50))
+    parsed_run_ids = [
+        item.strip()
+        for item in str(run_ids or "").split(",")
+        if item.strip()
+    ]
+    recent_runs = _utils.list_run_entries(RUN_LEDGER_DIR, limit=max(result_limit * 4, 40))
+    watched_runs = _utils.list_run_entries(RUN_LEDGER_DIR, run_ids=parsed_run_ids, limit=50) if parsed_run_ids else []
+    active_runs = [run for run in recent_runs if _is_active_run_status(run.get("status"))]
+    recent_failures = [
+        run
+        for run in recent_runs
+        if str(run.get("status") or "") in {"failed", "cancelled"} or run.get("failure")
+    ]
+    queue_runtime = get_queue_runtime_snapshot(limit=25)
+    queue_positions = dict(queue_runtime.get("positions") or {})
+    runs = [
+        _enrich_operation_run(run, view="summary", queue_positions=queue_positions)
+        for run in _merge_runs_by_id(active_runs, recent_failures[:result_limit], recent_runs[:result_limit], watched_runs)
+    ][: max(result_limit, len(parsed_run_ids))]
+    worker_runtime = get_worker_runtime_status()
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "runs": runs,
+            "active_runs": [
+                _enrich_operation_run(run, view="summary", queue_positions=queue_positions)
+                for run in active_runs[:result_limit]
+            ],
+            "recent_failures": [
+                _enrich_operation_run(run, view="summary", queue_positions=queue_positions)
+                for run in recent_failures[:result_limit]
+            ],
+            "worker_runtime": worker_runtime,
+            "queue_runtime": queue_runtime,
+            "summary": {
+                "run_count": len(runs),
+                "active_runs": len(active_runs),
+                "recent_failures": len(recent_failures),
+                "queued_jobs": dict(queue_runtime.get("summary") or {}).get("queued_jobs", 0),
+                "live_workers": dict(worker_runtime.get("summary") or {}).get("live_workers", 0),
+                "stale_workers": dict(worker_runtime.get("summary") or {}).get("stale_workers", 0),
+            },
+        }
+    )
+
+
+@app.get("/operations/runs", response_class=JSONResponse)
+async def operations_runs(
+    run_type: Optional[str] = None,
+    status: Optional[str] = None,
+    active_only: bool = False,
+    limit: Optional[int] = 80,
+    run_ids: Optional[str] = None,
+    q: Optional[str] = None,
+    model_id: Optional[int] = None,
+    dataset_id: Optional[int] = None,
+    study_id: Optional[int] = None,
+    inference_id: Optional[int] = None,
+    view: str = "summary",
+) -> JSONResponse:
+    parsed_run_ids = [
+        item.strip()
+        for item in str(run_ids or "").split(",")
+        if item.strip()
+    ]
+    queue_runtime = get_queue_runtime_snapshot(limit=100)
+    queue_positions = dict(queue_runtime.get("positions") or {})
+    normalized_view = "detail" if str(view or "").strip().lower() == "detail" else "summary"
+    runs = [
+        _enrich_operation_run(run, view=normalized_view, queue_positions=queue_positions)
+        for run in _utils.list_run_entries(
+            RUN_LEDGER_DIR,
+            run_type=run_type,
+            status=status,
+            active_only=active_only,
+            run_ids=parsed_run_ids,
+            model_id=model_id,
+            dataset_id=dataset_id,
+            study_id=study_id,
+            inference_id=inference_id,
+            limit=limit,
+        )
+    ]
+    query = str(q or "").strip().lower()
+    if query:
+        runs = [run for run in runs if _run_matches_operation_query(run, query)]
+    groups = {
+        "cpu": [run for run in runs if run.get("compute_target") != "gpu"],
+        "gpu": [run for run in runs if run.get("compute_target") == "gpu"],
+    }
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "view": normalized_view,
+            "runs": runs,
+            "groups": groups,
+            "worker_runtime": get_worker_runtime_status(),
+            "queue_runtime": queue_runtime,
+            "accelerators": _cached_torch_accelerator_status(),
+        }
+    )
+
+
+@app.get("/operations/runs/{run_id}/terminal", response_class=JSONResponse)
+async def operations_run_terminal(run_id: str, cursor: int = 0, tail: int = 300) -> JSONResponse:
+    payload = _utils.read_run_entry(RUN_LEDGER_DIR, run_id)
+    if payload is None:
+        return _utils._json_error("Run not found", status_code=404)
+    tail_limit = max(1, min(int(tail or 300), 1000))
+    lines = _utils.build_run_terminal_lines(payload)
+    if cursor > 0:
+        selected = [line for line in lines if int(line.get("index", 0)) >= cursor]
+    else:
+        selected = lines[-tail_limit:]
+    if len(selected) > tail_limit:
+        selected = selected[-tail_limit:]
+    next_cursor = (max((int(line.get("index", 0)) for line in lines), default=-1) + 1)
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "run_id": run_id,
+            "cursor": cursor,
+            "next_cursor": next_cursor,
+            "lines": selected,
+            "run": _enrich_operation_run(payload, view="summary"),
+        }
+    )
+
+
+async def _safe_registry_analysis(db: AsyncSession, registry_type: str, item_id: Optional[int]) -> dict[str, Any] | None:
+    if item_id is None:
+        return None
+    try:
+        return await _build_registry_analysis(db, registry_type, item_id)
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc), "registry_type": registry_type, "item_id": item_id}
+
+
+@app.get("/operations/runs/{run_id}/analysis", response_class=JSONResponse)
+async def operations_run_analysis(run_id: str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    payload = _utils.read_run_entry(RUN_LEDGER_DIR, run_id)
+    if payload is None:
+        return _utils._json_error("Run not found", status_code=404)
+    context = dict(payload.get("context") or {})
+    result = dict(payload.get("result") or {})
+    model_id = _coerce_optional_int(context.get("model_id") or result.get("model_id"))
+    dataset_id = _coerce_optional_int(context.get("dataset_id") or result.get("dataset_id"))
+    study_id = _coerce_optional_int(context.get("study_id") or result.get("study_id"))
+    inference_id = _coerce_optional_int(context.get("inference_id") or result.get("inference_id"))
+
+    inference_analysis = await _safe_registry_analysis(db, "inferencemodel", inference_id)
+    production_context = {
+        "state": {
+            key: PRODUCTION_STATE.get(key)
+            for key in ("running", "status", "active_watch_context_id", "model_id", "dataset_id", "inference_id", "started_at", "stopped_at")
+        },
+        "watchlist": [
+            value
+            for value in dict(PRODUCTION_STATE.get("watchlist") or {}).values()
+            if not isinstance(value, Mapping)
+            or model_id in (None, _coerce_optional_int(value.get("model_id")))
+            or dataset_id in (None, _coerce_optional_int(value.get("dataset_id")))
+            or inference_id in (None, _coerce_optional_int(value.get("inference_id")))
+        ],
+    }
+    plots = _list_plot_artifacts(
+        job_id=run_id,
+        model_id=model_id,
+        dataset_id=dataset_id,
+        inference_id=inference_id,
+    )
+    return _utils._json_response(
+        {
+            "status": "ok",
+            "run": _enrich_operation_run(payload, view="detail"),
+            "analysis": {
+                "model": await _safe_registry_analysis(db, "learningmodel", model_id),
+                "dataset": await _safe_registry_analysis(db, "datasetmodel", dataset_id),
+                "study": await _safe_registry_analysis(db, "studymodel", study_id),
+                "inference": inference_analysis,
+                "production": production_context,
+                "plots": plots,
+                "metrics": dict(payload.get("metrics") or {}),
+                "artifacts": dict(payload.get("artifacts") or {}),
+                "raw": payload,
+            },
         }
     )
 
@@ -4934,6 +5807,72 @@ async def onnx_validate(model_id: int, db: AsyncSession = Depends(get_db)) -> JS
     except Exception as exc:
         LOGGER.exception("ONNX validation failed for model_id=%s.", model_id)
         return _utils._json_error(str(exc), status_code=500)
+
+
+async def _onnx_netron_status_payload(model_id: int, db: AsyncSession) -> dict[str, Any] | None:
+    model_record = await LearningModel.read(db, model_id)
+    if model_record is None:
+        return None
+
+    path = _utils._resolve_fs_path(getattr(model_record, "path", None), default_parent=REPO_ROOT)
+    artifact_manifest = recover_model_params(path) if path is not None and path.exists() and path.is_file() else {}
+    return build_netron_status(
+        model_id=model_id,
+        model_name=getattr(model_record, "name", None) or getattr(model_record, "model_name", None),
+        artifact_path=path,
+        artifact_manifest=artifact_manifest if isinstance(artifact_manifest, Mapping) else {},
+    )
+
+
+@app.get("/onnx/netron/{model_id}/status", response_class=JSONResponse)
+async def onnx_netron_status(model_id: int, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    payload = await _onnx_netron_status_payload(model_id, db)
+    if payload is None:
+        return _utils._json_error("Model not found", status_code=404)
+    return _utils._json_response(payload)
+
+
+@app.post("/onnx/netron/{model_id}/open", response_class=JSONResponse)
+async def onnx_netron_open(model_id: int, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    model_record = await LearningModel.read(db, model_id)
+    if model_record is None:
+        return _utils._json_error("Model not found", status_code=404)
+
+    path = _utils._resolve_fs_path(getattr(model_record, "path", None), default_parent=REPO_ROOT)
+    artifact_manifest = recover_model_params(path) if path is not None and path.exists() and path.is_file() else {}
+    status_payload = build_netron_status(
+        model_id=model_id,
+        model_name=getattr(model_record, "name", None) or getattr(model_record, "model_name", None),
+        artifact_path=path,
+        artifact_manifest=artifact_manifest if isinstance(artifact_manifest, Mapping) else {},
+    )
+    if not status_payload.get("viewable") or path is None:
+        return _utils._json_response(status_payload)
+
+    try:
+        return _utils._json_response(start_netron_viewer(artifact_path=path, status_payload=status_payload))
+    except NetronUnavailableError as exc:
+        return _utils._json_response(
+            {
+                **status_payload,
+                "status": "unavailable",
+                "viewable": False,
+                "viewer_active": False,
+                "viewer_url": None,
+                "warnings": [*status_payload.get("warnings", []), str(exc)],
+            }
+        )
+    except Exception as exc:
+        LOGGER.exception("Unable to start Netron for model_id=%s.", model_id)
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/onnx/netron/stop", response_class=JSONResponse)
+async def onnx_netron_stop() -> JSONResponse:
+    try:
+        return _utils._json_response(stop_netron_viewer())
+    except NetronUnavailableError as exc:
+        return _utils._json_response({"status": "unavailable", "viewer_active": False, "warnings": [str(exc)]})
 
 
 

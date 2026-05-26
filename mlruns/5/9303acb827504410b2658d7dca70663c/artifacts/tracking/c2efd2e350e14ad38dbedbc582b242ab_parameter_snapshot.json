@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "epochs": "50",
+        "dropout": "0.1",
+        "framework": "pytorch",
+        "batch_size": "32",
+        "hidden_dim": "64",
+        "hidden_layers": "2",
+        "learning_rate": "0.001",
+        "input_features": "[\"transaction_id\", \"timestamp\", \"trader_species\", \"cargo_type\", \"origin_system\", \"quantity_units\", \"credits_total\"]",
+        "output_features": "[\"is_smuggled\"]",
+        "device": "auto",
+        "metrics_to_track": "[\"loss\", \"mae\", \"rmse\"]",
+        "objective_metric": "accuracy",
+        "training_mode": "transfer",
+        "transfer_strategy": "auto",
+        "base_model_id": "11",
+        "base_artifact_path": "/models/lightfm_model.pkl",
+        "base_run_id": "",
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "cuda_available": "false"
+    },
+    "skipped_conflicts": {}
+}

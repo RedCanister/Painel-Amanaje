@@ -1,0 +1,2990 @@
+{
+  "run_id": "training_48b1a1c27be9",
+  "run_type": "training",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-25T19:08:29.371204",
+  "updated_at": "2026-05-25T19:09:47.294122",
+  "started_at": "2026-05-25T19:08:42.031828",
+  "completed_at": "2026-05-25T19:09:47.294122",
+  "context": {
+    "model_id": 11,
+    "dataset_id": 31,
+    "study_id": null,
+    "inference_id": null
+  },
+  "parameters": {
+    "epochs": 50,
+    "dropout": 0.1,
+    "framework": "pytorch",
+    "batch_size": 32,
+    "hidden_dim": 64,
+    "hidden_layers": 2,
+    "learning_rate": 0.001,
+    "input_features": [
+      "transaction_id",
+      "timestamp",
+      "trader_species",
+      "cargo_type",
+      "origin_system",
+      "quantity_units",
+      "credits_total"
+    ],
+    "output_features": [
+      "is_smuggled"
+    ],
+    "device": "auto",
+    "metrics_to_track": [
+      "loss",
+      "mae",
+      "rmse"
+    ],
+    "objective_metric": "accuracy",
+    "training_mode": "transfer",
+    "transfer_strategy": "auto",
+    "base_model_id": 11,
+    "base_artifact_path": "/models/lightfm_model.pkl",
+    "base_run_id": null
+  },
+  "metrics": {
+    "train_loss": 1.1024306863546371,
+    "val_loss": 0.3423526883125305,
+    "eval_accuracy": 0.9,
+    "eval_precision": 0.45,
+    "eval_recall": 0.5,
+    "eval_f1": 0.47368421052631576
+  },
+  "artifacts": {
+    "summary_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+    "artifact_paths": [
+      "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+      "/app/runtime_artifacts/training/training_48b1a1c27be9/model_spec.json",
+      "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "/app/runtime_artifacts/plots/training_48b1a1c27be9/metric_comparison.png",
+      "/app/runtime_artifacts/plots/training_48b1a1c27be9/loss_curve.png",
+      "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py"
+    ],
+    "model_artifact_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+    "artifact_manifest": {
+      "artifact_format": ".pt",
+      "loader": "torchscript",
+      "runtime_capabilities": {
+        "register": true,
+        "inspect": true,
+        "train": false,
+        "predict": false,
+        "simulate": false,
+        "monitor": false
+      },
+      "framework": "pytorch",
+      "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "entrypoint": null,
+      "needs_companion_spec": true,
+      "warnings": [
+        "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+      ],
+      "metadata": {},
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ],
+      "capability_matrix": {
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": true,
+          "simulate": true,
+          "monitor": true
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": "guarded",
+          "simulate": "guarded",
+          "monitor": "guarded"
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        }
+      }
+    },
+    "serving_file": "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py",
+    "model_uri": "runs:/9303acb827504410b2658d7dca70663c/model"
+  },
+  "result": {
+    "model_id": 11,
+    "dataset_id": 31,
+    "input_type": "Manual",
+    "study_id": null,
+    "framework": "pytorch",
+    "metrics": {
+      "train_loss": 1.1024306863546371,
+      "val_loss": 0.3423526883125305,
+      "eval_accuracy": 0.9,
+      "eval_precision": 0.45,
+      "eval_recall": 0.5,
+      "eval_f1": 0.47368421052631576
+    },
+    "parameters": {
+      "epochs": 50,
+      "dropout": 0.1,
+      "framework": "pytorch",
+      "batch_size": 32,
+      "hidden_dim": 64,
+      "hidden_layers": 2,
+      "learning_rate": 0.001,
+      "input_features": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total"
+      ],
+      "output_features": [
+        "is_smuggled"
+      ],
+      "device": "auto",
+      "metrics_to_track": [
+        "loss",
+        "mae",
+        "rmse"
+      ],
+      "objective_metric": "accuracy",
+      "training_mode": "transfer",
+      "transfer_strategy": "auto",
+      "base_model_id": 11,
+      "base_artifact_path": "/models/lightfm_model.pkl",
+      "base_run_id": null
+    },
+    "monitoring": {
+      "job_id": "training_48b1a1c27be9",
+      "drift_results": {
+        "quantity_units": false,
+        "credits_total": false,
+        "transaction_id_TXN-1000": false,
+        "transaction_id_TXN-1001": false,
+        "transaction_id_TXN-1002": false,
+        "transaction_id_TXN-1003": false,
+        "transaction_id_TXN-1004": false,
+        "transaction_id_TXN-1005": false,
+        "transaction_id_TXN-1006": false,
+        "transaction_id_TXN-1007": false,
+        "transaction_id_TXN-1008": false,
+        "transaction_id_TXN-1009": false,
+        "transaction_id_TXN-1010": false,
+        "transaction_id_TXN-1011": false,
+        "transaction_id_TXN-1012": false,
+        "transaction_id_TXN-1013": false,
+        "transaction_id_TXN-1014": false,
+        "transaction_id_TXN-1015": false,
+        "transaction_id_TXN-1016": false,
+        "transaction_id_TXN-1017": false,
+        "transaction_id_TXN-1018": false,
+        "transaction_id_TXN-1019": false,
+        "transaction_id_TXN-1020": false,
+        "transaction_id_TXN-1021": false,
+        "transaction_id_TXN-1022": false,
+        "transaction_id_TXN-1023": false,
+        "transaction_id_TXN-1024": false,
+        "transaction_id_TXN-1025": false,
+        "transaction_id_TXN-1026": false,
+        "transaction_id_TXN-1027": false,
+        "transaction_id_TXN-1028": false,
+        "transaction_id_TXN-1029": false,
+        "transaction_id_TXN-1030": false,
+        "transaction_id_TXN-1031": false,
+        "transaction_id_TXN-1032": false,
+        "transaction_id_TXN-1033": false,
+        "transaction_id_TXN-1034": false,
+        "transaction_id_TXN-1035": false,
+        "transaction_id_TXN-1036": false,
+        "transaction_id_TXN-1037": false,
+        "transaction_id_TXN-1038": false,
+        "transaction_id_TXN-1039": false,
+        "transaction_id_TXN-1040": false,
+        "transaction_id_TXN-1041": false,
+        "transaction_id_TXN-1042": false,
+        "transaction_id_TXN-1043": false,
+        "transaction_id_TXN-1044": false,
+        "transaction_id_TXN-1045": false,
+        "transaction_id_TXN-1046": false,
+        "transaction_id_TXN-1047": false,
+        "transaction_id_TXN-1048": false,
+        "transaction_id_TXN-1049": false,
+        "transaction_id_nan": false,
+        "timestamp_2264-01-01 04:00:00": false,
+        "timestamp_2264-01-05 03:00:00": false,
+        "timestamp_2264-01-07 04:00:00": false,
+        "timestamp_2264-01-12 11:00:00": false,
+        "timestamp_2264-01-12 21:00:00": false,
+        "timestamp_2264-02-03 04:00:00": false,
+        "timestamp_2264-02-11 08:00:00": false,
+        "timestamp_2264-02-12 10:00:00": false,
+        "timestamp_2264-02-19 12:00:00": false,
+        "timestamp_2264-02-25 03:00:00": false,
+        "timestamp_2264-02-27 11:00:00": false,
+        "timestamp_2264-03-05 09:00:00": false,
+        "timestamp_2264-03-09 13:00:00": false,
+        "timestamp_2264-04-02 16:00:00": false,
+        "timestamp_2264-04-11 21:00:00": false,
+        "timestamp_2264-04-24 07:00:00": false,
+        "timestamp_2264-05-02 00:00:00": false,
+        "timestamp_2264-05-13 13:00:00": false,
+        "timestamp_2264-05-19 14:00:00": false,
+        "timestamp_2264-05-21 18:00:00": false,
+        "timestamp_2264-06-06 01:00:00": false,
+        "timestamp_2264-06-14 07:00:00": false,
+        "timestamp_2264-06-14 23:00:00": false,
+        "timestamp_2264-06-15 07:00:00": false,
+        "timestamp_2264-07-07 19:00:00": false,
+        "timestamp_2264-07-08 02:00:00": false,
+        "timestamp_2264-07-09 20:00:00": false,
+        "timestamp_2264-07-27 18:00:00": false,
+        "timestamp_2264-08-16 22:00:00": false,
+        "timestamp_2264-09-07 15:00:00": false,
+        "timestamp_2264-09-09 20:00:00": false,
+        "timestamp_2264-09-10 21:00:00": false,
+        "timestamp_2264-09-11 16:00:00": false,
+        "timestamp_2264-09-13 22:00:00": false,
+        "timestamp_2264-09-15 19:00:00": false,
+        "timestamp_2264-09-18 09:00:00": false,
+        "timestamp_2264-09-20 06:00:00": false,
+        "timestamp_2264-09-25 06:00:00": false,
+        "timestamp_2264-09-25 12:00:00": false,
+        "timestamp_2264-10-11 18:00:00": false,
+        "timestamp_2264-10-16 19:00:00": false,
+        "timestamp_2264-11-01 08:00:00": false,
+        "timestamp_2264-11-05 15:00:00": false,
+        "timestamp_2264-11-08 12:00:00": false,
+        "timestamp_2264-11-09 01:00:00": false,
+        "timestamp_2264-11-26 23:00:00": false,
+        "timestamp_2264-11-30 13:00:00": false,
+        "timestamp_2264-12-14 03:00:00": false,
+        "timestamp_2264-12-23 00:00:00": false,
+        "timestamp_2264-12-26 01:00:00": false,
+        "timestamp_nan": false,
+        "trader_species_Cyber-Corgi": false,
+        "trader_species_Hulking Glorg": false,
+        "trader_species_Mars-Colonist": false,
+        "trader_species_Sentient Nebula": false,
+        "trader_species_Void-Dweller": false,
+        "trader_species_nan": false,
+        "cargo_type_Ancient Earth Memes": false,
+        "cargo_type_Dark Matter Spice": false,
+        "cargo_type_Holodeck Parts": false,
+        "cargo_type_Oxygen Tanks": false,
+        "cargo_type_Unstable Isotopes": false,
+        "cargo_type_nan": false,
+        "origin_system_Alpha Centauri": false,
+        "origin_system_Kepler-186f": false,
+        "origin_system_Neo-Tokyo Orbit": false,
+        "origin_system_Rigel Prime": false,
+        "origin_system_The Void": false,
+        "origin_system_nan": false
+      },
+      "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+      },
+      "degradation_results": {
+        "train_loss": true,
+        "val_loss": false,
+        "eval_accuracy": false,
+        "eval_precision": false,
+        "eval_recall": false,
+        "eval_f1": false
+      },
+      "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 1
+      },
+      "retrain_recommended": true,
+      "evaluated_at": "2026-05-25T19:09:41.697282"
+    },
+    "artifacts": {
+      "summary_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+      "artifact_paths": [
+        "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+        "/app/runtime_artifacts/training/training_48b1a1c27be9/model_spec.json",
+        "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+        "/app/runtime_artifacts/plots/training_48b1a1c27be9/metric_comparison.png",
+        "/app/runtime_artifacts/plots/training_48b1a1c27be9/loss_curve.png",
+        "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py"
+      ],
+      "model_artifact_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "artifact_manifest": {
+        "artifact_format": ".pt",
+        "loader": "torchscript",
+        "runtime_capabilities": {
+          "register": true,
+          "inspect": true,
+          "train": false,
+          "predict": false,
+          "simulate": false,
+          "monitor": false
+        },
+        "framework": "pytorch",
+        "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+        "entrypoint": null,
+        "needs_companion_spec": true,
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "metadata": {},
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ],
+        "capability_matrix": {
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": true,
+            "simulate": true,
+            "monitor": true
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": "guarded",
+            "simulate": "guarded",
+            "monitor": "guarded"
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "register": true,
+            "inspect": true,
+            "train": false,
+            "predict": false,
+            "simulate": false,
+            "monitor": false
+          }
+        }
+      },
+      "serving_file": "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py",
+      "model_uri": "runs:/9303acb827504410b2658d7dca70663c/model"
+    },
+    "plots": [
+      {
+        "id": "16b984712687b4ff",
+        "kind": "legacy_image",
+        "title": "Loss Curve",
+        "description": "Saved runtime plot artifact.",
+        "source": {
+          "domain": "training",
+          "job_id": "training_48b1a1c27be9"
+        },
+        "metadata": {
+          "display_id": "16b984712687b4ff",
+          "kind": "legacy_image",
+          "domain": "training",
+          "job_id": "training_48b1a1c27be9",
+          "plot_type": "loss_curve",
+          "filename": "loss_curve.png",
+          "relative_path": "training_48b1a1c27be9/loss_curve.png",
+          "extension": ".png",
+          "size_bytes": 96378,
+          "modified_at": "2026-05-25T19:09:07.677281+00:00"
+        },
+        "artifact": {
+          "url": "/plots/artifacts/16b984712687b4ff/file",
+          "relative_path": "training_48b1a1c27be9/loss_curve.png",
+          "filename": "loss_curve.png",
+          "extension": ".png",
+          "size_bytes": 96378,
+          "modified_at": "2026-05-25T19:09:07.677281+00:00"
+        },
+        "plot_type": "loss_curve"
+      },
+      {
+        "id": "5b4262a783849b13",
+        "kind": "legacy_image",
+        "title": "Metric Comparison",
+        "description": "Saved runtime plot artifact.",
+        "source": {
+          "domain": "training",
+          "job_id": "training_48b1a1c27be9"
+        },
+        "metadata": {
+          "display_id": "5b4262a783849b13",
+          "kind": "legacy_image",
+          "domain": "training",
+          "job_id": "training_48b1a1c27be9",
+          "plot_type": "metric_comparison",
+          "filename": "metric_comparison.png",
+          "relative_path": "training_48b1a1c27be9/metric_comparison.png",
+          "extension": ".png",
+          "size_bytes": 48344,
+          "modified_at": "2026-05-25T19:09:06.832858+00:00"
+        },
+        "artifact": {
+          "url": "/plots/artifacts/5b4262a783849b13/file",
+          "relative_path": "training_48b1a1c27be9/metric_comparison.png",
+          "filename": "metric_comparison.png",
+          "extension": ".png",
+          "size_bytes": 48344,
+          "modified_at": "2026-05-25T19:09:06.832858+00:00"
+        },
+        "plot_type": "metric_comparison"
+      }
+    ],
+    "transfer_learning": {
+      "training_mode": "transfer",
+      "transfer_strategy": "auto",
+      "base_model_id": 11,
+      "base_run_id": null,
+      "base_artifact_path": "/models/lightfm_model.pkl",
+      "dataset_snapshot_hash": "b4ac57cf5b9a0628d53319af87943d70719301c4e927a1242236cc30917bf07c",
+      "transfer_status": "incompatible_base_artifact",
+      "base_model_loaded": false,
+      "transfer_error": "Missing runtime dependency 'lightfm' required to load 'lightfm_model.pkl'."
+    },
+    "training_lineage": {
+      "iteration": 1,
+      "latest_run_id": "training_48b1a1c27be9",
+      "base_run_id": null,
+      "base_model_id": 11,
+      "base_artifact_path": "/models/lightfm_model.pkl",
+      "previous_artifact_path": "/models/lightfm_model.pkl",
+      "new_artifact_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "transfer_status": "incompatible_base_artifact",
+      "transfer_strategy": "auto",
+      "training_mode": "transfer",
+      "dataset_snapshot_hash": "b4ac57cf5b9a0628d53319af87943d70719301c4e927a1242236cc30917bf07c",
+      "mlflow_run_id": "9303acb827504410b2658d7dca70663c"
+    },
+    "mlflow_run_id": "9303acb827504410b2658d7dca70663c",
+    "model": {
+      "id": 11,
+      "name": "lightfm_recommendation",
+      "description": "Simple recommedation model made for prediction trends in common news.",
+      "model_type": "supervised_model",
+      "is_trained": true,
+      "is_tested": true,
+      "is_deployed": true,
+      "metrics": {
+        "eval_f1": 0.47368421052631576,
+        "val_loss": 0.3423526883125305,
+        "train_loss": 1.1024306863546371,
+        "eval_recall": 0.5,
+        "eval_accuracy": 0.9,
+        "eval_precision": 0.45
+      },
+      "parameters": {
+        "device": "auto",
+        "epochs": 50,
+        "dropout": 0.1,
+        "framework": "pytorch",
+        "batch_size": 32,
+        "hidden_dim": 64,
+        "base_run_id": null,
+        "base_model_id": 11,
+        "hidden_layers": 2,
+        "learning_rate": 0.001,
+        "training_mode": "transfer",
+        "cuda_available": false,
+        "input_features": [
+          "transaction_id",
+          "timestamp",
+          "trader_species",
+          "cargo_type",
+          "origin_system",
+          "quantity_units",
+          "credits_total"
+        ],
+        "output_features": [
+          "is_smuggled"
+        ],
+        "resolved_device": "cpu",
+        "metrics_to_track": [
+          "loss",
+          "mae",
+          "rmse"
+        ],
+        "objective_metric": "accuracy",
+        "requested_device": "auto",
+        "training_lineage": {
+          "iteration": 1,
+          "base_run_id": null,
+          "base_model_id": 11,
+          "latest_run_id": "training_48b1a1c27be9",
+          "mlflow_run_id": "9303acb827504410b2658d7dca70663c",
+          "training_mode": "transfer",
+          "transfer_status": "incompatible_base_artifact",
+          "new_artifact_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+          "transfer_strategy": "auto",
+          "base_artifact_path": "/models/lightfm_model.pkl",
+          "dataset_snapshot_hash": "b4ac57cf5b9a0628d53319af87943d70719301c4e927a1242236cc30917bf07c",
+          "previous_artifact_path": "/models/lightfm_model.pkl"
+        },
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "transfer_strategy": "auto",
+        "base_artifact_path": "/models/lightfm_model.pkl",
+        "device_fallback_reason": "auto_selected_cpu",
+        "device_fallback_applied": false
+      },
+      "input_features": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total"
+      ],
+      "output_features": [
+        "is_smuggled"
+      ],
+      "size": 16.2144,
+      "path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      }
+    },
+    "inference": {
+      "id": 92,
+      "name": "lightfm_recommendation :: galactic_trade_ledger.csv",
+      "description": "Inference pair for lightfm_recommendation :: galactic_trade_ledger.csv",
+      "learning_model_id": 11,
+      "dataset_id": 31,
+      "input_features": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total"
+      ],
+      "output_features": [
+        "is_smuggled"
+      ],
+      "path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+      "status": "trained",
+      "latest_metrics": {
+        "eval_f1": 0.47368421052631576,
+        "val_loss": 0.3423526883125305,
+        "train_loss": 1.1024306863546371,
+        "eval_recall": 0.5,
+        "eval_accuracy": 0.9,
+        "eval_precision": 0.45
+      },
+      "latest_monitoring": {
+        "job_id": "training_48b1a1c27be9",
+        "summary": {
+          "degraded_metrics": 1,
+          "drifted_features": 0
+        },
+        "evaluated_at": "2026-05-25T19:09:41.697282",
+        "drift_results": {
+          "credits_total": false,
+          "timestamp_nan": false,
+          "cargo_type_nan": false,
+          "quantity_units": false,
+          "origin_system_nan": false,
+          "trader_species_nan": false,
+          "transaction_id_nan": false,
+          "origin_system_The Void": false,
+          "cargo_type_Oxygen Tanks": false,
+          "transaction_id_TXN-1000": false,
+          "transaction_id_TXN-1001": false,
+          "transaction_id_TXN-1002": false,
+          "transaction_id_TXN-1003": false,
+          "transaction_id_TXN-1004": false,
+          "transaction_id_TXN-1005": false,
+          "transaction_id_TXN-1006": false,
+          "transaction_id_TXN-1007": false,
+          "transaction_id_TXN-1008": false,
+          "transaction_id_TXN-1009": false,
+          "transaction_id_TXN-1010": false,
+          "transaction_id_TXN-1011": false,
+          "transaction_id_TXN-1012": false,
+          "transaction_id_TXN-1013": false,
+          "transaction_id_TXN-1014": false,
+          "transaction_id_TXN-1015": false,
+          "transaction_id_TXN-1016": false,
+          "transaction_id_TXN-1017": false,
+          "transaction_id_TXN-1018": false,
+          "transaction_id_TXN-1019": false,
+          "transaction_id_TXN-1020": false,
+          "transaction_id_TXN-1021": false,
+          "transaction_id_TXN-1022": false,
+          "transaction_id_TXN-1023": false,
+          "transaction_id_TXN-1024": false,
+          "transaction_id_TXN-1025": false,
+          "transaction_id_TXN-1026": false,
+          "transaction_id_TXN-1027": false,
+          "transaction_id_TXN-1028": false,
+          "transaction_id_TXN-1029": false,
+          "transaction_id_TXN-1030": false,
+          "transaction_id_TXN-1031": false,
+          "transaction_id_TXN-1032": false,
+          "transaction_id_TXN-1033": false,
+          "transaction_id_TXN-1034": false,
+          "transaction_id_TXN-1035": false,
+          "transaction_id_TXN-1036": false,
+          "transaction_id_TXN-1037": false,
+          "transaction_id_TXN-1038": false,
+          "transaction_id_TXN-1039": false,
+          "transaction_id_TXN-1040": false,
+          "transaction_id_TXN-1041": false,
+          "transaction_id_TXN-1042": false,
+          "transaction_id_TXN-1043": false,
+          "transaction_id_TXN-1044": false,
+          "transaction_id_TXN-1045": false,
+          "transaction_id_TXN-1046": false,
+          "transaction_id_TXN-1047": false,
+          "transaction_id_TXN-1048": false,
+          "transaction_id_TXN-1049": false,
+          "cargo_type_Holodeck Parts": false,
+          "origin_system_Kepler-186f": false,
+          "origin_system_Rigel Prime": false,
+          "trader_species_Cyber-Corgi": false,
+          "trader_species_Void-Dweller": false,
+          "cargo_type_Dark Matter Spice": false,
+          "cargo_type_Unstable Isotopes": false,
+          "origin_system_Alpha Centauri": false,
+          "trader_species_Hulking Glorg": false,
+          "trader_species_Mars-Colonist": false,
+          "origin_system_Neo-Tokyo Orbit": false,
+          "timestamp_2264-01-01 04:00:00": false,
+          "timestamp_2264-01-05 03:00:00": false,
+          "timestamp_2264-01-07 04:00:00": false,
+          "timestamp_2264-01-12 11:00:00": false,
+          "timestamp_2264-01-12 21:00:00": false,
+          "timestamp_2264-02-03 04:00:00": false,
+          "timestamp_2264-02-11 08:00:00": false,
+          "timestamp_2264-02-12 10:00:00": false,
+          "timestamp_2264-02-19 12:00:00": false,
+          "timestamp_2264-02-25 03:00:00": false,
+          "timestamp_2264-02-27 11:00:00": false,
+          "timestamp_2264-03-05 09:00:00": false,
+          "timestamp_2264-03-09 13:00:00": false,
+          "timestamp_2264-04-02 16:00:00": false,
+          "timestamp_2264-04-11 21:00:00": false,
+          "timestamp_2264-04-24 07:00:00": false,
+          "timestamp_2264-05-02 00:00:00": false,
+          "timestamp_2264-05-13 13:00:00": false,
+          "timestamp_2264-05-19 14:00:00": false,
+          "timestamp_2264-05-21 18:00:00": false,
+          "timestamp_2264-06-06 01:00:00": false,
+          "timestamp_2264-06-14 07:00:00": false,
+          "timestamp_2264-06-14 23:00:00": false,
+          "timestamp_2264-06-15 07:00:00": false,
+          "timestamp_2264-07-07 19:00:00": false,
+          "timestamp_2264-07-08 02:00:00": false,
+          "timestamp_2264-07-09 20:00:00": false,
+          "timestamp_2264-07-27 18:00:00": false,
+          "timestamp_2264-08-16 22:00:00": false,
+          "timestamp_2264-09-07 15:00:00": false,
+          "timestamp_2264-09-09 20:00:00": false,
+          "timestamp_2264-09-10 21:00:00": false,
+          "timestamp_2264-09-11 16:00:00": false,
+          "timestamp_2264-09-13 22:00:00": false,
+          "timestamp_2264-09-15 19:00:00": false,
+          "timestamp_2264-09-18 09:00:00": false,
+          "timestamp_2264-09-20 06:00:00": false,
+          "timestamp_2264-09-25 06:00:00": false,
+          "timestamp_2264-09-25 12:00:00": false,
+          "timestamp_2264-10-11 18:00:00": false,
+          "timestamp_2264-10-16 19:00:00": false,
+          "timestamp_2264-11-01 08:00:00": false,
+          "timestamp_2264-11-05 15:00:00": false,
+          "timestamp_2264-11-08 12:00:00": false,
+          "timestamp_2264-11-09 01:00:00": false,
+          "timestamp_2264-11-26 23:00:00": false,
+          "timestamp_2264-11-30 13:00:00": false,
+          "timestamp_2264-12-14 03:00:00": false,
+          "timestamp_2264-12-23 00:00:00": false,
+          "timestamp_2264-12-26 01:00:00": false,
+          "cargo_type_Ancient Earth Memes": false,
+          "trader_species_Sentient Nebula": false
+        },
+        "prediction_drift": {
+          "p_value": 1.0,
+          "detected": false
+        },
+        "degradation_results": {
+          "eval_f1": false,
+          "val_loss": false,
+          "train_loss": true,
+          "eval_recall": false,
+          "eval_accuracy": false,
+          "eval_precision": false
+        },
+        "retrain_recommended": true
+      },
+      "simulation_defaults": {
+        "steps": 12,
+        "strategy": "carry-forward",
+        "amplitude": 0.05
+      },
+      "artifact_manifest": {
+        "loader": "torchscript",
+        "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+        "metadata": {},
+        "warnings": [
+          "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+        ],
+        "framework": "pytorch",
+        "entrypoint": null,
+        "artifact_format": ".pt",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": true,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": false,
+        "predict": false,
+        "register": true,
+        "simulate": false
+      },
+      "history": [
+        {
+          "when": "2026-05-25T19:09:42.558077",
+          "job_id": "training_48b1a1c27be9",
+          "model_id": 11,
+          "operation": "training_sync",
+          "dataset_id": 31
+        }
+      ],
+      "inference_params": {
+        "status": "trained",
+        "artifacts": {
+          "model_uri": "runs:/9303acb827504410b2658d7dca70663c/model",
+          "serving_file": "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py",
+          "summary_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+          "artifact_paths": [
+            "/app/runtime_artifacts/training/training_48b1a1c27be9/training_summary.json",
+            "/app/runtime_artifacts/training/training_48b1a1c27be9/model_spec.json",
+            "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+            "/app/runtime_artifacts/plots/training_48b1a1c27be9/metric_comparison.png",
+            "/app/runtime_artifacts/plots/training_48b1a1c27be9/loss_curve.png",
+            "/app/runtime_artifacts/serving/training_48b1a1c27be9_service.py"
+          ],
+          "artifact_manifest": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+            "metadata": {},
+            "warnings": [
+              "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+            ],
+            "framework": "pytorch",
+            "entrypoint": null,
+            "artifact_format": ".pt",
+            "capability_matrix": {
+              ".pt": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pkl": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".pth": {
+                "label": "PyTorch Artifact",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              },
+              ".yml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".json": {
+                "label": "JSON Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".onnx": {
+                "label": "ONNX",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".yaml": {
+                "label": "YAML Config",
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+              },
+              ".joblib": {
+                "label": "scikit-learn Joblib",
+                "train": false,
+                "inspect": true,
+                "monitor": true,
+                "predict": true,
+                "register": true,
+                "simulate": true
+              },
+              ".pickle": {
+                "label": "Python Pickle",
+                "train": false,
+                "inspect": true,
+                "monitor": "guarded",
+                "predict": "guarded",
+                "register": true,
+                "simulate": "guarded"
+              }
+            },
+            "needs_companion_spec": true,
+            "runtime_capabilities": {
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            "supported_file_types": [
+              ".joblib",
+              ".json",
+              ".onnx",
+              ".pickle",
+              ".pkl",
+              ".pt",
+              ".pth",
+              ".yaml",
+              ".yml"
+            ]
+          },
+          "model_artifact_path": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt"
+        },
+        "framework": "pytorch",
+        "monitoring": {
+          "job_id": "training_48b1a1c27be9",
+          "summary": {
+            "degraded_metrics": 1,
+            "drifted_features": 0
+          },
+          "evaluated_at": "2026-05-25T19:09:41.697282",
+          "drift_results": {
+            "credits_total": false,
+            "timestamp_nan": false,
+            "cargo_type_nan": false,
+            "quantity_units": false,
+            "origin_system_nan": false,
+            "trader_species_nan": false,
+            "transaction_id_nan": false,
+            "origin_system_The Void": false,
+            "cargo_type_Oxygen Tanks": false,
+            "transaction_id_TXN-1000": false,
+            "transaction_id_TXN-1001": false,
+            "transaction_id_TXN-1002": false,
+            "transaction_id_TXN-1003": false,
+            "transaction_id_TXN-1004": false,
+            "transaction_id_TXN-1005": false,
+            "transaction_id_TXN-1006": false,
+            "transaction_id_TXN-1007": false,
+            "transaction_id_TXN-1008": false,
+            "transaction_id_TXN-1009": false,
+            "transaction_id_TXN-1010": false,
+            "transaction_id_TXN-1011": false,
+            "transaction_id_TXN-1012": false,
+            "transaction_id_TXN-1013": false,
+            "transaction_id_TXN-1014": false,
+            "transaction_id_TXN-1015": false,
+            "transaction_id_TXN-1016": false,
+            "transaction_id_TXN-1017": false,
+            "transaction_id_TXN-1018": false,
+            "transaction_id_TXN-1019": false,
+            "transaction_id_TXN-1020": false,
+            "transaction_id_TXN-1021": false,
+            "transaction_id_TXN-1022": false,
+            "transaction_id_TXN-1023": false,
+            "transaction_id_TXN-1024": false,
+            "transaction_id_TXN-1025": false,
+            "transaction_id_TXN-1026": false,
+            "transaction_id_TXN-1027": false,
+            "transaction_id_TXN-1028": false,
+            "transaction_id_TXN-1029": false,
+            "transaction_id_TXN-1030": false,
+            "transaction_id_TXN-1031": false,
+            "transaction_id_TXN-1032": false,
+            "transaction_id_TXN-1033": false,
+            "transaction_id_TXN-1034": false,
+            "transaction_id_TXN-1035": false,
+            "transaction_id_TXN-1036": false,
+            "transaction_id_TXN-1037": false,
+            "transaction_id_TXN-1038": false,
+            "transaction_id_TXN-1039": false,
+            "transaction_id_TXN-1040": false,
+            "transaction_id_TXN-1041": false,
+            "transaction_id_TXN-1042": false,
+            "transaction_id_TXN-1043": false,
+            "transaction_id_TXN-1044": false,
+            "transaction_id_TXN-1045": false,
+            "transaction_id_TXN-1046": false,
+            "transaction_id_TXN-1047": false,
+            "transaction_id_TXN-1048": false,
+            "transaction_id_TXN-1049": false,
+            "cargo_type_Holodeck Parts": false,
+            "origin_system_Kepler-186f": false,
+            "origin_system_Rigel Prime": false,
+            "trader_species_Cyber-Corgi": false,
+            "trader_species_Void-Dweller": false,
+            "cargo_type_Dark Matter Spice": false,
+            "cargo_type_Unstable Isotopes": false,
+            "origin_system_Alpha Centauri": false,
+            "trader_species_Hulking Glorg": false,
+            "trader_species_Mars-Colonist": false,
+            "origin_system_Neo-Tokyo Orbit": false,
+            "timestamp_2264-01-01 04:00:00": false,
+            "timestamp_2264-01-05 03:00:00": false,
+            "timestamp_2264-01-07 04:00:00": false,
+            "timestamp_2264-01-12 11:00:00": false,
+            "timestamp_2264-01-12 21:00:00": false,
+            "timestamp_2264-02-03 04:00:00": false,
+            "timestamp_2264-02-11 08:00:00": false,
+            "timestamp_2264-02-12 10:00:00": false,
+            "timestamp_2264-02-19 12:00:00": false,
+            "timestamp_2264-02-25 03:00:00": false,
+            "timestamp_2264-02-27 11:00:00": false,
+            "timestamp_2264-03-05 09:00:00": false,
+            "timestamp_2264-03-09 13:00:00": false,
+            "timestamp_2264-04-02 16:00:00": false,
+            "timestamp_2264-04-11 21:00:00": false,
+            "timestamp_2264-04-24 07:00:00": false,
+            "timestamp_2264-05-02 00:00:00": false,
+            "timestamp_2264-05-13 13:00:00": false,
+            "timestamp_2264-05-19 14:00:00": false,
+            "timestamp_2264-05-21 18:00:00": false,
+            "timestamp_2264-06-06 01:00:00": false,
+            "timestamp_2264-06-14 07:00:00": false,
+            "timestamp_2264-06-14 23:00:00": false,
+            "timestamp_2264-06-15 07:00:00": false,
+            "timestamp_2264-07-07 19:00:00": false,
+            "timestamp_2264-07-08 02:00:00": false,
+            "timestamp_2264-07-09 20:00:00": false,
+            "timestamp_2264-07-27 18:00:00": false,
+            "timestamp_2264-08-16 22:00:00": false,
+            "timestamp_2264-09-07 15:00:00": false,
+            "timestamp_2264-09-09 20:00:00": false,
+            "timestamp_2264-09-10 21:00:00": false,
+            "timestamp_2264-09-11 16:00:00": false,
+            "timestamp_2264-09-13 22:00:00": false,
+            "timestamp_2264-09-15 19:00:00": false,
+            "timestamp_2264-09-18 09:00:00": false,
+            "timestamp_2264-09-20 06:00:00": false,
+            "timestamp_2264-09-25 06:00:00": false,
+            "timestamp_2264-09-25 12:00:00": false,
+            "timestamp_2264-10-11 18:00:00": false,
+            "timestamp_2264-10-16 19:00:00": false,
+            "timestamp_2264-11-01 08:00:00": false,
+            "timestamp_2264-11-05 15:00:00": false,
+            "timestamp_2264-11-08 12:00:00": false,
+            "timestamp_2264-11-09 01:00:00": false,
+            "timestamp_2264-11-26 23:00:00": false,
+            "timestamp_2264-11-30 13:00:00": false,
+            "timestamp_2264-12-14 03:00:00": false,
+            "timestamp_2264-12-23 00:00:00": false,
+            "timestamp_2264-12-26 01:00:00": false,
+            "cargo_type_Ancient Earth Memes": false,
+            "trader_species_Sentient Nebula": false
+          },
+          "prediction_drift": {
+            "p_value": 1.0,
+            "detected": false
+          },
+          "degradation_results": {
+            "eval_f1": false,
+            "val_loss": false,
+            "train_loss": true,
+            "eval_recall": false,
+            "eval_accuracy": false,
+            "eval_precision": false
+          },
+          "retrain_recommended": true
+        },
+        "last_job_id": "training_48b1a1c27be9",
+        "latest_metrics": {
+          "eval_f1": 0.47368421052631576,
+          "val_loss": 0.3423526883125305,
+          "train_loss": 1.1024306863546371,
+          "eval_recall": 0.5,
+          "eval_accuracy": 0.9,
+          "eval_precision": 0.45
+        },
+        "last_trained_at": "2026-05-25T19:09:42.558010",
+        "artifact_manifest": {
+          "loader": "torchscript",
+          "source": "/app/runtime_artifacts/training/training_48b1a1c27be9/model_pytorch.pt",
+          "metadata": {},
+          "warnings": [
+            "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+          ],
+          "framework": "pytorch",
+          "entrypoint": null,
+          "artifact_format": ".pt",
+          "capability_matrix": {
+            ".pt": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pkl": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".pth": {
+              "label": "PyTorch Artifact",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            },
+            ".yml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".json": {
+              "label": "JSON Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".onnx": {
+              "label": "ONNX",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".yaml": {
+              "label": "YAML Config",
+              "train": false,
+              "inspect": true,
+              "monitor": false,
+              "predict": false,
+              "register": true,
+              "simulate": false
+            },
+            ".joblib": {
+              "label": "scikit-learn Joblib",
+              "train": false,
+              "inspect": true,
+              "monitor": true,
+              "predict": true,
+              "register": true,
+              "simulate": true
+            },
+            ".pickle": {
+              "label": "Python Pickle",
+              "train": false,
+              "inspect": true,
+              "monitor": "guarded",
+              "predict": "guarded",
+              "register": true,
+              "simulate": "guarded"
+            }
+          },
+          "needs_companion_spec": true,
+          "runtime_capabilities": {
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          "supported_file_types": [
+            ".joblib",
+            ".json",
+            ".onnx",
+            ".pickle",
+            ".pkl",
+            ".pt",
+            ".pth",
+            ".yaml",
+            ".yml"
+          ]
+        },
+        "simulation_defaults": {
+          "steps": 12,
+          "strategy": "carry-forward",
+          "amplitude": 0.05
+        }
+      }
+    }
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Training workflow completed.",
+    "latest_timestamp": "2026-05-25T19:09:47.294122",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T19:08:29.371204",
+        "message": "training run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T19:08:29.395269",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-25T19:08:42.031828",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:42.437778",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-25T19:08:42.474127",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-05-25T19:08:42.500258",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_accelerator",
+        "timestamp": "2026-05-25T19:08:55.029354",
+        "message": "Requested device auto resolved to cpu."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:55.091194",
+        "message": "Running PyTorch training epochs."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:57.818264",
+        "message": "Completed epoch 1 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:57.939758",
+        "message": "Completed epoch 2 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.048242",
+        "message": "Completed epoch 3 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.148649",
+        "message": "Completed epoch 4 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.243398",
+        "message": "Completed epoch 5 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.367376",
+        "message": "Completed epoch 6 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.477965",
+        "message": "Completed epoch 7 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.594921",
+        "message": "Completed epoch 8 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.715259",
+        "message": "Completed epoch 9 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:58.817837",
+        "message": "Completed epoch 10 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:59.007399",
+        "message": "Completed epoch 11 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:59.309643",
+        "message": "Completed epoch 12 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:59.558156",
+        "message": "Completed epoch 13 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:59.695327",
+        "message": "Completed epoch 14 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:08:59.871535",
+        "message": "Completed epoch 15 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:00.128215",
+        "message": "Completed epoch 16 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:00.334609",
+        "message": "Completed epoch 17 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:00.471050",
+        "message": "Completed epoch 18 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:00.631525",
+        "message": "Completed epoch 19 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:00.933317",
+        "message": "Completed epoch 20 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.103463",
+        "message": "Completed epoch 21 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.227375",
+        "message": "Completed epoch 22 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.343747",
+        "message": "Completed epoch 23 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.467104",
+        "message": "Completed epoch 24 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.581712",
+        "message": "Completed epoch 25 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.684073",
+        "message": "Completed epoch 26 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.781711",
+        "message": "Completed epoch 27 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.884428",
+        "message": "Completed epoch 28 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:01.996924",
+        "message": "Completed epoch 29 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.134564",
+        "message": "Completed epoch 30 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.254752",
+        "message": "Completed epoch 31 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.365225",
+        "message": "Completed epoch 32 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.482215",
+        "message": "Completed epoch 33 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.594337",
+        "message": "Completed epoch 34 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.730668",
+        "message": "Completed epoch 35 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.834393",
+        "message": "Completed epoch 36 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:02.929525",
+        "message": "Completed epoch 37 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.107220",
+        "message": "Completed epoch 38 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.266374",
+        "message": "Completed epoch 39 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.382055",
+        "message": "Completed epoch 40 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.492498",
+        "message": "Completed epoch 41 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.592855",
+        "message": "Completed epoch 42 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.694673",
+        "message": "Completed epoch 43 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.796357",
+        "message": "Completed epoch 44 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:03.907328",
+        "message": "Completed epoch 45 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:04.037148",
+        "message": "Completed epoch 46 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:04.147948",
+        "message": "Completed epoch 47 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:04.263782",
+        "message": "Completed epoch 48 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:04.372940",
+        "message": "Completed epoch 49 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:09:04.482214",
+        "message": "Completed epoch 50 of 50."
+      },
+      {
+        "status": "running",
+        "stage": "evaluating",
+        "timestamp": "2026-05-25T19:09:04.749574",
+        "message": "Scoring PyTorch predictions on the validation split."
+      },
+      {
+        "status": "running",
+        "stage": "persisting_artifacts",
+        "timestamp": "2026-05-25T19:09:05.585737",
+        "message": "Persisting artifacts, summaries, and runtime bundles."
+      },
+      {
+        "status": "running",
+        "stage": "logging_mlflow",
+        "timestamp": "2026-05-25T19:09:39.823149",
+        "message": "Logging monitoring summaries and artifact context."
+      },
+      {
+        "status": "running",
+        "stage": "syncing_inference",
+        "timestamp": "2026-05-25T19:09:43.089281",
+        "message": "Persisting run outputs to the registry and inference pair."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-25T19:09:47.294122",
+        "message": "Training workflow completed."
+      }
+    ],
+    "counters": {
+      "cuda_available": false,
+      "device_count": 0,
+      "fallback_applied": false,
+      "epochs_total": 50,
+      "epochs_completed": 50,
+      "train_loss": 1.1024306863546371,
+      "val_loss": 0.3423526883125305,
+      "mlflow_run_id": "9303acb827504410b2658d7dca70663c",
+      "metric_count": 6
+    }
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T19:08:29.371204",
+      "message": "training run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T19:08:29.395269",
+      "message": "Training run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-25T19:08:42.031828",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:42.437778",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-25T19:08:42.474127",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-05-25T19:08:42.500258",
+      "message": "Preparing dataset splits and feature encodings."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_accelerator",
+      "timestamp": "2026-05-25T19:08:55.029354",
+      "message": "Requested device auto resolved to cpu."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:55.091194",
+      "message": "Running PyTorch training epochs."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:57.818264",
+      "message": "Completed epoch 1 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:57.939758",
+      "message": "Completed epoch 2 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.048242",
+      "message": "Completed epoch 3 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.148649",
+      "message": "Completed epoch 4 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.243398",
+      "message": "Completed epoch 5 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.367376",
+      "message": "Completed epoch 6 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.477965",
+      "message": "Completed epoch 7 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.594921",
+      "message": "Completed epoch 8 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.715259",
+      "message": "Completed epoch 9 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:58.817837",
+      "message": "Completed epoch 10 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:59.007399",
+      "message": "Completed epoch 11 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:59.309643",
+      "message": "Completed epoch 12 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:59.558156",
+      "message": "Completed epoch 13 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:59.695327",
+      "message": "Completed epoch 14 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:08:59.871535",
+      "message": "Completed epoch 15 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:00.128215",
+      "message": "Completed epoch 16 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:00.334609",
+      "message": "Completed epoch 17 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:00.471050",
+      "message": "Completed epoch 18 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:00.631525",
+      "message": "Completed epoch 19 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:00.933317",
+      "message": "Completed epoch 20 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.103463",
+      "message": "Completed epoch 21 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.227375",
+      "message": "Completed epoch 22 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.343747",
+      "message": "Completed epoch 23 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.467104",
+      "message": "Completed epoch 24 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.581712",
+      "message": "Completed epoch 25 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.684073",
+      "message": "Completed epoch 26 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.781711",
+      "message": "Completed epoch 27 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.884428",
+      "message": "Completed epoch 28 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:01.996924",
+      "message": "Completed epoch 29 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.134564",
+      "message": "Completed epoch 30 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.254752",
+      "message": "Completed epoch 31 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.365225",
+      "message": "Completed epoch 32 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.482215",
+      "message": "Completed epoch 33 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.594337",
+      "message": "Completed epoch 34 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.730668",
+      "message": "Completed epoch 35 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.834393",
+      "message": "Completed epoch 36 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:02.929525",
+      "message": "Completed epoch 37 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.107220",
+      "message": "Completed epoch 38 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.266374",
+      "message": "Completed epoch 39 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.382055",
+      "message": "Completed epoch 40 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.492498",
+      "message": "Completed epoch 41 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.592855",
+      "message": "Completed epoch 42 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.694673",
+      "message": "Completed epoch 43 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.796357",
+      "message": "Completed epoch 44 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:03.907328",
+      "message": "Completed epoch 45 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:04.037148",
+      "message": "Completed epoch 46 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:04.147948",
+      "message": "Completed epoch 47 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:04.263782",
+      "message": "Completed epoch 48 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:04.372940",
+      "message": "Completed epoch 49 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:09:04.482214",
+      "message": "Completed epoch 50 of 50."
+    },
+    {
+      "status": "running",
+      "stage": "evaluating",
+      "timestamp": "2026-05-25T19:09:04.749574",
+      "message": "Scoring PyTorch predictions on the validation split."
+    },
+    {
+      "status": "running",
+      "stage": "persisting_artifacts",
+      "timestamp": "2026-05-25T19:09:05.585737",
+      "message": "Persisting artifacts, summaries, and runtime bundles."
+    },
+    {
+      "status": "running",
+      "stage": "logging_mlflow",
+      "timestamp": "2026-05-25T19:09:39.823149",
+      "message": "Logging monitoring summaries and artifact context."
+    },
+    {
+      "status": "running",
+      "stage": "syncing_inference",
+      "timestamp": "2026-05-25T19:09:43.089281",
+      "message": "Persisting run outputs to the registry and inference pair."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-25T19:09:47.294122",
+      "message": "Training workflow completed."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 63,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-25T19:08:29.371204",
+        "stream": "system",
+        "stage": "queued",
+        "message": "training run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-25T19:08:29.395269",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-25T19:08:42.031828",
+        "stream": "system",
+        "stage": "resolving_context",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-25T19:08:42.437778",
+        "stream": "system",
+        "stage": "training",
+        "message": "Training workflow started."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-25T19:08:42.474127",
+        "stream": "system",
+        "stage": "validating_schema",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-25T19:08:42.500258",
+        "stream": "system",
+        "stage": "preparing_dataset",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-05-25T19:08:55.029354",
+        "stream": "system",
+        "stage": "resolving_accelerator",
+        "message": "Requested device auto resolved to cpu."
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-05-25T19:08:55.091194",
+        "stream": "system",
+        "stage": "training",
+        "message": "Running PyTorch training epochs."
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-05-25T19:08:57.818264",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 1 of 50."
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-05-25T19:08:57.939758",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 2 of 50."
+      },
+      {
+        "index": 10,
+        "timestamp": "2026-05-25T19:08:58.048242",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 3 of 50."
+      },
+      {
+        "index": 11,
+        "timestamp": "2026-05-25T19:08:58.148649",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 4 of 50."
+      },
+      {
+        "index": 12,
+        "timestamp": "2026-05-25T19:08:58.243398",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 5 of 50."
+      },
+      {
+        "index": 13,
+        "timestamp": "2026-05-25T19:08:58.367376",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 6 of 50."
+      },
+      {
+        "index": 14,
+        "timestamp": "2026-05-25T19:08:58.477965",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 7 of 50."
+      },
+      {
+        "index": 15,
+        "timestamp": "2026-05-25T19:08:58.594921",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 8 of 50."
+      },
+      {
+        "index": 16,
+        "timestamp": "2026-05-25T19:08:58.715259",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 9 of 50."
+      },
+      {
+        "index": 17,
+        "timestamp": "2026-05-25T19:08:58.817837",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 10 of 50."
+      },
+      {
+        "index": 18,
+        "timestamp": "2026-05-25T19:08:59.007399",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 11 of 50."
+      },
+      {
+        "index": 19,
+        "timestamp": "2026-05-25T19:08:59.309643",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 12 of 50."
+      },
+      {
+        "index": 20,
+        "timestamp": "2026-05-25T19:08:59.558156",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 13 of 50."
+      },
+      {
+        "index": 21,
+        "timestamp": "2026-05-25T19:08:59.695327",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 14 of 50."
+      },
+      {
+        "index": 22,
+        "timestamp": "2026-05-25T19:08:59.871535",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 15 of 50."
+      },
+      {
+        "index": 23,
+        "timestamp": "2026-05-25T19:09:00.128215",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 16 of 50."
+      },
+      {
+        "index": 24,
+        "timestamp": "2026-05-25T19:09:00.334609",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 17 of 50."
+      },
+      {
+        "index": 25,
+        "timestamp": "2026-05-25T19:09:00.471050",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 18 of 50."
+      },
+      {
+        "index": 26,
+        "timestamp": "2026-05-25T19:09:00.631525",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 19 of 50."
+      },
+      {
+        "index": 27,
+        "timestamp": "2026-05-25T19:09:00.933317",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 20 of 50."
+      },
+      {
+        "index": 28,
+        "timestamp": "2026-05-25T19:09:01.103463",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 21 of 50."
+      },
+      {
+        "index": 29,
+        "timestamp": "2026-05-25T19:09:01.227375",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 22 of 50."
+      },
+      {
+        "index": 30,
+        "timestamp": "2026-05-25T19:09:01.343747",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 23 of 50."
+      },
+      {
+        "index": 31,
+        "timestamp": "2026-05-25T19:09:01.467104",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 24 of 50."
+      },
+      {
+        "index": 32,
+        "timestamp": "2026-05-25T19:09:01.581712",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 25 of 50."
+      },
+      {
+        "index": 33,
+        "timestamp": "2026-05-25T19:09:01.684073",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 26 of 50."
+      },
+      {
+        "index": 34,
+        "timestamp": "2026-05-25T19:09:01.781711",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 27 of 50."
+      },
+      {
+        "index": 35,
+        "timestamp": "2026-05-25T19:09:01.884428",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 28 of 50."
+      },
+      {
+        "index": 36,
+        "timestamp": "2026-05-25T19:09:01.996924",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 29 of 50."
+      },
+      {
+        "index": 37,
+        "timestamp": "2026-05-25T19:09:02.134564",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 30 of 50."
+      },
+      {
+        "index": 38,
+        "timestamp": "2026-05-25T19:09:02.254752",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 31 of 50."
+      },
+      {
+        "index": 39,
+        "timestamp": "2026-05-25T19:09:02.365225",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 32 of 50."
+      },
+      {
+        "index": 40,
+        "timestamp": "2026-05-25T19:09:02.482215",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 33 of 50."
+      },
+      {
+        "index": 41,
+        "timestamp": "2026-05-25T19:09:02.594337",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 34 of 50."
+      },
+      {
+        "index": 42,
+        "timestamp": "2026-05-25T19:09:02.730668",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 35 of 50."
+      },
+      {
+        "index": 43,
+        "timestamp": "2026-05-25T19:09:02.834393",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 36 of 50."
+      },
+      {
+        "index": 44,
+        "timestamp": "2026-05-25T19:09:02.929525",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 37 of 50."
+      },
+      {
+        "index": 45,
+        "timestamp": "2026-05-25T19:09:03.107220",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 38 of 50."
+      },
+      {
+        "index": 46,
+        "timestamp": "2026-05-25T19:09:03.266374",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 39 of 50."
+      },
+      {
+        "index": 47,
+        "timestamp": "2026-05-25T19:09:03.382055",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 40 of 50."
+      },
+      {
+        "index": 48,
+        "timestamp": "2026-05-25T19:09:03.492498",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 41 of 50."
+      },
+      {
+        "index": 49,
+        "timestamp": "2026-05-25T19:09:03.592855",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 42 of 50."
+      },
+      {
+        "index": 50,
+        "timestamp": "2026-05-25T19:09:03.694673",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 43 of 50."
+      },
+      {
+        "index": 51,
+        "timestamp": "2026-05-25T19:09:03.796357",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 44 of 50."
+      },
+      {
+        "index": 52,
+        "timestamp": "2026-05-25T19:09:03.907328",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 45 of 50."
+      },
+      {
+        "index": 53,
+        "timestamp": "2026-05-25T19:09:04.037148",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 46 of 50."
+      },
+      {
+        "index": 54,
+        "timestamp": "2026-05-25T19:09:04.147948",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 47 of 50."
+      },
+      {
+        "index": 55,
+        "timestamp": "2026-05-25T19:09:04.263782",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 48 of 50."
+      },
+      {
+        "index": 56,
+        "timestamp": "2026-05-25T19:09:04.372940",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 49 of 50."
+      },
+      {
+        "index": 57,
+        "timestamp": "2026-05-25T19:09:04.482214",
+        "stream": "system",
+        "stage": "training",
+        "message": "Completed epoch 50 of 50."
+      },
+      {
+        "index": 58,
+        "timestamp": "2026-05-25T19:09:04.749574",
+        "stream": "system",
+        "stage": "evaluating",
+        "message": "Scoring PyTorch predictions on the validation split."
+      },
+      {
+        "index": 59,
+        "timestamp": "2026-05-25T19:09:05.585737",
+        "stream": "system",
+        "stage": "persisting_artifacts",
+        "message": "Persisting artifacts, summaries, and runtime bundles."
+      },
+      {
+        "index": 60,
+        "timestamp": "2026-05-25T19:09:39.823149",
+        "stream": "system",
+        "stage": "logging_mlflow",
+        "message": "Logging monitoring summaries and artifact context."
+      },
+      {
+        "index": 61,
+        "timestamp": "2026-05-25T19:09:43.089281",
+        "stream": "system",
+        "stage": "syncing_inference",
+        "message": "Persisting run outputs to the registry and inference pair."
+      },
+      {
+        "index": 62,
+        "timestamp": "2026-05-25T19:09:47.294122",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Training workflow completed."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "training_48b1a1c27be9"
+  },
+  "rerun_payload": {
+    "run_type": "training",
+    "model_id": 11,
+    "payload_data": {
+      "datasetId": 31,
+      "parameters": {
+        "epochs": 50,
+        "batch_size": 32,
+        "learning_rate": 0.001,
+        "framework": "pytorch",
+        "device": "auto",
+        "input_features": [
+          "transaction_id",
+          "timestamp",
+          "trader_species",
+          "cargo_type",
+          "origin_system",
+          "quantity_units",
+          "credits_total"
+        ],
+        "output_features": [
+          "is_smuggled"
+        ],
+        "metrics_to_track": [
+          "loss",
+          "mae",
+          "rmse"
+        ],
+        "objective_metric": "accuracy"
+      },
+      "inputType": "Manual",
+      "studyId": null,
+      "inferenceId": null
+    },
+    "parameters": {
+      "epochs": 50,
+      "dropout": 0.1,
+      "framework": "pytorch",
+      "batch_size": 32,
+      "hidden_dim": 64,
+      "hidden_layers": 2,
+      "learning_rate": 0.001,
+      "input_features": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total"
+      ],
+      "output_features": [
+        "is_smuggled"
+      ],
+      "device": "auto",
+      "metrics_to_track": [
+        "loss",
+        "mae",
+        "rmse"
+      ],
+      "objective_metric": "accuracy",
+      "training_mode": "transfer",
+      "transfer_strategy": "auto"
+    }
+  },
+  "plots": [
+    {
+      "id": "16b984712687b4ff",
+      "kind": "legacy_image",
+      "title": "Loss Curve",
+      "description": "Saved runtime plot artifact.",
+      "source": {
+        "domain": "training",
+        "job_id": "training_48b1a1c27be9"
+      },
+      "metadata": {
+        "display_id": "16b984712687b4ff",
+        "kind": "legacy_image",
+        "domain": "training",
+        "job_id": "training_48b1a1c27be9",
+        "plot_type": "loss_curve",
+        "filename": "loss_curve.png",
+        "relative_path": "training_48b1a1c27be9/loss_curve.png",
+        "extension": ".png",
+        "size_bytes": 96378,
+        "modified_at": "2026-05-25T19:09:07.677281+00:00"
+      },
+      "artifact": {
+        "url": "/plots/artifacts/16b984712687b4ff/file",
+        "relative_path": "training_48b1a1c27be9/loss_curve.png",
+        "filename": "loss_curve.png",
+        "extension": ".png",
+        "size_bytes": 96378,
+        "modified_at": "2026-05-25T19:09:07.677281+00:00"
+      },
+      "plot_type": "loss_curve"
+    },
+    {
+      "id": "5b4262a783849b13",
+      "kind": "legacy_image",
+      "title": "Metric Comparison",
+      "description": "Saved runtime plot artifact.",
+      "source": {
+        "domain": "training",
+        "job_id": "training_48b1a1c27be9"
+      },
+      "metadata": {
+        "display_id": "5b4262a783849b13",
+        "kind": "legacy_image",
+        "domain": "training",
+        "job_id": "training_48b1a1c27be9",
+        "plot_type": "metric_comparison",
+        "filename": "metric_comparison.png",
+        "relative_path": "training_48b1a1c27be9/metric_comparison.png",
+        "extension": ".png",
+        "size_bytes": 48344,
+        "modified_at": "2026-05-25T19:09:06.832858+00:00"
+      },
+      "artifact": {
+        "url": "/plots/artifacts/5b4262a783849b13/file",
+        "relative_path": "training_48b1a1c27be9/metric_comparison.png",
+        "filename": "metric_comparison.png",
+        "extension": ".png",
+        "size_bytes": 48344,
+        "modified_at": "2026-05-25T19:09:06.832858+00:00"
+      },
+      "plot_type": "metric_comparison"
+    }
+  ],
+  "mlflow_run_id": "9303acb827504410b2658d7dca70663c"
+}

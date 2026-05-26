@@ -4,9 +4,16 @@
     "inference_id": 8,
     "model_name": "lstm_finance",
     "dataset_name": "stock_data",
-    "artifact_path": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
-    "started_at": "2026-05-19T21:06:51.314612",
+    "artifact_path": "/app/runtime_artifacts/training/training_2167226e9ba7/model_pytorch.pt",
+    "started_at": "2026-05-26T19:05:48.696722",
     "status": "active",
+    "schedule": {
+        "enabled": false,
+        "interval_seconds": 300,
+        "drift_threshold": 0.15,
+        "degradation_threshold": 0.1,
+        "auto_retrain": false
+    },
     "artifact_metadata": {
         "artifact_format": ".pt",
         "loader": "torchscript",
@@ -19,7 +26,7 @@
             "monitor": false
         },
         "framework": "pytorch",
-        "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+        "source": "/app/runtime_artifacts/training/training_2167226e9ba7/model_pytorch.pt",
         "entrypoint": null,
         "needs_companion_spec": true,
         "warnings": [
@@ -133,7 +140,7 @@
             "monitor": true
         },
         "framework": "pytorch",
-        "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+        "source": "/app/runtime_artifacts/training/training_2167226e9ba7/model_pytorch.pt",
         "entrypoint": "forward",
         "needs_companion_spec": false,
         "warnings": [],
@@ -160,7 +167,16 @@
                 "get_debug_state",
                 "get_extra_state",
                 "get_parameter"
-            ]
+            ],
+            "sklearn_capabilities": {
+                "predict": false,
+                "predict_proba": false,
+                "transform": false,
+                "fit_predict": false,
+                "score_samples": false,
+                "decision_function": false,
+                "forward": true
+            }
         },
         "supported_file_types": [
             ".joblib",

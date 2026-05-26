@@ -1,0 +1,10 @@
+{
+  "id": "model_quality_overview",
+  "title": "Model Quality Overview",
+  "description": "Example trusted dashboard for comparing model registry metrics and recent plot artifacts.",
+  "version": "0.1.0",
+  "author": "Painel Amanaje",
+  "tags": ["example", "models", "quality"],
+  "entrypoint": "extension:register",
+  "enabled": false
+}

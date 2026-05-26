@@ -1,0 +1,25 @@
+{
+  "provider_type": "openai_compatible",
+  "runtime_kind": "pytorch_hf_server",
+  "model_name": "Gemma Assistant",
+  "model_version": "huggingface-import",
+  "base_model_name": "google/gemma-4-31B-it-assistant",
+  "supported_draft_types": [
+    "dataset_generation",
+    "feature_operations",
+    "model_generation",
+    "registry_object",
+    "study",
+    "training_run"
+  ],
+  "max_context_tokens": 4096,
+  "base_url": "http://assistant-server:8080/v1",
+  "prompt_template_version": "amanaje-assistant-template-v1",
+  "generation_config": {},
+  "repo_id": "google/gemma-4-31B-it-assistant",
+  "revision": null,
+  "display_name": "Gemma Assistant",
+  "model_artifact_path": "model.safetensors",
+  "tokenizer_path": "tokenizer.json",
+  "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:"
+}

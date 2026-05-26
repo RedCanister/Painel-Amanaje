@@ -9,7 +9,14 @@ import numpy as np
 
 from app.utils.artifact_utils import inspect_model_artifact, load_runtime_artifact
 from app.utils import main_utils
-from app.utils.run_ledger import create_run_entry, list_run_entries, read_run_entry, update_run_entry
+from app.utils.run_ledger import (
+    append_run_terminal_line,
+    build_run_terminal_lines,
+    create_run_entry,
+    list_run_entries,
+    read_run_entry,
+    update_run_entry,
+)
 from app.utils.serialization import canonicalize_scalar_for_logging
 from app.utils.tabular_utils import build_dataset_analysis_summary, build_feature_extraction_summary, load_tabular_from_bytes
 
@@ -143,6 +150,33 @@ def test_run_ledger_create_update_and_filter():
     assert list_run_entries(tmp_path, active_only=True)[0]["run_id"] == entry["run_id"]
     assert list_run_entries(tmp_path, run_ids=[entry["run_id"]])[0]["run_id"] == entry["run_id"]
     assert list_run_entries(tmp_path, limit=1)[0]["run_id"] == entry["run_id"]
+
+
+def test_run_ledger_terminal_lines_are_capped_and_synthesized():
+    tmp_path = _workspace_tmp_dir()
+    entry = create_run_entry(tmp_path, run_type="editor_execution", status="queued")
+
+    update_run_entry(tmp_path, entry["run_id"], status="running", stage="executing", event_message="Started.")
+    update_run_entry(tmp_path, entry["run_id"], merge={"terminal": {"cap": 3, "next_index": 0, "lines": []}})
+    for index in range(5):
+        append_run_terminal_line(tmp_path, entry["run_id"], message=f"line {index}", stream="stdout", stage="executing")
+
+    stored = read_run_entry(tmp_path, entry["run_id"])
+    terminal = stored["terminal"]
+    assert len(terminal["lines"]) == 3
+    assert terminal["lines"][-1]["message"] == "line 4"
+    assert terminal["next_index"] > terminal["lines"][-1]["index"]
+
+    historical = {
+        "run_id": "historical",
+        "stage": "completed",
+        "updated_at": "2026-05-20T10:00:00",
+        "events": [{"timestamp": "2026-05-20T09:59:00", "stage": "queued", "message": "created"}],
+        "result": {"stdout": "hello\nworld", "stderr": "warn"},
+    }
+    synthesized = build_run_terminal_lines(historical)
+    assert [line["message"] for line in synthesized] == ["created", "hello", "world", "warn"]
+    assert synthesized[-1]["stream"] == "stderr"
 
 
 def test_canonicalize_scalar_for_logging_normalizes_equivalent_numeric_strings():

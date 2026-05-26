@@ -1,0 +1,812 @@
+{% extends "base_template.html" %}
+
+{% block title %}Dataset Store - Painel Amanaje{% endblock %}
+
+{% block body_class %}panel-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .store-shell { display: grid; gap: 1.25rem; }
+    .store-panel {
+        display: grid;
+        gap: 1rem;
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px var(--amanaje-primary-shadow);
+        padding: 1.25rem;
+    }
+    .store-panel h3,
+    .store-panel h4 {
+        margin: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        line-height: 1.12;
+    }
+    .store-panel h3 { font-size: clamp(1.22rem, 1.8vw, 1.5rem); }
+    .store-panel h4 { font-size: 1.04rem; }
+    .store-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .store-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr); }
+    .store-field { display: grid; gap: 0.45rem; margin: 0; }
+    .store-field label {
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .store-field input,
+    .store-field select,
+    .store-field textarea {
+        width: 100%;
+        padding: 0.72rem 0.78rem;
+        border: 1px solid var(--amanaje-primary-border);
+        border-radius: 12px;
+        box-sizing: border-box;
+        background: var(--amanaje-surface-3);
+        color: var(--amanaje-text-strong);
+        font: inherit;
+    }
+    .store-field textarea {
+        min-height: 180px;
+        resize: vertical;
+        font-family: var(--amanaje-code-font);
+    }
+    .store-actions,
+    .store-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .store-toolbar { justify-content: space-between; }
+    .store-button {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.65rem;
+        padding: 0.72rem 0.95rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+    }
+    .store-button.primary {
+        background: var(--amanaje-primary-gradient);
+        border-color: transparent;
+        color: white;
+    }
+    .store-button.secondary {
+        background: var(--amanaje-primary-mid);
+        color: var(--amanaje-primary-strong);
+    }
+    .store-button.danger {
+        border-color: #fecaca;
+        background: #fff7f7;
+        color: #991b1b;
+    }
+    .store-collapsible-body {
+        display: grid;
+        gap: 1rem;
+    }
+    .store-panel.collapsed .store-collapsible-body {
+        display: none;
+    }
+    .store-surface {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        box-shadow: 0 8px 20px var(--amanaje-primary-shadow);
+        padding: 1rem;
+    }
+    .store-list {
+        display: grid;
+        gap: 0.75rem;
+        max-height: 32rem;
+        overflow: auto;
+        padding-right: 0.25rem;
+    }
+    .store-item {
+        display: grid;
+        gap: 0.55rem;
+        width: 100%;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-text-strong);
+        cursor: pointer;
+        padding: 0.85rem;
+        text-align: left;
+    }
+    .store-item.active {
+        border-color: var(--amanaje-primary);
+        background: white;
+        box-shadow: 0 8px 18px var(--amanaje-primary-shadow);
+    }
+    .store-item strong { color: var(--amanaje-primary-strong); }
+    .store-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+    .store-pill {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 0.25rem 0.58rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 999px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+    .store-resource-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .store-resource {
+        display: grid;
+        gap: 0.55rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        background: var(--amanaje-surface-3);
+        padding: 0.85rem;
+    }
+    .store-resource.active {
+        border-color: var(--amanaje-primary);
+        box-shadow: 0 8px 18px var(--amanaje-primary-shadow);
+    }
+    .store-status .ok,
+    .store-status .error {
+        display: block;
+        padding: 0.85rem;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+    .store-status .ok { background: #ecfdf5; color: #065f46; }
+    .store-status .error { background: #fef2f2; color: #991b1b; }
+    .store-preview-wrap { display: grid; gap: 1rem; }
+    .store-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 2.65rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .store-checkbox input { inline-size: 1.1rem; block-size: 1.1rem; accent-color: var(--amanaje-primary); }
+    @media (max-width: 980px) {
+        .store-layout { grid-template-columns: 1fr; }
+        .store-toolbar { align-items: stretch; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="store-shell">
+    <section class="workspace-intro data-hero">
+        <span class="workspace-eyebrow">Data domain</span>
+        <h2>Dataset Store</h2>
+        <p>Browse registered providers, inspect resources, and materialize external data as registry-ready DatasetModels.</p>
+    </section>
+
+    <section class="store-panel" id="storeProviderPanel">
+        <div class="store-toolbar">
+            <div>
+                <h3>Provider Registry</h3>
+            </div>
+            <div class="store-actions">
+                <button type="button" class="store-button" id="storeToggleProviderRegistry" aria-expanded="true">Collapse</button>
+                <button type="button" class="store-button" id="storeReloadProviders">Reload Providers</button>
+                <button type="button" class="store-button secondary" id="storeTestProvider">Test Provider</button>
+                <button type="button" class="store-button secondary" id="storeSetDefaultProvider">Set Default</button>
+                <button type="button" class="store-button danger" id="storeDeleteProvider">Delete Provider</button>
+                <button type="button" class="store-button primary" id="storeSaveProvider">Save Provider</button>
+            </div>
+        </div>
+        <div id="storeStatus" class="store-status"></div>
+        <div class="store-collapsible-body" id="storeProviderRegistryBody">
+            <div class="store-grid">
+                <div class="store-field">
+                    <label for="storeProviderSelect">Provider</label>
+                    <select id="storeProviderSelect"></select>
+                </div>
+                <div class="store-field">
+                    <label for="storeProviderName">Name</label>
+                    <input id="storeProviderName" type="text" placeholder="Open Data Provider">
+                </div>
+                <div class="store-field">
+                    <label for="storeProviderType">Type</label>
+                    <select id="storeProviderType">
+                        <option value="dados_gov_br">dados.gov.br API</option>
+                        <option value="generic_rest">Generic REST/OpenAPI</option>
+                        <option value="openapi">OpenAPI with mappings</option>
+                    </select>
+                </div>
+                <div class="store-field">
+                    <label for="storeTokenEnvVar">Token Env Var</label>
+                    <input id="storeTokenEnvVar" type="text" placeholder="AMANAJE_DADOS_GOV_TOKEN">
+                </div>
+                <div class="store-field">
+                    <label for="storeBaseUrl">Base URL</label>
+                    <input id="storeBaseUrl" type="url" placeholder="https://example.gov">
+                </div>
+                <div class="store-field">
+                    <label for="storeOpenApiUrl">OpenAPI URL</label>
+                    <input id="storeOpenApiUrl" type="url" placeholder="https://example.gov/openapi.json">
+                </div>
+                <div class="store-field">
+                    <label for="storeAuthType">Auth</label>
+                    <select id="storeAuthType">
+                        <option value="none">None</option>
+                        <option value="bearer">Bearer token</option>
+                        <option value="header">Header token</option>
+                        <option value="query">Query token</option>
+                    </select>
+                </div>
+                <div class="store-field">
+                    <label for="storeAuthName">Auth Name</label>
+                    <input id="storeAuthName" type="text" placeholder="Authorization">
+                </div>
+            </div>
+            <div class="store-field">
+                <label for="storeMappings">Mappings JSON</label>
+                <textarea id="storeMappings" spellcheck="false"></textarea>
+            </div>
+        </div>
+    </section>
+
+    <section class="store-panel">
+        <div class="store-toolbar">
+            <div>
+                <h3>Catalog</h3>
+            </div>
+            <div class="store-actions">
+                <button type="button" class="store-button" id="storePrevPage">Previous</button>
+                <button type="button" class="store-button" id="storeNextPage">Next</button>
+                <button type="button" class="store-button primary" id="storeSearchCatalog">Search</button>
+            </div>
+        </div>
+        <div class="store-grid">
+            <div class="store-field">
+                <label for="storeCatalogQuery">Search</label>
+                <input id="storeCatalogQuery" type="search" placeholder="education, health, environment">
+            </div>
+            <div class="store-field">
+                <label for="storeCatalogCategory">Category</label>
+                <input id="storeCatalogCategory" type="text" placeholder="Category">
+            </div>
+            <div class="store-field">
+                <label for="storeCatalogPage">Page</label>
+                <input id="storeCatalogPage" type="number" min="1" value="1">
+            </div>
+        </div>
+        <div class="store-layout">
+            <div class="store-surface">
+                <h4>Datasets</h4>
+                <div id="storeCatalogList" class="store-list" style="margin-top:0.85rem;">Load a provider catalog to begin.</div>
+            </div>
+            <div class="store-surface">
+                <h4>Dataset Detail</h4>
+                <div id="storeDatasetDetail" class="helper-text" style="margin-top:0.85rem;">Select a dataset.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="store-panel">
+        <div class="store-toolbar">
+            <div>
+                <h3>Preview and Materialize</h3>
+            </div>
+            <div class="store-actions">
+                <button type="button" class="store-button secondary" id="storePreviewResource">Preview First 5 Rows</button>
+                <button type="button" class="store-button primary" id="storeMaterializeResource">Create DatasetModel</button>
+            </div>
+        </div>
+        <div class="store-grid">
+            <div class="store-field">
+                <label for="storeDatasetName">Dataset Name</label>
+                <input id="storeDatasetName" type="text" placeholder="external_dataset_snapshot">
+            </div>
+            <div class="store-field">
+                <label for="storeDatasetType">Dataset Type</label>
+                <input id="storeDatasetType" type="text" value="dataset">
+            </div>
+            <div class="store-field">
+                <label for="storeRefreshInterval">Refresh Interval Seconds</label>
+                <input id="storeRefreshInterval" type="number" min="60" value="86400">
+            </div>
+            <label class="store-checkbox" for="storeLiveDataset">
+                <input id="storeLiveDataset" type="checkbox">
+                Live dataset
+            </label>
+        </div>
+        <div class="store-field">
+            <label for="storeDatasetDescription">Description</label>
+            <textarea id="storeDatasetDescription" spellcheck="true" style="min-height:88px;"></textarea>
+        </div>
+        <div id="storePreviewResult" class="store-preview-wrap store-surface">Select a resource and preview it.</div>
+    </section>
+
+    <section class="store-panel">
+        <div class="store-toolbar">
+            <div>
+                <h3>Live Dataset Operations</h3>
+            </div>
+            <div class="store-actions">
+                <button type="button" class="store-button secondary" id="storeValidateExisting">Validate Live</button>
+                <button type="button" class="store-button primary" id="storeRefreshExisting">Refresh Snapshot</button>
+            </div>
+        </div>
+        <div class="store-grid">
+            <div class="store-field">
+                <label for="storeExistingDataset">DatasetModel</label>
+                <select id="storeExistingDataset">
+                    <option value="">Select a dataset</option>
+                </select>
+            </div>
+        </div>
+        <div id="storeLiveResult" class="store-surface helper-text">No live dataset operation has run.</div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}"></script>
+<script>
+const storeState = {
+    providers: [],
+    defaultProviderId: null,
+    currentProvider: null,
+    catalogItems: [],
+    selectedDataset: null,
+    selectedResource: null,
+    preview: null
+};
+
+const defaultMappings = {
+    catalog_path: "/datasets",
+    catalog_result_path: "items",
+    detail_path: "/datasets/{id}",
+    detail_result_path: "$",
+    resources_path: "resources",
+    item_id: "id",
+    title: "title",
+    name: "name",
+    category: "category",
+    organization: "organization",
+    updated_at: "updated_at",
+    resource_id: "id",
+    resource_title: "title",
+    resource_url: "url",
+    resource_format: "format",
+    resource_type: "type"
+};
+
+function storeStatus(message, isError = false) {
+    document.getElementById('storeStatus').innerHTML = message
+        ? `<span class="${isError ? 'error' : 'ok'}">${AmanajeUI.escapeHtml(message)}</span>`
+        : '';
+}
+
+function selectedProviderId() {
+    return document.getElementById('storeProviderSelect').value || 'dados_gov_br';
+}
+
+function setProviderForm(provider) {
+    document.getElementById('storeProviderName').value = provider?.built_in ? '' : (provider?.name || '');
+    document.getElementById('storeProviderType').value = provider?.provider_type || 'generic_rest';
+    document.getElementById('storeBaseUrl').value = provider?.built_in ? '' : (provider?.base_url || '');
+    document.getElementById('storeOpenApiUrl').value = provider?.built_in ? '' : (provider?.openapi_url || '');
+    document.getElementById('storeTokenEnvVar').value = provider?.built_in ? 'AMANAJE_DADOS_GOV_TOKEN' : (provider?.token_env_var || '');
+    const auth = provider?.auth || {};
+    document.getElementById('storeAuthType').value = auth.type || (provider?.token_env_var ? 'bearer' : 'none');
+    document.getElementById('storeAuthName').value = auth.header_name || auth.query_param || '';
+    document.getElementById('storeMappings').value = JSON.stringify(provider?.built_in ? {} : (provider?.mappings || defaultMappings), null, 2);
+    document.getElementById('storeDeleteProvider').disabled = Boolean(provider?.built_in);
+    document.getElementById('storeSetDefaultProvider').disabled = Boolean(provider?.is_default);
+}
+
+function applyProviderTypeDefaults() {
+    const providerType = document.getElementById('storeProviderType').value;
+    if (providerType !== 'dados_gov_br') return;
+    if (!document.getElementById('storeBaseUrl').value.trim()) {
+        document.getElementById('storeBaseUrl').value = 'https://dados.gov.br';
+    }
+    if (!document.getElementById('storeTokenEnvVar').value.trim()) {
+        document.getElementById('storeTokenEnvVar').value = 'AMANAJE_DADOS_GOV_TOKEN';
+    }
+    document.getElementById('storeOpenApiUrl').value = 'https://dados.gov.br/v3/api-docs';
+    document.getElementById('storeAuthType').value = 'header';
+    document.getElementById('storeAuthName').value = 'chave-api-dados-abertos';
+    document.getElementById('storeMappings').value = '{}';
+}
+
+function renderProviderOptions() {
+    const select = document.getElementById('storeProviderSelect');
+    const current = select.value;
+    select.innerHTML = storeState.providers.map((provider) => {
+        const status = provider.token_env_var ? (provider.token_configured ? 'configured' : 'missing token') : 'no token';
+        const suffix = provider.is_default ? 'default, ' : '';
+        return `<option value="${AmanajeUI.escapeHtml(provider.id)}">${AmanajeUI.escapeHtml(provider.name)} (${AmanajeUI.escapeHtml(suffix + status)})</option>`;
+    }).join('');
+    if (current && Array.from(select.options).some((option) => option.value === current)) {
+        select.value = current;
+    } else if (storeState.defaultProviderId && Array.from(select.options).some((option) => option.value === storeState.defaultProviderId)) {
+        select.value = storeState.defaultProviderId;
+    }
+    storeState.currentProvider = storeState.providers.find((provider) => provider.id === selectedProviderId()) || storeState.providers[0] || null;
+    setProviderForm(storeState.currentProvider);
+}
+
+async function loadProviders() {
+    try {
+        storeStatus('Loading providers...');
+        const payload = await AmanajeUI.fetchJson('/store/providers');
+        storeState.providers = payload.providers || [];
+        storeState.defaultProviderId = payload.default_provider_id || storeState.providers.find((provider) => provider.is_default)?.id || null;
+        renderProviderOptions();
+        storeStatus('Providers loaded.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+function providerPayloadFromForm() {
+    let mappings = {};
+    const mappingText = document.getElementById('storeMappings').value.trim();
+    if (mappingText) mappings = JSON.parse(mappingText);
+    const authType = document.getElementById('storeAuthType').value || 'none';
+    const authName = document.getElementById('storeAuthName').value.trim();
+    const auth = { type: authType };
+    if (authType === 'header' && authName) auth.header_name = authName;
+    if (authType === 'query' && authName) auth.query_param = authName;
+    return {
+        name: document.getElementById('storeProviderName').value.trim(),
+        provider_type: document.getElementById('storeProviderType').value,
+        base_url: document.getElementById('storeBaseUrl').value.trim(),
+        openapi_url: document.getElementById('storeOpenApiUrl').value.trim() || null,
+        token_env_var: document.getElementById('storeTokenEnvVar').value.trim() || null,
+        auth,
+        mappings
+    };
+}
+
+async function saveProvider() {
+    try {
+        storeStatus('Saving provider...');
+        await AmanajeUI.fetchJson('/store/providers', {
+            method: 'POST',
+            body: JSON.stringify(providerPayloadFromForm())
+        });
+        await loadProviders();
+        storeStatus('Provider saved.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function testProvider() {
+    try {
+        storeStatus('Testing provider...');
+        const payload = await AmanajeUI.fetchJson(`/store/providers/${encodeURIComponent(selectedProviderId())}/test`, { method: 'POST' });
+        storeStatus(payload.message || 'Provider validated.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function setDefaultProvider() {
+    try {
+        storeStatus('Setting default provider...');
+        const providerId = selectedProviderId();
+        const payload = await AmanajeUI.fetchJson(`/store/providers/${encodeURIComponent(providerId)}/default`, { method: 'POST' });
+        storeState.defaultProviderId = payload.default_provider_id || providerId;
+        await loadProviders();
+        storeStatus('Default provider updated.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function deleteProvider() {
+    const provider = storeState.currentProvider;
+    if (!provider || provider.built_in) {
+        storeStatus('Built-in providers cannot be deleted.', true);
+        return;
+    }
+    const confirmed = window.confirm(`Delete provider "${provider.name || provider.id}"?`);
+    if (!confirmed) return;
+    try {
+        storeStatus('Deleting provider...');
+        const payload = await AmanajeUI.fetchJson(`/store/providers/${encodeURIComponent(provider.id)}`, { method: 'DELETE' });
+        storeState.providers = payload.providers || [];
+        storeState.defaultProviderId = payload.default_provider_id || storeState.providers.find((item) => item.is_default)?.id || null;
+        renderProviderOptions();
+        storeStatus('Provider deleted.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+function toggleProviderRegistry() {
+    const panel = document.getElementById('storeProviderPanel');
+    const button = document.getElementById('storeToggleProviderRegistry');
+    const collapsed = !panel.classList.contains('collapsed');
+    panel.classList.toggle('collapsed', collapsed);
+    button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    button.textContent = collapsed ? 'Expand' : 'Collapse';
+}
+
+function renderCatalog(items = []) {
+    const target = document.getElementById('storeCatalogList');
+    if (!items.length) {
+        target.innerHTML = '<div class="helper-text">No datasets were returned.</div>';
+        return;
+    }
+    target.innerHTML = items.map((item) => `
+        <button type="button" class="store-item" data-dataset-id="${AmanajeUI.escapeHtml(item.external_id)}">
+            <strong>${AmanajeUI.escapeHtml(item.title || item.name || item.external_id)}</strong>
+            <span>${AmanajeUI.escapeHtml(item.organization || 'Unknown organization')}</span>
+            <span class="store-meta">
+                ${item.category ? `<span class="store-pill">${AmanajeUI.escapeHtml(item.category)}</span>` : ''}
+                ${item.updated_at ? `<span class="store-pill">${AmanajeUI.escapeHtml(item.updated_at)}</span>` : ''}
+                ${item.is_current !== undefined && item.is_current !== null ? `<span class="store-pill">${item.is_current ? 'Current' : 'Stale'}</span>` : ''}
+            </span>
+        </button>
+    `).join('');
+    target.querySelectorAll('[data-dataset-id]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            target.querySelectorAll('.store-item').forEach((item) => item.classList.remove('active'));
+            button.classList.add('active');
+            await loadDatasetDetail(button.dataset.datasetId);
+        });
+    });
+}
+
+async function searchCatalog() {
+    try {
+        storeStatus('Loading catalog...');
+        const params = new URLSearchParams({
+            provider_id: selectedProviderId(),
+            query: document.getElementById('storeCatalogQuery').value.trim(),
+            category: document.getElementById('storeCatalogCategory').value.trim(),
+            page: document.getElementById('storeCatalogPage').value || '1'
+        });
+        const payload = await AmanajeUI.fetchJson(`/store/catalog?${params.toString()}`);
+        storeState.catalogItems = payload.items || [];
+        renderCatalog(storeState.catalogItems);
+        storeStatus(`Catalog loaded with ${storeState.catalogItems.length} dataset(s).`);
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+function renderResources(resources = []) {
+    if (!resources.length) return '<div class="helper-text">No resources were returned for this dataset.</div>';
+    return `<div class="store-resource-grid">${resources.map((resource) => `
+        <article class="store-resource" data-resource-id="${AmanajeUI.escapeHtml(resource.external_id)}">
+            <strong>${AmanajeUI.escapeHtml(resource.title || resource.external_id)}</strong>
+            <div class="store-meta">
+                ${resource.format ? `<span class="store-pill">${AmanajeUI.escapeHtml(resource.format)}</span>` : ''}
+                ${resource.type ? `<span class="store-pill">${AmanajeUI.escapeHtml(resource.type)}</span>` : ''}
+                ${resource.size ? `<span class="store-pill">${AmanajeUI.escapeHtml(resource.size)} bytes</span>` : ''}
+                ${resource.download_count !== undefined && resource.download_count !== null ? `<span class="store-pill">${AmanajeUI.escapeHtml(resource.download_count)} downloads</span>` : ''}
+            </div>
+            <button type="button" class="store-button secondary" data-select-resource="${AmanajeUI.escapeHtml(resource.external_id)}">Select</button>
+        </article>
+    `).join('')}</div>`;
+}
+
+async function loadDatasetDetail(externalId) {
+    try {
+        storeStatus('Loading dataset detail...');
+        const params = new URLSearchParams({ provider_id: selectedProviderId() });
+        const payload = await AmanajeUI.fetchJson(`/store/catalog/${encodeURIComponent(externalId)}?${params.toString()}`);
+        storeState.selectedDataset = payload.dataset;
+        storeState.selectedResource = null;
+        document.getElementById('storeDatasetName').value = (payload.dataset.name || payload.dataset.title || 'store_dataset')
+            .replace(/[^a-zA-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .toLowerCase();
+        document.getElementById('storeDatasetDescription').value = payload.dataset.description || '';
+        document.getElementById('storeDatasetDetail').innerHTML = `
+            <div class="store-preview-wrap">
+                <div>
+                    <h4>${AmanajeUI.escapeHtml(payload.dataset.title || payload.dataset.name || externalId)}</h4>
+                    <p class="helper-text">${AmanajeUI.escapeHtml(payload.dataset.description || '')}</p>
+                    <div class="store-meta">
+                        ${payload.dataset.organization ? `<span class="store-pill">${AmanajeUI.escapeHtml(payload.dataset.organization)}</span>` : ''}
+                        ${payload.dataset.license ? `<span class="store-pill">${AmanajeUI.escapeHtml(payload.dataset.license)}</span>` : ''}
+                        ${payload.dataset.category ? `<span class="store-pill">${AmanajeUI.escapeHtml(payload.dataset.category)}</span>` : ''}
+                    </div>
+                </div>
+                ${renderResources(payload.dataset.resources || [])}
+                ${AmanajeUI.renderCollapsibleJson(payload.dataset.raw || payload.dataset, { title: 'Raw Metadata', collapsed: true })}
+            </div>
+        `;
+        document.getElementById('storeDatasetDetail').querySelectorAll('[data-select-resource]').forEach((button) => {
+            button.addEventListener('click', () => selectResource(button.dataset.selectResource));
+        });
+        storeStatus('Dataset detail loaded.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+function selectResource(resourceId) {
+    const resources = storeState.selectedDataset?.resources || [];
+    storeState.selectedResource = resources.find((resource) => String(resource.external_id) === String(resourceId)) || null;
+    document.querySelectorAll('.store-resource').forEach((resource) => {
+        resource.classList.toggle('active', resource.dataset.resourceId === resourceId);
+    });
+    if (storeState.selectedResource) {
+        storeStatus(`Selected resource: ${storeState.selectedResource.title || storeState.selectedResource.external_id}`);
+    }
+}
+
+function selectedResourcePayload() {
+    if (!storeState.selectedDataset) throw new Error('Select a dataset first.');
+    if (!storeState.selectedResource) throw new Error('Select a resource first.');
+    return {
+        provider_id: selectedProviderId(),
+        dataset_external_id: storeState.selectedDataset.external_id,
+        resource_external_id: storeState.selectedResource.external_id
+    };
+}
+
+function renderPreview(payload) {
+    const rows = payload.preview_rows || [];
+    const columns = payload.columns || Object.keys(rows[0] || {});
+    const table = rows.length ? `
+        <div class="table-scroll">
+            <table class="full-width-table">
+                <thead><tr>${columns.map((column) => `<th>${AmanajeUI.escapeHtml(column)}</th>`).join('')}</tr></thead>
+                <tbody>
+                    ${rows.map((row) => `<tr>${columns.map((column) => `<td>${AmanajeUI.escapeHtml(row[column])}</td>`).join('')}</tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    ` : '<div class="helper-text">No preview rows are available.</div>';
+    document.getElementById('storePreviewResult').innerHTML = AmanajeUI.renderResultTabs([
+        { key: 'preview', label: 'Preview', content: table },
+        { key: 'profile', label: 'Profile', content: AmanajeUI.renderMetricCards([
+            { label: 'Rows', value: payload.row_count ?? 0 },
+            { label: 'Columns', value: payload.column_count ?? columns.length },
+            { label: 'Preview Rows', value: rows.length }
+        ]) },
+        { key: 'details', label: 'Details', content: AmanajeUI.renderCollapsibleJson({
+            parser_report: payload.parser_report || {},
+            resource: payload.resource || {},
+            dataset: payload.dataset || {}
+        }, { title: 'Store Preview Payload', collapsed: false }) }
+    ], { idPrefix: 'store_preview_tabs' });
+    AmanajeUI.activateTabs(document.getElementById('storePreviewResult'));
+    AmanajeUI.enhanceCollapsibles(document.getElementById('storePreviewResult'));
+}
+
+async function previewResource() {
+    try {
+        storeStatus('Previewing resource...');
+        const payload = await AmanajeUI.fetchJson('/store/preview', {
+            method: 'POST',
+            body: JSON.stringify(selectedResourcePayload())
+        });
+        storeState.preview = payload;
+        renderPreview(payload);
+        storeStatus('Preview loaded.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function materializeResource() {
+    try {
+        const basePayload = selectedResourcePayload();
+        storeStatus('Creating DatasetModel...');
+        const payload = await AmanajeUI.fetchJson('/store/materialize', {
+            method: 'POST',
+            body: JSON.stringify({
+                ...basePayload,
+                name: document.getElementById('storeDatasetName').value.trim() || undefined,
+                description: document.getElementById('storeDatasetDescription').value.trim() || undefined,
+                dataset_type: document.getElementById('storeDatasetType').value.trim() || 'dataset',
+                live: {
+                    enabled: document.getElementById('storeLiveDataset').checked,
+                    interval_seconds: Number(document.getElementById('storeRefreshInterval').value || 86400)
+                }
+            })
+        });
+        renderPreview({ ...storeState.preview, ...(payload || {}) });
+        storeStatus(`DatasetModel created: ${payload.dataset?.name || 'store dataset'}.`);
+        await PopulateListOptions({
+            selectElement: '#storeExistingDataset',
+            endpoint: '/datasetmodel/list',
+            labelField: 'name',
+            valueField: 'id',
+            placeholderText: 'Select a dataset'
+        });
+        if (payload.dataset?.id) document.getElementById('storeExistingDataset').value = String(payload.dataset.id);
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function validateExisting() {
+    const datasetId = document.getElementById('storeExistingDataset').value;
+    if (!datasetId) {
+        storeStatus('Select a DatasetModel first.', true);
+        return;
+    }
+    try {
+        storeStatus('Validating live connection...');
+        const payload = await AmanajeUI.fetchJson(`/store/datasets/${encodeURIComponent(datasetId)}/validate-live`, { method: 'POST' });
+        document.getElementById('storeLiveResult').innerHTML = AmanajeUI.renderCollapsibleJson(payload, { title: 'Live Validation', collapsed: false });
+        AmanajeUI.enhanceCollapsibles(document.getElementById('storeLiveResult'));
+        storeStatus('Live connection validated.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+async function refreshExisting() {
+    const datasetId = document.getElementById('storeExistingDataset').value;
+    if (!datasetId) {
+        storeStatus('Select a DatasetModel first.', true);
+        return;
+    }
+    try {
+        storeStatus('Refreshing dataset snapshot...');
+        const payload = await AmanajeUI.fetchJson(`/store/datasets/${encodeURIComponent(datasetId)}/refresh`, { method: 'POST' });
+        document.getElementById('storeLiveResult').innerHTML = AmanajeUI.renderCollapsibleJson(payload, { title: 'Refresh Result', collapsed: false });
+        AmanajeUI.enhanceCollapsibles(document.getElementById('storeLiveResult'));
+        storeStatus('Dataset snapshot refreshed.');
+    } catch (error) {
+        storeStatus(error.message, true);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('storeMappings').value = JSON.stringify(defaultMappings, null, 2);
+    document.getElementById('storeReloadProviders').addEventListener('click', loadProviders);
+    document.getElementById('storeSaveProvider').addEventListener('click', saveProvider);
+    document.getElementById('storeTestProvider').addEventListener('click', testProvider);
+    document.getElementById('storeSetDefaultProvider').addEventListener('click', setDefaultProvider);
+    document.getElementById('storeDeleteProvider').addEventListener('click', deleteProvider);
+    document.getElementById('storeToggleProviderRegistry').addEventListener('click', toggleProviderRegistry);
+    document.getElementById('storeProviderType').addEventListener('change', applyProviderTypeDefaults);
+    document.getElementById('storeSearchCatalog').addEventListener('click', searchCatalog);
+    document.getElementById('storePreviewResource').addEventListener('click', previewResource);
+    document.getElementById('storeMaterializeResource').addEventListener('click', materializeResource);
+    document.getElementById('storeValidateExisting').addEventListener('click', validateExisting);
+    document.getElementById('storeRefreshExisting').addEventListener('click', refreshExisting);
+    document.getElementById('storeProviderSelect').addEventListener('change', () => {
+        storeState.currentProvider = storeState.providers.find((provider) => provider.id === selectedProviderId()) || null;
+        setProviderForm(storeState.currentProvider);
+    });
+    document.getElementById('storePrevPage').addEventListener('click', () => {
+        const input = document.getElementById('storeCatalogPage');
+        input.value = String(Math.max(Number(input.value || 1) - 1, 1));
+        searchCatalog();
+    });
+    document.getElementById('storeNextPage').addEventListener('click', () => {
+        const input = document.getElementById('storeCatalogPage');
+        input.value = String(Number(input.value || 1) + 1);
+        searchCatalog();
+    });
+    await loadProviders();
+    await PopulateListOptions({
+        selectElement: '#storeExistingDataset',
+        endpoint: '/datasetmodel/list',
+        labelField: 'name',
+        valueField: 'id',
+        placeholderText: 'Select a dataset'
+    });
+});
+</script>
+{% endblock %}

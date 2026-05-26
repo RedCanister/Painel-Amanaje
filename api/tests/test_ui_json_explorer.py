@@ -22,6 +22,7 @@ def test_json_explorer_public_helpers_are_exported():
     assert "renderJsonExplorer," in source
     assert "renderPlotlyTableSpec," in source
     assert "applyPlotTheme," in source
+    assert "dashboardBaseUrl," in source
     assert "plotIdentityMetadata," in source
 
 
@@ -56,11 +57,13 @@ def test_plot_renderer_has_theme_metadata_and_lightbox_hooks():
     assert "openPlotImageLightbox" in source
 
 
-def test_plotly_renderer_uses_manual_embed_fallback_for_dashboard_outages():
+def test_plotly_renderer_autoloads_embed_with_local_fallback():
     source = _source()
 
     assert "function renderPlotlyFallback" in source
     assert 'data-plotly-fallback="true"' in source
     assert "Open interactive renderer" in source
-    assert "data-plotly-frame-load" in source
-    assert "Load embedded renderer" in source
+    assert 'class="plotly-frame"' in source
+    assert "Local fallback preview" in source
+    assert "data-plotly-frame-load" not in source
+    assert "Load embedded renderer" not in source

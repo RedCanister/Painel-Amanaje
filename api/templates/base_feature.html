@@ -63,8 +63,8 @@
         box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.14);
     }
     .form-group textarea { min-height: 220px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
-    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .toolbar-row { justify-content: space-between; align-items: center; }
+    .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-start; justify-content: flex-start; max-width: 100%; }
+    .toolbar-row { align-items: flex-start; }
     .btn {
         appearance: none;
         display: inline-flex;
@@ -194,6 +194,8 @@
         border-radius: 14px;
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
+        min-width: 0;
+        overflow: auto;
     }
     .sql-builder-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); }
     .sql-preview {
@@ -279,6 +281,8 @@
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
         min-height: 160px;
+        min-width: 0;
+        overflow: auto;
     }
     .assistant-output h4 { margin-bottom: 0.4rem; }
     .status .ok, .status .error {

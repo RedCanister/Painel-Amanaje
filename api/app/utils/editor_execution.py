@@ -4,10 +4,38 @@ import sys
 import traceback
 from io import StringIO
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Callable
 
 
-def execute_editor_code(code: str, registry_context: dict[str, Any] | None = None) -> dict[str, Any]:
+class _StreamingStringIO(StringIO):
+    def __init__(self, callback: Callable[[str], None] | None = None) -> None:
+        super().__init__()
+        self._callback = callback
+        self._pending = ""
+
+    def write(self, value: str) -> int:
+        written = super().write(value)
+        if self._callback is None:
+            return written
+        self._pending += str(value)
+        while "\n" in self._pending:
+            line, self._pending = self._pending.split("\n", 1)
+            self._callback(line.rstrip("\r"))
+        return written
+
+    def flush_pending(self) -> None:
+        if self._callback is not None and self._pending:
+            self._callback(self._pending.rstrip("\r"))
+        self._pending = ""
+
+
+def execute_editor_code(
+    code: str,
+    registry_context: dict[str, Any] | None = None,
+    *,
+    stdout_callback: Callable[[str], None] | None = None,
+    stderr_callback: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
     import app.utils.main_utils as _utils
 
     normalized_code = str(code or "").strip()
@@ -70,8 +98,10 @@ def execute_editor_code(code: str, registry_context: dict[str, Any] | None = Non
 
     old_stdout = sys.stdout
     old_stderr = sys.stderr
-    sys.stdout = StringIO()
-    sys.stderr = StringIO()
+    stdout_capture = _StreamingStringIO(stdout_callback)
+    stderr_capture = _StreamingStringIO(stderr_callback)
+    sys.stdout = stdout_capture
+    sys.stderr = stderr_capture
 
     error_message = None
     extracted_variables: dict[str, dict[str, Any]] = {}
@@ -81,6 +111,8 @@ def execute_editor_code(code: str, registry_context: dict[str, Any] | None = Non
     except Exception:
         error_message = traceback.format_exc()
     finally:
+        stdout_capture.flush_pending()
+        stderr_capture.flush_pending()
         stdout_output = sys.stdout.getvalue()
         stderr_output = sys.stderr.getvalue()
         sys.stdout = old_stdout

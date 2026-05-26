@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional
 
 
+DEFAULT_TERMINAL_CAP = 2000
+
+
 def ensure_run_ledger_dir(path: str | Path) -> Path:
     directory = Path(path)
     directory.mkdir(parents=True, exist_ok=True)
@@ -28,6 +31,13 @@ def create_run_entry(
     run_id = f"{run_type}_{uuid.uuid4().hex[:12]}"
     now = datetime.now().isoformat()
     created_message = f"{run_type} run created."
+    terminal_line = {
+        "index": 0,
+        "timestamp": now,
+        "stream": "system",
+        "stage": "queued",
+        "message": created_message,
+    }
     payload = {
         "run_id": run_id,
         "run_type": run_type,
@@ -65,8 +75,79 @@ def create_run_entry(
                 "message": created_message,
             }
         ],
+        "terminal": {
+            "cap": DEFAULT_TERMINAL_CAP,
+            "next_index": 1,
+            "lines": [terminal_line],
+        },
     }
     write_run_entry(base_dir, payload)
+    return payload
+
+
+def _coerce_terminal_cap(value: Any = None) -> int:
+    try:
+        cap = int(value if value is not None else DEFAULT_TERMINAL_CAP)
+    except (TypeError, ValueError):
+        cap = DEFAULT_TERMINAL_CAP
+    return max(1, cap)
+
+
+def _terminal_line(
+    *,
+    index: int,
+    timestamp: str,
+    stream: str,
+    stage: str,
+    message: str,
+) -> dict[str, Any]:
+    return {
+        "index": int(index),
+        "timestamp": timestamp,
+        "stream": str(stream or "system"),
+        "stage": str(stage or ""),
+        "message": str(message or ""),
+    }
+
+
+def _append_terminal_line_to_payload(
+    payload: dict[str, Any],
+    *,
+    message: str,
+    stream: str = "system",
+    stage: Optional[str] = None,
+    timestamp: Optional[str] = None,
+) -> dict[str, Any]:
+    terminal = dict(payload.get("terminal", {}) or {})
+    cap = _coerce_terminal_cap(terminal.get("cap"))
+    lines = [dict(line) for line in terminal.get("lines", []) if isinstance(line, Mapping)]
+    try:
+        next_index = int(terminal.get("next_index", len(lines)))
+    except (TypeError, ValueError):
+        next_index = len(lines)
+
+    clean_message = str(message or "")
+    if not clean_message:
+        payload["terminal"] = {"cap": cap, "next_index": next_index, "lines": lines[-cap:]}
+        return payload
+
+    for raw_line in clean_message.splitlines() or [clean_message]:
+        lines.append(
+            _terminal_line(
+                index=next_index,
+                timestamp=timestamp or datetime.now().isoformat(),
+                stream=stream,
+                stage=stage if stage is not None else str(payload.get("stage") or ""),
+                message=raw_line,
+            )
+        )
+        next_index += 1
+
+    payload["terminal"] = {
+        "cap": cap,
+        "next_index": next_index,
+        "lines": lines[-cap:],
+    }
     return payload
 
 
@@ -136,6 +217,13 @@ def update_run_entry(
                 "message": event_message,
             }
         )
+        _append_terminal_line_to_payload(
+            payload,
+            message=event_message,
+            stream="system",
+            stage=str(payload.get("stage") or ""),
+            timestamp=now,
+        )
     if event_message or stage_changed or status_changed:
         progress = dict(payload.get("progress", {}) or {})
         progress["current_stage"] = payload.get("stage")
@@ -154,6 +242,163 @@ def update_run_entry(
         payload["progress"] = progress
     write_run_entry(base_dir, payload)
     return payload
+
+
+def append_run_terminal_line(
+    base_dir: str | Path,
+    run_id: str,
+    *,
+    message: str,
+    stream: str = "system",
+    stage: Optional[str] = None,
+    timestamp: Optional[str] = None,
+) -> dict[str, Any]:
+    payload = read_run_entry(base_dir, run_id)
+    if payload is None:
+        raise FileNotFoundError(f"Run '{run_id}' was not found in the ledger.")
+    updated = _append_terminal_line_to_payload(
+        payload,
+        message=message,
+        stream=stream,
+        stage=stage,
+        timestamp=timestamp,
+    )
+    write_run_entry(base_dir, updated)
+    return updated
+
+
+def build_run_terminal_lines(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    terminal = payload.get("terminal") if isinstance(payload, Mapping) else None
+    if isinstance(terminal, Mapping) and isinstance(terminal.get("lines"), list) and terminal.get("lines"):
+        return [
+            _terminal_line(
+                index=int(line.get("index", index)),
+                timestamp=str(line.get("timestamp") or ""),
+                stream=str(line.get("stream") or "system"),
+                stage=str(line.get("stage") or ""),
+                message=str(line.get("message") or ""),
+            )
+            for index, line in enumerate(terminal.get("lines", []))
+            if isinstance(line, Mapping)
+        ]
+
+    synthesized: list[dict[str, Any]] = []
+
+    def add_line(*, timestamp: Any, stream: str, stage: Any, message: Any) -> None:
+        text = str(message or "")
+        if not text:
+            return
+        for raw_line in text.splitlines() or [text]:
+            synthesized.append(
+                _terminal_line(
+                    index=len(synthesized),
+                    timestamp=str(timestamp or ""),
+                    stream=stream,
+                    stage=str(stage or ""),
+                    message=raw_line,
+                )
+            )
+
+    for event in payload.get("events", []) or []:
+        if not isinstance(event, Mapping):
+            continue
+        add_line(
+            timestamp=event.get("timestamp"),
+            stream="system",
+            stage=event.get("stage"),
+            message=event.get("message"),
+        )
+
+    progress = payload.get("progress", {}) if isinstance(payload.get("progress"), Mapping) else {}
+    for event in progress.get("timeline", []) or []:
+        if not isinstance(event, Mapping):
+            continue
+        add_line(
+            timestamp=event.get("timestamp"),
+            stream="system",
+            stage=event.get("stage"),
+            message=event.get("message"),
+        )
+
+    result = payload.get("result", {}) if isinstance(payload.get("result"), Mapping) else {}
+    add_line(
+        timestamp=payload.get("updated_at"),
+        stream="stdout",
+        stage=payload.get("stage"),
+        message=result.get("stdout"),
+    )
+    add_line(
+        timestamp=payload.get("updated_at"),
+        stream="stderr",
+        stage=payload.get("stage"),
+        message=result.get("stderr"),
+    )
+    add_line(
+        timestamp=payload.get("completed_at") or payload.get("updated_at"),
+        stream="stderr",
+        stage=payload.get("stage"),
+        message=payload.get("error"),
+    )
+    return synthesized[-DEFAULT_TERMINAL_CAP:]
+
+
+def summarize_run_entry(payload: Mapping[str, Any]) -> dict[str, Any]:
+    context = dict(payload.get("context", {}) or {})
+    parameters = dict(payload.get("parameters", {}) or {})
+    metrics = dict(payload.get("metrics", {}) or {})
+    progress = payload.get("progress", {}) if isinstance(payload.get("progress"), Mapping) else {}
+    counters = progress.get("counters", {}) if isinstance(progress.get("counters"), Mapping) else {}
+    terminal = payload.get("terminal", {}) if isinstance(payload.get("terminal"), Mapping) else {}
+    result = payload.get("result", {}) if isinstance(payload.get("result"), Mapping) else {}
+    artifacts = payload.get("artifacts", {}) if isinstance(payload.get("artifacts"), Mapping) else {}
+    events = payload.get("events", []) if isinstance(payload.get("events"), list) else []
+    failure = payload.get("failure", {}) if isinstance(payload.get("failure"), Mapping) else {}
+
+    return {
+        "run_id": payload.get("run_id"),
+        "run_type": payload.get("run_type"),
+        "status": payload.get("status"),
+        "stage": payload.get("stage"),
+        "created_at": payload.get("created_at"),
+        "updated_at": payload.get("updated_at"),
+        "started_at": payload.get("started_at"),
+        "completed_at": payload.get("completed_at"),
+        "context": context,
+        "parameters": parameters,
+        "metrics": metrics,
+        "error": payload.get("error"),
+        "failure": {
+            key: value
+            for key, value in failure.items()
+            if key not in {"traceback"}
+        },
+        "progress": {
+            "current_stage": progress.get("current_stage"),
+            "latest_event": progress.get("latest_event"),
+            "latest_timestamp": progress.get("latest_timestamp"),
+            "counters": dict(counters),
+        },
+        "queue": dict(payload.get("queue", {}) or {}),
+        "control": dict(payload.get("control", {}) or {}),
+        "source_run_id": payload.get("source_run_id"),
+        "event_count": len(events),
+        "terminal_summary": {
+            "line_count": len(terminal.get("lines", []) or []),
+            "next_index": terminal.get("next_index"),
+            "cap": terminal.get("cap"),
+        },
+        "result_summary": {
+            "status": result.get("status"),
+            "keys": sorted(str(key) for key in result.keys())[:20],
+            "key_count": len(result),
+        },
+        "artifact_summary": {
+            "keys": sorted(str(key) for key in artifacts.keys())[:20],
+            "key_count": len(artifacts),
+        },
+        "has_result": bool(result),
+        "has_failure_traceback": bool(failure.get("traceback")),
+    }
 
 
 def list_run_entries(

@@ -404,6 +404,10 @@ main.container :where(img, svg, canvas, video, iframe, table, pre) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .workspace-tab {
@@ -684,6 +688,26 @@ main.container :where(img, svg, canvas, video, iframe, table, pre) {
   border: 1px solid var(--amanaje-border);
   border-radius: 12px;
   background: var(--amanaje-surface-2);
+}
+
+.plotly-local-fallback {
+  border: 1px solid var(--amanaje-border);
+  border-radius: 12px;
+  background: var(--amanaje-surface-2);
+  overflow: hidden;
+}
+
+.plotly-local-fallback summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--amanaje-primary);
+  padding: 0.7rem 0.85rem;
+}
+
+.plotly-local-fallback .plotly-fallback {
+  border: 0;
+  border-top: 1px solid var(--amanaje-border);
+  border-radius: 0;
 }
 
 .plotly-fallback-meta,
@@ -1393,6 +1417,14 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   border-bottom: 1px solid var(--amanaje-primary-border-soft);
 }
 
+.global-operation-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .global-operation-worker {
   border-bottom: 1px solid var(--amanaje-primary-border-soft);
   color: var(--amanaje-muted);
@@ -1411,10 +1443,20 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 }
 
 .global-operation-refresh,
+.global-operation-page-link,
 .global-operation-dismiss,
 .global-operation-actions button {
   border-radius: 999px;
   padding: 0.35rem 0.55rem;
+}
+
+.global-operation-page-link {
+  border: 1px solid var(--amanaje-primary-border-soft);
+  background: var(--amanaje-surface, #fff);
+  color: var(--amanaje-primary-strong);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .global-operation-list {
@@ -1572,12 +1614,18 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   padding: 0.72rem 0.95rem;
   border-radius: 12px;
   border: 1px solid var(--amanaje-primary-border-soft);
+  inline-size: fit-content;
+  width: auto;
+  max-inline-size: 100%;
   background: #fff;
   color: var(--amanaje-primary-strong);
   cursor: pointer;
+  flex: 0 0 auto;
   font: inherit;
   font-weight: 800;
   text-decoration: none;
+  align-self: start;
+  justify-self: start;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
@@ -1633,6 +1681,22 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
   border-color: transparent;
   color: #fff;
+}
+
+.training-shell .workspace-tab.is-full-width,
+.production-shell .workspace-tab.is-full-width,
+.onnx-shell .workspace-tab.is-full-width,
+.plot-central-shell .workspace-tab.is-full-width,
+.registry-container .tab-button.is-full-width,
+.registry-container .mode-button.is-full-width,
+.assistant-page .assistant-tab-button.is-full-width,
+.assistant-page .assistant-button.is-full-width,
+.btn.is-full-width,
+.btn-fill {
+  inline-size: 100%;
+  width: 100%;
+  justify-content: center;
+  justify-self: stretch;
 }
 
 .training-shell .training-panel,
@@ -1766,9 +1830,9 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 
 .panel-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
   gap: 1rem;
-  align-items: stretch;
+  align-items: start;
   padding: 1.45rem;
   border: 1px solid var(--amanaje-border);
   border-radius: var(--amanaje-radius-lg);
@@ -1836,6 +1900,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   display: grid;
   gap: 0.85rem;
   align-content: start;
+  justify-items: start;
   padding: 1rem;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: var(--amanaje-radius-md);
@@ -1843,13 +1908,15 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 }
 
 .panel-mode-toggle {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.35rem;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.74);
+  inline-size: fit-content;
+  max-inline-size: 100%;
 }
 
 .panel-mode-toggle .mode-button {
@@ -1863,6 +1930,11 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   min-height: 2.35rem;
   padding: 0.55rem 0.75rem;
   border-radius: 10px;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  flex: 0 0 auto;
+  align-self: start;
+  justify-self: start;
 }
 
 .panel-mode-toggle .mode-button.active {
@@ -1880,11 +1952,14 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .panel-save-state {
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .panel-center-picker,
@@ -1923,7 +1998,8 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 .panel-comparison-fields {
   display: grid;
   gap: 0.65rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  align-items: start;
 }
 
 .panel-widget-count {
@@ -1933,7 +2009,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 
 .panel-builder {
   display: grid;
-  grid-template-columns: minmax(260px, 0.28fr) minmax(0, 1fr);
+  grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
 }
@@ -1976,6 +2052,9 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   padding: 1rem;
   position: sticky;
   top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.78)),
     var(--amanaje-surface);
@@ -1984,6 +2063,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 .panel-sidebar-section {
   display: grid;
   gap: 0.65rem;
+  min-width: 0;
   padding: 0.9rem;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: 16px;
@@ -2004,7 +2084,9 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 }
 
 .panel-add-button {
-  width: 100%;
+  width: auto;
+  inline-size: fit-content;
+  max-inline-size: 100%;
 }
 
 .panel-filter-details {
@@ -2127,12 +2209,14 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   display: grid;
   gap: 1rem;
   padding: 1rem;
+  min-width: 0;
 }
 
 .panel-canvas-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -2147,6 +2231,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   grid-column: span 6;
   display: grid;
   gap: 0.85rem;
+  min-width: 0;
   padding: 1rem;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: var(--amanaje-radius-md);
@@ -2171,6 +2256,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
@@ -2204,10 +2290,17 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   font-size: 0.82rem;
   font-weight: 800;
   text-decoration: none;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  flex: 0 0 auto;
+  align-self: start;
+  justify-self: start;
 }
 
 .panel-widget-body {
   min-height: 5rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .panel-widget-body textarea {
@@ -2225,6 +2318,7 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 .panel-widget-body pre {
   max-height: 380px;
   overflow: auto;
+  max-width: 100%;
 }
 
 .panel-empty-state,
@@ -2271,12 +2365,17 @@ body[data-assistant-visible="false"] .assistant-collapsible {
 .panel-dash-workspace {
   display: grid;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: auto;
 }
 
 .panel-plot-frame,
 .panel-dash-frame {
   width: 100%;
   min-height: 460px;
+  max-width: 100%;
+  overflow: auto;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: 10px;
   background: white;
@@ -2368,6 +2467,8 @@ body[data-assistant-visible="false"] .assistant-collapsible {
   display: grid;
   gap: 0.65rem;
   min-width: 0;
+  max-width: 100%;
+  overflow: auto;
   padding: 0.85rem;
   border: 1px solid var(--amanaje-primary-border-soft);
   border-radius: 14px;

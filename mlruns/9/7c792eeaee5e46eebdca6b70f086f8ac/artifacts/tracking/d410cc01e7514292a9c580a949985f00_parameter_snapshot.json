@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "event_name": "draft_review",
+        "provider": "assistant_model_38",
+        "draft_type": "model_generation",
+        "model_version": "huggingface-import",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_version": "assistant-context-pack-v1",
+        "context_pack_hash": "56440561abf9d72b035e5eedb7231dcec7b1101c1bf7aff16bf25e9c4ce5734f",
+        "reference_pack_hash": "fd1834b7e52be19ffb8fd1e92be4a19e2386f9d2e5c4477dda1cd62dee2a96f4",
+        "safety_profile_version": "assistant-safety-v1",
+        "evaluation_profile": "assistant-golden-v1",
+        "fallback_provider": "local"
+    },
+    "skipped_conflicts": {}
+}

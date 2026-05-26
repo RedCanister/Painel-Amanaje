@@ -1,0 +1,375 @@
+{
+  "recorded_at": "2026-05-22T20:49:54.519550",
+  "eligible_for_promotion": true,
+  "gate_checks": {
+    "evaluation_passed": true,
+    "output_alignment": true,
+    "safety_alignment": true,
+    "dependency_alignment": true,
+    "mlflow_alignment": true
+  },
+  "draft_id": "draft_20cd35351011",
+  "draft_type": "dataset_generation",
+  "provider": "assistant_model_38",
+  "model_version": "huggingface-import",
+  "context_pack_hash": "16fc58d59b0d44717043d8a29b26fb83a9bcdc55dea8cee0486ac0a3993133f0",
+  "prompt_template_version": "amanaje-assistant-template-v1",
+  "evaluation_profile": "assistant-golden-v1",
+  "mlflow_experiment": "assistant/amanaje_slm",
+  "provider_status": {
+    "provider": "assistant_model_38",
+    "base_model_name": "local-workflow-template",
+    "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+    "context_pack_version": "assistant-context-pack-v1",
+    "safety_profile_version": "assistant-safety-v1",
+    "allowed_dependencies": [
+      "numpy",
+      "pandas"
+    ],
+    "reference_count": 8,
+    "reference_pack_id": "refpack_2bdbfbb61167",
+    "reference_pack_hash": "fe28185230edc9a1b199d8e6a672b25e2ee8dc15f686198abf7154bdc5ebe9d0",
+    "selected_reference_ids": [
+      "ref_system_project_schema_dataset_generation",
+      "ref_system_safety_dataset_generation",
+      "ref_system_alignment_contracts",
+      "ref_system_prompt_dataset_generation",
+      "ref_system_writing_guide",
+      "ref_system_quality_rubric",
+      "ref_system_mlflow_tracking",
+      "ref_runtime_assistant_reference_snapshot"
+    ],
+    "reference_trust_levels": {
+      "ref_system_project_schema_dataset_generation": "system",
+      "ref_system_safety_dataset_generation": "system",
+      "ref_system_alignment_contracts": "system",
+      "ref_system_prompt_dataset_generation": "system",
+      "ref_system_writing_guide": "system",
+      "ref_system_quality_rubric": "system",
+      "ref_system_mlflow_tracking": "system",
+      "ref_runtime_assistant_reference_snapshot": "runtime"
+    },
+    "reference_hashes": [],
+    "fallback_provider": "local",
+    "latency_ms": 10.164,
+    "cache_hit": false,
+    "mlflow_experiment": "assistant/amanaje_slm",
+    "alignment_contracts": [
+      "output_alignment",
+      "safety_alignment",
+      "registry_alignment",
+      "dependency_alignment",
+      "mlflow_alignment"
+    ],
+    "runtime": "bootstrap",
+    "fallback_reason": "No external SLM runtime is configured; using deterministic local fallback.",
+    "serving_mode": "separate-service-ready",
+    "provider_config": {
+      "name": "amanaje_slm",
+      "type": "openai_compatible",
+      "enabled": false,
+      "base_url": "http://assistant-server:8080/v1",
+      "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+      "health_url": "http://assistant-server:8080/health",
+      "model_name": "Gemma Assistant",
+      "timeout_seconds": 20.0,
+      "max_tokens": "[REDACTED]",
+      "temperature": 0.2,
+      "api_key_env": "[REDACTED]",
+      "api_key_configured": false,
+      "model_version": "huggingface-import",
+      "runtime_kind": "pytorch_hf_server",
+      "base_model_name": "google/gemma-4-31B-it-assistant",
+      "adapter_path": null,
+      "supports_json_mode": true,
+      "supports_remote_auth": false,
+      "supports_health_check": true,
+      "supported_draft_types": [
+        "dataset_generation",
+        "feature_operations",
+        "model_generation",
+        "registry_object",
+        "study",
+        "training_run"
+      ],
+      "fallback_provider": "local",
+      "capabilities": {
+        "registry_backed": true,
+        "assistant_model_id": 38,
+        "assistant_model_name": "Gemma Assistant",
+        "behavior_profile": {},
+        "reference_policy": {},
+        "loads_in_fastapi": false,
+        "pytorch_hf_bundle": true,
+        "separate_server_required": true,
+        "huggingface_directory_bundle": true
+      },
+      "dtype": "auto",
+      "device": "auto",
+      "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "quantization": null,
+      "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+      "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+      "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "provider_type": "openai_compatible",
+      "runtime_config": {
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "runtime_kind": "pytorch_hf_server",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions"
+      },
+      "tokenizer_path": "[REDACTED]",
+      "tokenizer_assets": "[REDACTED]",
+      "generation_config": {},
+      "chat_template_path": null,
+      "max_context_tokens": "[REDACTED]",
+      "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+      "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+      "context_pack_version": "assistant-context-pack-v1",
+      "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+      "bundle_manifest_member": "assistant_model_manifest.json",
+      "safety_profile_version": "assistant-safety-v1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "project_examples_version": "painel-amanaje-example-catalog-v1",
+      "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+      "curated_training_record_count": 363,
+      "project_examples_sample_count": 360,
+      "curated_training_reference_records": 0,
+      "curated_training_interaction_records": 3,
+      "curated_training_ready_for_fine_tuning": true,
+      "curated_training_project_example_records": 360,
+      "load_in_fastapi": false,
+      "server_contract": "openai_compatible_chat_completions",
+      "api_key": "",
+      "registry_model": {
+        "id": 38,
+        "name": "Gemma Assistant",
+        "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "model_type": "assistant_model"
+      }
+    },
+    "slm_config": {
+      "name": "amanaje_slm",
+      "type": "openai_compatible",
+      "enabled": false,
+      "base_url": "http://assistant-server:8080/v1",
+      "chat_endpoint": "http://assistant-server:8080/v1/chat/completions",
+      "health_url": "http://assistant-server:8080/health",
+      "model_name": "Gemma Assistant",
+      "timeout_seconds": 20.0,
+      "max_tokens": "[REDACTED]",
+      "temperature": 0.2,
+      "api_key_env": "[REDACTED]",
+      "api_key_configured": false,
+      "model_version": "huggingface-import",
+      "runtime_kind": "pytorch_hf_server",
+      "base_model_name": "google/gemma-4-31B-it-assistant",
+      "adapter_path": null,
+      "supports_json_mode": true,
+      "supports_remote_auth": false,
+      "supports_health_check": true,
+      "supported_draft_types": [
+        "dataset_generation",
+        "feature_operations",
+        "model_generation",
+        "registry_object",
+        "study",
+        "training_run"
+      ],
+      "fallback_provider": "local",
+      "capabilities": {
+        "registry_backed": true,
+        "assistant_model_id": 38,
+        "assistant_model_name": "Gemma Assistant",
+        "behavior_profile": {},
+        "reference_policy": {},
+        "loads_in_fastapi": false,
+        "pytorch_hf_bundle": true,
+        "separate_server_required": true,
+        "huggingface_directory_bundle": true
+      },
+      "dtype": "auto",
+      "device": "auto",
+      "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "quantization": null,
+      "bundle_sha256": "5324d16536da1929a47d8b97ab8b61e00a015bab3317515f73c20c9d637919c5",
+      "chat_template": "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:",
+      "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+      "provider_type": "openai_compatible",
+      "runtime_config": {
+        "bundle_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "runtime_kind": "pytorch_hf_server",
+        "extracted_dir": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "load_in_fastapi": false,
+        "server_contract": "openai_compatible_chat_completions"
+      },
+      "tokenizer_path": "[REDACTED]",
+      "tokenizer_assets": "[REDACTED]",
+      "generation_config": {},
+      "chat_template_path": null,
+      "max_context_tokens": "[REDACTED]",
+      "model_artifact_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/model.safetensors",
+      "bundle_manifest_path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant/assistant_model_manifest.json",
+      "context_pack_version": "assistant-context-pack-v1",
+      "curated_training_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+      "bundle_manifest_member": "assistant_model_manifest.json",
+      "safety_profile_version": "assistant-safety-v1",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "project_examples_version": "painel-amanaje-example-catalog-v1",
+      "curated_training_manifest": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+      "curated_training_record_count": 363,
+      "project_examples_sample_count": 360,
+      "curated_training_reference_records": 0,
+      "curated_training_interaction_records": 3,
+      "curated_training_ready_for_fine_tuning": true,
+      "curated_training_project_example_records": 360,
+      "load_in_fastapi": false,
+      "server_contract": "openai_compatible_chat_completions",
+      "api_key": "",
+      "registry_model": {
+        "id": 38,
+        "name": "Gemma Assistant",
+        "path": "/app/runtime_artifacts/assistant_models/huggingface/google_gemma_4_31b_it_assistant",
+        "model_type": "assistant_model"
+      }
+    }
+  },
+  "learning_model_payload": {
+    "name": "assistant_model_38_assistant",
+    "description": "Private assistant model service used by Painel Amanaje.",
+    "object_type": "learning_model",
+    "size": 0,
+    "path": "runtime_artifacts/assistant_models/amanaje_slm",
+    "version": 1,
+    "model_type": "assistant_model",
+    "parameters": {
+      "assistant": {
+        "provider_type": "openai_compatible",
+        "provider": "assistant_model_38",
+        "model_version": "huggingface-import",
+        "base_model_name": "local-workflow-template",
+        "adapter_path": "runtime_artifacts/assistant_models/amanaje_slm",
+        "prompt_template_version": "amanaje-assistant-template-v1",
+        "context_pack_version": "assistant-context-pack-v1",
+        "safety_profile_version": "assistant-safety-v1",
+        "mlflow_experiment": "assistant/amanaje_slm",
+        "supported_draft_types": [
+          "dataset_generation",
+          "model_generation",
+          "registry_object",
+          "feature_operations",
+          "training_run",
+          "study"
+        ]
+      }
+    },
+    "metrics": {
+      "evaluation_profile": "assistant-golden-v1",
+      "evaluation_score": null,
+      "fallback_provider": "local"
+    },
+    "reference_data": "runtime_artifacts/assistant_datasets/interactions.jsonl",
+    "input_features": [
+      "prompt",
+      "context_pack",
+      "target_type"
+    ],
+    "output_features": [
+      "workflow_draft"
+    ],
+    "is_trained": false,
+    "is_tested": false,
+    "is_deployed": false,
+    "history": [
+      {
+        "operation": "assistant_model_registered_payload",
+        "model_version": "huggingface-import",
+        "mlflow_experiment": "assistant/amanaje_slm"
+      }
+    ]
+  },
+  "code_model_payload": {
+    "name": "assistant_model_38_assistant_prompt_context",
+    "description": "Prompt templates, context-pack rules, and alignment contracts for the private assistant.",
+    "object_type": "code_model",
+    "size": 0,
+    "path": "runtime_artifacts/assistant_models/prompt_context.json",
+    "version": 1,
+    "variables": {
+      "provider": "assistant_model_38",
+      "model_version": "huggingface-import",
+      "prompt_template_version": "amanaje-assistant-template-v1",
+      "context_pack_version": "assistant-context-pack-v1",
+      "safety_profile_version": "assistant-safety-v1",
+      "alignment_contracts": {
+        "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+        "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+        "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+        "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+        "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+      },
+      "mlflow_experiment": "assistant/amanaje_slm"
+    },
+    "code": {
+      "language": "json",
+      "prompt_templates": {
+        "dataset_generation": "Draft safe Python code that creates synthetic tabular data and exposes csv_text plus dataset metadata. Use only allowed dependencies, align names with trusted internal references, and never write files.",
+        "model_generation": "Draft safe Python code that creates a scikit-learn joblib artifact as base64 joblib_bytes plus LearningModel metadata. The artifact is a template, must not train on hidden data, and must match project dependency constraints.",
+        "registry_object": "Draft a form-ready registry payload for the selected registry type using internal schema references. Do not create the object; only return metadata.",
+        "feature_operations": "Draft visual feature operations that match the selected dataset context and can be previewed before materialization.",
+        "training_run": "Draft a reviewed training request that uses existing selected model and dataset identifiers.",
+        "study": "Draft an optimization study request using existing project study settings and safe defaults."
+      },
+      "context_pack_version": "assistant-context-pack-v1"
+    },
+    "history": [
+      {
+        "operation": "assistant_prompt_context_registered_payload",
+        "model_version": "huggingface-import",
+        "mlflow_experiment": "assistant/amanaje_slm"
+      }
+    ]
+  },
+  "evaluation": {
+    "evaluation_profile": "assistant-golden-v1",
+    "draft_type": "dataset_generation",
+    "passed": true,
+    "checks": {
+      "valid_workflow_draft": true,
+      "has_context_pack": true,
+      "has_model_version": true,
+      "has_prompt_template_version": true,
+      "review_approved": true,
+      "csv_text": true
+    },
+    "draft_quality": {
+      "title_quality": true,
+      "summary_quality": true,
+      "risk_or_assumption_quality": true,
+      "next_action_quality": true,
+      "reference_traceability": true
+    },
+    "draft_quality_rubric": {
+      "title_quality": "Title is specific to the requested artifact or workflow.",
+      "summary_quality": "Summary is not generic and explains the generated draft's project fit.",
+      "metadata_quality": "Registry metadata and materialized outputs match project schemas.",
+      "risk_quality": "Risks and assumptions are concrete enough for user review.",
+      "reference_quality": "Internal references are summarized, traceable, and not copied raw into prompts."
+    },
+    "alignment_contracts": {
+      "output_alignment": true,
+      "safety_alignment": true,
+      "registry_alignment": true,
+      "dependency_alignment": true,
+      "mlflow_alignment": true
+    },
+    "alignment_contract_descriptions": {
+      "output_alignment": "Every response must validate as WorkflowDraft and include the required workflow outputs.",
+      "safety_alignment": "Generated code must pass assistant_safety.py before approval or execution.",
+      "registry_alignment": "Registry drafts must map to the supported manual registry object payloads.",
+      "dependency_alignment": "Drafted code must stay inside allowed imports, dependencies, and artifact formats.",
+      "mlflow_alignment": "Drafts, evals, context packs, prompt versions, and model versions must be traceable."
+    }
+  }
+}

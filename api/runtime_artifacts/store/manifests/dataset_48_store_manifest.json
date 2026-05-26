@@ -1,0 +1,526 @@
+{
+    "dataset_id": 48,
+    "dataset_name": "09_atendimento_de_diagnostico_por_imagem",
+    "snapshot_path": "/app/runtime_artifacts/store/datasets/09_atendimento_de_diagnostico_por_imagem_c87dd4be.csv",
+    "connection_string": "store://dados_abertos/43c7b971-444f-43d0-b31f-28eb2a39221f/3c5764d3-3621-4b23-bdf0-0bfa99206974",
+    "provider": {
+        "id": "dados_abertos",
+        "name": "Dados Abertos",
+        "provider_type": "dados_gov_br",
+        "base_url": "https://dados.gov.br",
+        "openapi_url": "https://dados.gov.br/v3/api-docs",
+        "token_env_var": "CHAVE_API",
+        "auth": {
+            "type": "header",
+            "header_name": "chave-api-dados-abertos"
+        },
+        "mappings": {},
+        "built_in": false,
+        "created_at": "2026-05-22T21:19:29Z",
+        "updated_at": "2026-05-22T22:28:27Z",
+        "token_configured": true,
+        "raw_token_returned": false
+    },
+    "external_dataset": {
+        "external_id": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+        "title": "09. Atendimento de Diagnóstico por Imagem",
+        "name": "09-atendimento-de-diagnostico-por-imagem",
+        "description": "Relação de Exames de Diagnósticos por Imagem realizados no Hospital Universitário Onofre Lopes (Huol). A responsabilidade pela base é da Unidade de Diagnóstico por Imagem, e a periodicidade de atualização é anual.",
+        "category": "Saúde",
+        "categories": [
+            "Saúde"
+        ],
+        "organization": "ebserh-filial-hospital-universitario-onofre-lopes",
+        "license": "cc-by",
+        "periodicity": "ANUAL",
+        "visibility": "PUBLICA",
+        "updated_at": "12/01/2026 16:30:03",
+        "resources": [
+            {
+                "external_id": "3c5764d3-3621-4b23-bdf0-0bfa99206974",
+                "title": "09. Atendimento de Diagnóstico por Imagem",
+                "description": "Relação de Exames de Diagnósticos por Imagem.",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/view",
+                "format": "CSV",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "29/01/2024",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "29/01/2024",
+                    "dataCatalogacao": "30/01/2024",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem.",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "3c5764d3-3621-4b23-bdf0-0bfa99206974"
+                }
+            },
+            {
+                "external_id": "dcda1b15-3ea9-4111-a4f4-2b1540032c53",
+                "title": "09. Atendimento de Diagnóstico por Imagem",
+                "description": "Relação de Exames de Diagnósticos por Imagem.",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.pdf/@@download/file",
+                "format": "PDF",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "29/01/2024",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "29/01/2024",
+                    "dataCatalogacao": "30/01/2024",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.pdf/@@download/file",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem.",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "dcda1b15-3ea9-4111-a4f4-2b1540032c53"
+                }
+            },
+            {
+                "external_id": "d155760f-da7c-448c-8577-8ea9e8530406",
+                "title": "09. Atendimento de Diagnóstico por Imagem ",
+                "description": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.csv/view",
+                "format": "CSV",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "14/01/2025",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "14/01/2025",
+                    "dataCatalogacao": "30/01/2025",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem ",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "d155760f-da7c-448c-8577-8ea9e8530406"
+                }
+            },
+            {
+                "external_id": "d4d9cf3e-435f-456d-8f80-d1389afe4205",
+                "title": "09. Atendimento de Diagnóstico por Imagem ",
+                "description": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.pdf/view",
+                "format": "PDF",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "14/01/2025",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "14/01/2025",
+                    "dataCatalogacao": "30/01/2025",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.pdf/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem ",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "d4d9cf3e-435f-456d-8f80-d1389afe4205"
+                }
+            },
+            {
+                "external_id": "dbd71097-e691-4265-b898-beb9c5cb76d9",
+                "title": "09. Atendimento de Diagnóstico por Imagem",
+                "description": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.csv/view",
+                "format": "CSV",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "12/01/2026",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "12/01/2026",
+                    "dataCatalogacao": "30/01/2026",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "dbd71097-e691-4265-b898-beb9c5cb76d9"
+                }
+            },
+            {
+                "external_id": "f907e2f5-5598-44c2-b251-e2c74b00cb53",
+                "title": "09. Atendimento de Diagnóstico por Imagem",
+                "description": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.pdf/view",
+                "format": "PDF",
+                "type": "DADOS",
+                "size": 0,
+                "download_count": null,
+                "file_name": "",
+                "order": null,
+                "updated_at": "12/01/2026",
+                "raw": {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "12/01/2026",
+                    "dataCatalogacao": "30/01/2026",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.pdf/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "f907e2f5-5598-44c2-b251-e2c74b00cb53"
+                }
+            }
+        ],
+        "tags": [
+            "Diagnósticos",
+            "Exames de diagnóstico por imagem",
+            "diagnóstico por imagem"
+        ],
+        "raw": {
+            "id": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+            "titulo": "09. Atendimento de Diagnóstico por Imagem",
+            "nome": "09-atendimento-de-diagnostico-por-imagem",
+            "organizacao": "ebserh-filial-hospital-universitario-onofre-lopes",
+            "descricao": "Relação de Exames de Diagnósticos por Imagem realizados no Hospital Universitário Onofre Lopes (Huol). A responsabilidade pela base é da Unidade de Diagnóstico por Imagem, e a periodicidade de atualização é anual.",
+            "licenca": "cc-by",
+            "responsavel": "Unidade de Diagnóstico por Imagem",
+            "emailResponsavel": "udi.huol-ufrn@ebserh.gov.br",
+            "periodicidade": "ANUAL",
+            "temas": [
+                {
+                    "name": "saude",
+                    "title": "Saúde"
+                }
+            ],
+            "tags": [
+                {
+                    "id": "56a3f843-189d-441f-849a-bb38bdb79a89",
+                    "name": "Diagnósticos",
+                    "display_name": null
+                },
+                {
+                    "id": "85570d21-31ac-4a4b-ad91-781a6562bdee",
+                    "name": "Exames de diagnóstico por imagem",
+                    "display_name": null
+                },
+                {
+                    "id": "c2cdc616-f100-4943-87ad-8bebdc993b2f",
+                    "name": "diagnóstico por imagem",
+                    "display_name": null
+                }
+            ],
+            "coberturaTemporalInicio": "01/01/2025",
+            "coberturaTemporalFim": "31/12/2025",
+            "coberturaEspacial": null,
+            "valorCoberturaEspacial": null,
+            "granularidadeEspacial": null,
+            "versao": "03",
+            "atualizacaoVersao": true,
+            "visibilidade": "PUBLICA",
+            "descontinuado": false,
+            "dataDescontinuacao": null,
+            "reuso": false,
+            "recursos": [
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "29/01/2024",
+                    "dataCatalogacao": "30/01/2024",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem.",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "3c5764d3-3621-4b23-bdf0-0bfa99206974"
+                },
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "29/01/2024",
+                    "dataCatalogacao": "30/01/2024",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.pdf/@@download/file",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem.",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "dcda1b15-3ea9-4111-a4f4-2b1540032c53"
+                },
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "14/01/2025",
+                    "dataCatalogacao": "30/01/2025",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem ",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "d155760f-da7c-448c-8577-8ea9e8530406"
+                },
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "14/01/2025",
+                    "dataCatalogacao": "30/01/2025",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2024.pdf/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem, referente a 01/10/2024 a 31/12/2024",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem ",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "d4d9cf3e-435f-456d-8f80-d1389afe4205"
+                },
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "12/01/2026",
+                    "dataCatalogacao": "30/01/2026",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.csv/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "CSV",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "dbd71097-e691-4265-b898-beb9c5cb76d9"
+                },
+                {
+                    "tamanho": 0,
+                    "dataUltimaAtualizacaoArquivo": "12/01/2026",
+                    "dataCatalogacao": "30/01/2026",
+                    "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2025.pdf/view",
+                    "quantidadeDownloads": null,
+                    "nomeArquivo": null,
+                    "descricao": "Relação de Exames de Diagnósticos por Imagem (Referência_ Ano de 2025)",
+                    "titulo": "09. Atendimento de Diagnóstico por Imagem",
+                    "formato": "PDF",
+                    "tipo": "DADOS",
+                    "numOrdem": null,
+                    "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+                    "id": "f907e2f5-5598-44c2-b251-e2c74b00cb53"
+                }
+            ],
+            "conjuntoDadosAssociados": [],
+            "dataUltimaAtualizacaoMetadados": "30/01/2026 10:01:21",
+            "dataUltimaAtualizacaoArquivo": "12/01/2026 16:30:03",
+            "dataCatalogacao": "30/01/2024 18:35:00",
+            "atualizado": "Atualizado",
+            "dadosRacaEtnia": false,
+            "dadosGenero": false,
+            "observanciaLegal": "Público",
+            "dadosAbertos": "Sim",
+            "selo": "Bronze",
+            "origemCadastro": "Portal"
+        }
+    },
+    "resource": {
+        "external_id": "3c5764d3-3621-4b23-bdf0-0bfa99206974",
+        "title": "09. Atendimento de Diagnóstico por Imagem",
+        "description": "Relação de Exames de Diagnósticos por Imagem.",
+        "url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/@@download/file",
+        "format": "CSV",
+        "type": "DADOS",
+        "size": 0,
+        "download_count": null,
+        "file_name": "",
+        "order": null,
+        "updated_at": "29/01/2024",
+        "raw": {
+            "tamanho": 0,
+            "dataUltimaAtualizacaoArquivo": "29/01/2024",
+            "dataCatalogacao": "30/01/2024",
+            "link": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/view",
+            "quantidadeDownloads": null,
+            "nomeArquivo": null,
+            "descricao": "Relação de Exames de Diagnósticos por Imagem.",
+            "titulo": "09. Atendimento de Diagnóstico por Imagem",
+            "formato": "CSV",
+            "tipo": "DADOS",
+            "numOrdem": null,
+            "idConjuntoDados": "43c7b971-444f-43d0-b31f-28eb2a39221f",
+            "id": "3c5764d3-3621-4b23-bdf0-0bfa99206974"
+        },
+        "catalog_url": "https://www.gov.br/ebserh/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/view",
+        "file_extension": ".csv",
+        "download": {
+            "content_type": "text/csv",
+            "content_length": "1559",
+            "final_url": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn/acesso-a-informacao/dados-abertos-1/09%20-%20Atendimento%20de%20Diagnostico%20por%20Imagem/09-atendimento-de-diagnostico-por-imagem-referencia_-ano-de-2023.csv/@@download/file",
+            "downloaded_bytes": 1559
+        }
+    },
+    "parser_report": {
+        "file_name": "09_atendimento_de_diagn_stico_por_imagem.csv",
+        "file_type": ".csv",
+        "supported_file_types": [
+            ".csv",
+            ".json",
+            ".jsonl",
+            ".parquet",
+            ".tsv",
+            ".txt",
+            ".xls",
+            ".xlsx"
+        ],
+        "capability_matrix": {
+            ".csv": {
+                "label": "CSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                ]
+            },
+            ".tsv": {
+                "label": "TSV",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                ]
+            },
+            ".txt": {
+                "label": "Delimited Text",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                ]
+            },
+            ".json": {
+                "label": "JSON",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                ]
+            },
+            ".jsonl": {
+                "label": "JSON Lines",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Each non-empty line must contain one JSON object."
+                ]
+            },
+            ".parquet": {
+                "label": "Parquet",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                ]
+            },
+            ".xlsx": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                ]
+            },
+            ".xls": {
+                "label": "Excel",
+                "register": true,
+                "inspect": true,
+                "train": true,
+                "predict": true,
+                "simulate": true,
+                "monitor": true,
+                "notes": [
+                    "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                ]
+            }
+        },
+        "warnings": [],
+        "encoding": "cp1252",
+        "loader": "csv",
+        "delimiter": ";",
+        "rows": 59,
+        "columns": 2,
+        "mixed_type_columns": []
+    },
+    "live": {
+        "enabled": false,
+        "interval_seconds": 86400,
+        "mode": "manual_refresh",
+        "status": "snapshot"
+    },
+    "manifest_path": "/app/runtime_artifacts/store/manifests/dataset_48_store_manifest.json",
+    "created_at": "2026-05-24T06:32:03Z",
+    "updated_at": "2026-05-24T06:32:03Z"
+}

@@ -1,0 +1,25 @@
+{
+  "recorded_at": "2026-05-22T20:56:05.097123",
+  "source_path": "/app/runtime_artifacts/assistant_datasets/interactions.jsonl",
+  "project_examples_version": "painel-amanaje-example-catalog-v1",
+  "curated_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curated_interactions.jsonl",
+  "manifest_path": "/app/runtime_artifacts/assistant_datasets/curated/assistant_model_38/curation_manifest.json",
+  "record_count": 363,
+  "interaction_records": 3,
+  "project_example_records": 360,
+  "reference_records": 0,
+  "rejected_records": 0,
+  "labels": {
+    "positive": 361,
+    "corrected": 1,
+    "negative": 1
+  },
+  "workflow_types": {
+    "model_generation": 2,
+    "registry_object": 1,
+    "project_example": 360
+  },
+  "reference_dir": "/app/runtime_artifacts/assistant_datasets/references",
+  "redaction_policy": "Keys containing api_key, authorization, bearer, password, secret, or token are redacted.",
+  "ready_for_fine_tuning": true
+}

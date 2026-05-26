@@ -6,7 +6,10 @@ function initializeEditor(template, elementId) {
                 const memoryEditor = {
                     value: template || '',
                     getValue() { return this.value; },
-                    setValue(value) { this.value = value || ''; },
+                    setValue(value) {
+                        this.value = value || '';
+                        window.refreshCreateWorkspaceInsights?.();
+                    },
                     focus() {}
                 };
                 window.editor = memoryEditor;
@@ -33,10 +36,14 @@ function initializeEditor(template, elementId) {
             container.appendChild(textarea);
             const fallbackEditor = {
                 getValue() { return textarea.value; },
-                setValue(value) { textarea.value = value || ''; },
+                setValue(value) {
+                    textarea.value = value || '';
+                    window.refreshCreateWorkspaceInsights?.();
+                },
                 focus() { textarea.focus(); },
                 layout() {}
             };
+            textarea.addEventListener('input', () => window.refreshCreateWorkspaceInsights?.());
             window.editor = fallbackEditor;
             resolve(fallbackEditor);
         };
@@ -56,12 +63,25 @@ function initializeEditor(template, elementId) {
                 language: 'python',
                 theme: 'vs-dark',
                 automaticLayout: true,
+                glyphMargin: true,
+                folding: true,
                 tabSize: 4,
-                minimap: { enabled: false },
+                insertSpaces: true,
+                fontSize: 14,
+                fontLigatures: true,
+                smoothScrolling: true,
+                stickyScroll: { enabled: true },
+                minimap: { enabled: true },
                 lineNumbers: 'on',
-                scrollBeyondLastLine: true,
+                scrollBeyondLastLine: false,
                 wordWrap: 'on'
             });
+
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => executeCode());
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => saveVariablesToFile());
+            window.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => parseAndDisplayEditorState());
+            window.editor.onDidChangeCursorPosition(() => window.updateCursorStatus?.());
+            window.editor.onDidChangeModelContent(() => window.refreshCreateWorkspaceInsights?.());
 
             resolve(window.editor);
         }, createFallbackEditor);
@@ -874,10 +894,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.editor = null;
     window.executedVariables = {};
+    window.editorExecution = null;
+    window.editorDocument = null;
+    window.editorMetadata = {};
     window.editorReady = (async () => {
         window.editor = await initializeEditor('# Insert your creation code here', 'editorContainer');
     })();
     await window.editorReady;
+    window.wireCreateEditorShellControls?.();
 
     bindOperationToggle();
     ToggleFormOptions({
@@ -932,6 +956,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('operationId')?.addEventListener('change', () => {
         updateOperationToggleUI(document.getElementById('operationId').value);
         displayMetadataPanel(getUploadMetadata());
+        window.refreshCreateWorkspaceInsights?.();
     });
 
     await window.AmanajeUI?.loadAssistantModelOptions?.('assistantCreateModel');

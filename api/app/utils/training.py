@@ -35,6 +35,10 @@ from .mlflow_utils import (
 
 logger = get_logger("training")
 
+REGRESSION_METRICS = {"rmse", "mse", "mae", "mape", "r2"}
+CLASSIFICATION_METRICS = {"accuracy", "precision", "recall", "f1"}
+UNSUPERVISED_TASK_TYPES = {"clustering", "clusterer", "transformer", "outlier", "unsupervised", "estimator"}
+
 
 def _require_numpy() -> None:
     if not NUMPY_AVAILABLE or np is None:
@@ -124,6 +128,272 @@ def _infer_task_type(y: Any) -> str:
     return "regression"
 
 
+def _constructor_param_names(model_or_factory: Any) -> set[str] | None:
+    try:
+        signature = inspect.signature(model_or_factory)
+    except (TypeError, ValueError):
+        return None
+
+    names: set[str] = set()
+    for name, parameter in signature.parameters.items():
+        if name == "self":
+            continue
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            return None
+        if parameter.kind in {
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.KEYWORD_ONLY,
+        }:
+            names.add(name)
+    return names
+
+
+def _estimator_param_names(estimator_or_factory: Any) -> set[str] | None:
+    if hasattr(estimator_or_factory, "get_params"):
+        try:
+            return set(estimator_or_factory.get_params(deep=True).keys())
+        except Exception:
+            pass
+    if inspect.isclass(estimator_or_factory) or callable(estimator_or_factory):
+        return _constructor_param_names(estimator_or_factory)
+    return None
+
+
+def _split_known_params(
+    estimator_or_factory: Any,
+    params: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any], list[str] | None]:
+    valid_names = _estimator_param_names(estimator_or_factory)
+    if valid_names is None:
+        return dict(params), {}, None
+
+    accepted = {key: value for key, value in params.items() if key in valid_names}
+    ignored = {key: value for key, value in params.items() if key not in valid_names}
+    return accepted, ignored, sorted(valid_names)
+
+
+def _attach_estimator_build_details(
+    estimator: Any,
+    *,
+    accepted_params: Mapping[str, Any],
+    ignored_params: Mapping[str, Any],
+    valid_param_names: list[str] | None,
+) -> None:
+    try:
+        setattr(
+            estimator,
+            "_amanaje_build_details",
+            {
+                "accepted_estimator_params": dict(accepted_params),
+                "ignored_estimator_params": dict(ignored_params),
+                "valid_estimator_params": list(valid_param_names or []),
+            },
+        )
+    except Exception:
+        pass
+
+
+def _apply_estimator_params(estimator: Any, params: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any], list[str] | None]:
+    accepted, ignored, valid_names = _split_known_params(estimator, params)
+    if ignored:
+        logger.warning("Ignoring invalid estimator parameters for %s: %s", estimator, sorted(ignored))
+    if accepted and hasattr(estimator, "set_params"):
+        estimator.set_params(**accepted)
+    return accepted, ignored, valid_names
+
+
+def _estimator_capabilities(estimator: Any) -> dict[str, bool]:
+    return {
+        "fit": hasattr(estimator, "fit"),
+        "predict": hasattr(estimator, "predict"),
+        "predict_proba": hasattr(estimator, "predict_proba"),
+        "fit_predict": hasattr(estimator, "fit_predict"),
+        "transform": hasattr(estimator, "transform"),
+        "fit_transform": hasattr(estimator, "fit_transform"),
+        "score": hasattr(estimator, "score"),
+        "score_samples": hasattr(estimator, "score_samples"),
+        "decision_function": hasattr(estimator, "decision_function"),
+    }
+
+
+def _estimator_family(estimator: Any, task_type: Optional[str] = None) -> str:
+    normalized_task = str(task_type or "").strip().lower()
+    if normalized_task in {"classification", "classifier"}:
+        return "classifier"
+    if normalized_task in {"regression", "regressor"}:
+        return "regressor"
+    if normalized_task in UNSUPERVISED_TASK_TYPES:
+        if normalized_task == "clusterer":
+            return "clustering"
+        return normalized_task
+
+    estimator_type = str(getattr(estimator, "_estimator_type", "") or "").strip().lower()
+    if estimator_type == "classifier":
+        return "classifier"
+    if estimator_type == "regressor":
+        return "regressor"
+    if estimator_type in {"clusterer", "cluster"}:
+        return "clustering"
+    if estimator_type in {"outlier_detector", "outlier"}:
+        return "outlier"
+
+    capabilities = _estimator_capabilities(estimator)
+    if capabilities["transform"] or capabilities["fit_transform"]:
+        return "transformer"
+    if capabilities["fit_predict"]:
+        return "clustering"
+    if capabilities["score_samples"] or capabilities["decision_function"]:
+        return "outlier"
+    return "estimator"
+
+
+def _is_multi_output_target(y: Any) -> bool:
+    shape = getattr(y, "shape", None)
+    if shape is None:
+        try:
+            _require_numpy()
+            shape = np.asarray(y).shape
+        except Exception:
+            return False
+    return len(shape) > 1 and int(shape[1] or 0) > 1
+
+
+def _clone_for_retry(estimator: Any) -> Any:
+    try:
+        from sklearn.base import clone
+
+        return clone(estimator)
+    except Exception:
+        base_params = {}
+        if hasattr(estimator, "get_params"):
+            try:
+                base_params = estimator.get_params(deep=False)
+            except Exception:
+                base_params = {}
+        return estimator.__class__(**base_params)
+
+
+def _wrap_multi_output_estimator(estimator: Any, family: str) -> Any:
+    try:
+        if family == "classifier":
+            from sklearn.multioutput import MultiOutputClassifier
+
+            return MultiOutputClassifier(_clone_for_retry(estimator))
+        from sklearn.multioutput import MultiOutputRegressor
+
+        return MultiOutputRegressor(_clone_for_retry(estimator))
+    except Exception as exc:
+        raise RuntimeError(f"Unable to prepare multi-output sklearn estimator: {exc}") from exc
+
+
+def _fit_estimator(
+    estimator: Any,
+    x: Any,
+    y: Any,
+    *,
+    family: str,
+    fit_kwargs: Mapping[str, Any],
+) -> tuple[Any, dict[str, Any]]:
+    metadata = {
+        "fit_uses_target": family in {"classifier", "regressor"},
+        "multi_output": _is_multi_output_target(y),
+        "multi_output_strategy": None,
+    }
+    kwargs = dict(fit_kwargs or {})
+
+    if family in {"classifier", "regressor"}:
+        try:
+            estimator.fit(x, y, **kwargs)
+            if metadata["multi_output"]:
+                metadata["multi_output_strategy"] = "native"
+            return estimator, metadata
+        except Exception as exc:
+            if not metadata["multi_output"]:
+                raise
+            wrapped = _wrap_multi_output_estimator(estimator, family)
+            try:
+                wrapped.fit(x, y, **kwargs)
+            except Exception:
+                raise exc
+            metadata["multi_output_strategy"] = "wrapper"
+            metadata["multi_output_wrapper"] = wrapped.__class__.__name__
+            return wrapped, metadata
+
+    estimator.fit(x, **kwargs)
+    return estimator, metadata
+
+
+def _output_summary_metrics(prefix: str, values: Any) -> dict[str, float]:
+    _require_numpy()
+    array = np.asarray(values)
+    metrics: dict[str, float] = {}
+    if array.size == 0:
+        return metrics
+    metrics[f"{prefix}_rows"] = float(array.shape[0]) if array.ndim else 1.0
+    if array.ndim > 1:
+        metrics[f"{prefix}_columns"] = float(array.shape[1])
+    if np.issubdtype(array.dtype, np.number):
+        flattened = array.astype(float).reshape(-1)
+        metrics[f"{prefix}_mean"] = float(np.nanmean(flattened))
+        metrics[f"{prefix}_std"] = float(np.nanstd(flattened))
+    return metrics
+
+
+def _estimator_outputs(estimator: Any, x: Any, *, family: str) -> tuple[Any, dict[str, Any]]:
+    metadata: dict[str, Any] = {"output_method": None}
+    if hasattr(estimator, "predict"):
+        metadata["output_method"] = "predict"
+        return estimator.predict(x), metadata
+    if family == "transformer" and hasattr(estimator, "transform"):
+        metadata["output_method"] = "transform"
+        return estimator.transform(x), metadata
+    if hasattr(estimator, "score_samples"):
+        metadata["output_method"] = "score_samples"
+        return estimator.score_samples(x), metadata
+    if hasattr(estimator, "decision_function"):
+        metadata["output_method"] = "decision_function"
+        return estimator.decision_function(x), metadata
+    if hasattr(estimator, "fit_predict"):
+        metadata["output_method"] = "fit_predict"
+        metadata["output_method_warning"] = "fit_predict was used because the estimator does not expose predict."
+        return estimator.fit_predict(x), metadata
+    if family == "transformer" and hasattr(estimator, "fit_transform"):
+        metadata["output_method"] = "fit_transform"
+        metadata["output_method_warning"] = "fit_transform was used because the estimator does not expose transform."
+        return estimator.fit_transform(x), metadata
+    return None, metadata
+
+
+def _metric_compatibility(
+    task_type: str,
+    requested_metrics: Optional[Any],
+    objective_metric: Optional[str],
+) -> dict[str, Any]:
+    requested = [str(item).strip().lower() for item in (requested_metrics or []) if str(item).strip()]
+    normalized_task = task_type.lower()
+    if normalized_task == "regression":
+        compatible = REGRESSION_METRICS | {"fit_duration_sec"}
+        default_objective = "rmse"
+    elif normalized_task == "classification":
+        compatible = CLASSIFICATION_METRICS | {"fit_duration_sec"}
+        default_objective = "accuracy"
+    else:
+        compatible = {"fit_duration_sec", "output_rows", "output_columns", "output_mean", "output_std"}
+        default_objective = "fit_duration_sec"
+
+    ignored = [metric for metric in requested if metric not in compatible]
+    accepted = [metric for metric in requested if metric in compatible]
+    objective = str(objective_metric or default_objective).strip().lower()
+    resolved_objective = objective if objective in compatible else default_objective
+    return {
+        "requested_metrics": requested,
+        "accepted_metrics": accepted,
+        "ignored_incompatible_metrics": ignored,
+        "objective_metric": objective or None,
+        "resolved_objective_metric": resolved_objective,
+    }
+
+
 def _build_estimator(
     model_or_factory: Any,
     params: Optional[Mapping[str, Any]],
@@ -136,12 +406,21 @@ def _build_estimator(
     """
 
     estimator_params = dict(params or {})
+    ignored_params: dict[str, Any] = {}
+    accepted_params: dict[str, Any] = {}
+    valid_param_names: list[str] | None = None
 
     if hasattr(model_or_factory, "fit"):
         if not clone_estimator:
             estimator = model_or_factory
             if estimator_params and hasattr(estimator, "set_params"):
-                estimator.set_params(**estimator_params)
+                accepted_params, ignored_params, valid_param_names = _apply_estimator_params(estimator, estimator_params)
+            _attach_estimator_build_details(
+                estimator,
+                accepted_params=accepted_params,
+                ignored_params=ignored_params,
+                valid_param_names=valid_param_names,
+            )
             return estimator
         try:
             from sklearn.base import clone
@@ -164,22 +443,51 @@ def _build_estimator(
                 pass
 
         if estimator_params and hasattr(estimator, "set_params"):
-            estimator.set_params(**estimator_params)
+            accepted_params, ignored_params, valid_param_names = _apply_estimator_params(estimator, estimator_params)
+        _attach_estimator_build_details(
+            estimator,
+            accepted_params=accepted_params,
+            ignored_params=ignored_params,
+            valid_param_names=valid_param_names,
+        )
         return estimator
 
     if inspect.isclass(model_or_factory):
-        signature = inspect.signature(model_or_factory)
-        if random_state is not None and "random_state" in signature.parameters and "random_state" not in estimator_params:
+        valid_param_set = _estimator_param_names(model_or_factory)
+        if random_state is not None and (valid_param_set is None or "random_state" in valid_param_set) and "random_state" not in estimator_params:
             estimator_params["random_state"] = random_state
-        return model_or_factory(**estimator_params)
+        accepted_params, ignored_params, valid_param_names = _split_known_params(model_or_factory, estimator_params)
+        if ignored_params:
+            logger.warning("Ignoring invalid constructor parameters for %s: %s", model_or_factory, sorted(ignored_params))
+        estimator = model_or_factory(**accepted_params)
+        _attach_estimator_build_details(
+            estimator,
+            accepted_params=accepted_params,
+            ignored_params=ignored_params,
+            valid_param_names=valid_param_names,
+        )
+        return estimator
 
     if callable(model_or_factory):
         try:
             signature = inspect.signature(model_or_factory)
-            call_kwargs = dict(estimator_params)
+            valid_param_set = _estimator_param_names(model_or_factory)
+            if random_state is not None and (valid_param_set is None or "random_state" in valid_param_set) and "random_state" not in estimator_params:
+                estimator_params["random_state"] = random_state
+            accepted_params, ignored_params, valid_param_names = _split_known_params(model_or_factory, estimator_params)
+            if ignored_params:
+                logger.warning("Ignoring invalid factory parameters for %s: %s", model_or_factory, sorted(ignored_params))
+            call_kwargs = dict(accepted_params)
             if random_state is not None and "random_state" in signature.parameters and "random_state" not in call_kwargs:
                 call_kwargs["random_state"] = random_state
-            return model_or_factory(**call_kwargs)
+            estimator = model_or_factory(**call_kwargs)
+            _attach_estimator_build_details(
+                estimator,
+                accepted_params=accepted_params,
+                ignored_params=ignored_params,
+                valid_param_names=valid_param_names,
+            )
+            return estimator
         except (TypeError, ValueError):
             if random_state is not None:
                 return model_or_factory(estimator_params, random_state)
@@ -203,6 +511,8 @@ def train_sklearn(
     tags: Optional[Mapping[str, str]] = None,
     log_to_mlflow: bool = True,
     clone_estimator: bool = True,
+    metrics_to_track: Optional[Any] = None,
+    objective_metric: Optional[str] = None,
 ) -> TrainingResult:
     """
     Train a scikit-learn estimator and return a normalized ``TrainingResult``.
@@ -215,39 +525,76 @@ def train_sklearn(
     failed = False
     try:
         estimator = _build_estimator(model_or_factory, fit_parameters, random_state, clone_estimator=clone_estimator)
+        family = _estimator_family(estimator, task_type)
+        compatibility = _metric_compatibility(task_type or family, metrics_to_track, objective_metric)
         if log_to_mlflow and fit_parameters:
             log_params(fit_parameters)
 
         start_time = time.perf_counter()
-        estimator.fit(x, y, **dict(fit_kwargs or {}))
+        estimator, fit_metadata = _fit_estimator(
+            estimator,
+            x,
+            y,
+            family=family,
+            fit_kwargs=dict(fit_kwargs or {}),
+        )
         fit_duration_sec = time.perf_counter() - start_time
 
         metrics: Dict[str, float] = {"fit_duration_sec": fit_duration_sec}
+        output_metadata: dict[str, Any] = {}
         if eval_data is not None:
             x_eval, y_eval = eval_data
-            predictions = estimator.predict(x_eval)
-            normalized_task_type = (task_type or _infer_task_type(y_eval)).lower()
-            metrics.update(
-                evaluate_and_log_metrics(
-                    y_true=y_eval,
-                    y_pred=predictions,
-                    task_type=normalized_task_type,
-                    prefix="eval_",
-                    log_to_mlflow=log_to_mlflow,
+            predictions, output_metadata = _estimator_outputs(estimator, x_eval, family=family)
+            if predictions is not None and family in {"classifier", "regressor"}:
+                normalized_task_type = "classification" if family == "classifier" else "regression"
+                try:
+                    metrics.update(
+                        evaluate_and_log_metrics(
+                            y_true=y_eval,
+                            y_pred=predictions,
+                            task_type=normalized_task_type,
+                            prefix="eval_",
+                            log_to_mlflow=log_to_mlflow,
+                        )
+                    )
+                except Exception as exc:
+                    output_metadata["metric_warning"] = str(exc)
+                    logger.warning("Unable to compute sklearn evaluation metrics: %s", exc)
+            elif predictions is not None:
+                metrics.update(
+                    {
+                        f"eval_{key}": value
+                        for key, value in _output_summary_metrics("output", predictions).items()
+                    }
                 )
-            )
 
         if log_to_mlflow:
             log_metrics({"fit_duration_sec": fit_duration_sec})
+
+        build_details = dict(getattr(estimator, "_amanaje_build_details", {}) or {})
+        accepted_result_params = dict(build_details.get("accepted_estimator_params") or {})
+        metadata = {
+            "fit_duration_sec": fit_duration_sec,
+            "estimator_family": family,
+            "estimator_capabilities": _estimator_capabilities(estimator),
+            "fit": fit_metadata,
+            "output": output_metadata,
+            "metric_compatibility": compatibility,
+            **build_details,
+        }
+        if compatibility["ignored_incompatible_metrics"]:
+            metadata["warnings"] = [
+                f"Ignored incompatible metrics for {task_type or family}: {', '.join(compatibility['ignored_incompatible_metrics'])}"
+            ]
 
         result = TrainingResult(
             model=estimator,
             framework="sklearn",
             metrics=metrics,
             history={},
-            parameters=fit_parameters or getattr(estimator, "get_params", lambda **_: {})(),
+            parameters=accepted_result_params or fit_parameters or getattr(estimator, "get_params", lambda **_: {})(),
             run_id=run_id or active_run_id(),
-            metadata={"fit_duration_sec": fit_duration_sec},
+            metadata=metadata,
         )
 
         return result

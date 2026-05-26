@@ -1,0 +1,1043 @@
+{
+  "run_id": "training_5e316ae4dd9a",
+  "run_type": "training",
+  "status": "failed",
+  "stage": "failed",
+  "created_at": "2026-05-25T19:05:07.390401",
+  "updated_at": "2026-05-25T19:05:28.667291",
+  "started_at": "2026-05-25T19:05:21.634983",
+  "completed_at": "2026-05-25T19:05:28.667291",
+  "context": {
+    "model_id": 88,
+    "dataset_id": 90,
+    "study_id": null,
+    "inference_id": null
+  },
+  "parameters": {
+    "framework": "sklearn",
+    "estimator_class": "RandomForestRegressor",
+    "artifact_manifest": {
+      "loader": "joblib",
+      "source": "/models/RFR.joblib",
+      "metadata": {},
+      "warnings": [
+        "Joblib support is available for runtime loading."
+      ],
+      "framework": "sklearn",
+      "entrypoint": null,
+      "artifact_format": ".joblib",
+      "capability_matrix": {
+        ".pt": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pkl": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".pth": {
+          "label": "PyTorch Artifact",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        },
+        ".yml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".json": {
+          "label": "JSON Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".onnx": {
+          "label": "ONNX",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".yaml": {
+          "label": "YAML Config",
+          "train": false,
+          "inspect": true,
+          "monitor": false,
+          "predict": false,
+          "register": true,
+          "simulate": false
+        },
+        ".joblib": {
+          "label": "scikit-learn Joblib",
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        ".pickle": {
+          "label": "Python Pickle",
+          "train": false,
+          "inspect": true,
+          "monitor": "guarded",
+          "predict": "guarded",
+          "register": true,
+          "simulate": "guarded"
+        }
+      },
+      "needs_companion_spec": false,
+      "runtime_capabilities": {
+        "train": false,
+        "inspect": true,
+        "monitor": true,
+        "predict": true,
+        "register": true,
+        "simulate": true
+      },
+      "supported_file_types": [
+        ".joblib",
+        ".json",
+        ".onnx",
+        ".pickle",
+        ".pkl",
+        ".pt",
+        ".pth",
+        ".yaml",
+        ".yml"
+      ]
+    },
+    "epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "device": "cpu",
+    "input_features": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44",
+      "45",
+      "46",
+      "47",
+      "48",
+      "49",
+      "50",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "56",
+      "57",
+      "58",
+      "59",
+      "60",
+      "61",
+      "62",
+      "63",
+      "64",
+      "65",
+      "66",
+      "67",
+      "68",
+      "69",
+      "70",
+      "71",
+      "72",
+      "73",
+      "74",
+      "75",
+      "76",
+      "77",
+      "78",
+      "79",
+      "80",
+      "81",
+      "82",
+      "83",
+      "84",
+      "85",
+      "86",
+      "87",
+      "88",
+      "89",
+      "90",
+      "91",
+      "92",
+      "93",
+      "94",
+      "95",
+      "96",
+      "97",
+      "98"
+    ],
+    "output_features": [
+      "96",
+      "97",
+      "98",
+      "99"
+    ],
+    "metrics_to_track": [
+      "loss",
+      "mae",
+      "rmse",
+      "accuracy"
+    ],
+    "objective_metric": "accuracy",
+    "training_mode": "transfer",
+    "transfer_strategy": "auto",
+    "base_model_id": 88,
+    "base_artifact_path": "/models/RFR.joblib",
+    "base_run_id": null
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start'].",
+  "progress": {
+    "current_stage": "failed",
+    "latest_event": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start'].",
+    "latest_timestamp": "2026-05-25T19:05:28.667291",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T19:05:07.390401",
+        "message": "training run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T19:05:07.422723",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-25T19:05:21.634983",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:05:22.345760",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-25T19:05:22.383948",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-05-25T19:05:22.416404",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-25T19:05:24.113851",
+        "message": "Fitting the scikit-learn estimator."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-25T19:05:28.667291",
+        "message": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start']."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T19:05:07.390401",
+      "message": "training run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T19:05:07.422723",
+      "message": "Training run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-25T19:05:21.634983",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:05:22.345760",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-25T19:05:22.383948",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-05-25T19:05:22.416404",
+      "message": "Preparing dataset splits and feature encodings."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-25T19:05:24.113851",
+      "message": "Fitting the scikit-learn estimator."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-25T19:05:28.667291",
+      "message": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start']."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 41,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-25T19:05:07.390401",
+        "stream": "system",
+        "stage": "queued",
+        "message": "training run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-25T19:05:07.422723",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-25T19:05:21.634983",
+        "stream": "system",
+        "stage": "resolving_context",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-25T19:05:22.345760",
+        "stream": "system",
+        "stage": "training",
+        "message": "Training workflow started."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-25T19:05:22.383948",
+        "stream": "system",
+        "stage": "validating_schema",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-25T19:05:22.416404",
+        "stream": "system",
+        "stage": "preparing_dataset",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-05-25T19:05:24.113851",
+        "stream": "system",
+        "stage": "training",
+        "message": "Fitting the scikit-learn estimator."
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-05-25T19:05:28.634759",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "Traceback (most recent call last):"
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-05-25T19:05:28.634792",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/main_app.py\", line 4183, in _execute_training_run"
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-05-25T19:05:28.634807",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    workflow = await asyncio.to_thread("
+      },
+      {
+        "index": 10,
+        "timestamp": "2026-05-25T19:05:28.634821",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "               ^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 11,
+        "timestamp": "2026-05-25T19:05:28.634832",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/usr/local/lib/python3.11/asyncio/threads.py\", line 25, in to_thread"
+      },
+      {
+        "index": 12,
+        "timestamp": "2026-05-25T19:05:28.634842",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return await loop.run_in_executor(None, func_call)"
+      },
+      {
+        "index": 13,
+        "timestamp": "2026-05-25T19:05:28.634852",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 14,
+        "timestamp": "2026-05-25T19:05:28.634862",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/usr/local/lib/python3.11/concurrent/futures/thread.py\", line 58, in run"
+      },
+      {
+        "index": 15,
+        "timestamp": "2026-05-25T19:05:28.634872",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    result = self.fn(*self.args, **self.kwargs)"
+      },
+      {
+        "index": 16,
+        "timestamp": "2026-05-25T19:05:28.634882",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 17,
+        "timestamp": "2026-05-25T19:05:28.634893",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/main_app.py\", line 4184, in <lambda>"
+      },
+      {
+        "index": 18,
+        "timestamp": "2026-05-25T19:05:28.634903",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    lambda: _utils._run_training_workflow("
+      },
+      {
+        "index": 19,
+        "timestamp": "2026-05-25T19:05:28.634913",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 20,
+        "timestamp": "2026-05-25T19:05:28.634923",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/main_utils.py\", line 4666, in _run_training_workflow"
+      },
+      {
+        "index": 21,
+        "timestamp": "2026-05-25T19:05:28.634933",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    result, predictions = _train_with_sklearn("
+      },
+      {
+        "index": 22,
+        "timestamp": "2026-05-25T19:05:28.634943",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "                          ^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 23,
+        "timestamp": "2026-05-25T19:05:28.634953",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/main_utils.py\", line 4196, in _train_with_sklearn"
+      },
+      {
+        "index": 24,
+        "timestamp": "2026-05-25T19:05:28.634962",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    result = run_training_pipeline("
+      },
+      {
+        "index": 25,
+        "timestamp": "2026-05-25T19:05:28.634975",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "             ^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 26,
+        "timestamp": "2026-05-25T19:05:28.634985",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/training.py\", line 533, in run_training_pipeline"
+      },
+      {
+        "index": 27,
+        "timestamp": "2026-05-25T19:05:28.634995",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    result = train_fn(**train_kwargs)"
+      },
+      {
+        "index": 28,
+        "timestamp": "2026-05-25T19:05:28.635006",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "             ^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 29,
+        "timestamp": "2026-05-25T19:05:28.635016",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/main_utils.py\", line 4197, in <lambda>"
+      },
+      {
+        "index": 30,
+        "timestamp": "2026-05-25T19:05:28.635027",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    lambda: train_sklearn("
+      },
+      {
+        "index": 31,
+        "timestamp": "2026-05-25T19:05:28.635038",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "            ^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 32,
+        "timestamp": "2026-05-25T19:05:28.635050",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/training.py\", line 217, in train_sklearn"
+      },
+      {
+        "index": 33,
+        "timestamp": "2026-05-25T19:05:28.635064",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    estimator = _build_estimator(model_or_factory, fit_parameters, random_state, clone_estimator=clone_estimator)"
+      },
+      {
+        "index": 34,
+        "timestamp": "2026-05-25T19:05:28.635074",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 35,
+        "timestamp": "2026-05-25T19:05:28.635086",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/training.py\", line 144, in _build_estimator"
+      },
+      {
+        "index": 36,
+        "timestamp": "2026-05-25T19:05:28.635098",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    estimator.set_params(**estimator_params)"
+      },
+      {
+        "index": 37,
+        "timestamp": "2026-05-25T19:05:28.635126",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/opt/venv/lib/python3.11/site-packages/sklearn/base.py\", line 345, in set_params"
+      },
+      {
+        "index": 38,
+        "timestamp": "2026-05-25T19:05:28.635140",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    raise ValueError("
+      },
+      {
+        "index": 39,
+        "timestamp": "2026-05-25T19:05:28.635150",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "ValueError: Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start']."
+      },
+      {
+        "index": 40,
+        "timestamp": "2026-05-25T19:05:28.667291",
+        "stream": "system",
+        "stage": "failed",
+        "message": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start']."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:default",
+    "job_id": "training_5e316ae4dd9a"
+  },
+  "rerun_payload": {
+    "run_type": "training",
+    "model_id": 88,
+    "payload_data": {
+      "datasetId": 90,
+      "parameters": {
+        "epochs": 50,
+        "batch_size": 32,
+        "learning_rate": 0.001,
+        "framework": "sklearn",
+        "device": "cpu",
+        "input_features": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "32",
+          "33",
+          "34",
+          "35",
+          "36",
+          "37",
+          "38",
+          "39",
+          "40",
+          "41",
+          "42",
+          "43",
+          "44",
+          "45",
+          "46",
+          "47",
+          "48",
+          "49",
+          "50",
+          "51",
+          "52",
+          "53",
+          "54",
+          "55",
+          "56",
+          "57",
+          "58",
+          "59",
+          "60",
+          "61",
+          "62",
+          "63",
+          "64",
+          "65",
+          "66",
+          "67",
+          "68",
+          "69",
+          "70",
+          "71",
+          "72",
+          "73",
+          "74",
+          "75",
+          "76",
+          "77",
+          "78",
+          "79",
+          "80",
+          "81",
+          "82",
+          "83",
+          "84",
+          "85",
+          "86",
+          "87",
+          "88",
+          "89",
+          "90",
+          "91",
+          "92",
+          "93",
+          "94",
+          "95",
+          "96",
+          "97",
+          "98"
+        ],
+        "output_features": [
+          "96",
+          "97",
+          "98",
+          "99"
+        ],
+        "metrics_to_track": [
+          "loss",
+          "mae",
+          "rmse",
+          "accuracy"
+        ],
+        "objective_metric": "accuracy"
+      },
+      "inputType": "Manual",
+      "studyId": null,
+      "inferenceId": null
+    },
+    "parameters": {
+      "framework": "sklearn",
+      "estimator_class": "RandomForestRegressor",
+      "artifact_manifest": {
+        "loader": "joblib",
+        "source": "/models/RFR.joblib",
+        "metadata": {},
+        "warnings": [
+          "Joblib support is available for runtime loading."
+        ],
+        "framework": "sklearn",
+        "entrypoint": null,
+        "artifact_format": ".joblib",
+        "capability_matrix": {
+          ".pt": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pkl": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".pth": {
+            "label": "PyTorch Artifact",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          },
+          ".yml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".json": {
+            "label": "JSON Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".onnx": {
+            "label": "ONNX",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".yaml": {
+            "label": "YAML Config",
+            "train": false,
+            "inspect": true,
+            "monitor": false,
+            "predict": false,
+            "register": true,
+            "simulate": false
+          },
+          ".joblib": {
+            "label": "scikit-learn Joblib",
+            "train": false,
+            "inspect": true,
+            "monitor": true,
+            "predict": true,
+            "register": true,
+            "simulate": true
+          },
+          ".pickle": {
+            "label": "Python Pickle",
+            "train": false,
+            "inspect": true,
+            "monitor": "guarded",
+            "predict": "guarded",
+            "register": true,
+            "simulate": "guarded"
+          }
+        },
+        "needs_companion_spec": false,
+        "runtime_capabilities": {
+          "train": false,
+          "inspect": true,
+          "monitor": true,
+          "predict": true,
+          "register": true,
+          "simulate": true
+        },
+        "supported_file_types": [
+          ".joblib",
+          ".json",
+          ".onnx",
+          ".pickle",
+          ".pkl",
+          ".pt",
+          ".pth",
+          ".yaml",
+          ".yml"
+        ]
+      },
+      "epochs": 50,
+      "batch_size": 32,
+      "learning_rate": 0.001,
+      "device": "cpu",
+      "input_features": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52",
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65",
+        "66",
+        "67",
+        "68",
+        "69",
+        "70",
+        "71",
+        "72",
+        "73",
+        "74",
+        "75",
+        "76",
+        "77",
+        "78",
+        "79",
+        "80",
+        "81",
+        "82",
+        "83",
+        "84",
+        "85",
+        "86",
+        "87",
+        "88",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93",
+        "94",
+        "95",
+        "96",
+        "97",
+        "98"
+      ],
+      "output_features": [
+        "96",
+        "97",
+        "98",
+        "99"
+      ],
+      "metrics_to_track": [
+        "loss",
+        "mae",
+        "rmse",
+        "accuracy"
+      ],
+      "objective_metric": "accuracy",
+      "training_mode": "transfer",
+      "transfer_strategy": "auto"
+    }
+  },
+  "failure": {
+    "type": "ValueError",
+    "message": "Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start'].",
+    "traceback": "Traceback (most recent call last):\n  File \"/app/main_app.py\", line 4183, in _execute_training_run\n    workflow = await asyncio.to_thread(\n               ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/asyncio/threads.py\", line 25, in to_thread\n    return await loop.run_in_executor(None, func_call)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/concurrent/futures/thread.py\", line 58, in run\n    result = self.fn(*self.args, **self.kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/main_app.py\", line 4184, in <lambda>\n    lambda: _utils._run_training_workflow(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/utils/main_utils.py\", line 4666, in _run_training_workflow\n    result, predictions = _train_with_sklearn(\n                          ^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/utils/main_utils.py\", line 4196, in _train_with_sklearn\n    result = run_training_pipeline(\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/utils/training.py\", line 533, in run_training_pipeline\n    result = train_fn(**train_kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/utils/main_utils.py\", line 4197, in <lambda>\n    lambda: train_sklearn(\n            ^^^^^^^^^^^^^^\n  File \"/app/app/utils/training.py\", line 217, in train_sklearn\n    estimator = _build_estimator(model_or_factory, fit_parameters, random_state, clone_estimator=clone_estimator)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/utils/training.py\", line 144, in _build_estimator\n    estimator.set_params(**estimator_params)\n  File \"/opt/venv/lib/python3.11/site-packages/sklearn/base.py\", line 345, in set_params\n    raise ValueError(\nValueError: Invalid parameter 'metrics_to_track' for estimator RandomForestRegressor(n_estimators=60, random_state=42, warm_start=True). Valid parameters are: ['bootstrap', 'ccp_alpha', 'criterion', 'max_depth', 'max_features', 'max_leaf_nodes', 'max_samples', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'monotonic_cst', 'n_estimators', 'n_jobs', 'oob_score', 'random_state', 'verbose', 'warm_start'].\n",
+    "worker_name": "amanaje-compose-cpu-cpu-amanaje-default-0e0e86b38145-1-7377510e",
+    "queue": "amanaje:default",
+    "job_id": "training_5e316ae4dd9a",
+    "failed_at": "2026-05-25T19:05:28.627440"
+  }
+}

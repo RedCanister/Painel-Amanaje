@@ -1,0 +1,1849 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "Razão Social (Registro ANS)",
+            "Cobertura",
+            "Porte",
+            "Classificação no Mês",
+            "Classificação no Mês Anterior",
+            "out/22",
+            "set/22",
+            "ago/22",
+            "jul/22",
+            "jun/22",
+            "mai/22",
+            "abr/22",
+            "mar/22",
+            "fev/22",
+            "jan/22",
+            "dez/21",
+            "nov/21",
+            "Competência"
+        ],
+        "target_candidate": "Data de atualização",
+        "numeric_feature_count": 3,
+        "categorical_feature_count": 15,
+        "datetime_feature_count": 1
+    },
+    "manifest": {
+        "dataset_id": 49,
+        "dataset_name": "indice_geral_de_reclamacoes_ANS_2022",
+        "table_name": "dataset_49_indice_geral_de_reclamacoes_ans_2022",
+        "shape": [
+            915,
+            19
+        ],
+        "columns": [
+            {
+                "name": "nov/21",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 21,
+                "null_ratio": 0.022951,
+                "unique_count": 415,
+                "unique_ratio": 0.453552,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.2,
+                "sample_values": [
+                    "   6,01",
+                    "   0,41",
+                    "  24,54",
+                    "   3,28",
+                    "   4,56"
+                ]
+            },
+            {
+                "name": "dez/21",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 19,
+                "null_ratio": 0.020765,
+                "unique_count": 393,
+                "unique_ratio": 0.429508,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.32,
+                "sample_values": [
+                    "   5,02",
+                    "   0,21",
+                    "  28,76",
+                    "   1,32",
+                    "   4,54"
+                ]
+            },
+            {
+                "name": "jan/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 18,
+                "null_ratio": 0.019672,
+                "unique_count": 410,
+                "unique_ratio": 0.448087,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.2,
+                "sample_values": [
+                    "   9,05",
+                    "   0,21",
+                    "  20,64",
+                    "   0,66",
+                    "   6,78"
+                ]
+            },
+            {
+                "name": "fev/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 16,
+                "null_ratio": 0.017486,
+                "unique_count": 413,
+                "unique_ratio": 0.451366,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.22,
+                "sample_values": [
+                    "   8,31",
+                    "   0,21",
+                    "   8,30",
+                    "0,00",
+                    "   2,25"
+                ]
+            },
+            {
+                "name": "mar/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 12,
+                "null_ratio": 0.013115,
+                "unique_count": 423,
+                "unique_ratio": 0.462295,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.32,
+                "sample_values": [
+                    "    9,16",
+                    "    0,21",
+                    "   33,38",
+                    "0,00",
+                    "    2,24"
+                ]
+            },
+            {
+                "name": "abr/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 10,
+                "null_ratio": 0.010929,
+                "unique_count": 417,
+                "unique_ratio": 0.455738,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.24,
+                "sample_values": [
+                    "    6,72",
+                    "0,00",
+                    "   29,37",
+                    "    0,66",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "mai/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 8,
+                "null_ratio": 0.008743,
+                "unique_count": 415,
+                "unique_ratio": 0.453552,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.2,
+                "sample_values": [
+                    "   6,20",
+                    "0,00",
+                    "  33,73",
+                    "   0,66",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "jun/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 7,
+                "null_ratio": 0.00765,
+                "unique_count": 399,
+                "unique_ratio": 0.436066,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.18,
+                "sample_values": [
+                    "   3,61",
+                    "0,00",
+                    "   4,23",
+                    "   0,66",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "jul/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 6,
+                "null_ratio": 0.006557,
+                "unique_count": 409,
+                "unique_ratio": 0.446995,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.22,
+                "sample_values": [
+                    "   1,83",
+                    "   0,20",
+                    "  12,79",
+                    "0,00",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "set/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 4,
+                "null_ratio": 0.004372,
+                "unique_count": 413,
+                "unique_ratio": 0.451366,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.2,
+                "sample_values": [
+                    "   4,13",
+                    "   0,41",
+                    "  17,33",
+                    "0,00",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "ago/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 4,
+                "null_ratio": 0.004372,
+                "unique_count": 394,
+                "unique_ratio": 0.430601,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.26,
+                "sample_values": [
+                    "   4,33",
+                    "   0,41",
+                    "  12,89",
+                    "0,00",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "Classificação no Mês Anterior",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 4,
+                "null_ratio": 0.004372,
+                "unique_count": 204,
+                "unique_ratio": 0.222951,
+                "mixed_type": false,
+                "sample_types": [
+                    "float"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    90.0,
+                    187.0,
+                    33.0,
+                    197.0,
+                    197.0
+                ]
+            },
+            {
+                "name": "Razão Social (Registro ANS)",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 915,
+                "unique_ratio": 1.0,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    " CAIXA DE ASSISTÊNCIA DO SETOR DE ENERGIA -EVIDA -ASSISTÊNCIA À SAÚDE (418374)",
+                    "ABERTTA SAÚDE - ASSOCIAÇÃO BENEFICENTE DOS EMPREGADOS DA ARCELORMITTAL NO BRASIL (314668)",
+                    "ADVANCE PLANOS DE SAÚDE LTDA (335657)",
+                    "AGROS - INSTITUTO UFV DE SEGURIDADE SOCIAL (368920)",
+                    "ALCANCE SAÚDE EIRELI (416975)"
+                ]
+            },
+            {
+                "name": "out/22",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 389,
+                "unique_ratio": 0.425137,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.3,
+                "sample_values": [
+                    "   3,56",
+                    "   0,20",
+                    "   8,72",
+                    "0,00",
+                    "0,00"
+                ]
+            },
+            {
+                "name": "Classificação no Mês",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 211,
+                "unique_ratio": 0.230601,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    80,
+                    206,
+                    51,
+                    177,
+                    177
+                ]
+            },
+            {
+                "name": "Porte",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 4,
+                "unique_ratio": 0.004372,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Pequeno",
+                    "Médio",
+                    "Pequeno",
+                    "Pequeno",
+                    "Pequeno"
+                ]
+            },
+            {
+                "name": "Cobertura",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 2,
+                "unique_ratio": 0.002186,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "Médico Hospitalar",
+                    "Médico Hospitalar",
+                    "Médico Hospitalar",
+                    "Médico Hospitalar",
+                    "Médico Hospitalar"
+                ]
+            },
+            {
+                "name": "Competência",
+                "dtype": "int64",
+                "family": "numeric",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 1,
+                "unique_ratio": 0.001093,
+                "mixed_type": false,
+                "sample_types": [
+                    "int"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    202210,
+                    202210,
+                    202210,
+                    202210,
+                    202210
+                ]
+            },
+            {
+                "name": "Data de atualização",
+                "dtype": "object",
+                "family": "datetime_candidate",
+                "null_count": 0,
+                "null_ratio": 0.0,
+                "unique_count": 1,
+                "unique_ratio": 0.001093,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": false,
+                "datetime_confidence": 1.0,
+                "sample_values": [
+                    "15/11/2022 05:40:45",
+                    "15/11/2022 05:40:45",
+                    "15/11/2022 05:40:45",
+                    "15/11/2022 05:40:45",
+                    "15/11/2022 05:40:45"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "Razão Social (Registro ANS)": " CAIXA DE ASSISTÊNCIA DO SETOR DE ENERGIA -EVIDA -ASSISTÊNCIA À SAÚDE (418374)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 80,
+                "Classificação no Mês Anterior": 90.0,
+                "out/22": "   3,56",
+                "set/22": "   4,13",
+                "ago/22": "   4,33",
+                "jul/22": "   1,83",
+                "jun/22": "   3,61",
+                "mai/22": "   6,20",
+                "abr/22": "    6,72",
+                "mar/22": "    9,16",
+                "fev/22": "   8,31",
+                "jan/22": "   9,05",
+                "dez/21": "   5,02",
+                "nov/21": "   6,01",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ABERTTA SAÚDE - ASSOCIAÇÃO BENEFICENTE DOS EMPREGADOS DA ARCELORMITTAL NO BRASIL (314668)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 206,
+                "Classificação no Mês Anterior": 187.0,
+                "out/22": "   0,20",
+                "set/22": "   0,41",
+                "ago/22": "   0,41",
+                "jul/22": "   0,20",
+                "jun/22": "0,00",
+                "mai/22": "0,00",
+                "abr/22": "0,00",
+                "mar/22": "    0,21",
+                "fev/22": "   0,21",
+                "jan/22": "   0,21",
+                "dez/21": "   0,21",
+                "nov/21": "   0,41",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ADVANCE PLANOS DE SAÚDE LTDA (335657)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 51,
+                "Classificação no Mês Anterior": 33.0,
+                "out/22": "   8,72",
+                "set/22": "  17,33",
+                "ago/22": "  12,89",
+                "jul/22": "  12,79",
+                "jun/22": "   4,23",
+                "mai/22": "  33,73",
+                "abr/22": "   29,37",
+                "mar/22": "   33,38",
+                "fev/22": "   8,30",
+                "jan/22": "  20,64",
+                "dez/21": "  28,76",
+                "nov/21": "  24,54",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AGROS - INSTITUTO UFV DE SEGURIDADE SOCIAL (368920)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 197.0,
+                "out/22": "0,00",
+                "set/22": "0,00",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "   0,66",
+                "mai/22": "   0,66",
+                "abr/22": "    0,66",
+                "mar/22": "0,00",
+                "fev/22": "0,00",
+                "jan/22": "   0,66",
+                "dez/21": "   1,32",
+                "nov/21": "   3,28",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ALCANCE SAÚDE EIRELI (416975)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 197.0,
+                "out/22": "0,00",
+                "set/22": "0,00",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "0,00",
+                "mai/22": "0,00",
+                "abr/22": "0,00",
+                "mar/22": "    2,24",
+                "fev/22": "   2,25",
+                "jan/22": "   6,78",
+                "dez/21": "   4,54",
+                "nov/21": "   4,56",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ALICE OPERADORA LTDA. (421928)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 172.0,
+                "out/22": "0,00",
+                "set/22": "   0,94",
+                "ago/22": "   4,81",
+                "jul/22": "   4,98",
+                "jun/22": "   4,19",
+                "mai/22": "0,00",
+                "abr/22": "    1,19",
+                "mar/22": "    2,53",
+                "fev/22": "   2,74",
+                "jan/22": "   4,50",
+                "dez/21": "   3,48",
+                "nov/21": "   4,15",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ALLIANZ SAÚDE S/A (000515)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 44,
+                "Classificação no Mês Anterior": 42.0,
+                "out/22": "   6,87",
+                "set/22": "   7,50",
+                "ago/22": "   7,83",
+                "jul/22": "  13,61",
+                "jun/22": "  16,35",
+                "mai/22": "  16,91",
+                "abr/22": "   11,43",
+                "mar/22": "    9,87",
+                "fev/22": "  11,01",
+                "jan/22": "  12,15",
+                "dez/21": "  14,17",
+                "nov/21": "  15,21",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ALPHA SERVIÇOS DE SAÚDE LTDA (422754)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 197.0,
+                "out/22": "0,00",
+                "set/22": "0,00",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "0,00",
+                "mai/22": "0,00",
+                "abr/22": "0,00",
+                "mar/22": "0,00",
+                "fev/22": "0,00",
+                "jan/22": "0,00",
+                "dez/21": "0,00",
+                "nov/21": "0,00",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "ALVORECER - ASSOCIAÇÃO DE SOCORROS MÚTUOS (344800)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Grande",
+                "Classificação no Mês": 3,
+                "Classificação no Mês Anterior": 3.0,
+                "out/22": "  20,94",
+                "set/22": "  18,02",
+                "ago/22": "  13,33",
+                "jul/22": "  11,49",
+                "jun/22": "  10,93",
+                "mai/22": "  11,42",
+                "abr/22": "   10,99",
+                "mar/22": "    8,85",
+                "fev/22": "   7,52",
+                "jan/22": "   6,08",
+                "dez/21": "   8,44",
+                "nov/21": "   8,99",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMAZÔNIA PLANOS DE SAÚDE LTDA (419052)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 160,
+                "Classificação no Mês Anterior": 133.0,
+                "out/22": "   0,80",
+                "set/22": "   1,62",
+                "ago/22": "   2,44",
+                "jul/22": "   3,28",
+                "jun/22": "   3,31",
+                "mai/22": "   3,34",
+                "abr/22": "    1,68",
+                "mar/22": "    2,54",
+                "fev/22": "   2,55",
+                "jan/22": "   4,28",
+                "dez/21": "   3,44",
+                "nov/21": "   3,43",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AME-ASSISTÊNCIA MÉDICA A EMPRESAS LTDA (304531)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 154,
+                "Classificação no Mês Anterior": 175.0,
+                "out/22": "   0,92",
+                "set/22": "   0,89",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "0,00",
+                "mai/22": "0,00",
+                "abr/22": "0,00",
+                "mar/22": "0,00",
+                "fev/22": "0,00",
+                "jan/22": "0,00",
+                "dez/21": "0,00",
+                "nov/21": "0,00",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMEP FREGUESIA OPERADORA DE PLANO DE SAUDE LTDA (413330)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 85,
+                "Classificação no Mês Anterior": 100.0,
+                "out/22": "   2,33",
+                "set/22": "   1,95",
+                "ago/22": "   1,17",
+                "jul/22": "   0,39",
+                "jun/22": "0,00",
+                "mai/22": "   1,17",
+                "abr/22": "    2,34",
+                "mar/22": "    2,34",
+                "fev/22": "   1,95",
+                "jan/22": "   2,34",
+                "dez/21": "   2,73",
+                "nov/21": "   3,53",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMEPLAN ASSISTÊNCIA MÉDICA PLANEJADA LTDA (394734)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 10,
+                "Classificação no Mês Anterior": 7.0,
+                "out/22": "  27,91",
+                "set/22": "  33,22",
+                "ago/22": "  32,16",
+                "jul/22": "  29,75",
+                "jun/22": "  28,54",
+                "mai/22": "  35,45",
+                "abr/22": "   36,30",
+                "mar/22": "   35,90",
+                "fev/22": "  26,09",
+                "jan/22": "  22,65",
+                "dez/21": "  22,74",
+                "nov/21": "  24,91",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMERON - ASSISTÊNCIA MÉDICA RONDÔNIA S/A. (321338)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 5,
+                "Classificação no Mês Anterior": 13.0,
+                "out/22": "  45,01",
+                "set/22": "  50,61",
+                "ago/22": "  35,84",
+                "jul/22": "  28,52",
+                "jun/22": "  22,51",
+                "mai/22": "  26,29",
+                "abr/22": "   27,93",
+                "mar/22": "   26,98",
+                "fev/22": "  23,98",
+                "jan/22": "  21,68",
+                "dez/21": "  24,78",
+                "nov/21": "  28,92",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMESC - ASSOCIAÇÃO MÉDICA ESPÍRITA CRISTÃ (401081)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Médio",
+                "Classificação no Mês": 59,
+                "Classificação no Mês Anterior": 56.0,
+                "out/22": "   4,75",
+                "set/22": "   5,41",
+                "ago/22": "   4,79",
+                "jul/22": "   5,49",
+                "jun/22": "   5,27",
+                "mai/22": "   6,76",
+                "abr/22": "    6,74",
+                "mar/22": "    8,85",
+                "fev/22": "   7,94",
+                "jan/22": "   6,78",
+                "dez/21": "   5,75",
+                "nov/21": "   9,94",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMHA SAUDE S/A (418587)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 62,
+                "Classificação no Mês Anterior": 51.0,
+                "out/22": "   5,69",
+                "set/22": "  10,31",
+                "ago/22": "   8,10",
+                "jul/22": "   6,49",
+                "jun/22": "   2,64",
+                "mai/22": "   1,70",
+                "abr/22": "    1,54",
+                "mar/22": "    1,88",
+                "fev/22": "   2,13",
+                "jan/22": "   1,87",
+                "dez/21": "   1,42",
+                "nov/21": "   1,89",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMHE MED ASSISTENCIA A SAUDE LTDA - EPP (421731)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 48,
+                "Classificação no Mês Anterior": 47.0,
+                "out/22": "   9,36",
+                "set/22": "  11,35",
+                "ago/22": "   8,89",
+                "jul/22": "   7,17",
+                "jun/22": "   7,28",
+                "mai/22": "  10,05",
+                "abr/22": "    7,85",
+                "mar/22": "    6,54",
+                "fev/22": "   8,51",
+                "jan/22": "   7,13",
+                "dez/21": "   9,41",
+                "nov/21": "   9,88",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMIL ASSISTÊNCIA MÉDICA INTERNACIONAL S.A. (326305)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Grande",
+                "Classificação no Mês": 22,
+                "Classificação no Mês Anterior": 21.0,
+                "out/22": "   7,77",
+                "set/22": "   9,57",
+                "ago/22": "   9,59",
+                "jul/22": "   9,73",
+                "jun/22": "  10,27",
+                "mai/22": "  11,46",
+                "abr/22": "   11,89",
+                "mar/22": "   12,94",
+                "fev/22": "  12,75",
+                "jan/22": "  13,77",
+                "dez/21": "  14,10",
+                "nov/21": "  14,78",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMPARA ASSISTÊNCIA MÉDICA PARAÍSO LTDA (325465)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 197.0,
+                "out/22": "0,00",
+                "set/22": "0,00",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "   1,15",
+                "mai/22": "   1,14",
+                "abr/22": "    1,13",
+                "mar/22": "0,00",
+                "fev/22": "0,00",
+                "jan/22": "0,00",
+                "dez/21": "0,00",
+                "nov/21": "0,00",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            },
+            {
+                "Razão Social (Registro ANS)": "AMPLA PLANOS DE SAUDE  LTDA (422720)",
+                "Cobertura": "Médico Hospitalar",
+                "Porte": "Pequeno",
+                "Classificação no Mês": 177,
+                "Classificação no Mês Anterior": 197.0,
+                "out/22": "0,00",
+                "set/22": "0,00",
+                "ago/22": "0,00",
+                "jul/22": "0,00",
+                "jun/22": "0,00",
+                "mai/22": "0,00",
+                "abr/22": "0,00",
+                "mar/22": "0,00",
+                "fev/22": "0,00",
+                "jan/22": "0,00",
+                "dez/21": "0,00",
+                "nov/21": "0,00",
+                "Competência": 202210,
+                "Data de atualização": "15/11/2022 05:40:45"
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 915,
+            "columns": 19,
+            "column_names": [
+                "Razão Social (Registro ANS)",
+                "Cobertura",
+                "Porte",
+                "Classificação no Mês",
+                "Classificação no Mês Anterior",
+                "out/22",
+                "set/22",
+                "ago/22",
+                "jul/22",
+                "jun/22",
+                "mai/22",
+                "abr/22",
+                "mar/22",
+                "fev/22",
+                "jan/22",
+                "dez/21",
+                "nov/21",
+                "Competência",
+                "Data de atualização"
+            ],
+            "dtypes": {
+                "Razão Social (Registro ANS)": "object",
+                "Cobertura": "object",
+                "Porte": "object",
+                "Classificação no Mês": "int64",
+                "Classificação no Mês Anterior": "float64",
+                "out/22": "object",
+                "set/22": "object",
+                "ago/22": "object",
+                "jul/22": "object",
+                "jun/22": "object",
+                "mai/22": "object",
+                "abr/22": "object",
+                "mar/22": "object",
+                "fev/22": "object",
+                "jan/22": "object",
+                "dez/21": "object",
+                "nov/21": "object",
+                "Competência": "int64",
+                "Data de atualização": "object"
+            },
+            "missing_values": 129,
+            "stats": {
+                "Razão Social (Registro ANS)": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 915,
+                    "sample_values": [
+                        " CAIXA DE ASSISTÊNCIA DO SETOR DE ENERGIA -EVIDA -ASSISTÊNCIA À SAÚDE (418374)",
+                        "ABERTTA SAÚDE - ASSOCIAÇÃO BENEFICENTE DOS EMPREGADOS DA ARCELORMITTAL NO BRASIL (314668)",
+                        "ADVANCE PLANOS DE SAÚDE LTDA (335657)",
+                        "AGROS - INSTITUTO UFV DE SEGURIDADE SOCIAL (368920)",
+                        "ALCANCE SAÚDE EIRELI (416975)"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": " CAIXA DE ASSISTÊNCIA DO SETOR DE ENERGIA -EVIDA -ASSISTÊNCIA À SAÚDE (418374)"
+                },
+                "Cobertura": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 2,
+                    "sample_values": [
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "Médico Hospitalar"
+                },
+                "Porte": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 4,
+                    "sample_values": [
+                        "Pequeno",
+                        "Médio",
+                        "Pequeno",
+                        "Pequeno",
+                        "Pequeno"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "Pequeno"
+                },
+                "Classificação no Mês": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 211,
+                    "sample_values": [
+                        80,
+                        206,
+                        51,
+                        177,
+                        177
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 87.98469945355191,
+                    "std": 71.82035839107671,
+                    "min": 1.0,
+                    "max": 211.0
+                },
+                "Classificação no Mês Anterior": {
+                    "type": "numeric",
+                    "null_count": 4,
+                    "unique_values": 204,
+                    "sample_values": [
+                        90.0,
+                        187.0,
+                        33.0,
+                        197.0,
+                        197.0
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 91.43798024149287,
+                    "std": 76.91741143778644,
+                    "min": 1.0,
+                    "max": 204.0
+                },
+                "out/22": {
+                    "type": "categorical",
+                    "null_count": 0,
+                    "unique_values": 389,
+                    "sample_values": [
+                        "   3,56",
+                        "   0,20",
+                        "   8,72",
+                        "0,00",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.3,
+                    "mode": "0,00"
+                },
+                "set/22": {
+                    "type": "categorical",
+                    "null_count": 4,
+                    "unique_values": 413,
+                    "sample_values": [
+                        "   4,13",
+                        "   0,41",
+                        "  17,33",
+                        "0,00",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.2,
+                    "mode": "0,00"
+                },
+                "ago/22": {
+                    "type": "categorical",
+                    "null_count": 4,
+                    "unique_values": 394,
+                    "sample_values": [
+                        "   4,33",
+                        "   0,41",
+                        "  12,89",
+                        "0,00",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.26,
+                    "mode": "0,00"
+                },
+                "jul/22": {
+                    "type": "categorical",
+                    "null_count": 6,
+                    "unique_values": 409,
+                    "sample_values": [
+                        "   1,83",
+                        "   0,20",
+                        "  12,79",
+                        "0,00",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.22,
+                    "mode": "0,00"
+                },
+                "jun/22": {
+                    "type": "categorical",
+                    "null_count": 7,
+                    "unique_values": 399,
+                    "sample_values": [
+                        "   3,61",
+                        "0,00",
+                        "   4,23",
+                        "   0,66",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.18,
+                    "mode": "0,00"
+                },
+                "mai/22": {
+                    "type": "categorical",
+                    "null_count": 8,
+                    "unique_values": 415,
+                    "sample_values": [
+                        "   6,20",
+                        "0,00",
+                        "  33,73",
+                        "   0,66",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.2,
+                    "mode": "0,00"
+                },
+                "abr/22": {
+                    "type": "categorical",
+                    "null_count": 10,
+                    "unique_values": 417,
+                    "sample_values": [
+                        "    6,72",
+                        "0,00",
+                        "   29,37",
+                        "    0,66",
+                        "0,00"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.24,
+                    "mode": "0,00"
+                },
+                "mar/22": {
+                    "type": "categorical",
+                    "null_count": 12,
+                    "unique_values": 423,
+                    "sample_values": [
+                        "    9,16",
+                        "    0,21",
+                        "   33,38",
+                        "0,00",
+                        "    2,24"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.32,
+                    "mode": "0,00"
+                },
+                "fev/22": {
+                    "type": "categorical",
+                    "null_count": 16,
+                    "unique_values": 413,
+                    "sample_values": [
+                        "   8,31",
+                        "   0,21",
+                        "   8,30",
+                        "0,00",
+                        "   2,25"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.22,
+                    "mode": "0,00"
+                },
+                "jan/22": {
+                    "type": "categorical",
+                    "null_count": 18,
+                    "unique_values": 410,
+                    "sample_values": [
+                        "   9,05",
+                        "   0,21",
+                        "  20,64",
+                        "   0,66",
+                        "   6,78"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.2,
+                    "mode": "0,00"
+                },
+                "dez/21": {
+                    "type": "categorical",
+                    "null_count": 19,
+                    "unique_values": 393,
+                    "sample_values": [
+                        "   5,02",
+                        "   0,21",
+                        "  28,76",
+                        "   1,32",
+                        "   4,54"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.32,
+                    "mode": "0,00"
+                },
+                "nov/21": {
+                    "type": "categorical",
+                    "null_count": 21,
+                    "unique_values": 415,
+                    "sample_values": [
+                        "   6,01",
+                        "   0,41",
+                        "  24,54",
+                        "   3,28",
+                        "   4,56"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.2,
+                    "mode": "0,00"
+                },
+                "Competência": {
+                    "type": "numeric",
+                    "null_count": 0,
+                    "unique_values": 1,
+                    "sample_values": [
+                        202210,
+                        202210,
+                        202210,
+                        202210,
+                        202210
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": 202210.0,
+                    "std": 0.0,
+                    "min": 202210.0,
+                    "max": 202210.0
+                },
+                "Data de atualização": {
+                    "type": "datetime_candidate",
+                    "null_count": 0,
+                    "unique_values": 1,
+                    "sample_values": [
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 1.0,
+                    "mode": "15/11/2022 05:40:45"
+                }
+            },
+            "path": "/app/runtime_artifacts/store/datasets/indice_geral_de_reclamacoes_ans_2022_efe6e126.csv",
+            "profile": {
+                "numeric_columns": [
+                    "Classificação no Mês Anterior",
+                    "Classificação no Mês",
+                    "Competência"
+                ],
+                "categorical_columns": [
+                    "nov/21",
+                    "dez/21",
+                    "jan/22",
+                    "fev/22",
+                    "mar/22",
+                    "abr/22",
+                    "mai/22",
+                    "jun/22",
+                    "jul/22",
+                    "set/22",
+                    "ago/22",
+                    "Razão Social (Registro ANS)",
+                    "out/22",
+                    "Porte",
+                    "Cobertura"
+                ],
+                "datetime_columns": [
+                    "Data de atualização"
+                ],
+                "recommended_target": "Data de atualização",
+                "recommended_inputs": [
+                    "Razão Social (Registro ANS)",
+                    "Cobertura",
+                    "Porte",
+                    "Classificação no Mês",
+                    "Classificação no Mês Anterior",
+                    "out/22",
+                    "set/22",
+                    "ago/22",
+                    "jul/22",
+                    "jun/22",
+                    "mai/22",
+                    "abr/22",
+                    "mar/22",
+                    "fev/22",
+                    "jan/22",
+                    "dez/21",
+                    "nov/21",
+                    "Competência"
+                ]
+            },
+            "parser_report": {
+                "file_name": "indice_geral_de_reclamacoes_ans_2022_efe6e126.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 915,
+                "columns": 19,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "nov/21",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 21,
+                    "null_ratio": 0.022951,
+                    "unique_count": 415,
+                    "unique_ratio": 0.453552,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.2,
+                    "sample_values": [
+                        "   6,01",
+                        "   0,41",
+                        "  24,54",
+                        "   3,28",
+                        "   4,56"
+                    ]
+                },
+                {
+                    "name": "dez/21",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 19,
+                    "null_ratio": 0.020765,
+                    "unique_count": 393,
+                    "unique_ratio": 0.429508,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.32,
+                    "sample_values": [
+                        "   5,02",
+                        "   0,21",
+                        "  28,76",
+                        "   1,32",
+                        "   4,54"
+                    ]
+                },
+                {
+                    "name": "jan/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 18,
+                    "null_ratio": 0.019672,
+                    "unique_count": 410,
+                    "unique_ratio": 0.448087,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.2,
+                    "sample_values": [
+                        "   9,05",
+                        "   0,21",
+                        "  20,64",
+                        "   0,66",
+                        "   6,78"
+                    ]
+                },
+                {
+                    "name": "fev/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 16,
+                    "null_ratio": 0.017486,
+                    "unique_count": 413,
+                    "unique_ratio": 0.451366,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.22,
+                    "sample_values": [
+                        "   8,31",
+                        "   0,21",
+                        "   8,30",
+                        "0,00",
+                        "   2,25"
+                    ]
+                },
+                {
+                    "name": "mar/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 12,
+                    "null_ratio": 0.013115,
+                    "unique_count": 423,
+                    "unique_ratio": 0.462295,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.32,
+                    "sample_values": [
+                        "    9,16",
+                        "    0,21",
+                        "   33,38",
+                        "0,00",
+                        "    2,24"
+                    ]
+                },
+                {
+                    "name": "abr/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 10,
+                    "null_ratio": 0.010929,
+                    "unique_count": 417,
+                    "unique_ratio": 0.455738,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.24,
+                    "sample_values": [
+                        "    6,72",
+                        "0,00",
+                        "   29,37",
+                        "    0,66",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "mai/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 8,
+                    "null_ratio": 0.008743,
+                    "unique_count": 415,
+                    "unique_ratio": 0.453552,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.2,
+                    "sample_values": [
+                        "   6,20",
+                        "0,00",
+                        "  33,73",
+                        "   0,66",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "jun/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 7,
+                    "null_ratio": 0.00765,
+                    "unique_count": 399,
+                    "unique_ratio": 0.436066,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.18,
+                    "sample_values": [
+                        "   3,61",
+                        "0,00",
+                        "   4,23",
+                        "   0,66",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "jul/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 6,
+                    "null_ratio": 0.006557,
+                    "unique_count": 409,
+                    "unique_ratio": 0.446995,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.22,
+                    "sample_values": [
+                        "   1,83",
+                        "   0,20",
+                        "  12,79",
+                        "0,00",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "set/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 4,
+                    "null_ratio": 0.004372,
+                    "unique_count": 413,
+                    "unique_ratio": 0.451366,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.2,
+                    "sample_values": [
+                        "   4,13",
+                        "   0,41",
+                        "  17,33",
+                        "0,00",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "ago/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 4,
+                    "null_ratio": 0.004372,
+                    "unique_count": 394,
+                    "unique_ratio": 0.430601,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.26,
+                    "sample_values": [
+                        "   4,33",
+                        "   0,41",
+                        "  12,89",
+                        "0,00",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "Classificação no Mês Anterior",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 4,
+                    "null_ratio": 0.004372,
+                    "unique_count": 204,
+                    "unique_ratio": 0.222951,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "float"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        90.0,
+                        187.0,
+                        33.0,
+                        197.0,
+                        197.0
+                    ]
+                },
+                {
+                    "name": "Razão Social (Registro ANS)",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 915,
+                    "unique_ratio": 1.0,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        " CAIXA DE ASSISTÊNCIA DO SETOR DE ENERGIA -EVIDA -ASSISTÊNCIA À SAÚDE (418374)",
+                        "ABERTTA SAÚDE - ASSOCIAÇÃO BENEFICENTE DOS EMPREGADOS DA ARCELORMITTAL NO BRASIL (314668)",
+                        "ADVANCE PLANOS DE SAÚDE LTDA (335657)",
+                        "AGROS - INSTITUTO UFV DE SEGURIDADE SOCIAL (368920)",
+                        "ALCANCE SAÚDE EIRELI (416975)"
+                    ]
+                },
+                {
+                    "name": "out/22",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 389,
+                    "unique_ratio": 0.425137,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.3,
+                    "sample_values": [
+                        "   3,56",
+                        "   0,20",
+                        "   8,72",
+                        "0,00",
+                        "0,00"
+                    ]
+                },
+                {
+                    "name": "Classificação no Mês",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 211,
+                    "unique_ratio": 0.230601,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        80,
+                        206,
+                        51,
+                        177,
+                        177
+                    ]
+                },
+                {
+                    "name": "Porte",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 4,
+                    "unique_ratio": 0.004372,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Pequeno",
+                        "Médio",
+                        "Pequeno",
+                        "Pequeno",
+                        "Pequeno"
+                    ]
+                },
+                {
+                    "name": "Cobertura",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 2,
+                    "unique_ratio": 0.002186,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar",
+                        "Médico Hospitalar"
+                    ]
+                },
+                {
+                    "name": "Competência",
+                    "dtype": "int64",
+                    "family": "numeric",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 1,
+                    "unique_ratio": 0.001093,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "int"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        202210,
+                        202210,
+                        202210,
+                        202210,
+                        202210
+                    ]
+                },
+                {
+                    "name": "Data de atualização",
+                    "dtype": "object",
+                    "family": "datetime_candidate",
+                    "null_count": 0,
+                    "null_ratio": 0.0,
+                    "unique_count": 1,
+                    "unique_ratio": 0.001093,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": false,
+                    "datetime_confidence": 1.0,
+                    "sample_values": [
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45",
+                        "15/11/2022 05:40:45"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [
+                    "Classificação no Mês Anterior",
+                    "Classificação no Mês",
+                    "Competência"
+                ],
+                "categorical": [
+                    "nov/21",
+                    "dez/21",
+                    "jan/22",
+                    "fev/22",
+                    "mar/22",
+                    "abr/22",
+                    "mai/22",
+                    "jun/22",
+                    "jul/22",
+                    "set/22",
+                    "ago/22",
+                    "Razão Social (Registro ANS)",
+                    "out/22",
+                    "Porte",
+                    "Cobertura"
+                ],
+                "datetime": [
+                    "Data de atualização"
+                ]
+            },
+            "top_warnings": [
+                "Column 'Razão Social (Registro ANS)' has high cardinality and may need filtering or encoding."
+            ]
+        }
+    }
+}

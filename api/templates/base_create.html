@@ -88,13 +88,14 @@
         padding: 1rem;
     }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-    .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.9rem; }
+    .support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0.9rem; align-items: start; }
     .support-card {
         background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 0.95rem;
+        min-width: 0;
     }
     .support-card h4 {
         margin: 0 0 0.35rem;
@@ -118,6 +119,8 @@
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         padding: 0.95rem;
+        min-width: 0;
+        overflow: auto;
     }
     .analysis-card h4 {
         margin-top: 0;
@@ -134,9 +137,10 @@
         padding: 0.75rem;
     }
     .analysis-kpi strong { display: block; color: var(--amanaje-primary); font-size: 1.1rem; }
-    .analysis-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    .analysis-table { width: 100%; min-width: 640px; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
     .analysis-table th, .analysis-table td { padding: 0.55rem; border-bottom: 1px solid var(--amanaje-primary-soft); text-align: left; vertical-align: top; }
     .analysis-table th { color: var(--amanaje-primary-strong); background: white; }
+    .analysis-table-wrap { max-width: 100%; overflow-x: auto; }
     .analysis-warning {
         margin-top: 0.75rem;
         padding: 0.7rem 0.8rem;
@@ -145,7 +149,7 @@
         color: #9a3412;
         border: 1px solid #fdba74;
     }
-    .editor-controls, .feature-controls, .model-controls, .analysis-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+    .editor-controls, .feature-controls, .model-controls, .analysis-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; align-items: flex-start; justify-content: flex-start; }
     .analysis-controls select { max-width: 320px; }
     .operation-switch { display: inline-flex; flex-wrap: wrap; gap: 0.6rem; }
     .operation-chip {
@@ -174,44 +178,331 @@
         white-space: nowrap;
         border: 0;
     }
+    .create-editor-shell {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 245, 246, 0.88));
+        box-shadow: 0 18px 40px var(--amanaje-primary-shadow);
+        min-width: 0;
+    }
+    .create-editor-center,
+    .panel-card,
+    .minimal-collapse {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.95);
+        min-width: 0;
+    }
+    .create-editor-center {
+        overflow: hidden;
+        box-shadow: 0 18px 38px rgba(230, 57, 70, 0.12);
+    }
+    .create-editor-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 0.8rem 1rem;
+        background: #1f1215;
+        color: #fee2e2;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .create-editor-file {
+        display: grid;
+        gap: 0.2rem;
+    }
+    .create-editor-file strong {
+        font-size: 0.92rem;
+    }
+    .create-editor-file span {
+        color: #fecaca;
+        font-size: 0.82rem;
+    }
     #editorContainer {
         width: 100%;
-        height: 520px;
-        min-height: 200px;
-        border: 1px solid var(--amanaje-primary-border);
-        border-radius: 14px;
+        height: 640px;
+        min-height: 360px;
         box-sizing: border-box;
         overflow: hidden;
     }
-    #executionOutput { margin-top: 1rem; padding: 0.75rem; background: var(--amanaje-code-bg); color: var(--amanaje-code-fg); border: 1px solid var(--amanaje-code-border); border-radius: 14px; display: none; }
-    #executionOutput.visible { display: block; }
-    #outputContent { white-space: pre-wrap; }
-    #output { white-space: pre-wrap; background: #f5f5f5; padding: 10px; margin-top: 10px; }
-    #editor #variablePanel,
-    #editor #metadataPanel {
-        background: #faf5ff;
-        border: 1px solid #e9d5ff;
+    .create-editor-status {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 0.7rem 1rem;
+        background: #241114;
+        color: #fecaca;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.84rem;
     }
-    #editor .variable-item {
+    .create-editor-status strong {
+        color: #fff1f2;
+    }
+    .create-editor-status span {
+        color: #fca5a5;
+    }
+    .create-editor-panels {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: start;
+    }
+    .panel-card {
+        display: grid;
+        gap: 0.85rem;
+        padding: 1rem;
+        overflow: auto;
+    }
+    .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .panel-head h3 {
+        margin: 0.25rem 0 0;
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+        color: var(--amanaje-text-strong);
+    }
+    .panel-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        font-size: 0.74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .terminal-output {
+        min-height: 170px;
+        max-height: 340px;
+        overflow: auto;
+        padding: 1rem;
+        border-radius: 14px;
+        border: 1px solid var(--amanaje-code-border);
+        background: var(--amanaje-code-bg);
+        color: var(--amanaje-code-fg);
+        font-family: var(--amanaje-code-font);
+        font-size: 0.88rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .terminal-output.empty {
+        color: #94a3b8;
+        font-style: italic;
+    }
+    .output-line {
+        margin: 0 0 0.8rem;
+    }
+    .output-line:last-child {
+        margin-bottom: 0;
+    }
+    .output-title {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: #fca5a5;
+        font-weight: 800;
+    }
+    .output-line.error .output-title {
+        color: #fecaca;
+    }
+    .variables-grid,
+    .problems-list,
+    .outline-list {
+        display: grid;
+        gap: 0.65rem;
+    }
+    .variable-card,
+    .problem-item,
+    .outline-item {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.96);
+    }
+    .variable-card {
+        display: grid;
+        gap: 0.45rem;
+        padding: 0.8rem;
+    }
+    .variable-card strong {
+        color: var(--amanaje-text-strong);
+    }
+    .variable-meta {
+        color: var(--amanaje-muted);
+        font-size: 0.8rem;
+    }
+    .variable-preview {
+        margin: 0;
+        padding: 0.7rem;
+        border-radius: 12px;
+        background: var(--amanaje-surface-2);
+        color: var(--amanaje-muted);
+        font-family: var(--amanaje-code-font);
+        font-size: 0.83rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .problem-item,
+    .outline-item,
+    .mini-btn,
+    .side-link {
+        appearance: none;
+        padding: 0.65rem 0.75rem;
+        color: var(--amanaje-text-strong);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .mini-btn,
+    .side-link {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
         background: white;
-        border-left-color: #6d28d9;
+        color: var(--amanaje-primary-strong);
+        font-weight: 700;
     }
-    #editor .variable-item .var-name {
-        color: #581c87;
+    .problem-item:hover,
+    .outline-item:hover,
+    .mini-btn:hover,
+    .side-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px var(--amanaje-primary-shadow);
     }
-    #editor .variable-item .var-type {
-        background: #ede9fe;
-        color: #5b21b6;
+    .problem-item.error {
+        border-color: #fecaca;
+        background: #fef2f2;
     }
-    #editor .variable-item .var-value {
-        color: #6b7280;
+    .problem-item.warning {
+        border-color: #fde68a;
+        background: #fffbeb;
     }
-    #editor .metadata-table th {
-        background: #6d28d9;
-        color: #fff;
+    .problem-item.info {
+        border-color: #fecdd3;
+        background: #fff1f2;
     }
-    #editor .metadata-key {
-        color: #581c87;
+    .empty-state {
+        padding: 0.85rem;
+        border-radius: 12px;
+        border: 1px dashed var(--amanaje-primary-border);
+        background: var(--amanaje-primary-softer);
+        color: var(--amanaje-muted);
+    }
+    .metadata-table {
+        width: 100%;
+        min-width: 620px;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .metadata-table th,
+    .metadata-table td {
+        padding: 0.7rem 0.8rem;
+        text-align: left;
+        border-bottom: 1px solid var(--amanaje-primary-border-soft);
+        vertical-align: top;
+    }
+    .metadata-table th {
+        background: var(--amanaje-primary-soft);
+        color: var(--amanaje-primary-strong);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .metadata-table td:last-child {
+        font-family: var(--amanaje-code-font);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    #metadataContent,
+    #variableList {
+        max-width: 100%;
+        min-width: 0;
+        overflow: auto;
+    }
+    .minimal-collapse {
+        display: grid;
+        gap: 0.75rem;
+        padding: 0.9rem;
+    }
+    .collapse-toggle {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+    }
+    .collapse-toggle h3 {
+        margin: 0;
+        color: var(--amanaje-text-strong);
+        font-family: var(--amanaje-heading-font);
+        font-size: 1.02rem;
+        line-height: 1.15;
+    }
+    .collapse-toggle span {
+        color: var(--amanaje-muted);
+        font-size: 0.85rem;
+    }
+    .collapse-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--amanaje-primary-strong);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    .collapse-body[hidden] {
+        display: none !important;
+    }
+    .create-editor-support-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .side-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        align-items: flex-start;
+    }
+    .editor-context-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .editor-registry-context select {
+        width: 100%;
+        min-height: 7rem;
     }
     .status-message { display: none; margin-top: 1rem; padding: 0.75rem; border-radius: 14px; }
     .status-message.success { background: var(--amanaje-primary-mid); color: var(--amanaje-primary-strong); border: 1px solid var(--amanaje-primary-border); }
@@ -319,15 +610,23 @@
         line-height: 1.15;
     }
     @media (max-width: 900px) {
-        .assistant-create-grid { grid-template-columns: 1fr; }
+        .assistant-create-grid,
+        .create-editor-panels,
+        .create-editor-support-row { grid-template-columns: 1fr; }
+        #editorContainer { height: 560px; }
+    }
+    @media (max-width: 760px) {
+        .create-editor-topline,
+        .create-editor-status,
+        .panel-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
 </style>
 {% endblock %}
 
 {% block extra_script %}
-<script src="{{ url_for('static', path='/js/form-utilities.js') }}?v=20260403-1"></script>
-<script src="{{ url_for('static', path='/js/editor-utilities.js') }}?v=20260403-1"></script>
-<script src="{{ url_for('static', path='/js/create-page.js') }}?v=20260403-1"></script>
 {% endblock %}
 
 {% block content %}
@@ -404,34 +703,143 @@
                 </div>
             </div>
 
-            <div id="editor">
-                <h3>Write your creation script here.</h3>
+            <div id="editor" class="create-editor-shell">
+                <div id="statusMessage" class="statusMessage status-message" aria-live="polite"></div>
 
+                <div class="create-editor-center">
+                    <div class="create-editor-topline">
+                        <div class="create-editor-file">
+                            <strong id="editorFileLabel">generated/create_workspace.py</strong>
+                            <span id="editorSubtitle">Ready for dataset and model creation scripts.</span>
+                        </div>
+                        <button type="button" id="btnCommandPalette" class="mini-btn">Command Palette</button>
+                    </div>
 
-                <div id="editorContainer"></div>
-                <br>
-                <div id="output"></div>
+                    <div id="editorContainer" aria-label="Create workspace code editor"></div>
 
-                <div id="statusMessage" class="statusMessage status-message"></div>
+                    <section class="minimal-collapse editor-registry-context">
+                        <button type="button" class="collapse-toggle" data-collapse-target="editorRegistryContextBody" aria-expanded="false">
+                            <div>
+                                <h3>Registry Context</h3>
+                                <span>Select datasets and models exposed to Python helpers.</span>
+                            </div>
+                            <span class="collapse-icon">+</span>
+                        </button>
+                        <div id="editorRegistryContextBody" class="collapse-body" hidden>
+                            <div class="editor-context-grid">
+                                <div class="form-group">
+                                    <label for="editorDatasetContext">Datasets</label>
+                                    <select id="editorDatasetContext" multiple size="4"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editorModelContext">Models</label>
+                                    <select id="editorModelContext" multiple size="4"></select>
+                                </div>
+                            </div>
+                            <div class="side-list">
+                                <button type="button" class="side-link" id="btnRefreshEditorContext">Refresh Context</button>
+                                <button type="button" class="side-link" id="btnInsertRegistrySnippet">Insert Helper Snippet</button>
+                                <button type="button" class="side-link" id="btnClearRegistryContext">Clear Selection</button>
+                            </div>
+                            <div class="empty-state" id="editorRegistryContextSummary">Registry helpers: load_dataset(), load_model(), list_datasets(), list_models().</div>
+                        </div>
+                    </section>
 
-                <div id="executionOutput">
-                    <div style="color: #569cd6; margin-bottom: 8px;">Execution Output</div>
-                    <div id="outputContent"></div>
+                    <div class="create-editor-status">
+                        <div><strong>Cursor</strong> <span id="cursorPositionLabel">Ln 1, Col 1</span></div>
+                        <div><strong>Document</strong> <span id="documentStatsLabel">0 lines | 0 chars</span></div>
+                        <div><strong>Runtime</strong> <span id="runtimeStateLabel">Idle</span></div>
+                    </div>
                 </div>
-                
-                <div id="variablePanel" style="display:none;">
-                    <h3>Extracted Variables</h3>
-                    <div id="variableList"></div>
+
+                <div class="create-editor-support-row">
+                    <section class="minimal-collapse">
+                        <button type="button" class="collapse-toggle" data-collapse-target="outlineCollapseBody" aria-expanded="false">
+                            <div>
+                                <h3>Outline</h3>
+                                <span>Top-level script structure.</span>
+                            </div>
+                            <span class="collapse-icon">+</span>
+                        </button>
+                        <div id="outlineCollapseBody" class="collapse-body" hidden>
+                            <div id="outlineList" class="outline-list">
+                                <div class="empty-state">Outline appears here.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="minimal-collapse">
+                        <button type="button" class="collapse-toggle" data-collapse-target="shortcutsCollapseBody" aria-expanded="false">
+                            <div>
+                                <h3>Workspace</h3>
+                                <span>Quick actions around execution results.</span>
+                            </div>
+                            <span class="collapse-icon">+</span>
+                        </button>
+                        <div id="shortcutsCollapseBody" class="collapse-body" hidden>
+                            <div class="side-list">
+                                <button type="button" class="side-link" id="btnFocusOutput">Output</button>
+                                <button type="button" class="side-link" id="btnFocusVariables">Variables</button>
+                                <button type="button" class="side-link" id="btnFocusMetadata">Metadata</button>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <!--
-                <div id="metadataPanel" style="display:none;">
-                    <h3>Parsed Metadata</h3>
-                    <p id="metadataHint" class="small-text">Run the script or parse the editor to build a save-ready document.</p>
-                    <div id="metadataContent"></div>
-                </div>
-                -->
+                <div class="create-editor-panels">
+                    <section class="panel-card" id="outputPanel">
+                        <div class="panel-head">
+                            <div>
+                                <span class="panel-label">Output</span>
+                                <h3>Execution Console</h3>
+                            </div>
+                            <button type="button" id="btnClearOutput" class="mini-btn">Clear</button>
+                        </div>
+                        <div id="executionOutput" class="terminal-output empty">Run the current script to inspect standard output and backend execution errors.</div>
+                    </section>
 
+                    <section class="panel-card" id="problemsPanel">
+                        <div class="panel-head">
+                            <div>
+                                <span class="panel-label">Problems</span>
+                                <h3>Diagnostics</h3>
+                            </div>
+                            <button type="button" id="btnClearProblems" class="mini-btn">Clear</button>
+                        </div>
+                        <div id="problemsList" class="problems-list">
+                            <div class="empty-state">No diagnostics yet.</div>
+                        </div>
+                    </section>
+
+                    <section class="panel-card" id="variablesPanel">
+                        <div class="panel-head">
+                            <div>
+                                <span class="panel-label">Variables</span>
+                                <h3>Workspace Values</h3>
+                            </div>
+                            <button type="button" id="btnSyncVariables" class="mini-btn">Refresh</button>
+                        </div>
+                        <div id="variablePanel">
+                            <div id="variableList" class="variables-grid">
+                                <div class="empty-state">Parse or run the script to collect variables.</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel-card" id="metadataPanel">
+                        <div class="panel-head">
+                            <div>
+                                <span class="panel-label">Metadata</span>
+                                <h3>Registry Preview</h3>
+                            </div>
+                            <button type="button" id="btnSyncMetadata" class="mini-btn">Refresh</button>
+                        </div>
+                        <p id="metadataHint" class="small-text">Fields such as <code>name</code>, <code>description</code>, <code>object_type</code>, and <code>path</code> are collected here.</p>
+                        <div id="metadataContent">
+                            <div class="empty-state">Define metadata variables in the script to preview a save-ready document.</div>
+                        </div>
+                    </section>
+                </div>
             </div>
 
             <div class="form-group" id="artifactFileGroup">
@@ -499,4 +907,8 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/form-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/editor-utilities.js') }}?v=20260403-1"></script>
+<script src="{{ url_for('static', path='/js/create-page.js') }}?v=20260403-1"></script>
+{% endblock %}

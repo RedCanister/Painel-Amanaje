@@ -11,17 +11,18 @@
         display: none;
     }
     .onnx-panel.active { display: block; }
-    .layout-grid, .summary-grid, .readiness-grid, .run-grid { display: grid; gap: 1rem; }
+    .layout-grid, .summary-grid, .readiness-grid, .run-grid, .netron-grid { display: grid; gap: 1rem; }
     .layout-grid { grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); }
     .summary-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .readiness-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-    .surface-card, .snapshot-card, .status-card, .run-card {
+    .netron-grid { grid-template-columns: minmax(0, 0.85fr) minmax(420px, 1.2fr); }
+    .surface-card, .snapshot-card, .status-card, .run-card, .netron-viewer-card {
         background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 16px;
         padding: 1rem;
     }
-    .surface-card h4, .snapshot-card h4, .status-card h4, .run-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
+    .surface-card h4, .snapshot-card h4, .status-card h4, .run-card h4, .netron-viewer-card h4 { margin-top: 0; color: var(--amanaje-primary-strong); }
     .form-group textarea { min-height: 150px; resize: vertical; font-family: Consolas, "Courier New", monospace; }
     .inline-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
     .actions-row, .toolbar-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
@@ -42,8 +43,16 @@
     .summary-table td { padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--amanaje-primary-soft); vertical-align: top; }
     .summary-table td:first-child { font-weight: 700; color: var(--amanaje-primary-strong); width: 38%; }
     .summary-table code { white-space: pre-wrap; word-break: break-word; }
+    .netron-frame {
+        width: 100%;
+        min-height: 640px;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: white;
+    }
+    .netron-frame.is-empty { display: none; }
     @media (max-width: 980px) {
-        .layout-grid { grid-template-columns: 1fr; }
+        .layout-grid, .netron-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -102,7 +111,7 @@
         <div class="actions-row">
             <button type="button" class="btn btn-primary" id="btnGlobalPrepareOnnx">Prepare ONNX Payload</button>
             <button type="button" class="btn btn-secondary" id="btnGlobalValidateOnnx">Validate Artifact</button>
-            <button type="button" class="btn btn-ghost" id="btnGlobalTrainOnnx">Train For ONNX</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalTrainOnnx">Train With ONNX Export Intent</button>
             <button type="button" class="btn btn-ghost" id="btnRefreshOnnxData">Refresh Registry</button>
         </div>
         <div id="onnxStatus"></div>
@@ -111,6 +120,7 @@
     <div class="workspace-tabs">
         <button class="workspace-tab active" type="button" data-tab="control">ONNX Control</button>
         <button class="workspace-tab" type="button" data-tab="artifact">Artifact Readiness</button>
+        <button class="workspace-tab" type="button" data-tab="netron">Netron Viewer</button>
         <button class="workspace-tab" type="button" data-tab="training">Training Handoff</button>
         <button class="workspace-tab" type="button" data-tab="runs">Validation and Runs</button>
     </div>
@@ -164,20 +174,44 @@
 
     <section class="onnx-panel" id="panel-training">
         <h3 class="panel-title">Training Handoff</h3>
-        <p class="panel-subtitle">Submit a training run through the existing training endpoint with ONNX as the requested export target and the selected backend framework as the actual trainer.</p>
+        <p class="panel-subtitle">Submit a training run through the existing training endpoint with ONNX export intent while the selected backend framework remains the actual trainer.</p>
 
         <div class="layout-grid">
             <div class="surface-card">
                 <h4>Handoff Summary</h4>
                 <div id="onnxTrainingSummary">Select a model and dataset before submitting training.</div>
                 <div class="actions-row" style="margin-top:1rem;">
-                    <button type="button" class="btn btn-primary" id="btnSubmitOnnxTraining">Submit ONNX Training</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitOnnxTraining">Train With ONNX Export Intent</button>
                     <button type="button" class="btn btn-ghost" id="btnRefreshOnnxRuns">Refresh Runs</button>
                 </div>
             </div>
             <div class="surface-card">
                 <h4>Training Result</h4>
                 <div id="onnxTrainingResult">No ONNX handoff run has been submitted from this page.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="onnx-panel" id="panel-netron">
+        <h3 class="panel-title">Netron Viewer</h3>
+        <p class="panel-subtitle">Open the selected registered artifact in a local Netron viewer. ONNX files are preferred, with PyTorch artifacts allowed when Netron can parse them.</p>
+
+        <div class="netron-grid">
+            <div class="netron-viewer-card">
+                <h4>Viewer Controls</h4>
+                <div id="onnxNetronSummary">Select a model to check Netron readiness.</div>
+                <div class="actions-row" style="margin-top:1rem;">
+                    <button type="button" class="btn btn-primary" id="btnOpenNetron">Start Viewer</button>
+                    <button type="button" class="btn btn-secondary" id="btnRefreshNetron">Refresh Status</button>
+                    <button type="button" class="btn btn-ghost" id="btnStopNetron">Stop Viewer</button>
+                    <a class="btn btn-ghost" id="onnxNetronOpenLink" href="#" target="_blank" rel="noopener" style="display:none;">Open In New Tab</a>
+                </div>
+                <div id="onnxNetronStatus"></div>
+            </div>
+            <div class="netron-viewer-card">
+                <h4>Graph Viewer</h4>
+                <div id="onnxNetronPlaceholder" class="helper-text">Start the local Netron viewer to inspect the selected model graph here.</div>
+                <iframe id="onnxNetronFrame" class="netron-frame is-empty" title="Local Netron model viewer"></iframe>
             </div>
         </div>
     </section>
@@ -207,6 +241,7 @@
     let inferenceCache = [];
     let latestModelSummary = {};
     let latestDatasetSummary = {};
+    let latestNetronStatus = {};
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -447,6 +482,87 @@
         window.AmanajeUI?.enhanceCollapsibles?.(el('onnxArtifactReadiness'));
     }
 
+    function renderNetronStatus(payload = {}) {
+        latestNetronStatus = payload || {};
+        const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+        const statusLabel = payload.viewer_active
+            ? 'viewer active'
+            : payload.viewable
+                ? 'ready'
+                : 'not viewable';
+        el('onnxNetronSummary').innerHTML = `
+            ${summaryRows([
+                ['Status', statusLabel],
+                ['Artifact', payload.artifact_name || '-'],
+                ['Extension', payload.artifact_extension || '-'],
+                ['Framework', payload.framework || '-'],
+                ['Preferred Format', payload.preferred_extension || '.onnx'],
+                ['Viewer URL', payload.viewer_url || '-']
+            ])}
+            ${warnings.length ? `<div class="alert alert-warning">${escapeHtml(warnings.join(' '))}</div>` : ''}
+        `;
+
+        const frame = el('onnxNetronFrame');
+        const placeholder = el('onnxNetronPlaceholder');
+        const openLink = el('onnxNetronOpenLink');
+        if (payload.viewer_url) {
+            frame.src = payload.viewer_url;
+            frame.classList.remove('is-empty');
+            placeholder.style.display = 'none';
+            openLink.href = payload.viewer_url;
+            openLink.style.display = 'inline-flex';
+        } else {
+            frame.removeAttribute('src');
+            frame.classList.add('is-empty');
+            placeholder.style.display = 'block';
+            openLink.href = '#';
+            openLink.style.display = 'none';
+        }
+    }
+
+    async function loadNetronStatus() {
+        if (!modelSelect.value) {
+            renderNetronStatus({ status: 'not_viewable', viewable: false, warnings: ['Select a model to check Netron readiness.'] });
+            return;
+        }
+        try {
+            const result = await fetchJson(`/onnx/netron/${encodeURIComponent(modelSelect.value)}/status`);
+            renderNetronStatus(result);
+        } catch (error) {
+            renderAlert('onnxNetronStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function openNetronViewer() {
+        if (!modelSelect.value) {
+            renderAlert('onnxNetronStatus', 'error', 'Select a model before opening Netron.');
+            return;
+        }
+        renderAlert('onnxNetronStatus', 'info', 'Starting local Netron viewer...');
+        try {
+            const result = await fetchJson(`/onnx/netron/${encodeURIComponent(modelSelect.value)}/open`, { method: 'POST' });
+            renderNetronStatus(result);
+            if (result.viewer_url) {
+                renderAlert('onnxNetronStatus', 'success', `Netron viewer is running for <code>${escapeHtml(result.artifact_name || 'artifact')}</code>.`);
+            } else {
+                renderAlert('onnxNetronStatus', 'warning', escapeHtml((result.warnings || ['Artifact is not viewable in Netron.']).join(' ')));
+            }
+        } catch (error) {
+            renderAlert('onnxNetronStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
+    async function stopNetronViewer() {
+        try {
+            const result = await fetchJson('/onnx/netron/stop', { method: 'POST' });
+            renderNetronStatus({ ...latestNetronStatus, viewer_active: false, viewer_url: null });
+            renderAlert('onnxNetronStatus', 'info', result.stopped ? 'Netron viewer stopped.' : 'No Netron viewer was running.');
+            await loadNetronStatus();
+        } catch (error) {
+            renderAlert('onnxNetronStatus', 'error', escapeHtml(error.message));
+        }
+    }
+
     async function loadModelSnapshot() {
         if (!modelSelect.value) {
             latestModelSummary = {};
@@ -540,11 +656,11 @@
 
     async function submitOnnxTraining() {
         if (!modelSelect.value) {
-            renderAlert('onnxTrainingResult', 'error', 'Select a model before submitting ONNX training.');
+            renderAlert('onnxTrainingResult', 'error', 'Select a model before submitting ONNX export-intent training.');
             return;
         }
         if (!datasetSelect.value) {
-            renderAlert('onnxTrainingResult', 'error', 'Select a dataset before submitting ONNX training.');
+            renderAlert('onnxTrainingResult', 'error', 'Select a dataset before submitting ONNX export-intent training.');
             return;
         }
         let parameters;
@@ -554,7 +670,7 @@
             renderAlert('onnxTrainingResult', 'error', `Runtime parameters must be valid JSON: ${escapeHtml(error.message)}`);
             return;
         }
-        renderAlert('onnxTrainingResult', 'info', 'Submitting ONNX training handoff...');
+        renderAlert('onnxTrainingResult', 'info', 'Submitting training run with ONNX export intent...');
         try {
             const result = await fetchJson(`/training/${encodeURIComponent(modelSelect.value)}`, {
                 method: 'POST',
@@ -568,7 +684,7 @@
                 })
             });
             window.AmanajeUI?.watchRun?.(result.run_id, { source: 'onnx-training' });
-            renderAlert('onnxTrainingResult', 'success', `ONNX training run queued: <code>${escapeHtml(result.run_id || '-')}</code>`);
+            renderAlert('onnxTrainingResult', 'success', `ONNX export-intent run queued: <code>${escapeHtml(result.run_id || '-')}</code>`);
             await loadRuns();
         } catch (error) {
             renderAlert('onnxTrainingResult', 'error', escapeHtml(error.message));
@@ -665,7 +781,7 @@
             training_backend: backendFrameworkSelect.value
         });
         renderContextSummary();
-        await Promise.all([loadModelSnapshot(), loadDatasetSnapshot(), loadRuns()]);
+        await Promise.all([loadModelSnapshot(), loadDatasetSnapshot(), loadNetronStatus(), loadRuns()]);
     }
 
     function setPanel(tabName) {
@@ -708,6 +824,9 @@
     el('btnPrepareOnnx').addEventListener('click', prepareOnnx);
     el('btnGlobalValidateOnnx').addEventListener('click', validateOnnx);
     el('btnValidateOnnx').addEventListener('click', validateOnnx);
+    el('btnOpenNetron').addEventListener('click', openNetronViewer);
+    el('btnRefreshNetron').addEventListener('click', loadNetronStatus);
+    el('btnStopNetron').addEventListener('click', stopNetronViewer);
     el('btnGlobalTrainOnnx').addEventListener('click', () => {
         setPanel('training');
         submitOnnxTraining();

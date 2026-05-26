@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "verbose": "0",
+        "bootstrap": "true",
+        "ccp_alpha": "0",
+        "criterion": "squared_error",
+        "oob_score": "false",
+        "warm_start": "true",
+        "max_features": "1",
+        "n_estimators": "60",
+        "min_samples_leaf": "1",
+        "min_samples_split": "2",
+        "min_impurity_decrease": "0",
+        "min_weight_fraction_leaf": "0"
+    },
+    "skipped_conflicts": {}
+}

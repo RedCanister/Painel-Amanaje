@@ -474,6 +474,9 @@ server.index_string = """
             .extension-stage, .empty-state, .extension-errors, .extension-render-error { background: white; border: 1px solid #d1fae5; border-radius: 12px; padding: 16px; }
             .extension-stage h2 { margin: 0 0 12px; color: #115e59; }
             .extension-error-json { overflow: auto; max-height: 280px; background: #f8fafc; padding: 12px; border-radius: 8px; }
+            .extension-metric-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 14px 0; }
+            .extension-metric { display: grid; gap: 4px; border: 1px solid #d1fae5; border-radius: 10px; padding: 12px; background: #f8fafc; }
+            .extension-metric .metric-value { font-size: 1.25rem; font-weight: 800; color: #0f766e; }
         </style>
     </head>
     <body>

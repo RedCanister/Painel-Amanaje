@@ -507,16 +507,21 @@
             const src = `${dashboardBaseUrl()}/embed?figure=${encodeURIComponent(encodedFigure)}&title=${encodeURIComponent(plot.title || "Plot")}`;
             return `
                 <div class="plotly-embed-shell">
-                    ${renderPlotlyFallback(plot)}
+                    <iframe
+                        class="plotly-frame"
+                        title="${escapeHtml(plot.title || "Plot")}"
+                        loading="lazy"
+                        src="${escapeHtml(src)}"
+                    ></iframe>
                     <div class="plotly-renderer-actions">
                         <a class="plotly-renderer-link" href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer">
                             Open interactive renderer
                         </a>
-                        <button type="button" class="plotly-renderer-button" data-plotly-frame-load="${escapeHtml(src)}" data-plot-title="${escapeHtml(plot.title || "Plot")}">
-                            Load embedded renderer
-                        </button>
                     </div>
-                    <div class="plotly-frame-target" data-plotly-frame-target="true"></div>
+                    <details class="plotly-local-fallback">
+                        <summary>Local fallback preview</summary>
+                        ${renderPlotlyFallback(plot)}
+                    </details>
                 </div>
             `;
         } catch (_error) {
@@ -737,25 +742,6 @@
                     description: lightboxTrigger.getAttribute("data-image-description") || "",
                     metadata,
                 });
-                return;
-            }
-            const plotlyFrameButton = target.closest("[data-plotly-frame-load]");
-            if (plotlyFrameButton) {
-                const src = plotlyFrameButton.getAttribute("data-plotly-frame-load") || "";
-                const shell = plotlyFrameButton.closest(".plotly-embed-shell");
-                const frameTarget = shell?.querySelector("[data-plotly-frame-target='true']");
-                if (src && frameTarget) {
-                    frameTarget.innerHTML = `
-                        <iframe
-                            class="plotly-frame"
-                            title="${escapeHtml(plotlyFrameButton.getAttribute("data-plot-title") || "Plot")}"
-                            loading="lazy"
-                            src="${escapeHtml(src)}"
-                        ></iframe>
-                    `;
-                    plotlyFrameButton.setAttribute("disabled", "disabled");
-                    plotlyFrameButton.textContent = "Renderer loaded";
-                }
                 return;
             }
             if (
@@ -1213,6 +1199,13 @@
         return `${type}${parts.length ? ` - ${parts.join(" - ")}` : ""}`;
     }
 
+    function runQueueLabel(run = {}) {
+        const diagnostics = run.queue_diagnostics || {};
+        const queue = diagnostics.queue || run.queue?.queue || run.queue?.name || "";
+        const position = diagnostics.position ? ` #${diagnostics.position}` : "";
+        return queue ? `${queue}${position}` : "";
+    }
+
     function renderWorkerSummary(workerRuntime = {}) {
         const target = document.getElementById("globalOperationWorkerSummary");
         if (!target) return;
@@ -1224,7 +1217,7 @@
             .join(" | ");
         target.dataset.status = status;
         target.textContent = status === "ok"
-            ? `Workers: ${summary.active_workers || 0} active | queued ${summary.queued_jobs || 0}${queueText ? ` | ${queueText}` : ""}`
+            ? `Workers: ${summary.live_workers || summary.active_workers || 0} live, ${summary.stale_workers || 0} stale | queued ${summary.queued_jobs || 0}${queueText ? ` | ${queueText}` : ""}`
             : `Workers: ${status}${workerRuntime.error ? ` | ${workerRuntime.error}` : ""}`;
     }
 
@@ -1246,6 +1239,8 @@
             const latestEvent = run.progress?.latest_event || run.error || "";
             const runId = String(run.run_id || "");
             const status = String(run.status || "queued");
+            const failure = run.failure?.message || "";
+            const queueLabel = runQueueLabel(run);
             const canPause = ["queued", "running"].includes(status);
             const canResume = status === "paused";
             const canCancel = ["queued", "running", "paused", "cancel_requested"].includes(status);
@@ -1258,12 +1253,14 @@
                     <div class="global-operation-meta">
                         <code>${escapeHtml(runId)}</code>
                         <span>${escapeHtml(status)}</span>
+                        ${queueLabel ? `<span>${escapeHtml(queueLabel)}</span>` : ""}
                     </div>
-                    ${latestEvent ? `<div class="global-operation-event">${escapeHtml(latestEvent)}</div>` : ""}
+                    ${failure ? `<div class="global-operation-event">${escapeHtml(failure)}</div>` : (latestEvent ? `<div class="global-operation-event">${escapeHtml(latestEvent)}</div>` : "")}
                     <div class="global-operation-actions">
                         ${canPause ? `<button type="button" data-run-control="pause" data-run-id="${escapeHtml(runId)}">Pause</button>` : ""}
                         ${canResume ? `<button type="button" data-run-control="resume" data-run-id="${escapeHtml(runId)}">Resume</button>` : ""}
                         ${canCancel ? `<button type="button" data-run-control="cancel" data-run-id="${escapeHtml(runId)}">Cancel</button>` : ""}
+                        <a href="/operations" class="global-operation-dismiss">Open</a>
                         <button type="button" class="global-operation-dismiss" data-run-dismiss="${escapeHtml(runId)}" aria-label="Dismiss operation">Dismiss</button>
                     </div>
                 </article>
@@ -1296,20 +1293,11 @@
         operationStackBusy = true;
         try {
             const watchedIds = getWatchedRunIds();
-            const [recent, workerRuntime] = await Promise.all([
-                fetchJson("/runs/list?limit=8", {}, { source: "operation-stack", allowError: true }),
-                fetchJson("/runtime/workers", {}, { source: "operation-stack", allowError: true }),
-            ]);
+            const summaryUrl = `/operations/summary?limit=12${watchedIds.length ? `&run_ids=${encodeURIComponent(watchedIds.join(","))}` : ""}`;
+            const recent = await fetchJson(summaryUrl, {}, { source: "operation-stack", allowError: true });
+            const workerRuntime = recent.worker_runtime || {};
             renderWorkerSummary(workerRuntime);
-            let watched = { runs: [] };
-            if (watchedIds.length) {
-                watched = await fetchJson(
-                    `/runs/list?run_ids=${encodeURIComponent(watchedIds.join(","))}&limit=30`,
-                    {},
-                    { source: "operation-stack", allowError: true },
-                );
-            }
-            const runs = mergeRuns(recent.runs || [], watched.runs || []);
+            const runs = mergeRuns(recent.runs || [], recent.active_runs || [], recent.recent_failures || []);
             renderOperationStack(runs);
             window.dispatchEvent(new CustomEvent("amanaje:operation-stack-update", { detail: { runs } }));
             const hasActive = runs.some((run) => ["queued", "running", "paused", "cancel_requested"].includes(String(run.status || "")));
@@ -1362,6 +1350,7 @@
         renderJsonExplorer,
         renderPlotlyTableSpec,
         applyPlotTheme,
+        dashboardBaseUrl,
         plotIdentityMetadata,
         renderPlotDeck,
         renderResultTabs,

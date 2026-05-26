@@ -1,0 +1,316 @@
+{
+  "run_id": "editor_execution_d662a2067431",
+  "run_type": "editor_execution",
+  "status": "failed",
+  "stage": "failed",
+  "created_at": "2026-05-25T02:25:54.789790",
+  "updated_at": "2026-05-25T02:26:03.505680",
+  "started_at": "2026-05-25T02:26:03.252549",
+  "completed_at": "2026-05-25T02:26:03.505680",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false,
+    "dataset_count": 0,
+    "model_count": 0,
+    "dataset_ids": [],
+    "model_ids": []
+  },
+  "parameters": {
+    "code_length": 1118,
+    "registry_context": {
+      "dataset_count": 0,
+      "model_count": 0,
+      "dataset_ids": [],
+      "model_ids": []
+    }
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "status": "error",
+    "variables": {},
+    "metadata": {},
+    "document": {
+      "name": "code_model_20260525_022603",
+      "description": "Code created in the editor",
+      "object_type": "code_model",
+      "size": 0.0,
+      "path": "editor",
+      "date": "2026-05-25T02:26:03.498555",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-25T02:26:03.498555"
+        }
+      ],
+      "variables": {},
+      "metadata": {},
+      "code": {
+        "script": "import pandas as pd\nimport torch\n\n\n# Generating a random sample of 100 1D numbers\ntensor_1d = torch.rand(100)\n\n# Generating a random sample of 10000 2D numbers\ntensor_2d = torch.rand(100, 100)\n\n# Generating a sample of 1000000 3D numbers\ntensor_3d = torch.rand(100, 100, 100)\n\n# Creating a dataframe with the generated tensors\ndf = pd.DataFrame({\n    tensor_2d\n})\n\n# Saving the dataframe into a .csv for registry\ncsv_text = df.to_csv(index=False)\n\n\n\n# Name of the dataset.\nname = \"tensor_dataset\"\n\n# Description of the dataset.\ndescription = \"Template dataset based on Tensors generated using PyTorch and Pandas\"\n\n# Object type. To define the payload to be used in the dataset.\nobject_type = \"dataset\"\n\n# Path of the dataset. Between, generated, model and dataset.\npath = \"generated/numerical_tensor_dataset.csv\"\n\n# Version of the dataset. To be used in further updates on the dataset.\nversion = 1\n\n# Dataset type. Between, numerical, categorical, time series, image, videoaudio, text, mixed.\ndataset_type = \"numerical_dataset\"\n\n# Connection string. To be used in datasets that use live updates.\nconnection_string = \"\"",
+        "language": "python",
+        "line_count": 43
+      }
+    },
+    "summary": {
+      "variable_count": 0,
+      "defined_name_count": 12,
+      "defined_names": [
+        "tensor_1d",
+        "tensor_2d",
+        "tensor_3d",
+        "df",
+        "csv_text",
+        "name",
+        "description",
+        "object_type",
+        "path",
+        "version",
+        "dataset_type",
+        "connection_string"
+      ],
+      "has_error": true
+    },
+    "stdout": "",
+    "stderr": "",
+    "error": "Traceback (most recent call last):\n  File \"/app/app/utils/editor_execution.py\", line 109, in execute_editor_code\n    exec(normalized_code, namespace)\n  File \"<string>\", line 15, in <module>\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/frame.py\", line 871, in __init__\n    mgr = ndarray_to_mgr(\n          ^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 319, in ndarray_to_mgr\n    values = _prep_ndarraylike(values, copy=copy_on_sanitize)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 582, in _prep_ndarraylike\n    return _ensure_2d(values)\n           ^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 592, in _ensure_2d\n    raise ValueError(f\"Must pass 2-d input. shape={values.shape}\")\nValueError: Must pass 2-d input. shape=(1, 100, 100)\n"
+  },
+  "error": "Traceback (most recent call last):\n  File \"/app/app/utils/editor_execution.py\", line 109, in execute_editor_code\n    exec(normalized_code, namespace)\n  File \"<string>\", line 15, in <module>\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/frame.py\", line 871, in __init__\n    mgr = ndarray_to_mgr(\n          ^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 319, in ndarray_to_mgr\n    values = _prep_ndarraylike(values, copy=copy_on_sanitize)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 582, in _prep_ndarraylike\n    return _ensure_2d(values)\n           ^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 592, in _ensure_2d\n    raise ValueError(f\"Must pass 2-d input. shape={values.shape}\")\nValueError: Must pass 2-d input. shape=(1, 100, 100)\n",
+  "progress": {
+    "current_stage": "failed",
+    "latest_event": "Editor execution completed with an error.",
+    "latest_timestamp": "2026-05-25T02:26:03.505680",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T02:25:54.789790",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-25T02:25:54.822953",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-25T02:26:03.252549",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-25T02:26:03.505680",
+        "message": "Editor execution completed with an error."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T02:25:54.789790",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-25T02:25:54.822953",
+      "message": "Editor execution enqueued on amanaje:interactive."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-25T02:26:03.252549",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-25T02:26:03.505680",
+      "message": "Editor execution completed with an error."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 20,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-25T02:25:54.789790",
+        "stream": "system",
+        "stage": "queued",
+        "message": "editor_execution run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-25T02:25:54.822953",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-25T02:26:03.252549",
+        "stream": "system",
+        "stage": "executing",
+        "message": "Editor execution started."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-25T02:26:03.505680",
+        "stream": "system",
+        "stage": "failed",
+        "message": "Editor execution completed with an error."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-25T02:26:03.527379",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "Traceback (most recent call last):"
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-25T02:26:03.527401",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/editor_execution.py\", line 109, in execute_editor_code"
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-05-25T02:26:03.527409",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    exec(normalized_code, namespace)"
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-05-25T02:26:03.527418",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"<string>\", line 15, in <module>"
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-05-25T02:26:03.527427",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/frame.py\", line 871, in __init__"
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-05-25T02:26:03.527443",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    mgr = ndarray_to_mgr("
+      },
+      {
+        "index": 10,
+        "timestamp": "2026-05-25T02:26:03.527452",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "          ^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 11,
+        "timestamp": "2026-05-25T02:26:03.527459",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 319, in ndarray_to_mgr"
+      },
+      {
+        "index": 12,
+        "timestamp": "2026-05-25T02:26:03.527466",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    values = _prep_ndarraylike(values, copy=copy_on_sanitize)"
+      },
+      {
+        "index": 13,
+        "timestamp": "2026-05-25T02:26:03.527473",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 14,
+        "timestamp": "2026-05-25T02:26:03.527480",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 582, in _prep_ndarraylike"
+      },
+      {
+        "index": 15,
+        "timestamp": "2026-05-25T02:26:03.527486",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return _ensure_2d(values)"
+      },
+      {
+        "index": 16,
+        "timestamp": "2026-05-25T02:26:03.527493",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 17,
+        "timestamp": "2026-05-25T02:26:03.527500",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 592, in _ensure_2d"
+      },
+      {
+        "index": 18,
+        "timestamp": "2026-05-25T02:26:03.527507",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    raise ValueError(f\"Must pass 2-d input. shape={values.shape}\")"
+      },
+      {
+        "index": 19,
+        "timestamp": "2026-05-25T02:26:03.527515",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "ValueError: Must pass 2-d input. shape=(1, 100, 100)"
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:interactive",
+    "job_id": "editor_execution_d662a2067431"
+  },
+  "rerun_payload": {
+    "run_type": "editor_execution",
+    "code": "import pandas as pd\nimport torch\n\n\n# Generating a random sample of 100 1D numbers\ntensor_1d = torch.rand(100)\n\n# Generating a random sample of 10000 2D numbers\ntensor_2d = torch.rand(100, 100)\n\n# Generating a sample of 1000000 3D numbers\ntensor_3d = torch.rand(100, 100, 100)\n\n# Creating a dataframe with the generated tensors\ndf = pd.DataFrame({\n    tensor_2d\n})\n\n# Saving the dataframe into a .csv for registry\ncsv_text = df.to_csv(index=False)\n\n\n\n# Name of the dataset.\nname = \"tensor_dataset\"\n\n# Description of the dataset.\ndescription = \"Template dataset based on Tensors generated using PyTorch and Pandas\"\n\n# Object type. To define the payload to be used in the dataset.\nobject_type = \"dataset\"\n\n# Path of the dataset. Between, generated, model and dataset.\npath = \"generated/numerical_tensor_dataset.csv\"\n\n# Version of the dataset. To be used in further updates on the dataset.\nversion = 1\n\n# Dataset type. Between, numerical, categorical, time series, image, videoaudio, text, mixed.\ndataset_type = \"numerical_dataset\"\n\n# Connection string. To be used in datasets that use live updates.\nconnection_string = \"\"",
+    "queue_payload": {
+      "code": "import pandas as pd\nimport torch\n\n\n# Generating a random sample of 100 1D numbers\ntensor_1d = torch.rand(100)\n\n# Generating a random sample of 10000 2D numbers\ntensor_2d = torch.rand(100, 100)\n\n# Generating a sample of 1000000 3D numbers\ntensor_3d = torch.rand(100, 100, 100)\n\n# Creating a dataframe with the generated tensors\ndf = pd.DataFrame({\n    tensor_2d\n})\n\n# Saving the dataframe into a .csv for registry\ncsv_text = df.to_csv(index=False)\n\n\n\n# Name of the dataset.\nname = \"tensor_dataset\"\n\n# Description of the dataset.\ndescription = \"Template dataset based on Tensors generated using PyTorch and Pandas\"\n\n# Object type. To define the payload to be used in the dataset.\nobject_type = \"dataset\"\n\n# Path of the dataset. Between, generated, model and dataset.\npath = \"generated/numerical_tensor_dataset.csv\"\n\n# Version of the dataset. To be used in further updates on the dataset.\nversion = 1\n\n# Dataset type. Between, numerical, categorical, time series, image, videoaudio, text, mixed.\ndataset_type = \"numerical_dataset\"\n\n# Connection string. To be used in datasets that use live updates.\nconnection_string = \"\"",
+      "registry_context": {
+        "datasets": [],
+        "models": [],
+        "summary": {
+          "dataset_count": 0,
+          "model_count": 0,
+          "dataset_ids": [],
+          "model_ids": []
+        }
+      }
+    }
+  },
+  "failure": {
+    "type": "EditorExecutionError",
+    "message": "Editor execution completed with an error.",
+    "traceback": "Traceback (most recent call last):\n  File \"/app/app/utils/editor_execution.py\", line 109, in execute_editor_code\n    exec(normalized_code, namespace)\n  File \"<string>\", line 15, in <module>\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/frame.py\", line 871, in __init__\n    mgr = ndarray_to_mgr(\n          ^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 319, in ndarray_to_mgr\n    values = _prep_ndarraylike(values, copy=copy_on_sanitize)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 582, in _prep_ndarraylike\n    return _ensure_2d(values)\n           ^^^^^^^^^^^^^^^^^^\n  File \"/opt/venv/lib/python3.11/site-packages/pandas/core/internals/construction.py\", line 592, in _ensure_2d\n    raise ValueError(f\"Must pass 2-d input. shape={values.shape}\")\nValueError: Must pass 2-d input. shape=(1, 100, 100)\n",
+    "worker_name": "amanaje-compose-interactive-interactive-amanaje-interactive-103814a01aa3-1-78847147",
+    "host_id": "compose-interactive",
+    "role": "interactive",
+    "queue": "amanaje:interactive",
+    "job_id": "editor_execution_d662a2067431",
+    "failed_at": "2026-05-25T02:26:03.499738"
+  }
+}

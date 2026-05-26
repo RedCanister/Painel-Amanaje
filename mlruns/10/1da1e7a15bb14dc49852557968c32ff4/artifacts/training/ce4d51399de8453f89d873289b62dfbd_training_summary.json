@@ -1,0 +1,81 @@
+{
+    "framework": "sklearn",
+    "metrics": {
+        "fit_duration_sec": 0.9187670030005393,
+        "eval_rmse": 0.2815080265296416,
+        "eval_mse": 0.07924676900061338,
+        "eval_mae": 0.24174504135052083,
+        "eval_mape": 267.12870638363086,
+        "eval_r2": -0.11996148907422527
+    },
+    "history": {},
+    "parameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "criterion": "squared_error",
+        "max_depth": null,
+        "max_features": 1.0,
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 60,
+        "n_jobs": null,
+        "oob_score": false,
+        "random_state": 42,
+        "verbose": 0,
+        "warm_start": true
+    },
+    "run_id": "1da1e7a15bb14dc49852557968c32ff4",
+    "artifact_paths": [],
+    "metadata": {
+        "fit_duration_sec": 0.9187670030005393,
+        "estimator_family": "regressor",
+        "estimator_capabilities": {
+            "fit": true,
+            "predict": true,
+            "predict_proba": false,
+            "fit_predict": false,
+            "transform": false,
+            "fit_transform": false,
+            "score": true,
+            "score_samples": false,
+            "decision_function": false
+        },
+        "fit": {
+            "fit_uses_target": true,
+            "multi_output": true,
+            "multi_output_strategy": "native"
+        },
+        "output": {
+            "output_method": "predict"
+        },
+        "metric_compatibility": {
+            "requested_metrics": [
+                "loss",
+                "mae",
+                "rmse",
+                "accuracy"
+            ],
+            "accepted_metrics": [
+                "mae",
+                "rmse"
+            ],
+            "ignored_incompatible_metrics": [
+                "loss",
+                "accuracy"
+            ],
+            "objective_metric": "accuracy",
+            "resolved_objective_metric": "rmse"
+        },
+        "accepted_estimator_params": {},
+        "ignored_estimator_params": {},
+        "valid_estimator_params": [],
+        "warnings": [
+            "Ignored incompatible metrics for regression: loss, accuracy"
+        ]
+    }
+}

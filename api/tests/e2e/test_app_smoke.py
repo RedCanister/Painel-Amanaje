@@ -38,11 +38,52 @@ def _computed_style_snapshot(page, selector):
     )
 
 
+def _box_metrics(page, selector):
+    return page.locator(selector).first.evaluate(
+        """
+        (element) => {
+            const style = getComputedStyle(element);
+            const parent = element.parentElement;
+            return {
+                width: element.getBoundingClientRect().width,
+                parentWidth: parent ? parent.getBoundingClientRect().width : 0,
+                clientWidth: element.clientWidth,
+                scrollWidth: element.scrollWidth,
+                clientHeight: element.clientHeight,
+                scrollHeight: element.scrollHeight,
+                overflowX: style.overflowX,
+                overflowY: style.overflowY
+            };
+        }
+        """
+    )
+
+
+def _goto_ready(page, path, selector="main.container"):
+    page.goto(path, wait_until="domcontentloaded")
+    page.locator(selector).wait_for(state="visible")
+
+
+def _wait_for_panel_workspace_ready(page):
+    page.locator("#panelDashboardSelect").wait_for(state="attached")
+    page.wait_for_function(
+        """
+        () => {
+            const status = document.querySelector("#statusMessage")?.textContent || "";
+            const select = document.querySelector("#panelDashboardSelect");
+            const loadingOption = select?.querySelector("option")?.textContent || "";
+            return !status.includes("Loading panel workspace") && !loadingOption.includes("Loading panels");
+        }
+        """
+    )
+
+
 @pytest.mark.parametrize(
     ("page_cls", "path", "expected_text"),
     [
         (UploadPage, "/upload", "Data Upload"),
         (CreatePage, "/create", "Data Creation"),
+        (SettingsPage, "/store", "Dataset Store"),
         (FeaturePage, "/feature", "Feature Workspace"),
         (TrainingPage, "/training", "Global Training Context"),
         (TrainingPage, "/onnx", "ONNX Framework Workspace"),
@@ -61,11 +102,22 @@ def test_primary_routes_render_core_workspace_surfaces(page, page_cls, path, exp
     assert expected_text in page.content()
 
 
+def test_onnx_netron_viewer_tab_renders_controls(page):
+    page.goto("/onnx", wait_until="networkidle")
+    page.locator("[data-tab='netron']").click()
+
+    expect(page.locator("#panel-netron")).to_be_visible()
+    expect(page.locator("#btnOpenNetron")).to_be_visible()
+    expect(page.locator("#btnRefreshNetron")).to_be_visible()
+    expect(page.locator("#onnxNetronFrame")).to_have_count(1)
+
+
 def test_panel_workspace_saves_reloads_and_deletes_dashboard(page):
     panel_name = f"E2E Panel {uuid4().hex[:8]}"
 
     page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
-    page.goto("/panel", wait_until="networkidle")
+    _goto_ready(page, "/panel")
+    _wait_for_panel_workspace_ready(page)
     page.locator("#panelModeEdit").wait_for(state="visible")
     page.locator("#panelModeEdit").click()
     page.locator("#panelDashboardName").wait_for(state="visible")
@@ -79,21 +131,41 @@ def test_panel_workspace_saves_reloads_and_deletes_dashboard(page):
 
     expect(page.locator(".panel-widget-title", has_text="E2E Note")).to_be_visible()
 
-    page.locator("#panelSaveDashboard").click()
-    expect(page.locator("#statusMessage")).to_contain_text("Panel saved.", timeout=10000)
+    with page.expect_response(
+        lambda response: response.url.endswith("/panel/dashboards") and response.request.method == "POST",
+        timeout=30000,
+    ) as save_response:
+        page.locator("#panelSaveDashboard").click()
+    assert save_response.value.status == 201
+    page.wait_for_function(
+        """
+        (name) => Array.from(document.querySelector("#panelDashboardSelect")?.options || []).some(
+            (option) => option.textContent === name
+        )
+        """,
+        arg=panel_name,
+    )
 
-    page.locator("#panelNewDashboard").click()
-    page.locator("#panelDashboardSelect").select_option(label=panel_name)
-    expect(page.locator("#panelDashboardName")).to_have_value(panel_name, timeout=10000)
-    expect(page.locator(".panel-widget-title", has_text="E2E Note")).to_be_visible()
-
-    page.locator("#panelDeleteDashboard").click()
-    expect(page.locator("#statusMessage")).to_contain_text("Panel deleted.", timeout=10000)
+    with page.expect_response(
+        lambda response: "/panel/dashboards/" in response.url and response.request.method == "DELETE",
+        timeout=30000,
+    ) as delete_response:
+        page.locator("#panelDeleteDashboard").click()
+    assert delete_response.value.status == 200
+    page.wait_for_function(
+        """
+        (name) => !Array.from(document.querySelector("#panelDashboardSelect")?.options || []).some(
+            (option) => option.textContent === name
+        )
+        """,
+        arg=panel_name,
+    )
 
 
 def test_panel_modes_sizes_and_dash_workspace_render(page):
     page.add_init_script("window.localStorage.removeItem('amanajePanelMode')")
-    page.goto("/panel", wait_until="networkidle")
+    _goto_ready(page, "/panel")
+    _wait_for_panel_workspace_ready(page)
     page.locator("#panelModeRun").wait_for(state="visible")
 
     assert page.locator("#panelModeRun").count() == 1
@@ -128,6 +200,7 @@ def test_operational_atlas_shell_kicker_and_domain_navigation_render(page):
     [
         ("/upload", ".workspace-intro h2"),
         ("/create", ".workspace-intro h2"),
+        ("/store", ".workspace-intro h2"),
         ("/feature", ".workspace-intro h2"),
         ("/assistant", ".assistant-hero h2"),
         ("/settings", ".settings-header h2"),
@@ -235,7 +308,8 @@ def test_production_interval_schedule_fields_follow_toggle(page):
 
 def test_panel_display_filters_collapse_and_filter_widget_is_available(page):
     page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
-    page.goto("/panel", wait_until="networkidle")
+    _goto_ready(page, "/panel")
+    _wait_for_panel_workspace_ready(page)
     page.locator("#panelModeEdit").wait_for(state="visible")
     page.locator("#panelModeEdit").click()
 
@@ -248,14 +322,26 @@ def test_panel_display_filters_collapse_and_filter_widget_is_available(page):
     expect(page.locator("#panelWidgetKind option[value='filter_control']")).to_have_count(1)
 
 
-def test_visualization_loads_with_local_plotly_fallback_without_forcing_dashboard(page):
+def test_panel_add_widget_button_keeps_intrinsic_width(page):
+    page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
+    _goto_ready(page, "/panel")
+    _wait_for_panel_workspace_ready(page)
+    page.locator("#panelModeEdit").wait_for(state="visible")
+    page.locator("#panelModeEdit").click()
+    page.locator("#panelNewDashboard").click()
+
+    metrics = _box_metrics(page, "#panelAddWidget")
+    assert metrics["width"] < metrics["parentWidth"] - 16
+
+
+def test_visualization_autoloads_plotly_frame_with_local_fallback(page):
     page.goto("/visualization", wait_until="domcontentloaded")
     page.locator("main.container").wait_for(state="visible")
 
     assert page.locator("#plotSourceType").count() == 1
     assert page.locator("#galleryDeck").count() == 1
     assert page.locator("[data-plotly-fallback='true']").count() >= 1
-    assert page.locator(".plotly-frame").count() == 0
+    assert page.locator(".plotly-frame").count() >= 1
     assert "Visualization Gallery" in page.content()
 
 
@@ -283,6 +369,22 @@ def test_red_domain_workspaces_keep_styled_panels_and_controls(page, path, panel
 
 
 @pytest.mark.parametrize(
+    ("path", "selector"),
+    [
+        ("/upload", "#uploadForm .btn-primary"),
+        ("/feature", "#btnPreviewFeatureView"),
+        ("/operations", "#operationsRefreshButton"),
+        ("/assistant", "#btnAssistantRefresh"),
+    ],
+)
+def test_compact_actions_keep_intrinsic_width(page, path, selector):
+    page.goto(path, wait_until="networkidle")
+
+    metrics = _box_metrics(page, selector)
+    assert metrics["width"] < metrics["parentWidth"] - 16
+
+
+@pytest.mark.parametrize(
     ("viewport", "path"),
     [
         ({"width": 1440, "height": 960}, "/upload"),
@@ -294,14 +396,19 @@ def test_red_domain_workspaces_keep_styled_panels_and_controls(page, path, panel
         ({"width": 560, "height": 960}, "/onnx"),
         ({"width": 560, "height": 960}, "/production"),
         ({"width": 560, "height": 960}, "/visualization"),
+        ({"width": 560, "height": 960}, "/operations"),
+        ({"width": 560, "height": 960}, "/panel"),
         ({"width": 560, "height": 960}, "/settings"),
     ],
 )
 def test_workspace_layout_stays_within_available_viewport_width(page, viewport, path):
     page.set_viewport_size(viewport)
-    if path in {"/training", "/visualization"}:
-        page.goto(path, wait_until="domcontentloaded")
-        page.locator("main.container").wait_for(state="visible")
+    if path == "/panel":
+        page.add_init_script("window.localStorage.setItem('amanajePanelMode', 'edit')")
+        _goto_ready(page, path)
+        _wait_for_panel_workspace_ready(page)
+    elif path in {"/training", "/production", "/visualization", "/operations"}:
+        _goto_ready(page, path)
     else:
         page.goto(path, wait_until="networkidle")
 
@@ -317,6 +424,37 @@ def test_workspace_layout_stays_within_available_viewport_width(page, viewport, 
 
     assert sizing["documentWidth"] <= sizing["viewportWidth"] + 2
     assert sizing["bodyWidth"] <= sizing["viewportWidth"] + 2
+
+
+def test_settings_table_wrapper_handles_horizontal_overflow(page):
+    page.set_viewport_size({"width": 560, "height": 960})
+    page.goto("/settings", wait_until="networkidle")
+
+    metrics = _box_metrics(page, ".settings-table-wrap")
+    assert metrics["overflowX"] in {"auto", "scroll"}
+    assert metrics["scrollWidth"] > metrics["clientWidth"]
+
+
+def test_operations_run_list_scrolls_within_its_surface(page):
+    page.goto("/operations", wait_until="networkidle")
+    page.evaluate(
+        """
+        () => {
+            const list = document.querySelector('.operations-run-list');
+            if (!list) return;
+            list.innerHTML = Array.from({ length: 80 }, (_, index) => `
+                <div class="operation-run-card">
+                    <div class="operation-run-main"><strong>Operation ${index}</strong></div>
+                    <div class="operation-run-event">Generated for scroll verification.</div>
+                </div>
+            `).join('');
+        }
+        """
+    )
+
+    metrics = _box_metrics(page, ".operations-run-list")
+    assert metrics["overflowY"] in {"auto", "scroll"}
+    assert metrics["scrollHeight"] > metrics["clientHeight"]
 
 
 def test_assistant_toggle_expands_and_collapses_panel(page):

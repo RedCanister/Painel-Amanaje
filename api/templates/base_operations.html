@@ -1,0 +1,500 @@
+{% extends "base_template.html" %}
+
+{% block title %}Operations Console - Painel Amanaje{% endblock %}
+
+{% block body_class %}blue-theme{% endblock %}
+
+{% block extra_css %}
+<style>
+    .operations-shell { display: grid; gap: 1rem; }
+    .operations-header,
+    .operations-toolbar,
+    .operations-status-strip,
+    .operations-low-level,
+    .operations-detail {
+        background: var(--amanaje-surface-2);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    .operations-header {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: start;
+    }
+    .operations-header h2 { margin: 0.2rem 0; color: var(--amanaje-primary-strong); }
+    .operations-header p { margin: 0; color: var(--amanaje-muted); max-width: 68rem; }
+    .operations-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: end;
+    }
+    .operations-toolbar > label {
+        flex: 1 1 12rem;
+        min-width: min(100%, 12rem);
+        max-width: 18rem;
+    }
+    .operations-toolbar > label:first-child {
+        flex-basis: 18rem;
+        max-width: 24rem;
+    }
+    .operations-toolbar label {
+        display: grid;
+        gap: 0.35rem;
+        color: var(--amanaje-primary-strong);
+        font-size: 0.84rem;
+        font-weight: 800;
+        min-width: 0;
+    }
+    .operations-toolbar input,
+    .operations-toolbar select {
+        min-height: 2.55rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 8px;
+        background: white;
+        color: var(--amanaje-text-strong);
+        padding: 0.55rem 0.65rem;
+    }
+    .operations-live-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex: 0 0 auto;
+        min-height: 2.55rem;
+        color: var(--amanaje-primary-strong);
+        font-weight: 800;
+    }
+    .operations-live-toggle input { width: auto; min-height: auto; }
+    .operations-status-strip {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .operations-kpi {
+        min-height: 5rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 8px;
+        background: var(--amanaje-primary-softer);
+        padding: 0.75rem;
+    }
+    .operations-kpi span {
+        display: block;
+        color: var(--amanaje-muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .operations-kpi strong {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--amanaje-primary-strong);
+        font-size: 1.15rem;
+        overflow-wrap: anywhere;
+    }
+    .operations-split {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: start;
+    }
+    .operations-lane {
+        background: white;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 12px;
+        overflow: hidden;
+        min-width: 0;
+    }
+    .operations-lane-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: center;
+        border-bottom: 1px solid var(--amanaje-primary-border-soft);
+        background: var(--amanaje-primary-softer);
+        padding: 0.85rem 1rem;
+    }
+    .operations-lane-header h3 { margin: 0; color: var(--amanaje-primary-strong); }
+    .operations-run-list {
+        display: grid;
+        gap: 0.65rem;
+        max-height: 38rem;
+        overflow: auto;
+        padding: 0.75rem;
+    }
+    .operation-run-card {
+        display: grid;
+        gap: 0.55rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.75rem;
+        cursor: pointer;
+    }
+    .operation-run-card.active {
+        border-color: var(--amanaje-primary);
+        box-shadow: inset 0 0 0 1px var(--amanaje-primary);
+    }
+    .operation-run-card.running,
+    .operation-run-card.queued { background: #fffbeb; border-color: #fde68a; }
+    .operation-run-card.completed { background: #ecfdf5; border-color: #a7f3d0; }
+    .operation-run-card.failed,
+    .operation-run-card.cancelled { background: #fef2f2; border-color: #fecaca; }
+    .operation-run-main,
+    .operation-run-meta,
+    .operation-run-actions {
+        display: flex;
+        gap: 0.55rem;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .operation-run-main strong { color: var(--amanaje-primary-strong); overflow-wrap: anywhere; }
+    .operation-run-meta { color: var(--amanaje-muted); font-size: 0.82rem; }
+    .operation-run-event { color: var(--amanaje-muted); font-size: 0.86rem; overflow-wrap: anywhere; }
+    .operation-run-actions { justify-content: flex-end; }
+    .operation-run-actions button,
+    .operations-detail-tabs button {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 999px;
+        background: white;
+        color: var(--amanaje-primary-strong);
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 800;
+        padding: 0.38rem 0.6rem;
+    }
+    .operation-run-actions button[disabled] {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+    .operation-run-actions button[data-operation-action="cancel"] {
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+    .operations-empty {
+        color: var(--amanaje-muted);
+        padding: 0.75rem;
+    }
+    .operations-detail-heading {
+        display: grid;
+        gap: 0.65rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        margin-bottom: 0.85rem;
+    }
+    .operations-detail-title h3 { margin: 0; color: var(--amanaje-primary-strong); }
+    .operations-detail-title p { margin: 0.35rem 0 0; color: var(--amanaje-muted); overflow-wrap: anywhere; }
+    .operations-detail-tabs {
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        margin-bottom: 0.85rem;
+    }
+    .operations-detail-tabs button.active {
+        background: var(--amanaje-primary);
+        color: white;
+    }
+    .operations-tab-panel[hidden] { display: none !important; }
+    .operations-terminal-shell {
+        overflow: hidden;
+        border: 1px solid #1f2937;
+        border-radius: 10px;
+        background: #0f172a;
+    }
+    .operations-terminal-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        background: #111827;
+        color: #e5e7eb;
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 0.6rem 0.75rem;
+    }
+    .operations-terminal-view {
+        max-height: 30rem;
+        min-height: 18rem;
+        overflow: auto;
+        color: #d1d5db;
+        font-family: var(--amanaje-code-font);
+        font-size: 0.82rem;
+        line-height: 1.45;
+        padding: 0.75rem;
+    }
+    .operations-terminal-line {
+        display: grid;
+        grid-template-columns: minmax(10rem, auto) minmax(5rem, auto) minmax(6rem, auto) minmax(0, 1fr);
+        gap: 0.55rem;
+        padding: 0.14rem 0;
+    }
+    .operations-terminal-time,
+    .operations-terminal-stage { color: #93c5fd; white-space: nowrap; }
+    .operations-terminal-stream { color: #86efac; white-space: nowrap; }
+    .operations-terminal-line.stderr .operations-terminal-stream,
+    .operations-terminal-line.stderr .operations-terminal-message { color: #fca5a5; }
+    .operations-terminal-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .operations-json-grid,
+    .operations-analysis-grid {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .operations-analysis-card {
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0.85rem;
+        min-width: 0;
+        overflow: auto;
+    }
+    .operations-analysis-card h4 { margin: 0 0 0.55rem; color: var(--amanaje-primary-strong); }
+    .operations-low-level {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr);
+        align-items: start;
+    }
+    .operations-low-panel {
+        display: grid;
+        gap: 0.65rem;
+        min-width: 0;
+        overflow: auto;
+    }
+    .operations-low-panel h3 {
+        margin: 0;
+        color: var(--amanaje-primary-strong);
+        font-size: 1rem;
+    }
+    .operations-job-list {
+        display: grid;
+        gap: 0.35rem;
+        margin: 0.65rem 0 0;
+        padding-left: 1.15rem;
+        color: var(--amanaje-muted);
+    }
+    .operations-job-list li {
+        display: flex;
+        gap: 0.55rem;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .operations-worker-card {
+        display: grid;
+        gap: 0.45rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 8px;
+        background: #f8fafc;
+        padding: 0.75rem;
+    }
+    .operations-worker-card.stale {
+        border-color: #fecaca;
+        background: #fef2f2;
+    }
+    .operations-worker-card > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+    }
+    .operations-worker-card strong { color: var(--amanaje-primary-strong); overflow-wrap: anywhere; }
+    .operations-failure-meta {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        color: var(--amanaje-muted);
+        font-size: 0.82rem;
+    }
+    .operations-failure-row {
+        display: grid;
+        gap: 0.25rem;
+        width: 100%;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #7f1d1d;
+        cursor: pointer;
+        padding: 0.65rem;
+        text-align: left;
+    }
+    .operations-failure-row span { overflow-wrap: anywhere; }
+    .operations-failure-card {
+        border-color: #fecaca;
+        background: #fff7f7;
+    }
+    .operations-traceback {
+        max-height: 30rem;
+        overflow: auto;
+        border-radius: 8px;
+        background: #111827;
+        color: #fecaca;
+        font-family: var(--amanaje-code-font);
+        font-size: 0.8rem;
+        line-height: 1.45;
+        padding: 0.8rem;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1080px) {
+        .operations-header,
+        .operations-toolbar,
+        .operations-split,
+        .operations-low-level,
+        .operations-detail-heading {
+            grid-template-columns: 1fr;
+        }
+        .operations-terminal-line {
+            grid-template-columns: 1fr;
+            gap: 0.1rem;
+            padding: 0.45rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="operations-shell">
+    <section class="operations-header">
+        <div>
+            <span class="workspace-eyebrow">Blue domain</span>
+            <h2>Operations Console</h2>
+            <p>Inspect every queued, running, paused, completed, and failed operation with CPU/GPU separation, run controls, analysis context, artifacts, and terminal-style execution output.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="operationsRefreshButton">Refresh</button>
+    </section>
+
+    <section class="operations-toolbar" aria-label="Operations filters">
+        <label for="operationsSearch">Search
+            <input id="operationsSearch" type="search" placeholder="run id, type, status, event">
+        </label>
+        <label for="operationsStatusFilter">Status
+            <select id="operationsStatusFilter">
+                <option value="">All statuses</option>
+                <option value="queued,running,paused,cancel_requested">Active</option>
+                <option value="completed">Completed</option>
+                <option value="failed,cancelled">Failed or cancelled</option>
+            </select>
+        </label>
+        <label for="operationsTypeFilter">Type
+            <select id="operationsTypeFilter">
+                <option value="">All types</option>
+                <option value="training">Training</option>
+                <option value="study">Study</option>
+                <option value="editor_execution">Editor</option>
+                <option value="assistant_operation">Assistant operation</option>
+                <option value="assistant">Assistant session</option>
+            </select>
+        </label>
+        <label for="operationsLimit">Limit
+            <input id="operationsLimit" type="number" min="10" max="500" step="10" value="120">
+        </label>
+        <label class="operations-live-toggle" for="operationsLiveToggle">
+            <input id="operationsLiveToggle" type="checkbox" checked>
+            Live
+        </label>
+        <span id="operationsUpdated" class="helper-text">Waiting for operations</span>
+    </section>
+
+    <section class="operations-status-strip" id="operationsStatusStrip">
+        <div class="operations-kpi"><span>Runs</span><strong id="operationsRunCount">0</strong></div>
+        <div class="operations-kpi"><span>CPU</span><strong id="operationsCpuCount">0</strong></div>
+        <div class="operations-kpi"><span>GPU</span><strong id="operationsGpuCount">0</strong></div>
+        <div class="operations-kpi"><span>Workers</span><strong id="operationsWorkerSummary">Checking</strong></div>
+        <div class="operations-kpi"><span>Queues</span><strong id="operationsQueueSummary">Checking</strong></div>
+        <div class="operations-kpi"><span>Accelerators</span><strong id="operationsAcceleratorSummary">Checking</strong></div>
+    </section>
+
+    <section class="operations-low-level" aria-label="Worker and queue diagnostics">
+        <div class="operations-low-panel">
+            <h3>Queue Backlog</h3>
+            <div id="operationsQueueBacklog">
+                <div class="operations-empty">Loading queue backlog.</div>
+            </div>
+        </div>
+        <div class="operations-low-panel">
+            <h3>Worker Hosts</h3>
+            <div id="operationsWorkerHosts">
+                <div class="operations-empty">Loading worker hosts.</div>
+            </div>
+        </div>
+        <div class="operations-low-panel">
+            <h3>Recent Failures</h3>
+            <div id="operationsRecentFailures">
+                <div class="operations-empty">Loading recent failures.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="operations-split" aria-label="CPU and GPU operations">
+        <div class="operations-lane" id="operationsCpuLane">
+            <div class="operations-lane-header">
+                <h3>CPU Operations</h3>
+                <span id="operationsCpuLabel" class="pill">0</span>
+            </div>
+            <div class="operations-run-list" id="operationsCpuList">
+                <div class="operations-empty">Loading CPU operations.</div>
+            </div>
+        </div>
+        <div class="operations-lane" id="operationsGpuLane">
+            <div class="operations-lane-header">
+                <h3>GPU Operations</h3>
+                <span id="operationsGpuLabel" class="pill">0</span>
+            </div>
+            <div class="operations-run-list" id="operationsGpuList">
+                <div class="operations-empty">Loading GPU operations.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="operations-detail" id="operationsDetail">
+        <div class="operations-detail-heading">
+            <div class="operations-detail-title">
+                <h3 id="operationsDetailTitle">Select an operation</h3>
+                <p id="operationsDetailSubtitle">Choose a run from either lane to inspect execution output and analysis.</p>
+            </div>
+            <div class="operation-run-actions" id="operationsDetailActions"></div>
+        </div>
+        <div class="operations-detail-tabs">
+            <button type="button" class="active" data-operations-tab="terminal">Terminal</button>
+            <button type="button" data-operations-tab="timeline">Timeline</button>
+            <button type="button" data-operations-tab="failure">Failure</button>
+            <button type="button" data-operations-tab="analysis">Analysis</button>
+            <button type="button" data-operations-tab="artifacts">Artifacts</button>
+            <button type="button" data-operations-tab="raw">Raw</button>
+        </div>
+
+        <div class="operations-tab-panel" id="operationsTabTerminal">
+            <div class="operations-terminal-shell">
+                <div class="operations-terminal-toolbar">
+                    <span>Terminal Execution</span>
+                    <span id="operationsTerminalStatus">No run selected</span>
+                </div>
+                <div id="operationsTerminal" class="operations-terminal-view" role="log" aria-live="polite">Select a run to stream terminal lines.</div>
+            </div>
+        </div>
+        <div class="operations-tab-panel" id="operationsTabTimeline" hidden>
+            <div id="operationsTimeline" class="operations-json-grid"></div>
+        </div>
+        <div class="operations-tab-panel" id="operationsTabFailure" hidden>
+            <div id="operationsFailure" class="operations-json-grid"></div>
+        </div>
+        <div class="operations-tab-panel" id="operationsTabAnalysis" hidden>
+            <div id="operationsAnalysis" class="operations-analysis-grid"></div>
+        </div>
+        <div class="operations-tab-panel" id="operationsTabArtifacts" hidden>
+            <div id="operationsArtifacts" class="operations-json-grid"></div>
+        </div>
+        <div class="operations-tab-panel" id="operationsTabRaw" hidden>
+            <div id="operationsRaw"></div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/operations-page.js') }}?v=20260520-operations"></script>
+{% endblock %}

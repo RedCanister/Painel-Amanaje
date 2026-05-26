@@ -66,14 +66,21 @@
         const flags = payload?.feature_flags || {};
         const debugMode = document.getElementById("settingsDebugMode");
         const assistantVisible = document.getElementById("settingsAssistantVisible");
+        const dashExtensionsEnabled = document.getElementById("settingsDashExtensionsEnabled");
         if (debugMode) debugMode.checked = Boolean(flags.debug_mode);
         if (assistantVisible) assistantVisible.checked = flags.assistant_visible !== false;
+        if (dashExtensionsEnabled) {
+            const enabled = Boolean(payload?.services?.dashboard_extensions_enabled);
+            dashExtensionsEnabled.checked = enabled;
+            dashExtensionsEnabled.dataset.originalValue = enabled ? "true" : "false";
+        }
     }
 
     function renderEnvironmentTable(payload) {
         const container = document.getElementById("settingsEnvironmentTable");
         if (!container) return;
-        const rows = Array.isArray(payload?.environment_variables) ? payload.environment_variables : [];
+        const rows = (Array.isArray(payload?.environment_variables) ? payload.environment_variables : [])
+            .filter((row) => row.key !== "AMANAJE_DASH_EXTENSIONS_ENABLED");
         if (!rows.length) {
             container.innerHTML = "No editable environment variables are configured.";
             return;
@@ -95,6 +102,7 @@
                         ${rows.map((row) => {
                             const savedValue = row.saved_override ?? "";
                             const effectiveValue = row.value ?? "";
+                            const inputType = row.redacted ? "password" : "text";
                             return `
                                 <tr>
                                     <td>
@@ -103,11 +111,12 @@
                                     </td>
                                     <td>
                                         <input
-                                            type="text"
+                                            type="${inputType}"
                                             data-settings-env-key="${escapeHtml(row.key)}"
                                             data-original-value="${escapeHtml(savedValue)}"
                                             value="${escapeHtml(savedValue)}"
                                             placeholder="Use process/default value"
+                                            autocomplete="off"
                                         >
                                     </td>
                                     <td><code>${escapeHtml(effectiveValue)}</code></td>
@@ -304,6 +313,14 @@
                 envOverrides[key] = nextValue || null;
             }
         });
+        document.querySelectorAll("[data-settings-env-toggle]").forEach((input) => {
+            const key = input.dataset.settingsEnvToggle;
+            const nextValue = input.checked ? "true" : "false";
+            const originalValue = input.dataset.originalValue || "false";
+            if (nextValue !== originalValue) {
+                envOverrides[key] = nextValue;
+            }
+        });
 
         return {
             feature_flags: {
@@ -324,6 +341,10 @@
         const previewPayload = {
             ...payload,
             feature_flags: featureFlags,
+            services: {
+                ...(payload.services || {}),
+                dashboard_extensions_enabled: Boolean(document.getElementById("settingsDashExtensionsEnabled")?.checked),
+            },
         };
         renderDebugState(previewPayload);
         window.AmanajeUI?.applyGlobalSettings?.(previewPayload);
@@ -351,6 +372,7 @@
         document.getElementById("settingsReload")?.addEventListener("click", loadSettings);
         document.getElementById("settingsDebugMode")?.addEventListener("change", previewFeatureFlags);
         document.getElementById("settingsAssistantVisible")?.addEventListener("change", previewFeatureFlags);
+        document.getElementById("settingsDashExtensionsEnabled")?.addEventListener("change", previewFeatureFlags);
         document.getElementById("settingsLogsRefresh")?.addEventListener("click", loadLogs);
         document.getElementById("settingsLogSource")?.addEventListener("change", loadLogs);
         document.getElementById("settingsLogTail")?.addEventListener("change", loadLogs);

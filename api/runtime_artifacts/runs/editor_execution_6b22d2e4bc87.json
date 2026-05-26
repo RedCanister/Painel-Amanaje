@@ -1,12 +1,12 @@
 {
   "run_id": "editor_execution_6b22d2e4bc87",
   "run_type": "editor_execution",
-  "status": "queued",
-  "stage": "queued",
+  "status": "completed",
+  "stage": "completed",
   "created_at": "2026-05-18T20:27:01.796425",
-  "updated_at": "2026-05-18T20:27:01.830267",
-  "started_at": null,
-  "completed_at": null,
+  "updated_at": "2026-05-21T22:25:36.556456",
+  "started_at": "2026-05-21T22:25:35.406689",
+  "completed_at": "2026-05-21T22:25:36.556456",
   "context": {
     "source": "editor",
     "gpu_allowed": false
@@ -14,14 +14,629 @@
   "parameters": {
     "code_length": 779
   },
-  "metrics": {},
+  "metrics": {
+    "variable_count": 23
+  },
   "artifacts": {},
-  "result": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "registry_context": {
+        "name": "registry_context",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{}",
+        "preview": "{}",
+        "metadata": null,
+        "raw_value": {}
+      },
+      "list_datasets": {
+        "name": "list_datasets",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+        "preview": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>"
+      },
+      "list_models": {
+        "name": "list_models",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+        "preview": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>"
+      },
+      "load_dataset": {
+        "name": "load_dataset",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+        "preview": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>"
+      },
+      "load_model": {
+        "name": "load_model",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+        "preview": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>"
+      },
+      "RandomForestClassifier": {
+        "name": "RandomForestClassifier",
+        "type": "ABCMeta",
+        "python_type": "abc.ABCMeta",
+        "kind": "object",
+        "value": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>",
+        "preview": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>"
+      },
+      "model": {
+        "name": "model",
+        "type": "RandomForestClassifier",
+        "python_type": "sklearn.ensemble._forest.RandomForestClassifier",
+        "kind": "object",
+        "value": "RandomForestClassifier(n_estimators=50, random_state=42)",
+        "preview": "RandomForestClassifier(n_estimators=50, random_state=42)",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "RandomForestClassifier(n_estimators=50, random_state=42)"
+      },
+      "buffer": {
+        "name": "buffer",
+        "type": "BytesIO",
+        "python_type": "_io.BytesIO",
+        "kind": "object",
+        "value": "<_io.BytesIO object at 0x74b9a40bfc40>",
+        "preview": "<_io.BytesIO object at 0x74b9a40bfc40>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<_io.BytesIO object at 0x74b9a40bfc40>"
+      },
+      "name": {
+        "name": "name",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "generated_model",
+        "preview": "generated_model",
+        "metadata": null,
+        "raw_value": "generated_model"
+      },
+      "description": {
+        "name": "description",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "Portable model artifact created in the editor",
+        "preview": "Portable model artifact created in the editor",
+        "metadata": null,
+        "raw_value": "Portable model artifact created in the editor"
+      },
+      "object_type": {
+        "name": "object_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "learning_model",
+        "preview": "learning_model",
+        "metadata": null,
+        "raw_value": "learning_model"
+      },
+      "path": {
+        "name": "path",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "generated/generated_model.joblib",
+        "preview": "generated/generated_model.joblib",
+        "metadata": null,
+        "raw_value": "generated/generated_model.joblib"
+      },
+      "version": {
+        "name": "version",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "1",
+        "preview": "1",
+        "metadata": null,
+        "raw_value": 1
+      },
+      "model_type": {
+        "name": "model_type",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "classification_model",
+        "preview": "classification_model",
+        "metadata": null,
+        "raw_value": "classification_model"
+      },
+      "parameters": {
+        "name": "parameters",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestClassifier\"}",
+        "preview": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestClassifier\"}",
+        "metadata": null,
+        "raw_value": {
+          "framework": "sklearn",
+          "estimator_class": "RandomForestClassifier"
+        }
+      },
+      "metrics": {
+        "name": "metrics",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"task\": \"classification\"}",
+        "preview": "{\"task\": \"classification\"}",
+        "metadata": null,
+        "raw_value": {
+          "task": "classification"
+        }
+      },
+      "reference_data": {
+        "name": "reference_data",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "sample_dataset.csv",
+        "preview": "sample_dataset.csv",
+        "metadata": null,
+        "raw_value": "sample_dataset.csv"
+      },
+      "input_features": {
+        "name": "input_features",
+        "type": "list",
+        "python_type": "builtins.list",
+        "kind": "sequence",
+        "value": "[\"feature_a\", \"feature_b\"]",
+        "preview": "[\"feature_a\", \"feature_b\"]",
+        "metadata": null,
+        "raw_value": [
+          "feature_a",
+          "feature_b"
+        ]
+      },
+      "output_features": {
+        "name": "output_features",
+        "type": "list",
+        "python_type": "builtins.list",
+        "kind": "sequence",
+        "value": "[\"target\"]",
+        "preview": "[\"target\"]",
+        "metadata": null,
+        "raw_value": [
+          "target"
+        ]
+      },
+      "is_trained": {
+        "name": "is_trained",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      },
+      "is_tested": {
+        "name": "is_tested",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      },
+      "is_deployed": {
+        "name": "is_deployed",
+        "type": "bool",
+        "python_type": "builtins.bool",
+        "kind": "boolean",
+        "value": "false",
+        "preview": "false",
+        "metadata": null,
+        "raw_value": false
+      },
+      "joblib_bytes": {
+        "name": "joblib_bytes",
+        "type": "str",
+        "python_type": "builtins.str",
+        "kind": "string",
+        "value": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4=",
+        "preview": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4=",
+        "metadata": null,
+        "raw_value": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4="
+      }
+    },
+    "metadata": {
+      "description": "Portable model artifact created in the editor",
+      "path": "generated/generated_model.joblib",
+      "metrics": {
+        "task": "classification"
+      },
+      "is_tested": false,
+      "parameters": {
+        "framework": "sklearn",
+        "estimator_class": "RandomForestClassifier"
+      },
+      "reference_data": "sample_dataset.csv",
+      "model_type": "classification_model",
+      "is_trained": false,
+      "output_features": [
+        "target"
+      ],
+      "name": "generated_model",
+      "input_features": [
+        "feature_a",
+        "feature_b"
+      ],
+      "object_type": "learning_model",
+      "is_deployed": false,
+      "version": 1
+    },
+    "document": {
+      "name": "generated_model",
+      "description": "Portable model artifact created in the editor",
+      "object_type": "learning_model",
+      "size": 0.0,
+      "path": "generated/generated_model.joblib",
+      "date": "2026-05-21T22:25:36.535128",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-21T22:25:36.535128"
+        }
+      ],
+      "variables": {
+        "registry_context": {
+          "name": "registry_context",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{}",
+          "preview": "{}",
+          "metadata": null,
+          "raw_value": {}
+        },
+        "list_datasets": {
+          "name": "list_datasets",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+          "preview": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x74b9a4908540>"
+        },
+        "list_models": {
+          "name": "list_models",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+          "preview": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_models at 0x74b9a49085e0>"
+        },
+        "load_dataset": {
+          "name": "load_dataset",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+          "preview": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x74b9a4908680>"
+        },
+        "load_model": {
+          "name": "load_model",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+          "preview": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_model at 0x74b9a4908720>"
+        },
+        "RandomForestClassifier": {
+          "name": "RandomForestClassifier",
+          "type": "ABCMeta",
+          "python_type": "abc.ABCMeta",
+          "kind": "object",
+          "value": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>",
+          "preview": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<class 'sklearn.ensemble._forest.RandomForestClassifier'>"
+        },
+        "model": {
+          "name": "model",
+          "type": "RandomForestClassifier",
+          "python_type": "sklearn.ensemble._forest.RandomForestClassifier",
+          "kind": "object",
+          "value": "RandomForestClassifier(n_estimators=50, random_state=42)",
+          "preview": "RandomForestClassifier(n_estimators=50, random_state=42)",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "RandomForestClassifier(n_estimators=50, random_state=42)"
+        },
+        "buffer": {
+          "name": "buffer",
+          "type": "BytesIO",
+          "python_type": "_io.BytesIO",
+          "kind": "object",
+          "value": "<_io.BytesIO object at 0x74b9a40bfc40>",
+          "preview": "<_io.BytesIO object at 0x74b9a40bfc40>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<_io.BytesIO object at 0x74b9a40bfc40>"
+        },
+        "name": {
+          "name": "name",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "generated_model",
+          "preview": "generated_model",
+          "metadata": null,
+          "raw_value": "generated_model"
+        },
+        "description": {
+          "name": "description",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "Portable model artifact created in the editor",
+          "preview": "Portable model artifact created in the editor",
+          "metadata": null,
+          "raw_value": "Portable model artifact created in the editor"
+        },
+        "object_type": {
+          "name": "object_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "learning_model",
+          "preview": "learning_model",
+          "metadata": null,
+          "raw_value": "learning_model"
+        },
+        "path": {
+          "name": "path",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "generated/generated_model.joblib",
+          "preview": "generated/generated_model.joblib",
+          "metadata": null,
+          "raw_value": "generated/generated_model.joblib"
+        },
+        "version": {
+          "name": "version",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "1",
+          "preview": "1",
+          "metadata": null,
+          "raw_value": 1
+        },
+        "model_type": {
+          "name": "model_type",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "classification_model",
+          "preview": "classification_model",
+          "metadata": null,
+          "raw_value": "classification_model"
+        },
+        "parameters": {
+          "name": "parameters",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestClassifier\"}",
+          "preview": "{\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestClassifier\"}",
+          "metadata": null,
+          "raw_value": {
+            "framework": "sklearn",
+            "estimator_class": "RandomForestClassifier"
+          }
+        },
+        "metrics": {
+          "name": "metrics",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"task\": \"classification\"}",
+          "preview": "{\"task\": \"classification\"}",
+          "metadata": null,
+          "raw_value": {
+            "task": "classification"
+          }
+        },
+        "reference_data": {
+          "name": "reference_data",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "sample_dataset.csv",
+          "preview": "sample_dataset.csv",
+          "metadata": null,
+          "raw_value": "sample_dataset.csv"
+        },
+        "input_features": {
+          "name": "input_features",
+          "type": "list",
+          "python_type": "builtins.list",
+          "kind": "sequence",
+          "value": "[\"feature_a\", \"feature_b\"]",
+          "preview": "[\"feature_a\", \"feature_b\"]",
+          "metadata": null,
+          "raw_value": [
+            "feature_a",
+            "feature_b"
+          ]
+        },
+        "output_features": {
+          "name": "output_features",
+          "type": "list",
+          "python_type": "builtins.list",
+          "kind": "sequence",
+          "value": "[\"target\"]",
+          "preview": "[\"target\"]",
+          "metadata": null,
+          "raw_value": [
+            "target"
+          ]
+        },
+        "is_trained": {
+          "name": "is_trained",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        },
+        "is_tested": {
+          "name": "is_tested",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        },
+        "is_deployed": {
+          "name": "is_deployed",
+          "type": "bool",
+          "python_type": "builtins.bool",
+          "kind": "boolean",
+          "value": "false",
+          "preview": "false",
+          "metadata": null,
+          "raw_value": false
+        },
+        "joblib_bytes": {
+          "name": "joblib_bytes",
+          "type": "str",
+          "python_type": "builtins.str",
+          "kind": "string",
+          "value": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4=",
+          "preview": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4=",
+          "metadata": null,
+          "raw_value": "gASVfwIAAAAAAACMGHNrbGVhcm4uZW5zZW1ibGUuX2ZvcmVzdJSMFlJhbmRvbUZvcmVzdENsYXNzaWZpZXKUk5QpgZR9lCiMCWVzdGltYXRvcpSMFXNrbGVhcm4udHJlZS5fY2xhc3Nlc5SMFkRlY2lzaW9uVHJlZUNsYXNzaWZpZXKUk5QpgZR9lCiMCWNyaXRlcmlvbpSMBGdpbmmUjAhzcGxpdHRlcpSMBGJlc3SUjAltYXhfZGVwdGiUTowRbWluX3NhbXBsZXNfc3BsaXSUSwKMEG1pbl9zYW1wbGVzX2xlYWaUSwGMGG1pbl93ZWlnaHRfZnJhY3Rpb25fbGVhZpRHAAAAAAAAAACMDG1heF9mZWF0dXJlc5ROjA5tYXhfbGVhZl9ub2Rlc5ROjAxyYW5kb21fc3RhdGWUTowVbWluX2ltcHVyaXR5X2RlY3JlYXNllEcAAAAAAAAAAIwMY2xhc3Nfd2VpZ2h0lE6MCWNjcF9hbHBoYZRHAAAAAAAAAACMDW1vbm90b25pY19jc3SUTowQX3NrbGVhcm5fdmVyc2lvbpSMBTEuNy4ylHVijAxuX2VzdGltYXRvcnOUSzKMEGVzdGltYXRvcl9wYXJhbXOUKGgLaA9oEGgRaBJoE2gUaBZoFWgYaBl0lIwJYm9vdHN0cmFwlIiMCW9vYl9zY29yZZSJjAZuX2pvYnOUTmgVSyqMB3ZlcmJvc2WUSwCMCndhcm1fc3RhcnSUiWgXTowLbWF4X3NhbXBsZXOUTmgLaAxoD05oEEsCaBFLAWgSRwAAAAAAAAAAaBOMBHNxcnSUaBROaBZHAAAAAAAAAABoGU5oGEcAAAAAAAAAAGgaaBt1Yi4="
+        }
+      },
+      "metadata": {
+        "description": "Portable model artifact created in the editor",
+        "path": "generated/generated_model.joblib",
+        "metrics": {
+          "task": "classification"
+        },
+        "is_tested": false,
+        "parameters": {
+          "framework": "sklearn",
+          "estimator_class": "RandomForestClassifier"
+        },
+        "reference_data": "sample_dataset.csv",
+        "model_type": "classification_model",
+        "is_trained": false,
+        "output_features": [
+          "target"
+        ],
+        "name": "generated_model",
+        "input_features": [
+          "feature_a",
+          "feature_b"
+        ],
+        "object_type": "learning_model",
+        "is_deployed": false,
+        "version": 1
+      },
+      "code": {
+        "script": "import base64\nimport io\nimport joblib\nfrom sklearn.ensemble import RandomForestClassifier\n\nmodel = RandomForestClassifier(n_estimators=50, random_state=42)\nbuffer = io.BytesIO()\njoblib.dump(model, buffer)\nbuffer.seek(0)\n\nname = \"generated_model\"\ndescription = \"Portable model artifact created in the editor\"\nobject_type = \"learning_model\"\npath = \"generated/generated_model.joblib\"\nversion = 1\nmodel_type = \"classification_model\"\nparameters = {\"framework\": \"sklearn\", \"estimator_class\": \"RandomForestClassifier\"}\nmetrics = {\"task\": \"classification\"}\nreference_data = \"sample_dataset.csv\"\ninput_features = [\"feature_a\", \"feature_b\"]\noutput_features = [\"target\"]\nis_trained = False\nis_tested = False\nis_deployed = False\njoblib_bytes = base64.b64encode(buffer.read()).decode(\"utf-8\")",
+        "language": "python",
+        "line_count": 25
+      }
+    },
+    "summary": {
+      "variable_count": 23,
+      "defined_name_count": 17,
+      "defined_names": [
+        "model",
+        "buffer",
+        "name",
+        "description",
+        "object_type",
+        "path",
+        "version",
+        "model_type",
+        "parameters",
+        "metrics",
+        "reference_data",
+        "input_features",
+        "output_features",
+        "is_trained",
+        "is_tested",
+        "is_deployed",
+        "joblib_bytes"
+      ],
+      "has_error": false
+    },
+    "stdout": "",
+    "stderr": "",
+    "error": null
+  },
   "error": null,
   "progress": {
-    "current_stage": "queued",
-    "latest_event": "Editor execution enqueued on amanaje:default.",
-    "latest_timestamp": "2026-05-18T20:27:01.830267",
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-21T22:25:36.556456",
     "timeline": [
       {
         "status": "queued",
@@ -34,6 +649,24 @@
         "stage": "queued",
         "timestamp": "2026-05-18T20:27:01.830267",
         "message": "Editor execution enqueued on amanaje:default."
+      },
+      {
+        "status": "cancelled",
+        "stage": "cancelled",
+        "timestamp": "2026-05-20T18:17:07.319189",
+        "message": "Run cancelled."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-21T22:25:35.406689",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-21T22:25:36.556456",
+        "message": "Editor execution completed."
       }
     ],
     "counters": {}
@@ -50,11 +683,55 @@
       "stage": "queued",
       "timestamp": "2026-05-18T20:27:01.830267",
       "message": "Editor execution enqueued on amanaje:default."
+    },
+    {
+      "status": "cancelled",
+      "stage": "cancelled",
+      "timestamp": "2026-05-20T18:17:07.319189",
+      "message": "Run cancelled."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-21T22:25:35.406689",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-21T22:25:36.556456",
+      "message": "Editor execution completed."
     }
   ],
   "queue": {
     "backend": "rq",
-    "queue": "amanaje:default",
-    "job_id": "editor_execution_6b22d2e4bc87"
+    "job_id": "editor_execution_6b22d2e4bc87",
+    "cancelled": false,
+    "job_status": "JobStatus.QUEUED",
+    "reason": "cooperative_cancel_required"
+  },
+  "control": {
+    "cancel_requested": true,
+    "cancel_requested_at": "2026-05-20T18:17:07.304132"
+  },
+  "terminal": {
+    "cap": 2000,
+    "next_index": 2,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-21T22:25:35.406689",
+        "stream": "system",
+        "stage": "executing",
+        "message": "Editor execution started."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-21T22:25:36.556456",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Editor execution completed."
+      }
+    ]
   }
 }

@@ -1,0 +1,32 @@
+{
+    "framework": "pytorch",
+    "artifact_format": ".pt",
+    "input_features": [
+        "transaction_id",
+        "timestamp",
+        "trader_species",
+        "cargo_type",
+        "origin_system",
+        "quantity_units",
+        "credits_total"
+    ],
+    "output_feature": "is_smuggled",
+    "task_type": "classification",
+    "label_mapping": {
+        "False": 0,
+        "True": 1
+    },
+    "accelerator": {
+        "torch_available": true,
+        "torch_version": "2.9.0+cu128",
+        "cuda_available": false,
+        "cuda_version": "12.8",
+        "device_count": 0,
+        "devices": [],
+        "fallback_policy": "cpu",
+        "requested_device": "auto",
+        "resolved_device": "cpu",
+        "fallback_applied": false,
+        "fallback_reason": "auto_selected_cpu"
+    }
+}

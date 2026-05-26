@@ -4,19 +4,22 @@
         "version": "0.3.0"
     },
     "mlflow": {
-        "tracking_uri": "file:///C:/Users/andma/Documents/Painel%20Amanaje/Painel-Amanaje/api/mlruns",
-        "registry_uri": "file:///C:/Users/andma/Documents/Painel%20Amanaje/Painel-Amanaje/api/mlruns"
+        "tracking_uri": "http://mlflow:5000",
+        "registry_uri": "http://mlflow:5000"
     },
     "artifacts": {
-        "runtime_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts",
-        "training_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\training",
-        "monitoring_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\monitoring",
-        "deployment_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\deployment",
-        "optuna_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\optuna",
-        "plots_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\plots",
-        "serving_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\serving",
-        "assistant_models_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\assistant_models",
-        "assistant_datasets_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\assistant_datasets",
-        "assistant_evals_dir": "C:\\Users\\andma\\Documents\\Painel Amanaje\\Painel-Amanaje\\api\\runtime_artifacts\\assistant_evals"
+        "runtime_dir": "/app/runtime_artifacts",
+        "training_dir": "/app/runtime_artifacts/training",
+        "monitoring_dir": "/app/runtime_artifacts/monitoring",
+        "deployment_dir": "/app/runtime_artifacts/deployment",
+        "optuna_dir": "/app/runtime_artifacts/optuna",
+        "plots_dir": "/app/runtime_artifacts/plots",
+        "serving_dir": "/app/runtime_artifacts/serving",
+        "exports_dir": "/app/runtime_artifacts/exports",
+        "features_dir": "/app/runtime_artifacts/features",
+        "store_dir": "/app/runtime_artifacts/store",
+        "assistant_models_dir": "/app/runtime_artifacts/assistant_models",
+        "assistant_datasets_dir": "/app/runtime_artifacts/assistant_datasets",
+        "assistant_evals_dir": "/app/runtime_artifacts/assistant_evals"
     }
 }

@@ -1,0 +1,98 @@
+{
+    "framework": "pytorch",
+    "task_type": "classification",
+    "model": {
+        "id": 11,
+        "name": "lightfm_recommendation",
+        "model_type": "supervised_model"
+    },
+    "dataset_profile": {
+        "input_features": [
+            "transaction_id",
+            "timestamp",
+            "trader_species",
+            "cargo_type",
+            "origin_system",
+            "quantity_units",
+            "credits_total"
+        ],
+        "output_feature": "is_smuggled",
+        "feature_count": 7,
+        "train_shape": [
+            40,
+            122
+        ],
+        "test_shape": [
+            10,
+            122
+        ],
+        "label_mapping": {
+            "False": 0,
+            "True": 1
+        }
+    },
+    "parameters": {
+        "epochs": 50,
+        "dropout": 0.1,
+        "framework": "pytorch",
+        "batch_size": 32,
+        "hidden_dim": 64,
+        "hidden_layers": 2,
+        "learning_rate": 0.001,
+        "input_features": [
+            "transaction_id",
+            "timestamp",
+            "trader_species",
+            "cargo_type",
+            "origin_system",
+            "quantity_units",
+            "credits_total"
+        ],
+        "output_features": [
+            "is_smuggled"
+        ],
+        "device": "auto",
+        "metrics_to_track": [
+            "loss",
+            "mae",
+            "rmse"
+        ],
+        "objective_metric": "accuracy",
+        "training_mode": "transfer",
+        "transfer_strategy": "auto",
+        "base_model_id": 11,
+        "base_artifact_path": "/models/lightfm_model.pkl",
+        "base_run_id": null
+    },
+    "extra": {
+        "predictions_preview": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ],
+        "evaluation_metrics": {
+            "eval_accuracy": 0.9,
+            "eval_precision": 0.45,
+            "eval_recall": 0.5,
+            "eval_f1": 0.47368421052631576
+        },
+        "transfer_learning": {
+            "training_mode": "transfer",
+            "transfer_strategy": "auto",
+            "base_model_id": 11,
+            "base_run_id": null,
+            "base_artifact_path": "/models/lightfm_model.pkl",
+            "dataset_snapshot_hash": "b4ac57cf5b9a0628d53319af87943d70719301c4e927a1242236cc30917bf07c",
+            "transfer_status": "incompatible_base_artifact",
+            "base_model_loaded": false,
+            "transfer_error": "Missing runtime dependency 'lightfm' required to load 'lightfm_model.pkl'."
+        }
+    }
+}

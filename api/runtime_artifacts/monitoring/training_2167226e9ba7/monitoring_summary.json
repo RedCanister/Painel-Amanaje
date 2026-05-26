@@ -1,0 +1,63 @@
+{
+    "job_id": "training_2167226e9ba7",
+    "drift_results": {
+        "Date": false,
+        "Open": false,
+        "High": false,
+        "Low": false,
+        "Close": false,
+        "Volume": false,
+        "Close_Return": false,
+        "Volatility": false,
+        "MA20": false,
+        "MA50": false,
+        "Momentum": false,
+        "RelVolume": false,
+        "RSI_Close": false,
+        "Williams_%R": false,
+        "CCI": false,
+        "Bollinger_%B": false,
+        "KeltnerC_%": false,
+        "MACD_lib": false,
+        "MACD_signal": false,
+        "MACD_Hist": false,
+        "Force_Index": false,
+        "Volume_Price_Trend": false,
+        "DLR": false,
+        "RSI_Over": false,
+        "RSI_Under": false,
+        "Williams_Over": false,
+        "Williams_Under": false,
+        "MACD_Over": false,
+        "MACD_Under": false,
+        "Data": false,
+        "time_idx": false,
+        "hl_center": false,
+        "hl_range": false,
+        "dayofweek": false,
+        "series_id_AAPL": false,
+        "series_id_AMD": false,
+        "series_id_NVDA": false,
+        "series_id_QCOM": false,
+        "series_id_nan": false
+    },
+    "prediction_drift": {
+        "detected": false,
+        "p_value": 1.0
+    },
+    "degradation_results": {
+        "train_loss": false,
+        "val_loss": false,
+        "eval_rmse": false,
+        "eval_mse": false,
+        "eval_mae": false,
+        "eval_mape": false,
+        "eval_r2": true
+    },
+    "summary": {
+        "drifted_features": 0,
+        "degraded_metrics": 1
+    },
+    "retrain_recommended": true,
+    "evaluated_at": "2026-05-24T04:53:12.654163"
+}

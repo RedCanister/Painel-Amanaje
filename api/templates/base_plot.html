@@ -17,6 +17,7 @@
     .source-grid { grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1.18fr); }
     .artifact-grid { grid-template-columns: minmax(0, 0.72fr) minmax(320px, 1.28fr); }
     .summary-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    .extension-grid { display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .surface-card, .status-card {
         background: var(--amanaje-surface-2);
         border: 1px solid var(--amanaje-primary-border-soft);
@@ -44,6 +45,32 @@
         border-radius: 16px;
         background: white;
     }
+    .extension-frame {
+        width: 100%;
+        min-height: min(820px, 76vh);
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 16px;
+        background: white;
+    }
+    .extension-card-button {
+        display: grid;
+        gap: 0.45rem;
+        width: 100%;
+        min-height: 8.5rem;
+        padding: 1rem;
+        border: 1px solid var(--amanaje-primary-border-soft);
+        border-radius: 14px;
+        background: var(--amanaje-surface);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .extension-card-button.active {
+        border-color: var(--amanaje-primary);
+        box-shadow: 0 12px 28px rgba(14, 116, 144, 0.12);
+    }
+    .extension-card-button strong { color: var(--amanaje-primary-strong); }
+    .extension-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
     .spec-output {
         min-height: 220px;
         max-height: 460px;
@@ -291,6 +318,7 @@
         <button class="workspace-tab" type="button" data-tab="generator">Generator</button>
         <button class="workspace-tab" type="button" data-tab="objects">Object Explorer</button>
         <button class="workspace-tab" type="button" data-tab="artifacts">Artifact Browser</button>
+        <button class="workspace-tab" type="button" data-tab="extensions">Custom Dashboards</button>
     </div>
 
     <section class="plot-panel active" id="panel-gallery">
@@ -457,6 +485,20 @@
             </div>
         </div>
     </section>
+
+    <section class="plot-panel" id="panel-extensions">
+        <div class="toolbar-row">
+            <div>
+                <h3 class="panel-title">Custom Dashboards</h3>
+                <p class="panel-subtitle">Embed trusted local Python Dash dashboards from the Visualization renderer without replacing the native plot gallery.</p>
+            </div>
+            <button type="button" class="btn btn-ghost" id="btnRefreshExtensions">Refresh Dashboards</button>
+        </div>
+        <div id="extensionStatus" class="helper-text">Custom dashboards have not been loaded yet.</div>
+        <div id="extensionCards" class="extension-grid" style="margin-top:1rem;"></div>
+        <iframe id="extensionFrame" class="extension-frame" title="Custom Visualization dashboard" style="display:none;margin-top:1rem;"></iframe>
+        <div id="extensionDetails" style="margin-top:1rem;"></div>
+    </section>
 </div>
 {% endblock %}
 
@@ -471,7 +513,9 @@ const plotState = {
     latestGeneratedSpec: null,
     latestObjectPayload: null,
     selectedGalleryIndex: null,
-    pins: { baseline: null, candidate: null }
+    pins: { baseline: null, candidate: null },
+    extensions: [],
+    selectedExtensionId: null
 };
 
 const plotSourceType = document.getElementById('plotSourceType');
@@ -771,6 +815,103 @@ function renderDetails(targetId, payload = {}, title = 'Source Payload') {
         ? AmanajeUI.renderCollapsibleJson(summary, { title, collapsed: true })
         : `<pre class="json-block">${escapeHtml(JSON.stringify(summary, null, 2))}</pre>`;
     window.AmanajeUI?.enhanceCollapsibles?.(target);
+}
+
+function dashboardRendererBaseUrl() {
+    if (window.AmanajeUI?.dashboardBaseUrl) return AmanajeUI.dashboardBaseUrl();
+    const configured = window.AmanajeSettings?.services?.plotly_dashboard_url;
+    if (configured) return String(configured).replace(/\/$/, '');
+    return `${window.location.protocol}//${window.location.hostname}:8050`;
+}
+
+function dashboardExtensionsEnabled() {
+    return window.AmanajeSettings?.services?.dashboard_extensions_enabled === true;
+}
+
+function syncDashboardExtensionControls() {
+    const enabled = dashboardExtensionsEnabled();
+    const panel = document.getElementById('panel-extensions');
+    const refreshButton = document.getElementById('btnRefreshExtensions');
+    if (panel) panel.dataset.extensionsEnabled = enabled ? 'true' : 'false';
+    if (refreshButton) refreshButton.disabled = !enabled;
+    return enabled;
+}
+
+function renderExtensionCards(selectedId = plotState.selectedExtensionId) {
+    const target = document.getElementById('extensionCards');
+    if (!plotState.extensions.length) {
+        target.innerHTML = '';
+        return;
+    }
+    target.innerHTML = plotState.extensions.map((extension) => `
+        <button type="button" class="extension-card-button ${String(extension.id) === String(selectedId) ? 'active' : ''}" data-extension-id="${escapeHtml(extension.id)}">
+            <strong>${escapeHtml(extension.title || extension.id)}</strong>
+            <span class="helper-text">${escapeHtml(extension.description || 'Custom Visualization dashboard.')}</span>
+            <span class="helper-text">${escapeHtml([extension.author, extension.version].filter(Boolean).join(' | '))}</span>
+            <span class="extension-tags">
+                ${(extension.tags || []).slice(0, 5).map((tag) => `<span class="scale-badge">${escapeHtml(tag)}</span>`).join('')}
+            </span>
+        </button>
+    `).join('');
+    target.querySelectorAll('[data-extension-id]').forEach((button) => {
+        button.addEventListener('click', () => selectVisualizationExtension(button.dataset.extensionId));
+    });
+}
+
+function selectVisualizationExtension(extensionId) {
+    const extension = plotState.extensions.find((item) => String(item.id) === String(extensionId));
+    const frame = document.getElementById('extensionFrame');
+    if (!extension) {
+        frame.style.display = 'none';
+        frame.removeAttribute('src');
+        return;
+    }
+    plotState.selectedExtensionId = extension.id;
+    renderExtensionCards(extension.id);
+    frame.style.display = 'block';
+    frame.src = `${dashboardRendererBaseUrl()}/extensions/${encodeURIComponent(extension.id)}`;
+    document.getElementById('extensionStatus').textContent = `Loaded custom dashboard: ${extension.title || extension.id}.`;
+}
+
+async function loadVisualizationExtensions() {
+    const statusTarget = document.getElementById('extensionStatus');
+    const frame = document.getElementById('extensionFrame');
+    if (!syncDashboardExtensionControls()) {
+        plotState.extensions = [];
+        renderExtensionCards();
+        frame.style.display = 'none';
+        frame.removeAttribute('src');
+        statusTarget.innerHTML = '<div class="alert alert-info">Custom dashboards are disabled in Settings.</div>';
+        return;
+    }
+    statusTarget.textContent = 'Checking Visualization renderer extensions...';
+    try {
+        const response = await fetch(`${dashboardRendererBaseUrl()}/extensions.json`, { cache: 'no-store' });
+        const payload = await response.json();
+        plotState.extensions = Array.isArray(payload.extensions) ? payload.extensions : [];
+        plotState.selectedExtensionId = plotState.extensions[0]?.id || null;
+        renderExtensionCards(plotState.selectedExtensionId);
+        renderDetails('extensionDetails', payload, 'Extension Registry Details');
+        if (!payload.enabled) {
+            frame.style.display = 'none';
+            frame.removeAttribute('src');
+            statusTarget.innerHTML = '<div class="alert alert-info">Custom dashboards are disabled. Enable AMANAJE_DASH_EXTENSIONS_ENABLED=true in the dashboard renderer when you want trusted local Python extensions.</div>';
+            return;
+        }
+        if (!plotState.extensions.length) {
+            frame.style.display = 'none';
+            frame.removeAttribute('src');
+            statusTarget.textContent = 'No enabled custom dashboards were found.';
+            return;
+        }
+        selectVisualizationExtension(plotState.selectedExtensionId);
+    } catch (error) {
+        plotState.extensions = [];
+        renderExtensionCards();
+        frame.style.display = 'none';
+        frame.removeAttribute('src');
+        statusTarget.innerHTML = `<div class="alert alert-info">Custom dashboards are unavailable from the Visualization renderer. Native plots remain usable. ${escapeHtml(error.message)}</div>`;
+    }
 }
 
 async function populatePlotOptions() {
@@ -1128,6 +1269,7 @@ document.getElementById('btnSyncArtifactFilters').addEventListener('click', sync
 document.getElementById('btnLoadArtifacts').addEventListener('click', loadArtifacts);
 document.getElementById('btnAnalyzeObjectPlots').addEventListener('click', analyzeObjectPlots);
 document.getElementById('btnAdoptObjectPlots').addEventListener('click', adoptObjectPlots);
+document.getElementById('btnRefreshExtensions').addEventListener('click', loadVisualizationExtensions);
 document.getElementById('generatorInputType').addEventListener('change', loadGeneratorExample);
 document.getElementById('galleryDeck').addEventListener('click', (event) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -1160,6 +1302,7 @@ document.getElementById('plotPinStrip').addEventListener('click', (event) => {
 document.addEventListener('DOMContentLoaded', async () => {
     loadGeneratorExample();
     generatePlotSpec();
+    loadVisualizationExtensions();
     await populatePlotOptions();
     await loadCentralGallery();
 });

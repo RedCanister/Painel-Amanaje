@@ -112,7 +112,8 @@
         flex-wrap: wrap;
         gap: 0.75rem;
         margin: 1rem 0;
-        align-items: flex-end;
+        align-items: flex-start;
+        justify-content: flex-start;
     }
     .analysis-controls select { max-width: 320px; min-width: min(100%, 240px); }
     .feature-list, .model-list { list-style: none; padding: 0; display: grid; gap: 0.75rem; }
@@ -122,6 +123,7 @@
         border-radius: 14px;
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
+        min-width: 0;
     }
     .feature-item h4, .model-item h4, .analysis-result h4 {
         margin: 0 0 0.45rem;
@@ -132,17 +134,19 @@
     }
     .feature-item p, .model-item p { color: #6b7280 !important; }
     .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; align-items: start; }
+    .analysis-result { overflow: auto; max-width: 100%; }
     .analysis-result table { background: white; border-radius: 14px; overflow: hidden; }
     .analysis-result table tr:first-child { background: var(--amanaje-primary-softer) !important; border-bottom: 2px solid var(--amanaje-primary-border-soft) !important; }
     .analysis-result table tr { border-bottom: 1px solid var(--amanaje-primary-soft) !important; }
     .analysis-result th, .analysis-result td { color: #1f2937; }
-    .support-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .support-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: start; }
     .support-card {
         background: white;
         border: 1px solid var(--amanaje-primary-border-soft);
         border-radius: 14px;
         box-shadow: 0 8px 20px rgba(230, 57, 70, 0.06);
         padding: 1rem;
+        min-width: 0;
     }
     .support-card h4 {
         margin: 0 0 0.45rem;
@@ -250,10 +254,15 @@
     }
     .analysis-table {
         width: 100%;
+        min-width: 640px;
         border-collapse: collapse;
         background: var(--amanaje-surface);
         border-radius: 14px;
         overflow: hidden;
+    }
+    .analysis-table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
     }
     .analysis-table th,
     .analysis-table td {
@@ -947,34 +956,36 @@ async function analyzeModel() {
                     <div class="analysis-kpi"><span>Recommended Target</span><strong>${escapeHtml(summary.profile?.recommended_target || '-')}</strong></div>
                 </div>
                 ${renderWarnings(summary.top_warnings || summary.parser_report?.warnings || [])}
-                <table class="analysis-table">
-                    <thead>
-                        <tr>
-                            <th>Column</th>
-                            <th>Family</th>
-                            <th>Nulls</th>
-                            <th>Unique</th>
-                            <th>Flags</th>
-                            <th>Samples</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${explorer.map((column) => `
+                <div class="analysis-table-wrap">
+                    <table class="analysis-table">
+                        <thead>
                             <tr>
-                                <td><strong>${escapeHtml(column.name)}</strong><br><span class="small-text">${escapeHtml(column.dtype)}</span></td>
-                                <td>${escapeHtml(column.family)}</td>
-                                <td>${escapeHtml(column.null_count)}</td>
-                                <td>${escapeHtml(column.unique_count)}</td>
-                                <td>${escapeHtml([
-                                    column.mixed_type ? 'mixed' : '',
-                                    column.high_cardinality ? 'high-cardinality' : '',
-                                    column.datetime_confidence >= 0.8 ? `date:${column.datetime_confidence}` : ''
-                                ].filter(Boolean).join(', ') || 'stable')}</td>
-                                <td>${escapeHtml((column.sample_values || []).join(', '))}</td>
+                                <th>Column</th>
+                                <th>Family</th>
+                                <th>Nulls</th>
+                                <th>Unique</th>
+                                <th>Flags</th>
+                                <th>Samples</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${explorer.map((column) => `
+                                <tr>
+                                    <td><strong>${escapeHtml(column.name)}</strong><br><span class="small-text">${escapeHtml(column.dtype)}</span></td>
+                                    <td>${escapeHtml(column.family)}</td>
+                                    <td>${escapeHtml(column.null_count)}</td>
+                                    <td>${escapeHtml(column.unique_count)}</td>
+                                    <td>${escapeHtml([
+                                        column.mixed_type ? 'mixed' : '',
+                                        column.high_cardinality ? 'high-cardinality' : '',
+                                        column.datetime_confidence >= 0.8 ? `date:${column.datetime_confidence}` : ''
+                                    ].filter(Boolean).join(', ') || 'stable')}</td>
+                                    <td>${escapeHtml((column.sample_values || []).join(', '))}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     }
@@ -992,22 +1003,24 @@ async function analyzeModel() {
                     <div class="analysis-kpi"><span>Metrics</span><strong>${escapeHtml(Object.keys(metrics).length)}</strong></div>
                 </div>
                 ${renderWarnings(manifest.warnings || [])}
-                <table class="analysis-table">
-                    <thead>
-                        <tr>
-                            <th>Capability</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(manifest.runtime_capabilities || {}).map(([key, value]) => `
+                <div class="analysis-table-wrap">
+                    <table class="analysis-table">
+                        <thead>
                             <tr>
-                                <td>${escapeHtml(key)}</td>
-                                <td>${escapeHtml(String(value))}</td>
+                                <th>Capability</th>
+                                <th>Status</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(manifest.runtime_capabilities || {}).map(([key, value]) => `
+                                <tr>
+                                    <td>${escapeHtml(key)}</td>
+                                    <td>${escapeHtml(String(value))}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
                 <div class="json-block" style="margin-top:1rem;">${escapeHtml(JSON.stringify(manifest.metadata || {}, null, 2))}</div>
             </div>
         `;

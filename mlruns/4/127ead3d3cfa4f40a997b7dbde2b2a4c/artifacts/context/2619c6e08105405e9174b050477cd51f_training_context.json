@@ -1,0 +1,294 @@
+{
+    "framework": "pytorch",
+    "task_type": "regression",
+    "model": {
+        "id": 5,
+        "name": "lstm_finance",
+        "model_type": "deep_learning_model"
+    },
+    "dataset_profile": {
+        "input_features": [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "Volume_Price_Trend",
+            "DLR",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under",
+            "Data",
+            "time_idx",
+            "series_id",
+            "hl_center",
+            "hl_range",
+            "dayofweek"
+        ],
+        "output_feature": "Close",
+        "feature_count": 35,
+        "train_shape": [
+            8048,
+            39
+        ],
+        "test_shape": [
+            2012,
+            39
+        ],
+        "label_mapping": {}
+    },
+    "parameters": {
+        "device": "cuda",
+        "epochs": 50,
+        "metric": "accuracy",
+        "dropout": 0.4,
+        "n_trials": 25,
+        "direction": "maximize",
+        "framework": "pytorch",
+        "batch_size": 32,
+        "hidden_dim": 64,
+        "input_size": 4,
+        "num_layers": 2,
+        "base_run_id": null,
+        "hidden_size": 32,
+        "output_size": 1,
+        "base_model_id": 5,
+        "hidden_layers": 4,
+        "learning_rate": 0.001,
+        "training_mode": "transfer",
+        "cuda_available": "false",
+        "input_features": [
+            "Date",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume",
+            "Close_Return",
+            "Volatility",
+            "MA20",
+            "MA50",
+            "Momentum",
+            "RelVolume",
+            "RSI_Close",
+            "Williams_%R",
+            "CCI",
+            "Bollinger_%B",
+            "KeltnerC_%",
+            "MACD_lib",
+            "MACD_signal",
+            "MACD_Hist",
+            "Force_Index",
+            "Volume_Price_Trend",
+            "DLR",
+            "RSI_Over",
+            "RSI_Under",
+            "Williams_Over",
+            "Williams_Under",
+            "MACD_Over",
+            "MACD_Under",
+            "Data",
+            "time_idx",
+            "series_id",
+            "hl_center",
+            "hl_range",
+            "dayofweek"
+        ],
+        "output_features": [
+            "Close",
+            "Close_Return"
+        ],
+        "resolved_device": "cpu",
+        "requested_device": "auto",
+        "training_lineage": {
+            "iteration": 2,
+            "base_run_id": "training_5ee2752ac427",
+            "base_model_id": 5,
+            "latest_run_id": "training_a347e995c819",
+            "mlflow_run_id": "eb3c5e488d3f4953ab58043557f02c96",
+            "training_mode": "transfer",
+            "transfer_status": "base_loaded",
+            "new_artifact_path": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+            "transfer_strategy": "auto",
+            "base_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+            "dataset_snapshot_hash": "0733ea7bd9b4ddfd6dde303775dd2b937f4ea0644ee9757778009acff3e87415",
+            "previous_artifact_path": "/app/runtime_artifacts/training/training_5ee2752ac427/model_pytorch.pt"
+        },
+        "artifact_manifest": {
+            "loader": "torchscript",
+            "source": "/app/runtime_artifacts/training/training_a347e995c819/model_pytorch.pt",
+            "metadata": {},
+            "warnings": [
+                "Only TorchScript or app-generated PyTorch bundles are directly runnable. Plain state_dict files require a companion model definition."
+            ],
+            "framework": "pytorch",
+            "entrypoint": null,
+            "artifact_format": ".pt",
+            "capability_matrix": {
+                ".pt": {
+                    "label": "PyTorch Artifact",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": "guarded",
+                    "predict": "guarded",
+                    "register": true,
+                    "simulate": "guarded"
+                },
+                ".pkl": {
+                    "label": "Python Pickle",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": "guarded",
+                    "predict": "guarded",
+                    "register": true,
+                    "simulate": "guarded"
+                },
+                ".pth": {
+                    "label": "PyTorch Artifact",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": "guarded",
+                    "predict": "guarded",
+                    "register": true,
+                    "simulate": "guarded"
+                },
+                ".yml": {
+                    "label": "YAML Config",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": false,
+                    "predict": false,
+                    "register": true,
+                    "simulate": false
+                },
+                ".json": {
+                    "label": "JSON Config",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": false,
+                    "predict": false,
+                    "register": true,
+                    "simulate": false
+                },
+                ".onnx": {
+                    "label": "ONNX",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": false,
+                    "predict": false,
+                    "register": true,
+                    "simulate": false
+                },
+                ".yaml": {
+                    "label": "YAML Config",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": false,
+                    "predict": false,
+                    "register": true,
+                    "simulate": false
+                },
+                ".joblib": {
+                    "label": "scikit-learn Joblib",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": true,
+                    "predict": true,
+                    "register": true,
+                    "simulate": true
+                },
+                ".pickle": {
+                    "label": "Python Pickle",
+                    "train": false,
+                    "inspect": true,
+                    "monitor": "guarded",
+                    "predict": "guarded",
+                    "register": true,
+                    "simulate": "guarded"
+                }
+            },
+            "needs_companion_spec": true,
+            "runtime_capabilities": {
+                "train": false,
+                "inspect": true,
+                "monitor": false,
+                "predict": false,
+                "register": true,
+                "simulate": false
+            },
+            "supported_file_types": [
+                ".joblib",
+                ".json",
+                ".onnx",
+                ".pickle",
+                ".pkl",
+                ".pt",
+                ".pth",
+                ".yaml",
+                ".yml"
+            ]
+        },
+        "transfer_strategy": "auto",
+        "base_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+        "device_fallback_reason": "auto_selected_cpu",
+        "device_fallback_applied": "false"
+    },
+    "extra": {
+        "predictions_preview": [
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424,
+            -0.023655546829104424
+        ],
+        "evaluation_metrics": {
+            "eval_rmse": 96.68799568892635,
+            "eval_mse": 9348.56851034184,
+            "eval_mae": 74.46285006342082,
+            "eval_mape": 100.19543523180054,
+            "eval_r2": -1.4576580143863342
+        },
+        "transfer_learning": {
+            "training_mode": "transfer",
+            "transfer_strategy": "auto",
+            "base_model_id": 5,
+            "base_run_id": "training_a347e995c819",
+            "base_artifact_path": "/app/runtime_artifacts/training/training_4f59147fb253/model_pytorch.pt",
+            "dataset_snapshot_hash": "0733ea7bd9b4ddfd6dde303775dd2b937f4ea0644ee9757778009acff3e87415",
+            "transfer_status": "base_weights_incompatible",
+            "base_model_loaded": true,
+            "base_artifact_manifest": {
+                "artifact_format": ".pt",
+                "framework": "pytorch",
+                "loader": "torchscript",
+                "warnings": []
+            },
+            "loaded_framework": "pytorch",
+            "transfer_error": "Error(s) in loading state_dict for FeedForwardNet:\n\tsize mismatch for network.0.weight: copying a param with shape torch.Size([32, 39]) from checkpoint, the shape in current model is torch.Size([64, 39]).\n\tsize mismatch for network.0.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([64]).\n\tsize mismatch for network.3.weight: copying a param with shape torch.Size([32, 32]) from checkpoint, the shape in current model is torch.Size([64, 64]).\n\tsize mismatch for network.3.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([64]).\n\tsize mismatch for network.6.weight: copying a param with shape torch.Size([32, 32]) from checkpoint, the shape in current model is torch.Size([64, 64]).\n\tsize mismatch for network.6.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([64]).\n\tsize mismatch for network.9.weight: copying a param with shape torch.Size([32, 32]) from checkpoint, the shape in current model is torch.Size([64, 64]).\n\tsize mismatch for network.9.bias: copying a param with shape torch.Size([32]) from checkpoint, the shape in current model is torch.Size([64]).\n\tsize mismatch for network.12.weight: copying a param with shape torch.Size([12, 32]) from checkpoint, the shape in current model is torch.Size([1, 64]).\n\tsize mismatch for network.12.bias: copying a param with shape torch.Size([12]) from checkpoint, the shape in current model is torch.Size([1])."
+        }
+    }
+}

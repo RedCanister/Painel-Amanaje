@@ -205,6 +205,9 @@ services:
       AMANAJE_DASHBOARD_PUBLIC_URL: "http://localhost:8050"
       AMANAJE_ASSISTANT_SERVER_BASE_URL: "http://assistant-server:8080"
       AMANAJE_ASSISTANT_SERVER_ADMIN_TOKEN: "${AMANAJE_ASSISTANT_SERVER_ADMIN_TOKEN:-amanaje-assistant-dev-token}"
+      AMANAJE_NETRON_HOST: "0.0.0.0"
+      AMANAJE_NETRON_PORT: "8082"
+      AMANAJE_NETRON_PUBLIC_URL: "http://localhost:8082"
       AMANAJE_SLM_ENABLED: "true"
       AMANAJE_SLM_BASE_URL: "http://assistant-server:8080/v1"
       AMANAJE_SLM_HEALTH_URL: "http://assistant-server:8080/health"
@@ -216,6 +219,7 @@ services:
       - ./models:/models
     ports:
       - "8000:8000"
+      - "8082:8082"
     depends_on:
       postgres:
         condition: service_healthy
@@ -229,6 +233,45 @@ services:
         condition: service_started
       assistant-server:
         condition: service_started
+    restart: unless-stopped
+    networks:
+      - backend
+
+  api-worker-interactive:
+    build:
+      context: ./api
+    image: painel-amanaje-api:local
+    command: ["python", "-m", "app.workers.operation_worker", "amanaje:interactive"]
+    env_file:
+      - .env
+    environment:
+      AMANAJE_REDIS_URL: "redis://redis:6379/0"
+      AMANAJE_WORKER_QUEUE: "amanaje:interactive"
+      AMANAJE_WORKER_HOST_ID: "compose-interactive"
+      AMANAJE_WORKER_ROLE: "interactive"
+      AMANAJE_WORKER_CONCURRENCY: "1"
+      AMANAJE_DASHBOARD_PUBLIC_URL: "http://localhost:8050"
+    volumes:
+      - ./api:/app:cached
+      - ./data:/data
+      - ./mlruns:/mlruns
+      - ./models:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+      assistant-server:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.workers.healthcheck", "amanaje:interactive"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    stop_grace_period: 30s
     restart: unless-stopped
     networks:
       - backend
@@ -263,6 +306,45 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD", "python", "-m", "app.workers.healthcheck", "amanaje:default"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    stop_grace_period: 30s
+    restart: unless-stopped
+    networks:
+      - backend
+
+  api-worker-assistant:
+    build:
+      context: ./api
+    image: painel-amanaje-api:local
+    command: ["python", "-m", "app.workers.operation_worker", "amanaje:assistant"]
+    env_file:
+      - .env
+    environment:
+      AMANAJE_REDIS_URL: "redis://redis:6379/0"
+      AMANAJE_WORKER_QUEUE: "amanaje:assistant"
+      AMANAJE_WORKER_HOST_ID: "compose-assistant"
+      AMANAJE_WORKER_ROLE: "assistant"
+      AMANAJE_WORKER_CONCURRENCY: "1"
+      AMANAJE_DASHBOARD_PUBLIC_URL: "http://localhost:8050"
+    volumes:
+      - ./api:/app:cached
+      - ./data:/data
+      - ./mlruns:/mlruns
+      - ./models:/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+      assistant-server:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.workers.healthcheck", "amanaje:assistant"]
       interval: 15s
       timeout: 10s
       retries: 5
