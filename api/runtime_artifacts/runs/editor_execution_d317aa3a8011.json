@@ -1,0 +1,347 @@
+{
+  "run_id": "editor_execution_d317aa3a8011",
+  "run_type": "editor_execution",
+  "status": "completed",
+  "stage": "completed",
+  "created_at": "2026-05-26T23:35:27.342554",
+  "updated_at": "2026-05-26T23:35:40.437410",
+  "started_at": "2026-05-26T23:35:40.122642",
+  "completed_at": "2026-05-26T23:35:40.437410",
+  "context": {
+    "source": "editor",
+    "gpu_allowed": false,
+    "dataset_count": 0,
+    "model_count": 0,
+    "dataset_ids": [],
+    "model_ids": []
+  },
+  "parameters": {
+    "code_length": 42,
+    "registry_context": {
+      "dataset_count": 0,
+      "model_count": 0,
+      "dataset_ids": [],
+      "model_ids": []
+    }
+  },
+  "metrics": {
+    "variable_count": 6
+  },
+  "artifacts": {},
+  "result": {
+    "status": "success",
+    "variables": {
+      "registry_context": {
+        "name": "registry_context",
+        "type": "dict",
+        "python_type": "builtins.dict",
+        "kind": "mapping",
+        "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+        "metadata": null,
+        "raw_value": {
+          "datasets": [],
+          "models": [],
+          "summary": {
+            "dataset_count": 0,
+            "model_count": 0,
+            "dataset_ids": [],
+            "model_ids": []
+          }
+        }
+      },
+      "list_datasets": {
+        "name": "list_datasets",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>",
+        "preview": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>"
+      },
+      "list_models": {
+        "name": "list_models",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>",
+        "preview": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>"
+      },
+      "load_dataset": {
+        "name": "load_dataset",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>",
+        "preview": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>"
+      },
+      "load_model": {
+        "name": "load_model",
+        "type": "function",
+        "python_type": "builtins.function",
+        "kind": "object",
+        "value": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>",
+        "preview": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>",
+        "metadata": {
+          "serialization": "repr"
+        },
+        "raw_value": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>"
+      },
+      "result": {
+        "name": "result",
+        "type": "int",
+        "python_type": "builtins.int",
+        "kind": "number",
+        "value": "4",
+        "preview": "4",
+        "metadata": null,
+        "raw_value": 4
+      }
+    },
+    "metadata": {},
+    "document": {
+      "name": "code_model_20260526_233540",
+      "description": "Code created in the editor",
+      "object_type": "code_model",
+      "size": 0.0,
+      "path": "editor",
+      "date": "2026-05-26T23:35:40.427167",
+      "version": 1,
+      "history": [
+        {
+          "operation": "execute",
+          "when": "2026-05-26T23:35:40.427167"
+        }
+      ],
+      "variables": {
+        "registry_context": {
+          "name": "registry_context",
+          "type": "dict",
+          "python_type": "builtins.dict",
+          "kind": "mapping",
+          "value": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "preview": "{\"datasets\": [], \"models\": [], \"summary\": {\"dataset_count\": 0, \"model_count\": 0, \"dataset_ids\": [], \"model_ids\": []}}",
+          "metadata": null,
+          "raw_value": {
+            "datasets": [],
+            "models": [],
+            "summary": {
+              "dataset_count": 0,
+              "model_count": 0,
+              "dataset_ids": [],
+              "model_ids": []
+            }
+          }
+        },
+        "list_datasets": {
+          "name": "list_datasets",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>",
+          "preview": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_datasets at 0x727d724cd6c0>"
+        },
+        "list_models": {
+          "name": "list_models",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>",
+          "preview": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.list_models at 0x727d724cd760>"
+        },
+        "load_dataset": {
+          "name": "load_dataset",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>",
+          "preview": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_dataset at 0x727d724cd800>"
+        },
+        "load_model": {
+          "name": "load_model",
+          "type": "function",
+          "python_type": "builtins.function",
+          "kind": "object",
+          "value": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>",
+          "preview": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>",
+          "metadata": {
+            "serialization": "repr"
+          },
+          "raw_value": "<function execute_editor_code.<locals>.load_model at 0x727d724cd8a0>"
+        },
+        "result": {
+          "name": "result",
+          "type": "int",
+          "python_type": "builtins.int",
+          "kind": "number",
+          "value": "4",
+          "preview": "4",
+          "metadata": null,
+          "raw_value": 4
+        }
+      },
+      "metadata": {},
+      "code": {
+        "script": "print('amanaje live smoke')\nresult = 2 + 2",
+        "language": "python",
+        "line_count": 2
+      }
+    },
+    "summary": {
+      "variable_count": 6,
+      "defined_name_count": 1,
+      "defined_names": [
+        "result"
+      ],
+      "has_error": false
+    },
+    "stdout": "amanaje live smoke\n",
+    "stderr": "",
+    "error": null
+  },
+  "error": null,
+  "progress": {
+    "current_stage": "completed",
+    "latest_event": "Editor execution completed.",
+    "latest_timestamp": "2026-05-26T23:35:40.437410",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:35:27.342554",
+        "message": "editor_execution run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:35:27.371613",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "status": "running",
+        "stage": "executing",
+        "timestamp": "2026-05-26T23:35:40.122642",
+        "message": "Editor execution started."
+      },
+      {
+        "status": "completed",
+        "stage": "completed",
+        "timestamp": "2026-05-26T23:35:40.437410",
+        "message": "Editor execution completed."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:35:27.342554",
+      "message": "editor_execution run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:35:27.371613",
+      "message": "Editor execution enqueued on amanaje:interactive."
+    },
+    {
+      "status": "running",
+      "stage": "executing",
+      "timestamp": "2026-05-26T23:35:40.122642",
+      "message": "Editor execution started."
+    },
+    {
+      "status": "completed",
+      "stage": "completed",
+      "timestamp": "2026-05-26T23:35:40.437410",
+      "message": "Editor execution completed."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 5,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-26T23:35:27.342554",
+        "stream": "system",
+        "stage": "queued",
+        "message": "editor_execution run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-26T23:35:27.371613",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Editor execution enqueued on amanaje:interactive."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-26T23:35:40.122642",
+        "stream": "system",
+        "stage": "executing",
+        "message": "Editor execution started."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-26T23:35:40.420360",
+        "stream": "stdout",
+        "stage": "executing",
+        "message": "amanaje live smoke"
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-26T23:35:40.437410",
+        "stream": "system",
+        "stage": "completed",
+        "message": "Editor execution completed."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:interactive",
+    "job_id": "editor_execution_d317aa3a8011"
+  },
+  "rerun_payload": {
+    "run_type": "editor_execution",
+    "code": "print('amanaje live smoke')\nresult = 2 + 2",
+    "queue_payload": {
+      "code": "print('amanaje live smoke')\nresult = 2 + 2",
+      "registry_context": {
+        "datasets": [],
+        "models": [],
+        "summary": {
+          "dataset_count": 0,
+          "model_count": 0,
+          "dataset_ids": [],
+          "model_ids": []
+        }
+      }
+    }
+  }
+}

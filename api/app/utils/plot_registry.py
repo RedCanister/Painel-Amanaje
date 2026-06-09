@@ -328,11 +328,13 @@ def list_legacy_plot_artifacts(
     dataset_id: Optional[int] = None,
     inference_id: Optional[int] = None,
     kind: Optional[str] = None,
+    limit: Optional[int] = None,
 ) -> list[dict[str, Any]]:
     if not plot_root.exists():
         return []
     artifacts: list[dict[str, Any]] = []
-    for file_path in sorted(plot_root.rglob("*")):
+    file_paths = sorted(plot_root.rglob("*")) if limit is None else plot_root.rglob("*")
+    for file_path in file_paths:
         if not file_path.is_file() or file_path.suffix.lower() not in PLOT_IMAGE_SUFFIXES:
             continue
         try:
@@ -351,6 +353,8 @@ def list_legacy_plot_artifacts(
         if kind and kind not in {spec.get("kind"), spec.get("plot_type")}:
             continue
         artifacts.append(spec)
+        if limit is not None and len(artifacts) >= limit:
+            break
     return artifacts
 
 

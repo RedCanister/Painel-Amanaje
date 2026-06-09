@@ -14,6 +14,7 @@ import main_app
 from app.models.assistant_objects import AssistantReferenceRequest
 from app.models.model_objects import AssistantModel
 from app.utils import assistant_llmops
+from app.utils import assistant_embeddings
 from app.utils.assistant_provider import (
     AmanajeSLMProvider,
     OpenAICompatibleAssistantProvider,
@@ -27,7 +28,7 @@ from app.utils.assistant_bundles import (
     normalize_huggingface_assistant_directory,
     prepare_assistant_model_tokenization,
 )
-from app.utils.assistant_runtime import assistant_model_runtime_payload
+from app.utils.assistant_runtime import assistant_embedding_runtime_payload, assistant_model_runtime_payload
 
 
 def _payload(response):
@@ -100,6 +101,36 @@ def _write_assistant_bundle(path: Path, *, omit: set[str] | None = None) -> Path
     return path
 
 
+def _write_embedding_bundle(path: Path, *, omit: set[str] | None = None, manifest_overrides: dict | None = None) -> Path:
+    omit = omit or set()
+    manifest = {
+        "assistant_role": "embedding",
+        "provider_type": "openai_compatible_embeddings",
+        "runtime_kind": "embedding_hf_server",
+        "model_name": "pytest-embedding-body",
+        "model_version": "0.1.0",
+        "base_model_name": "pytest/embedding-base",
+        "supported_draft_types": ["embedding_retrieval"],
+        "max_context_tokens": 2048,
+        "max_sequence_tokens": 512,
+        "embedding_dimension": 384,
+        "pooling_strategy": "mean",
+        "normalize_embeddings": True,
+        "base_url": "http://localhost:8080/v1",
+        "model_artifact_path": "model.safetensors",
+        "tokenizer_path": "tokenizer.json",
+    }
+    manifest.update(manifest_overrides or {})
+    with zipfile.ZipFile(path, "w") as bundle:
+        if "manifest" not in omit:
+            bundle.writestr("assistant_model_manifest.json", json.dumps(manifest))
+        if "model" not in omit:
+            bundle.writestr("model.safetensors", b"fake embedding weights")
+        if "tokenizer" not in omit:
+            bundle.writestr("tokenizer.json", json.dumps({"version": "1.0", "model": {"type": "WordPiece"}}))
+    return path
+
+
 def test_assistant_routes_are_registered():
     route_paths = {route.path for route in main_app.app.routes}
 
@@ -136,6 +167,13 @@ def test_assistant_routes_are_registered():
         "/assistant/models/{assistant_model_id}/training/curate",
         "/assistant/models/{assistant_model_id}/training/dataset/attach",
         "/assistant/models/{assistant_model_id}/training/tokenize",
+        "/assistant/embeddings/index/rebuild",
+        "/assistant/embeddings/index/status",
+        "/assistant/embeddings/search",
+        "/assistant/models/{assistant_model_id}/embedding/activate",
+        "/assistant/models/{assistant_model_id}/embedding/status",
+        "/assistant/models/{assistant_model_id}/embedding/runtime/load",
+        "/assistant/models/{assistant_model_id}/training/embedding/prepare",
         "/assistant/contracts/workflow-draft.schema",
         "/assistant/evals/run",
         "/assistant/training/curate",
@@ -152,6 +190,10 @@ def test_assistant_routes_are_registered():
     assert "/assistant/models/import/pytorch" in management_routes
     assert "/assistant/models/{assistant_model_id}/runtime/load" in management_routes
     assert "/assistant/models/{assistant_model_id}/activate" in management_routes
+    assert "/assistant/embeddings/index/rebuild" in management_routes
+    assert "/assistant/embeddings/search" in management_routes
+    assert "/assistant/models/{assistant_model_id}/embedding/activate" in management_routes
+    assert "/assistant/models/{assistant_model_id}/training/embedding/prepare" in management_routes
     assert "/execution/run" in management_routes
     assert "/mlflow/experiments" in management_routes
 
@@ -390,6 +432,86 @@ def test_assistant_model_packs_provider_config_into_learning_parameters():
     assert config["temperature"] == 0.35
 
 
+def test_embedding_assistant_model_packs_role_and_embedding_config():
+    model = AssistantModel(
+        id=9,
+        name="panel_embedding_body",
+        description="Registry-backed retrieval body",
+        object_type="learning_model",
+        size=0,
+        path="runtime_artifacts/assistant_models/panel_embedding_body",
+        version=1,
+        assistant_role="embedding",
+        provider_type="openai_compatible_embeddings",
+        runtime_kind="embedding_hf_server",
+        model_name="panel-embedder",
+        model_version="panel-embedder-0.1",
+        base_model_name="google/embeddinggemma-300m",
+        embedding_dimension=768,
+        pooling_strategy="mean",
+        max_sequence_tokens=512,
+        query_instruction="Represent this Amanaje request:",
+        document_instruction="Represent this Amanaje reference:",
+        normalize_embeddings=True,
+    )
+
+    payload = model.model_dump()
+    assistant_parameters = payload["parameters"]["assistant"]
+    provider_config = assistant_model_to_provider_config(payload)
+    embedding_config = assistant_embeddings.assistant_embedding_model_config(payload, provider_config)
+
+    assert payload["model_type"] == "assistant_model"
+    assert assistant_parameters["assistant_role"] == "embedding"
+    assert assistant_parameters["provider_type"] == "openai_compatible_embeddings"
+    assert assistant_parameters["runtime_kind"] == "embedding_hf_server"
+    assert assistant_parameters["embedding_dimension"] == 768
+    assert assistant_parameters["pooling_strategy"] == "mean"
+    assert assistant_embeddings.assistant_model_matches_role(payload, "embedding")
+    assert not assistant_embeddings.assistant_model_matches_role(payload, "generator")
+    assert provider_config["type"] == "openai_compatible_embeddings"
+    assert provider_config["capabilities"]["embedding_body"] is True
+    assert embedding_config["model_name"] == "panel-embedder"
+    assert embedding_config["embedding_dimension"] == 768
+
+
+def test_assistant_models_list_filters_by_assistant_role(monkeypatch):
+    generator = SimpleNamespace(
+        id=1,
+        name="generator_assistant",
+        model_type="assistant_model",
+        parameters={"assistant": {"assistant_role": "generator", "provider_type": "local"}},
+        metrics={},
+    )
+    embedding = SimpleNamespace(
+        id=2,
+        name="embedding_body",
+        model_type="assistant_model",
+        parameters={"assistant": {"assistant_role": "embedding", "provider_type": "openai_compatible_embeddings"}},
+        metrics={},
+    )
+    dual = SimpleNamespace(
+        id=3,
+        name="dual_assistant",
+        model_type="assistant_model",
+        parameters={"assistant": {"assistant_role": "dual", "provider_type": "openai_compatible"}},
+        metrics={},
+    )
+
+    async def fake_get_all_entries(_db, orm_model):
+        assert orm_model is main_app.AssistantORM
+        return [generator, embedding, dual]
+
+    monkeypatch.setattr(main_app, "get_all_entries", fake_get_all_entries)
+
+    embedding_response = asyncio.run(main_app.assistant_models_list(role="embedding", db=object()))
+    generator_response = asyncio.run(main_app.assistant_models_list(role="generator", db=object()))
+    all_response = asyncio.run(main_app.assistant_models_list(role="all", db=object()))
+
+    assert [item["name"] for item in _payload(embedding_response)["models"]] == ["embedding_body", "dual_assistant"]
+    assert [item["name"] for item in _payload(generator_response)["models"]] == ["generator_assistant", "dual_assistant"]
+    assert [item["name"] for item in _payload(all_response)["models"]] == ["generator_assistant", "embedding_body", "dual_assistant"]
+
+
 def test_assistant_model_bundle_inspection_validates_and_extracts(tmp_path):
     bundle_path = _write_assistant_bundle(tmp_path / "assistant_bundle.zip")
     extract_dir = tmp_path / "extracted"
@@ -418,6 +540,44 @@ def test_assistant_model_bundle_inspection_validates_and_extracts(tmp_path):
     assert bundle_status["server"]["separate_server_required"] is True
     assert provider_config["runtime_kind"] == "pytorch_hf_server"
     assert provider_config["model_name"] == "pytest-assistant"
+
+
+def test_embedding_assistant_bundle_validation_allows_no_chat_template(tmp_path):
+    bundle_path = _write_embedding_bundle(tmp_path / "embedding_bundle.zip")
+    extract_dir = tmp_path / "embedding_extracted"
+
+    result = inspect_assistant_model_bundle(bundle_path, extract_dir=extract_dir)
+    model_record = {
+        "id": 33,
+        "name": "pytest_embedding_body",
+        "model_type": "assistant_model",
+        "parameters": {"assistant": result["assistant_parameters"]},
+    }
+    bundle_status = assistant_bundle_status_from_model(model_record)
+    provider_config = assistant_model_to_provider_config(model_record)
+    runtime_payload = assistant_embedding_runtime_payload(model_record, provider_config)
+
+    assert result["status"] == "valid"
+    assert result["assistant_parameters"]["assistant_role"] == "embedding"
+    assert result["assistant_parameters"]["provider_type"] == "openai_compatible_embeddings"
+    assert result["assistant_parameters"]["runtime_kind"] == "embedding_hf_server"
+    assert result["assistant_parameters"]["embedding_dimension"] == 384
+    assert result["assistant_parameters"].get("chat_template_path") in (None, "")
+    assert bundle_status["ready"] is True
+    assert bundle_status["assistant_role"] == "embedding"
+    assert provider_config["type"] == "openai_compatible_embeddings"
+    assert runtime_payload["embedding_dimension"] == 384
+    assert runtime_payload["pooling_strategy"] == "mean"
+
+
+def test_embedding_assistant_bundle_rejects_missing_embedding_dimension(tmp_path):
+    bundle_path = _write_embedding_bundle(
+        tmp_path / "embedding_bundle_missing_dimension.zip",
+        manifest_overrides={"embedding_dimension": None},
+    )
+
+    with pytest.raises(ValueError, match="embedding_dimension"):
+        inspect_assistant_model_bundle(bundle_path)
 
 
 def test_huggingface_directory_bundle_normalizes_manifest_and_runtime_payload(tmp_path):
@@ -455,6 +615,47 @@ def test_huggingface_directory_bundle_normalizes_manifest_and_runtime_payload(tm
     assert runtime_payload["model_name"] == "Pytest Assistant"
     assert runtime_payload["bundle_dir"] == str(snapshot_dir.resolve())
     assert runtime_payload["max_context_tokens"] == 1024
+
+
+def test_huggingface_embedding_directory_bundle_normalizes_without_chat_template(tmp_path):
+    snapshot_dir = tmp_path / "hf_embedding_snapshot"
+    snapshot_dir.mkdir()
+    (snapshot_dir / "model.safetensors").write_bytes(b"fake embedding weights")
+    (snapshot_dir / "tokenizer.json").write_text(json.dumps({"version": "1.0", "model": {"type": "WordPiece"}}), encoding="utf-8")
+    (snapshot_dir / "config.json").write_text("{}", encoding="utf-8")
+
+    result = normalize_huggingface_assistant_directory(
+        snapshot_dir,
+        {
+            "repo_id": "google/embeddinggemma-300m",
+            "revision": "main",
+            "display_name": "EmbeddingGemma Body",
+            "assistant_role": "embedding",
+            "embedding_dimension": 768,
+            "pooling_strategy": "mean",
+            "max_sequence_tokens": 512,
+        },
+    )
+    inspected = inspect_assistant_model_directory(snapshot_dir)
+    model_record = {
+        "id": 34,
+        "name": "embeddinggemma_body",
+        "model_type": "assistant_model",
+        "parameters": {"assistant": result["assistant_parameters"]},
+    }
+    provider_config = assistant_model_to_provider_config(model_record)
+    runtime_payload = assistant_embedding_runtime_payload(model_record, provider_config)
+
+    assert result["status"] == "valid"
+    assert result["assistant_parameters"]["assistant_role"] == "embedding"
+    assert result["assistant_parameters"]["provider_type"] == "openai_compatible_embeddings"
+    assert result["assistant_parameters"]["runtime_kind"] == "embedding_hf_server"
+    assert result["assistant_parameters"]["supported_draft_types"] == ["embedding_retrieval"]
+    assert inspected["assistant_parameters"]["embedding_dimension"] == 768
+    assert "chat_template" not in json.loads((snapshot_dir / "assistant_model_manifest.json").read_text(encoding="utf-8"))
+    assert provider_config["capabilities"]["embedding_body"] is True
+    assert runtime_payload["model_name"] == "EmbeddingGemma Body"
+    assert runtime_payload["embedding_dimension"] == 768
 
 
 def test_pytorch_assistant_import_registers_directory_bundle(monkeypatch, tmp_path):
@@ -506,6 +707,108 @@ def test_assistant_model_bundle_rejects_missing_contract_assets(tmp_path):
     missing_tokenizer = _write_assistant_bundle(tmp_path / "missing_tokenizer.zip", omit={"tokenizer"})
     with pytest.raises(ValueError, match="tokenizer"):
         inspect_assistant_model_bundle(missing_tokenizer)
+
+
+def test_embedding_index_rebuild_search_and_training_prepare(tmp_path):
+    reference_dir = tmp_path / "references"
+    dataset_dir = tmp_path / "datasets"
+    index_dir = tmp_path / "embedding_index"
+    output_dir = tmp_path / "embedding_training"
+    reference_dir.mkdir()
+    dataset_dir.mkdir()
+    assistant_llmops.create_assistant_reference(
+        reference_dir,
+        AssistantReferenceRequest(
+            source_type="project_file",
+            name="keyboard_dataset_script",
+            file_name="keyboard_dataset_script.py",
+            content_text="Create keyboard switch datasets with layout, switch_type, price, and failure_rate columns.",
+            trust_level="project",
+            tags=["keyboard", "dataset", "script"],
+            metadata={"source_path": "api/scripts/keyboard_dataset_script.py", "source_extension": ".py"},
+        ),
+    )
+    interactions_path = dataset_dir / "interactions.jsonl"
+    interactions_path.write_text(
+        json.dumps(
+            {
+                "label": "positive",
+                "prompt": "Make a dataset about keyboards to test.",
+                "workflow_type": "dataset_generation",
+                "source_hash": "interaction-keyboard",
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "label": "unsafe",
+                "prompt": "Fetch a remote keyboard dataset using requests.",
+                "workflow_type": "dataset_generation",
+                "source_hash": "interaction-unsafe",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    embedding_model = {
+        "id": 44,
+        "name": "pytest_embedding",
+        "version": 1,
+        "parameters": {
+            "assistant": {
+                "assistant_role": "embedding",
+                "provider_type": "openai_compatible_embeddings",
+                "model_name": "pytest-embedding",
+                "model_version": "pytest-embedding-v1",
+                "embedding_dimension": 64,
+                "pooling_strategy": "mean",
+            }
+        },
+    }
+
+    manifest = assistant_embeddings.rebuild_embedding_index(
+        reference_dir,
+        index_dir,
+        embedding_model=embedding_model,
+        project_examples={
+            "version": "pytest-examples",
+            "objects": [
+                {
+                    "family": "assistant_workflow",
+                    "object_name": "AssistantDraftRequest",
+                    "samples": [{"tier": "small", "payload": {"prompt": "Draft a keyboard dataset.", "target_type": "dataset_generation"}}],
+                }
+            ],
+        },
+    )
+    status = assistant_embeddings.embedding_index_status(index_dir)
+    search = assistant_embeddings.search_embedding_index(index_dir, "keyboard dataset switch testing", embedding_model=embedding_model, limit=3)
+    training = assistant_embeddings.prepare_embedding_training_examples(
+        dataset_dir,
+        reference_dir,
+        output_dir,
+        embedding_model=embedding_model,
+    )
+    training_rows = [
+        json.loads(line)
+        for line in Path(training["examples_path"]).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+    assert manifest["status"] == "ready"
+    assert manifest["record_count"] >= 2
+    assert Path(manifest["vectors_path"]).exists()
+    assert Path(manifest["metadata_path"]).exists()
+    assert status["ready"] is True
+    assert search["status"] == "ok"
+    assert search["results"]
+    assert {"score", "reference_id", "summary", "trust_level"} <= set(search["results"][0])
+    assert "content_text" not in search["results"][0]
+    assert training["status"] == "prepared"
+    assert training["record_count"] == 2
+    assert training["label_counts"]["positive"] == 1
+    assert training["label_counts"]["negative"] == 1
+    assert {"query", "positive_text", "negative_text", "label", "source_type", "workflow_type", "reference_ids", "source_hash"} <= set(training_rows[0])
 
 
 def test_assistant_model_tokenization_uses_canonical_jsonl(tmp_path):
@@ -995,6 +1298,54 @@ def test_selected_assistant_model_loads_runtime_before_draft(monkeypatch, reques
     assert payload["ledger"]["context"]["assistant_model_id"] == 88
 
 
+def test_selected_assistant_model_runtime_failure_blocks_fallback(monkeypatch, request):
+    _use_workspace_run_dir(monkeypatch, request)
+    model_record = SimpleNamespace(
+        id=89,
+        name="gemma_assistant",
+        model_type="assistant_model",
+        parameters={
+            "assistant": {
+                "provider_type": "openai_compatible",
+                "runtime_kind": "pytorch_hf_server",
+                "model_name": "gemma-assistant",
+                "model_version": "0.3",
+                "base_url": "http://assistant-server:8080/v1",
+            }
+        },
+    )
+
+    async def fake_get_model(_db, assistant_model_id):
+        assert assistant_model_id == 89
+        return model_record
+
+    def fake_load(_record, _provider_config):
+        return {"status": "load_failed", "error": "assistant-server unavailable"}
+
+    monkeypatch.setattr(main_app, "_get_assistant_model_record", fake_get_model)
+    monkeypatch.setattr(main_app, "ensure_assistant_model_runtime_loaded", fake_load)
+    monkeypatch.setattr(main_app, "get_assistant_provider_for_model", lambda *_args, **_kwargs: main_app.get_assistant_provider("local"))
+
+    response = asyncio.run(
+        main_app.assistant_draft(
+            main_app.AssistantDraftRequest(
+                prompt="Create a dataset draft with the selected model.",
+                target_type="dataset_generation",
+                assistant_model_id=89,
+            ),
+            db=object(),
+        )
+    )
+    payload = _payload(response)
+
+    assert response.status_code == 503
+    assert payload["status"] == "runtime_unavailable"
+    assert payload["assistant_model_id"] == 89
+    assert payload["runtime_loaded"] is False
+    assert payload["fallback_used"] is False
+    assert payload["draft_valid"] is None
+
+
 def test_assistant_provider_diagnostics_and_schema_endpoint(monkeypatch, request):
     _use_workspace_run_dir(monkeypatch, request)
 
@@ -1373,7 +1724,21 @@ def test_assistant_management_page_covers_routes_files_and_operations():
     assert "/assistant/models/import/huggingface" in assistant_js
     assert "/assistant/models/import/pytorch" in assistant_js
     assert "/assistant/models/${encodeURIComponent(id)}/training/tokenize" in assistant_js
+    assert "embedding_index_rebuild" in assistant_js
+    assert "/assistant/embeddings/search" in assistant_js
+    assert "/assistant/models/${encodeURIComponent(id)}/embedding/activate" in assistant_js
+    assert "/assistant/models/${encodeURIComponent(id)}/embedding/runtime/load" in assistant_js
+    assert "/assistant/models/${encodeURIComponent(id)}/training/embedding/prepare" in assistant_js
+    assert "amanajeAssistantEmbeddingModelId" in assistant_js
+    assert 'role: "embedding"' in assistant_js
     assert "Prepare Token Examples" in assistant_html
+    assert "Prepare Embedding Training" in assistant_html
+    assert "Embedding Body" in assistant_html
+    assert "Rebuild Embedding Index" in assistant_html
+    assert "Search Embedding Index" in assistant_html
+    assert "assistantEmbeddingModelSelect" in assistant_html
+    assert "assistantHfRole" in assistant_html
+    assert "assistantPtRole" in assistant_html
     assert "Bundle Status" in assistant_html
     assert "Load In Runtime" in assistant_html
     assert "Use For This Session" in assistant_html

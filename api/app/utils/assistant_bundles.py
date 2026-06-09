@@ -22,6 +22,14 @@ ASSISTANT_BUNDLE_REQUIRED_METADATA = (
     "supported_draft_types",
     "max_context_tokens",
 )
+ASSISTANT_BUNDLE_BASE_REQUIRED_METADATA = (
+    "provider_type",
+    "model_name",
+    "model_version",
+    "runtime_kind",
+    "base_model_name",
+    "max_context_tokens",
+)
 ASSISTANT_MODEL_ASSET_NAMES = {
     "model.safetensors",
     "pytorch_model.bin",
@@ -192,6 +200,31 @@ def _coerce_supported_draft_types(value: Any) -> list[str]:
     return draft_types
 
 
+def _assistant_manifest_role(manifest: Mapping[str, Any]) -> str:
+    role = str(manifest.get("assistant_role") or manifest.get("role") or "generator").strip().lower()
+    return role if role in {"generator", "embedding", "dual"} else "generator"
+
+
+def _required_manifest_fields(manifest: Mapping[str, Any]) -> tuple[str, ...]:
+    role = _assistant_manifest_role(manifest)
+    if role == "embedding":
+        return (*ASSISTANT_BUNDLE_BASE_REQUIRED_METADATA, "embedding_dimension")
+    return ASSISTANT_BUNDLE_REQUIRED_METADATA
+
+
+def _normalize_provider_type(provider_type: Any, role: str) -> str:
+    normalized = str(provider_type or "").strip().lower()
+    if role == "embedding":
+        if normalized in {"", "openai", "http", "embedding", "embeddings", "openai_compatible"}:
+            return "openai_compatible_embeddings"
+        if normalized in {"embedding_openai_compatible"}:
+            return "openai_compatible_embeddings"
+        return normalized
+    if normalized in {"openai", "http", "llm", "slm"}:
+        return "openai_compatible"
+    return normalized or "openai_compatible"
+
+
 def _coerce_positive_int(value: Any, field_name: str) -> int:
     try:
         parsed = int(value)
@@ -238,11 +271,17 @@ def inspect_assistant_model_bundle(
         if not isinstance(manifest, Mapping):
             raise ValueError(f"{ASSISTANT_MODEL_MANIFEST_NAME} must be a JSON object.")
 
-        missing = [key for key in ASSISTANT_BUNDLE_REQUIRED_METADATA if manifest.get(key) in (None, "", [])]
+        assistant_role = _assistant_manifest_role(manifest)
+        required_metadata = _required_manifest_fields(manifest)
+        missing = [key for key in required_metadata if manifest.get(key) in (None, "", [])]
         if missing:
             raise ValueError(f"AssistantModel manifest is missing required fields: {', '.join(missing)}")
 
-        supported_draft_types = _coerce_supported_draft_types(manifest.get("supported_draft_types"))
+        supported_draft_types = (
+            ["embedding_retrieval"]
+            if assistant_role == "embedding" and manifest.get("supported_draft_types") in (None, "", [])
+            else _coerce_supported_draft_types(manifest.get("supported_draft_types"))
+        )
         max_context_tokens = _coerce_positive_int(manifest.get("max_context_tokens"), "max_context_tokens")
 
         model_asset = _member_exists(
@@ -277,7 +316,7 @@ def inspect_assistant_model_bundle(
             _find_manifest_path(manifest, ("chat_template_path", "prompt_template_path")),
         ) or _find_named_asset(members, ASSISTANT_PROMPT_ASSET_NAMES)
         has_prompt = bool(manifest.get("chat_template") or manifest.get("prompt_template_version") or prompt_asset)
-        if not has_prompt:
+        if assistant_role != "embedding" and not has_prompt:
             raise ValueError(
                 "AssistantModel bundle must include a chat_template, prompt_template_version, or prompt template file."
             )
@@ -287,25 +326,37 @@ def inspect_assistant_model_bundle(
             _safe_extract_zip(bundle, extracted_dir_path)
 
     manifest_dict = dict(_redact_sensitive_values(dict(manifest)))
-    provider_type = str(manifest.get("provider_type") or "openai_compatible").strip().lower()
-    if provider_type in {"openai", "http", "llm", "slm"}:
-        provider_type = "openai_compatible"
-    runtime_kind = str(manifest.get("runtime_kind") or "pytorch_hf_server").strip()
+    assistant_role = _assistant_manifest_role(manifest)
+    provider_type = _normalize_provider_type(manifest.get("provider_type"), assistant_role)
+    runtime_kind = str(manifest.get("runtime_kind") or ("embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server")).strip()
     base_url = str(manifest.get("base_url") or "http://assistant-server:8080/v1").rstrip("/")
     generation_config = _as_mapping(manifest.get("generation_config") or {})
     prompt_template_version = str(manifest.get("prompt_template_version") or PROMPT_TEMPLATE_VERSION)
+    embedding_dimension = (
+        _coerce_positive_int(manifest.get("embedding_dimension"), "embedding_dimension")
+        if assistant_role == "embedding"
+        else manifest.get("embedding_dimension")
+    )
 
     assistant_parameters = {
+        "assistant_role": assistant_role,
         "provider_type": provider_type,
         "runtime_kind": runtime_kind,
         "base_url": base_url,
         "chat_endpoint": str(manifest.get("chat_endpoint") or f"{base_url}/chat/completions"),
+        "embeddings_endpoint": str(manifest.get("embeddings_endpoint") or f"{base_url}/embeddings"),
         "health_url": manifest.get("health_url") or f"{base_url.rsplit('/v1', 1)[0]}/health",
         "model_name": str(manifest.get("model_name")),
         "model_version": str(manifest.get("model_version")),
         "base_model_name": str(manifest.get("base_model_name")),
         "supported_draft_types": supported_draft_types,
         "max_context_tokens": max_context_tokens,
+        "max_sequence_tokens": int(manifest.get("max_sequence_tokens") or max_context_tokens),
+        "embedding_dimension": embedding_dimension,
+        "pooling_strategy": manifest.get("pooling_strategy") or ("mean" if assistant_role == "embedding" else None),
+        "query_instruction": manifest.get("query_instruction"),
+        "document_instruction": manifest.get("document_instruction"),
+        "normalize_embeddings": bool(manifest.get("normalize_embeddings", True)),
         "max_tokens": int(generation_config.get("max_new_tokens") or manifest.get("max_tokens") or 1600),
         "temperature": float(generation_config.get("temperature") or manifest.get("temperature") or 0.2),
         "timeout_seconds": float(manifest.get("timeout_seconds") or 20),
@@ -332,11 +383,12 @@ def inspect_assistant_model_bundle(
             "bundle_path": str(path),
             "extracted_dir": str(extracted_dir_path.resolve()) if extracted_dir_path is not None else None,
             "load_in_fastapi": False,
-            "server_contract": "openai_compatible_chat_completions",
+            "server_contract": "openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible_chat_completions",
         },
         "capabilities": {
             "registry_backed": True,
             "pytorch_hf_bundle": True,
+            "embedding_body": assistant_role in {"embedding", "dual"},
             "separate_server_required": True,
             "loads_in_fastapi": False,
         },
@@ -348,7 +400,7 @@ def inspect_assistant_model_bundle(
         "bundle_sha256": assistant_parameters["bundle_sha256"],
         "manifest_member": manifest_member,
         "manifest": manifest_dict,
-        "required_metadata": {key: manifest_dict.get(key) for key in ASSISTANT_BUNDLE_REQUIRED_METADATA},
+        "required_metadata": {key: manifest_dict.get(key) for key in _required_manifest_fields(manifest)},
         "assets": {
             "model_artifact": model_asset,
             "tokenizer_assets": tokenizer_assets,
@@ -361,6 +413,7 @@ def inspect_assistant_model_bundle(
             "runtime_kind": runtime_kind,
             "base_url": assistant_parameters["base_url"],
             "chat_endpoint": assistant_parameters["chat_endpoint"],
+            "embeddings_endpoint": assistant_parameters["embeddings_endpoint"],
             "health_url": assistant_parameters["health_url"],
             "model_name": assistant_parameters["model_name"],
             "model_version": assistant_parameters["model_version"],
@@ -407,11 +460,16 @@ def inspect_assistant_model_directory(directory_path: str | Path) -> dict[str, A
     if not isinstance(manifest, Mapping):
         raise ValueError(f"{ASSISTANT_MODEL_MANIFEST_NAME} must be a JSON object.")
 
-    missing = [key for key in ASSISTANT_BUNDLE_REQUIRED_METADATA if manifest.get(key) in (None, "", [])]
+    assistant_role = _assistant_manifest_role(manifest)
+    missing = [key for key in _required_manifest_fields(manifest) if manifest.get(key) in (None, "", [])]
     if missing:
         raise ValueError(f"AssistantModel manifest is missing required fields: {', '.join(missing)}")
 
-    supported_draft_types = _coerce_supported_draft_types(manifest.get("supported_draft_types"))
+    supported_draft_types = (
+        ["embedding_retrieval"]
+        if assistant_role == "embedding" and manifest.get("supported_draft_types") in (None, "", [])
+        else _coerce_supported_draft_types(manifest.get("supported_draft_types"))
+    )
     max_context_tokens = _coerce_positive_int(manifest.get("max_context_tokens"), "max_context_tokens")
     model_asset = _member_exists(
         members,
@@ -444,32 +502,43 @@ def inspect_assistant_model_directory(directory_path: str | Path) -> dict[str, A
         _find_manifest_path(manifest, ("chat_template_path", "prompt_template_path")),
     ) or _find_named_asset(members, ASSISTANT_PROMPT_ASSET_NAMES)
     has_prompt = bool(manifest.get("chat_template") or manifest.get("prompt_template_version") or prompt_asset)
-    if not has_prompt:
+    if assistant_role != "embedding" and not has_prompt:
         raise ValueError(
             "AssistantModel directory must include a chat_template, prompt_template_version, or prompt template file."
         )
 
     manifest_dict = dict(_redact_sensitive_values(dict(manifest)))
-    provider_type = str(manifest.get("provider_type") or "openai_compatible").strip().lower()
-    if provider_type in {"openai", "http", "llm", "slm"}:
-        provider_type = "openai_compatible"
-    runtime_kind = str(manifest.get("runtime_kind") or "pytorch_hf_server").strip()
+    provider_type = _normalize_provider_type(manifest.get("provider_type"), assistant_role)
+    runtime_kind = str(manifest.get("runtime_kind") or ("embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server")).strip()
     base_url = str(manifest.get("base_url") or "http://assistant-server:8080/v1").rstrip("/")
     generation_config = _as_mapping(manifest.get("generation_config") or {})
     prompt_template_version = str(manifest.get("prompt_template_version") or PROMPT_TEMPLATE_VERSION)
     bundle_sha256 = _hash_directory(path)
+    embedding_dimension = (
+        _coerce_positive_int(manifest.get("embedding_dimension"), "embedding_dimension")
+        if assistant_role == "embedding"
+        else manifest.get("embedding_dimension")
+    )
 
     assistant_parameters = {
+        "assistant_role": assistant_role,
         "provider_type": provider_type,
         "runtime_kind": runtime_kind,
         "base_url": base_url,
         "chat_endpoint": str(manifest.get("chat_endpoint") or f"{base_url}/chat/completions"),
+        "embeddings_endpoint": str(manifest.get("embeddings_endpoint") or f"{base_url}/embeddings"),
         "health_url": manifest.get("health_url") or f"{base_url.rsplit('/v1', 1)[0]}/health",
         "model_name": str(manifest.get("model_name")),
         "model_version": str(manifest.get("model_version")),
         "base_model_name": str(manifest.get("base_model_name")),
         "supported_draft_types": supported_draft_types,
         "max_context_tokens": max_context_tokens,
+        "max_sequence_tokens": int(manifest.get("max_sequence_tokens") or max_context_tokens),
+        "embedding_dimension": embedding_dimension,
+        "pooling_strategy": manifest.get("pooling_strategy") or ("mean" if assistant_role == "embedding" else None),
+        "query_instruction": manifest.get("query_instruction"),
+        "document_instruction": manifest.get("document_instruction"),
+        "normalize_embeddings": bool(manifest.get("normalize_embeddings", True)),
         "max_tokens": int(generation_config.get("max_new_tokens") or manifest.get("max_tokens") or 1600),
         "temperature": float(generation_config.get("temperature") or manifest.get("temperature") or 0.2),
         "timeout_seconds": float(manifest.get("timeout_seconds") or 20),
@@ -496,12 +565,13 @@ def inspect_assistant_model_directory(directory_path: str | Path) -> dict[str, A
             "bundle_path": str(path),
             "extracted_dir": str(path.resolve()),
             "load_in_fastapi": False,
-            "server_contract": "openai_compatible_chat_completions",
+            "server_contract": "openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible_chat_completions",
         },
         "capabilities": {
             "registry_backed": True,
             "pytorch_hf_bundle": True,
             "huggingface_directory_bundle": True,
+            "embedding_body": assistant_role in {"embedding", "dual"},
             "separate_server_required": True,
             "loads_in_fastapi": False,
         },
@@ -513,7 +583,7 @@ def inspect_assistant_model_directory(directory_path: str | Path) -> dict[str, A
         "bundle_sha256": bundle_sha256,
         "manifest_member": ASSISTANT_MODEL_MANIFEST_NAME,
         "manifest": manifest_dict,
-        "required_metadata": {key: manifest_dict.get(key) for key in ASSISTANT_BUNDLE_REQUIRED_METADATA},
+        "required_metadata": {key: manifest_dict.get(key) for key in _required_manifest_fields(manifest)},
         "assets": {
             "model_artifact": model_asset,
             "tokenizer_assets": tokenizer_assets,
@@ -526,6 +596,7 @@ def inspect_assistant_model_directory(directory_path: str | Path) -> dict[str, A
             "runtime_kind": runtime_kind,
             "base_url": assistant_parameters["base_url"],
             "chat_endpoint": assistant_parameters["chat_endpoint"],
+            "embeddings_endpoint": assistant_parameters["embeddings_endpoint"],
             "health_url": assistant_parameters["health_url"],
             "model_name": assistant_parameters["model_name"],
             "model_version": assistant_parameters["model_version"],
@@ -564,6 +635,9 @@ def normalize_huggingface_assistant_directory(
     members = _directory_members(path)
     repo_id = str(supplied.get("repo_id") or manifest.get("repo_id") or path.name)
     display_name = str(supplied.get("display_name") or manifest.get("display_name") or repo_id.rsplit("/", 1)[-1])
+    assistant_role = str(supplied.get("assistant_role") or manifest.get("assistant_role") or "generator").strip().lower()
+    if assistant_role not in {"generator", "embedding", "dual"}:
+        assistant_role = "generator"
     model_asset = _member_exists(
         members,
         str(supplied.get("model_artifact_path") or manifest.get("model_artifact_path") or "").strip() or None,
@@ -578,22 +652,37 @@ def normalize_huggingface_assistant_directory(
     ) or _find_named_asset(members, ASSISTANT_PROMPT_ASSET_NAMES)
     manifest.update(
         {
-            "provider_type": supplied.get("provider_type") or manifest.get("provider_type") or "openai_compatible",
-            "runtime_kind": supplied.get("runtime_kind") or manifest.get("runtime_kind") or "pytorch_hf_server",
+            "assistant_role": assistant_role,
+            "provider_type": supplied.get("provider_type")
+            or manifest.get("provider_type")
+            or ("openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible"),
+            "runtime_kind": supplied.get("runtime_kind")
+            or manifest.get("runtime_kind")
+            or ("embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server"),
             "model_name": supplied.get("model_name") or manifest.get("model_name") or display_name,
             "model_version": supplied.get("model_version") or manifest.get("model_version") or supplied.get("revision") or "huggingface-import",
             "base_model_name": supplied.get("base_model_name") or manifest.get("base_model_name") or repo_id,
             "supported_draft_types": supplied.get("supported_draft_types")
             or manifest.get("supported_draft_types")
-            or [
+            or (
+                ["embedding_retrieval"]
+                if assistant_role == "embedding"
+                else [
                 "dataset_generation",
                 "model_generation",
                 "registry_object",
                 "feature_operations",
                 "training_run",
                 "study",
-            ],
+                ]
+            ),
             "max_context_tokens": supplied.get("max_context_tokens") or manifest.get("max_context_tokens") or 4096,
+            "embedding_dimension": supplied.get("embedding_dimension") or manifest.get("embedding_dimension") or (768 if assistant_role == "embedding" else None),
+            "pooling_strategy": supplied.get("pooling_strategy") or manifest.get("pooling_strategy") or ("mean" if assistant_role == "embedding" else None),
+            "max_sequence_tokens": supplied.get("max_sequence_tokens") or manifest.get("max_sequence_tokens") or supplied.get("max_context_tokens") or manifest.get("max_context_tokens") or 512,
+            "query_instruction": supplied.get("query_instruction") or manifest.get("query_instruction"),
+            "document_instruction": supplied.get("document_instruction") or manifest.get("document_instruction"),
+            "normalize_embeddings": supplied.get("normalize_embeddings") if "normalize_embeddings" in supplied else manifest.get("normalize_embeddings", True),
             "base_url": supplied.get("base_url") or manifest.get("base_url") or "http://assistant-server:8080/v1",
             "prompt_template_version": supplied.get("prompt_template_version")
             or manifest.get("prompt_template_version")
@@ -613,7 +702,7 @@ def normalize_huggingface_assistant_directory(
         manifest["tokenizer_path"] = tokenizer_asset
     if prompt_asset:
         manifest["chat_template_path"] = prompt_asset
-    if not manifest.get("chat_template") and not manifest.get("chat_template_path"):
+    if assistant_role != "embedding" and not manifest.get("chat_template") and not manifest.get("chat_template_path"):
         manifest["chat_template"] = (
             "{% for message in messages %}{{ message['role'] }}: {{ message['content'] }}\n{% endfor %}assistant:"
         )
@@ -651,21 +740,30 @@ def assistant_bundle_status_from_model(model_record: Any) -> dict[str, Any]:
     tokenizer = _path_status("tokenizer_path")
     prompt_asset = _path_status("chat_template_path")
     manifest = _path_status("bundle_manifest_path")
+    assistant_role = str(assistant_config.get("assistant_role") or "generator").strip().lower()
     ready = bool(
         bundle_path["exists"]
         and (extracted_dir["exists"] or model_artifact["exists"])
         and model_artifact["exists"]
         and (tokenizer["exists"] or any(item["exists"] for item in tokenizer_asset_status))
-        and (prompt_asset["exists"] or assistant_config.get("chat_template") or assistant_config.get("prompt_template_version"))
+        and (
+            assistant_role == "embedding"
+            or prompt_asset["exists"]
+            or assistant_config.get("chat_template")
+            or assistant_config.get("prompt_template_version")
+        )
     )
     return {
         "status": "ready" if ready else ("configured" if bundle_path["configured"] else "missing"),
         "ready": ready,
         "runtime_kind": assistant_config.get("runtime_kind"),
         "provider_type": assistant_config.get("provider_type"),
+        "assistant_role": assistant_role,
         "model_name": assistant_config.get("model_name"),
         "model_version": assistant_config.get("model_version"),
         "max_context_tokens": assistant_config.get("max_context_tokens"),
+        "embedding_dimension": assistant_config.get("embedding_dimension"),
+        "pooling_strategy": assistant_config.get("pooling_strategy"),
         "bundle": bundle_path,
         "extracted_dir": extracted_dir,
         "manifest": manifest,

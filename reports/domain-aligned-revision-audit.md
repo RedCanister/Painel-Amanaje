@@ -309,3 +309,87 @@ Date: 2026-05-14
 - `.pytest_cache` cannot be written because Windows denies access to the cache directory. Unique basetemp directories keep suites passing, but the cache warning remains.
 - Compose still warns that `POSTGRES_PASSWORD` is unset. This is acceptable for the current local stack but should be resolved before packaged distribution.
 - The worktree remains intentionally dirty with preserved source changes, generated runtime artifacts, and prior screenshots.
+
+---
+
+# Full Testing And Finish-The-App Verification
+
+Date: 2026-05-27
+
+## Procedure
+
+1. Preserved the dirty worktree and generated runtime artifacts, including existing run ledgers and live config/activity files.
+2. Fixed the remaining dependency/runtime regressions found during this pass:
+   - Added the missing local/API/worker `transformers` dependency alongside the already verified Redis/RQ runtime path.
+   - Preserved `RuntimeArtifactDependencyError` metadata from `/production/simulate` while still converting model-runtime failures into structured user-facing `400` responses.
+   - Fixed sklearn estimator-class handling in training utilities so estimator classes are instantiated before cloning.
+3. Reworked the three maturity blockers from the prompt:
+   - Simulation/Prediction is now framed as `Prediction Review`, with deterministic labels, compact default controls, hidden raw JSON/advanced payload controls, Plotly-ready `plot_specs`, and response aliases for `primary_result`, `prediction_summary`, `series`, `scenario_comparison`, and `changed_features`.
+   - Gemma Assistant selection now disables silent fallback. Runtime responses expose provider/model/bundle/runtime/draft flags, and the Assistant UI shows separate provider configured, bundle ready, runtime loaded, and draft validated gates.
+   - Panel is moved toward a dashboard-app shell: Dash Workspace is the primary tile type, page wording now follows data-source/filter/tile/inspector concepts, save/delete selector state is more stable, and `/panel/context` uses lighter summaries.
+4. Rebuilt and recreated the live API and CPU worker after the final patch:
+   - `docker compose build api api-worker-cpu`
+   - `docker compose up -d --no-deps --force-recreate api api-worker-cpu`
+5. Verified source syntax/imports:
+   - Local imports passed for `redis`, `rq`, `plotly`, `dash`, `torch`, `transformers`, `mlflow`, and `sklearn`.
+   - API container imports passed for `redis`, `rq`, and `transformers`.
+   - CPU worker container imports passed for `redis`, `rq`, and `transformers`.
+   - `py_compile` passed for the touched API/runtime utility modules.
+
+## Automated Verification
+
+- `scripts/run_fast_tests.ps1`: `218 passed, 69 deselected`.
+- `scripts/run_perf_tests.ps1`: `3 passed, 284 deselected`.
+- `scripts/run_full_stack_tests.ps1`: `100 passed, 187 deselected`.
+- Explicit Playwright E2E: `66 passed`.
+- Targeted dependency regression: `test_production_simulate_returns_structured_dependency_errors` passed.
+- `git diff --check`: passed with line-ending warnings only.
+
+## Live Service Verification
+
+- Services up:
+  - `api`: running on `8000` and `8082`.
+  - `api-worker-cpu`: healthy.
+  - `api-worker-gpu`: healthy and registered on `amanaje:gpu`.
+  - `redis`: healthy.
+  - `dashboard`: running on `8050`.
+  - `mlflow`: running on `5000`.
+  - `postgres`: healthy.
+  - `assistant-server`: healthy on `8091`.
+- `/runtime/workers`: `status=ok`, backend `rq`, `4` live workers, `0` queued jobs, `0` stale workers.
+- `/runtime/accelerators`: `torch_available=true`, `torch_version=2.9.0+cu128`, `cuda_available=false`, `device_count=0`, `fallback_policy=cpu`.
+- `/panel/context`: `status=ok`, measured at `1430 ms`.
+- API routes returned HTTP 200:
+  - `/visualization`, `/plot`, `/plots/artifacts`, `/settings/logs`, `/production/status`, `/assistant/management/overview`.
+- Dashboard routes returned HTTP 200:
+  - `/`, `/embed`, `/extensions`, `/extensions.json`.
+- `/production/simulate` with the known LSTM finance context now returns structured `400` instead of a server error:
+  - `error_code=simulation_runtime_error`
+  - `watch_context_id=inference:8|model:5|dataset:4`
+  - user-facing `detail=Simulation runtime failed for the selected model and dataset context.`
+
+## Live Run Artifacts Preserved
+
+- `api/runtime_artifacts/runs/editor_execution_d317aa3a8011.json`
+  - Status: `completed`.
+  - Output included `amanaje live smoke` and `result=4`.
+- `api/runtime_artifacts/runs/assistant_operation_ed869c615883.json`
+  - Status: `failed` by design after strict Gemma routing.
+  - Error: `Selected assistant model runtime is unavailable; draft was not generated.`
+- `api/runtime_artifacts/runs/training_13d4c75b9966.json`
+  - Status in ledger remains `running` at `preparing_dataset`.
+  - Queue/worker evidence shows the default queue now has failed jobs and no queued jobs; this is a live artifact consistency gap after the heavy CPU training smoke.
+- `api/runtime_artifacts/runs/study_820406e20124.json`
+  - Status in ledger remains `running` at `validating_schema`.
+  - The requested `study_id=3` did not exist in the current DB; the available linked study/model/dataset path used `study_id=19`, `model_id=18`, `dataset_id=13`.
+
+## Remaining Gaps
+
+- External chat history is still unavailable; compliance remains limited to visible prompts, local reports, route evidence, tests, and generated artifacts.
+- `README.md` has no conflict markers, but Git still reports it as `UU`. The index should be resolved before packaging or creating a release branch.
+- The requested live `/training/2` with `datasetId=1` and `/studies/3/optimize` could not be completed because those IDs do not exist in the current database. The available live training/study smoke path used a large GitHub dataset and left stale `running` ledgers after worker failure/timeout.
+- Gemma Assistant bundle/runtime gates are now visible and strict, but Gemma still does not produce a validated draft. Assistant-server logs show `/v1/chat/completions` returning `500` with `ValueError: inputs_embeds and shared_kv_states cannot be None.` No silent local fallback is used for selected Gemma runs.
+- GPU worker registration is healthy, but this host exposes no CUDA device to PyTorch. CUDA execution remains an environment/hardware blocker.
+- `.pytest_cache` still cannot be written because Windows denies access to the cache directory. The suites pass with explicit temp directories, but the warning remains.
+- Docker Compose still warns that `POSTGRES_PASSWORD` is unset; this should be fixed before distribution.
+- The worktree remains dirty with preserved source edits and runtime artifacts, including `api/runtime_artifacts/config/runtime_config.json` and `api/runtime_artifacts/monitoring/activity_log.jsonl`.

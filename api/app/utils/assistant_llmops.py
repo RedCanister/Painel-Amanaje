@@ -395,6 +395,12 @@ def build_assistant_context_pack(request: AssistantDraftRequest, target_type: st
     form_values = _extract_form_values(context)
     references = _build_content_references(context, profile, registry_type)
     reference_pack = build_reference_pack_metadata(references)
+    embedding_metadata = context.get("embedding_retrieval") if isinstance(context.get("embedding_retrieval"), Mapping) else {}
+    selected_reference_scores = {
+        str(key): float(value)
+        for key, value in dict(embedding_metadata.get("selected_reference_scores") or {}).items()
+        if value is not None
+    }
     compact_summary = _build_compact_summary(
         target_type=profile,
         registry_type=registry_type,
@@ -417,6 +423,12 @@ def build_assistant_context_pack(request: AssistantDraftRequest, target_type: st
         reference_pack_hash=reference_pack["reference_pack_hash"],
         selected_reference_ids=reference_pack["selected_reference_ids"],
         reference_trust_levels=reference_pack["reference_trust_levels"],
+        selected_reference_scores=selected_reference_scores,
+        embedding_model_id=embedding_metadata.get("embedding_model_id"),
+        embedding_model_version=embedding_metadata.get("embedding_model_version"),
+        embedding_index_hash=embedding_metadata.get("embedding_index_hash"),
+        embedding_retrieval_hash=embedding_metadata.get("embedding_retrieval_hash"),
+        embedding_runtime_fallback=embedding_metadata.get("runtime_fallback"),
         compact_summary=compact_summary,
     )
     return pack.model_copy(update={"pack_hash": context_pack_hash(pack)})
@@ -802,6 +814,12 @@ def stamp_workflow_draft(
         "reference_pack_hash": context_pack.reference_pack_hash,
         "selected_reference_ids": list(context_pack.selected_reference_ids),
         "reference_trust_levels": dict(context_pack.reference_trust_levels),
+        "selected_reference_scores": dict(context_pack.selected_reference_scores),
+        "embedding_model_id": context_pack.embedding_model_id,
+        "embedding_model_version": context_pack.embedding_model_version,
+        "embedding_index_hash": context_pack.embedding_index_hash,
+        "embedding_retrieval_hash": context_pack.embedding_retrieval_hash,
+        "embedding_runtime_fallback": context_pack.embedding_runtime_fallback,
         "reference_hashes": [
             reference.content_hash
             for reference in context_pack.content_references

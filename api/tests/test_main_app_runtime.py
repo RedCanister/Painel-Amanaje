@@ -469,6 +469,80 @@ def test_run_control_routes_update_cooperative_ledger(monkeypatch, tmp_path):
     assert missing.status_code == 404
 
 
+def test_orphaned_cancel_requested_run_can_be_reconciled_and_rerun(monkeypatch, tmp_path):
+    monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
+    monkeypatch.setattr(
+        main_app,
+        "get_queue_runtime_snapshot",
+        lambda limit=100: {"positions": {}, "summary": {"queued_jobs": 0, "started_jobs": 0}, "queues": []},
+    )
+    monkeypatch.setattr(
+        main_app,
+        "get_worker_runtime_status",
+        lambda: {"status": "ok", "summary": {"live_workers": 1, "stale_workers": 0}, "live_workers": []},
+    )
+    monkeypatch.setattr(
+        main_app,
+        "_cached_torch_accelerator_status",
+        lambda: {"cuda": {"available": False, "device_count": 0}},
+    )
+    monkeypatch.setattr(
+        main_app,
+        "cancel_rq_job",
+        lambda run_id: {"backend": "rq", "job_id": run_id, "cancelled": False, "reason": "job_not_found"},
+    )
+    monkeypatch.setattr(
+        main_app,
+        "enqueue_training_run",
+        lambda run_id, *, model_id, payload_data, prefer_gpu=False: {
+            "backend": "rq",
+            "queue": "amanaje:default",
+            "job_id": run_id,
+            "model_id": model_id,
+            "payload_dataset_id": payload_data["datasetId"],
+            "prefer_gpu": prefer_gpu,
+        },
+    )
+    orphan = create_run_entry(
+        tmp_path,
+        run_type="training",
+        status="cancel_requested",
+        context={"model_id": 5, "dataset_id": 7, "study_id": None},
+        parameters={"framework": "sklearn"},
+    )
+    update_run_entry(
+        tmp_path,
+        orphan["run_id"],
+        merge={"queue": {"backend": "rq", "job_id": orphan["run_id"], "cancelled": False, "reason": "job_not_found"}},
+        event_message="Cooperative cancellation requested for this run.",
+    )
+    client = TestClient(main_app.app)
+
+    listing = client.get(f"/operations/runs?run_ids={orphan['run_id']}&limit=5")
+    active_listing = client.get(f"/operations/runs?run_ids={orphan['run_id']}&active_only=true&limit=5")
+    listed = listing.json()["runs"][0]
+    rerun = client.post(f"/runs/{orphan['run_id']}/rerun")
+    cancelled = client.post(f"/runs/{orphan['run_id']}/cancel")
+    ledger = read_run_entry(tmp_path, orphan["run_id"])
+
+    assert listing.status_code == 200
+    assert active_listing.status_code == 200
+    assert active_listing.json()["runs"] == []
+    assert listed["status"] == "cancel_requested"
+    assert listed["effective_status"] == "cancelled"
+    assert listed["actions"]["cancel"] is True
+    assert listed["actions"]["rerun"] is True
+    assert "job is no longer present" in listed["status_reason"]
+    assert rerun.status_code == 202
+    assert rerun.json()["source_run_id"] == orphan["run_id"]
+    assert read_run_entry(tmp_path, rerun.json()["run_id"])["context"]["rerun_of"] == orphan["run_id"]
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+    assert ledger["status"] == "cancelled"
+    assert ledger["queue"]["reason"] == "job_not_found"
+    assert ledger["progress"]["latest_event"] == "Run closed because its RQ job is no longer present."
+
+
 def test_operations_console_api_buckets_terminal_and_analysis(monkeypatch, tmp_path):
     monkeypatch.setattr(main_app, "RUN_LEDGER_DIR", tmp_path)
     cpu_run = create_run_entry(tmp_path, run_type="training", parameters={"framework": "sklearn"}, status="queued")

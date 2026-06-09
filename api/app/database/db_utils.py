@@ -118,11 +118,13 @@ JSONB_CONTAINER_COLUMNS = {
 }
 
 ASSISTANT_MODEL_PARAMETER_FIELDS = {
+    "assistant_role",
     "provider_type",
     "runtime_kind",
     "base_url",
     "chat_endpoint",
     "health_url",
+    "embeddings_endpoint",
     "model_name",
     "model_version",
     "base_model_name",
@@ -143,6 +145,12 @@ ASSISTANT_MODEL_PARAMETER_FIELDS = {
     "quantization",
     "generation_config",
     "max_context_tokens",
+    "max_sequence_tokens",
+    "embedding_dimension",
+    "pooling_strategy",
+    "query_instruction",
+    "document_instruction",
+    "normalize_embeddings",
     "prompt_template_version",
     "context_pack_version",
     "safety_profile_version",
@@ -290,7 +298,14 @@ def _pack_assistant_model_payload(orm_model: Type[ObjectORM], payload: dict) -> 
             value = normalized.pop(field_name)
             if value is not None:
                 assistant_parameters[field_name] = value
-    assistant_parameters.setdefault("provider_type", "openai_compatible")
+    assistant_role = str(assistant_parameters.get("assistant_role") or "generator").strip().lower()
+    if assistant_role not in {"generator", "embedding", "dual"}:
+        assistant_role = "generator"
+    assistant_parameters["assistant_role"] = assistant_role
+    assistant_parameters.setdefault(
+        "provider_type",
+        "openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible",
+    )
     parameters["assistant"] = assistant_parameters
     normalized["parameters"] = parameters
     return normalized

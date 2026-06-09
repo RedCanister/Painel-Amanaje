@@ -1,0 +1,281 @@
+{
+  "run_id": "study_820406e20124",
+  "run_type": "study",
+  "status": "cancel_requested",
+  "stage": "cancellation_requested",
+  "created_at": "2026-05-26T23:43:54.374686",
+  "updated_at": "2026-06-06T03:52:23.959425",
+  "started_at": "2026-05-26T23:45:49.873906",
+  "completed_at": null,
+  "context": {
+    "study_id": 19,
+    "model_id": 18,
+    "dataset_id": 13,
+    "inference_id": null
+  },
+  "parameters": {
+    "nTrials": 1,
+    "outputDir": null,
+    "plotResults": true
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "cancellation_requested",
+    "latest_event": "Cooperative cancellation requested for this run.",
+    "latest_timestamp": "2026-06-06T03:52:23.959425",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:43:54.374686",
+        "message": "study run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:43:54.409571",
+        "message": "Study run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-26T23:45:49.873906",
+        "message": "Resolving study, model, and dataset context."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-26T23:45:51.787951",
+        "message": "Study context resolved."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-26T23:45:51.808278",
+        "message": "Study preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-26T23:45:51.835273",
+        "message": "Validating the linked model and dataset schema for the study."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-04T20:26:51.719431",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-05T23:19:10.932038",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-05T23:23:46.228219",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-06T03:52:23.959425",
+        "message": "Cooperative cancellation requested for this run."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:43:54.374686",
+      "message": "study run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:43:54.409571",
+      "message": "Study run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-26T23:45:49.873906",
+      "message": "Resolving study, model, and dataset context."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-26T23:45:51.787951",
+      "message": "Study context resolved."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-26T23:45:51.808278",
+      "message": "Study preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-26T23:45:51.835273",
+      "message": "Validating the linked model and dataset schema for the study."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-04T20:26:51.719431",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-05T23:19:10.932038",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-05T23:23:46.228219",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-06T03:52:23.959425",
+      "message": "Cooperative cancellation requested for this run."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 10,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-26T23:43:54.374686",
+        "stream": "system",
+        "stage": "queued",
+        "message": "study run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-26T23:43:54.409571",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Study run enqueued on amanaje:default."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-26T23:45:49.873906",
+        "stream": "system",
+        "stage": "resolving_context",
+        "message": "Resolving study, model, and dataset context."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-26T23:45:51.787951",
+        "stream": "system",
+        "stage": "resolving_context",
+        "message": "Study context resolved."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-26T23:45:51.808278",
+        "stream": "system",
+        "stage": "validating_schema",
+        "message": "Study preflight completed. Required dataset columns are available."
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-26T23:45:51.835273",
+        "stream": "system",
+        "stage": "validating_schema",
+        "message": "Validating the linked model and dataset schema for the study."
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-06-04T20:26:51.719431",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-06-05T23:19:10.932038",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-06-05T23:23:46.228219",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-06-06T03:52:23.959425",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "job_id": "study_820406e20124",
+    "cancelled": false,
+    "reason": "job_not_found"
+  },
+  "rerun_payload": {
+    "run_type": "study",
+    "study_id": 19,
+    "payload_data": {
+      "nTrials": 1,
+      "outputDir": null,
+      "plotResults": true
+    },
+    "parameters": {
+      "framework": "sklearn",
+      "model_type": "GradientBoosting",
+      "features_count": 23,
+      "metric": "accuracy",
+      "n_trials": 25,
+      "direction": "maximize",
+      "search_space": {
+        "framework": {
+          "type": "categorical",
+          "choices": [
+            "sklearn"
+          ]
+        },
+        "model_type": {
+          "type": "categorical",
+          "choices": [
+            "GradientBoosting"
+          ]
+        },
+        "features_count": {
+          "low": 14,
+          "high": 41,
+          "step": 1,
+          "type": "int"
+        }
+      },
+      "nTrials": 1,
+      "outputDir": null,
+      "plotResults": true
+    }
+  },
+  "control": {
+    "cancel_requested": true,
+    "cancel_requested_at": "2026-06-06T03:52:23.951066"
+  }
+}

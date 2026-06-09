@@ -1,0 +1,338 @@
+{
+  "run_id": "assistant_operation_ed869c615883",
+  "run_type": "assistant_operation",
+  "status": "failed",
+  "stage": "failed",
+  "created_at": "2026-05-26T23:36:03.104349",
+  "updated_at": "2026-05-26T23:36:13.505170",
+  "started_at": "2026-05-26T23:36:13.178312",
+  "completed_at": "2026-05-26T23:36:13.505170",
+  "context": {
+    "source": "assistant",
+    "operation": "draft",
+    "assistant_model_id": 38
+  },
+  "parameters": {
+    "operation": "draft",
+    "payload_keys": [
+      "assistant_model_id",
+      "prompt",
+      "target_type"
+    ],
+    "prompt_length": 37
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {
+    "operation": "draft",
+    "status": "failed"
+  },
+  "error": "Selected assistant model runtime is unavailable; draft was not generated.",
+  "progress": {
+    "current_stage": "failed",
+    "latest_event": "ValueError: Selected assistant model runtime is unavailable; draft was not generated.",
+    "latest_timestamp": "2026-05-26T23:36:13.505170",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:36:03.104349",
+        "message": "assistant_operation run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:36:03.125953",
+        "message": "Assistant operation enqueued on amanaje:assistant."
+      },
+      {
+        "status": "running",
+        "stage": "draft",
+        "timestamp": "2026-05-26T23:36:13.178312",
+        "message": "Assistant operation 'draft' started."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-26T23:36:13.460976",
+        "message": "Assistant operation 'draft' failed: Selected assistant model runtime is unavailable; draft was not generated."
+      },
+      {
+        "status": "failed",
+        "stage": "failed",
+        "timestamp": "2026-05-26T23:36:13.505170",
+        "message": "ValueError: Selected assistant model runtime is unavailable; draft was not generated."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:36:03.104349",
+      "message": "assistant_operation run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:36:03.125953",
+      "message": "Assistant operation enqueued on amanaje:assistant."
+    },
+    {
+      "status": "running",
+      "stage": "draft",
+      "timestamp": "2026-05-26T23:36:13.178312",
+      "message": "Assistant operation 'draft' started."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-26T23:36:13.460976",
+      "message": "Assistant operation 'draft' failed: Selected assistant model runtime is unavailable; draft was not generated."
+    },
+    {
+      "status": "failed",
+      "stage": "failed",
+      "timestamp": "2026-05-26T23:36:13.505170",
+      "message": "ValueError: Selected assistant model runtime is unavailable; draft was not generated."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 29,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-26T23:36:03.104349",
+        "stream": "system",
+        "stage": "queued",
+        "message": "assistant_operation run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-26T23:36:03.125953",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Assistant operation enqueued on amanaje:assistant."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-26T23:36:13.178312",
+        "stream": "system",
+        "stage": "draft",
+        "message": "Assistant operation 'draft' started."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-26T23:36:13.460976",
+        "stream": "system",
+        "stage": "failed",
+        "message": "Assistant operation 'draft' failed: Selected assistant model runtime is unavailable; draft was not generated."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-26T23:36:13.485724",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "Traceback (most recent call last):"
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-26T23:36:13.485746",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/operation_queue.py\", line 520, in _run_with_failure_ledger"
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-05-26T23:36:13.485754",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return work()"
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-05-26T23:36:13.485763",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^"
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-05-26T23:36:13.485771",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/app/utils/operation_queue.py\", line 611, in _work"
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-05-26T23:36:13.485780",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    asyncio.run("
+      },
+      {
+        "index": 10,
+        "timestamp": "2026-05-26T23:36:13.485788",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/usr/local/lib/python3.11/asyncio/runners.py\", line 190, in run"
+      },
+      {
+        "index": 11,
+        "timestamp": "2026-05-26T23:36:13.485795",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return runner.run(main)"
+      },
+      {
+        "index": 12,
+        "timestamp": "2026-05-26T23:36:13.485802",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 13,
+        "timestamp": "2026-05-26T23:36:13.485809",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/usr/local/lib/python3.11/asyncio/runners.py\", line 118, in run"
+      },
+      {
+        "index": 14,
+        "timestamp": "2026-05-26T23:36:13.485816",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return self._loop.run_until_complete(task)"
+      },
+      {
+        "index": 15,
+        "timestamp": "2026-05-26T23:36:13.485823",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 16,
+        "timestamp": "2026-05-26T23:36:13.485830",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/usr/local/lib/python3.11/asyncio/base_events.py\", line 654, in run_until_complete"
+      },
+      {
+        "index": 17,
+        "timestamp": "2026-05-26T23:36:13.485837",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return future.result()"
+      },
+      {
+        "index": 18,
+        "timestamp": "2026-05-26T23:36:13.485844",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 19,
+        "timestamp": "2026-05-26T23:36:13.485851",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/main_app.py\", line 262, in _execute_assistant_operation_job"
+      },
+      {
+        "index": 20,
+        "timestamp": "2026-05-26T23:36:13.485858",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    result = await _call_assistant_operation(operation, payload_data)"
+      },
+      {
+        "index": 21,
+        "timestamp": "2026-05-26T23:36:13.485865",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 22,
+        "timestamp": "2026-05-26T23:36:13.485872",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/main_app.py\", line 230, in _call_assistant_operation"
+      },
+      {
+        "index": 23,
+        "timestamp": "2026-05-26T23:36:13.485879",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    return _json_response_payload(await assistant_draft(request_payload, db=db))"
+      },
+      {
+        "index": 24,
+        "timestamp": "2026-05-26T23:36:13.485886",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      },
+      {
+        "index": 25,
+        "timestamp": "2026-05-26T23:36:13.485894",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "  File \"/app/main_app.py\", line 210, in _json_response_payload"
+      },
+      {
+        "index": 26,
+        "timestamp": "2026-05-26T23:36:13.485900",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "    raise ValueError(str(detail))"
+      },
+      {
+        "index": 27,
+        "timestamp": "2026-05-26T23:36:13.485907",
+        "stream": "stderr",
+        "stage": "failed",
+        "message": "ValueError: Selected assistant model runtime is unavailable; draft was not generated."
+      },
+      {
+        "index": 28,
+        "timestamp": "2026-05-26T23:36:13.505170",
+        "stream": "system",
+        "stage": "failed",
+        "message": "ValueError: Selected assistant model runtime is unavailable; draft was not generated."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "queue": "amanaje:assistant",
+    "job_id": "assistant_operation_ed869c615883"
+  },
+  "rerun_payload": {
+    "run_type": "assistant_operation",
+    "operation": "draft",
+    "queue_payload": {
+      "operation": "draft",
+      "payload_data": {
+        "prompt": "Create a tiny csv_text dataset draft.",
+        "target_type": "dataset_generation",
+        "assistant_model_id": 38
+      }
+    }
+  },
+  "failure": {
+    "type": "ValueError",
+    "message": "Selected assistant model runtime is unavailable; draft was not generated.",
+    "traceback": "Traceback (most recent call last):\n  File \"/app/app/utils/operation_queue.py\", line 520, in _run_with_failure_ledger\n    return work()\n           ^^^^^^\n  File \"/app/app/utils/operation_queue.py\", line 611, in _work\n    asyncio.run(\n  File \"/usr/local/lib/python3.11/asyncio/runners.py\", line 190, in run\n    return runner.run(main)\n           ^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.11/asyncio/base_events.py\", line 654, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"/app/main_app.py\", line 262, in _execute_assistant_operation_job\n    result = await _call_assistant_operation(operation, payload_data)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/main_app.py\", line 230, in _call_assistant_operation\n    return _json_response_payload(await assistant_draft(request_payload, db=db))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/main_app.py\", line 210, in _json_response_payload\n    raise ValueError(str(detail))\nValueError: Selected assistant model runtime is unavailable; draft was not generated.\n",
+    "worker_name": "amanaje-compose-assistant-assistant-amanaje-assistant-f11c1f503385-1-db7f5582",
+    "host_id": "compose-assistant",
+    "role": "assistant",
+    "queue": "amanaje:assistant",
+    "job_id": "assistant_operation_ed869c615883",
+    "failed_at": "2026-05-26T23:36:13.479110"
+  }
+}

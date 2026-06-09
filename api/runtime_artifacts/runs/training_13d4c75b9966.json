@@ -1,0 +1,267 @@
+{
+  "run_id": "training_13d4c75b9966",
+  "run_type": "training",
+  "status": "cancel_requested",
+  "stage": "cancellation_requested",
+  "created_at": "2026-05-26T23:38:49.406760",
+  "updated_at": "2026-06-06T03:52:23.911262",
+  "started_at": "2026-05-26T23:38:57.099813",
+  "completed_at": null,
+  "context": {
+    "model_id": 18,
+    "dataset_id": 13,
+    "study_id": null,
+    "inference_id": null
+  },
+  "parameters": {
+    "framework": "sklearn",
+    "model_type": "GradientBoosting",
+    "features_count": 23,
+    "epochs": 1,
+    "training_mode": "transfer",
+    "transfer_strategy": "auto",
+    "base_model_id": 18,
+    "base_artifact_path": "/models/github_full_schema.joblib",
+    "base_run_id": null
+  },
+  "metrics": {},
+  "artifacts": {},
+  "result": {},
+  "error": null,
+  "progress": {
+    "current_stage": "cancellation_requested",
+    "latest_event": "Cooperative cancellation requested for this run.",
+    "latest_timestamp": "2026-06-06T03:52:23.911262",
+    "timeline": [
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:38:49.406760",
+        "message": "training run created."
+      },
+      {
+        "status": "queued",
+        "stage": "queued",
+        "timestamp": "2026-05-26T23:38:49.450137",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "status": "running",
+        "stage": "resolving_context",
+        "timestamp": "2026-05-26T23:38:57.099813",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "status": "running",
+        "stage": "training",
+        "timestamp": "2026-05-26T23:39:01.469421",
+        "message": "Training workflow started."
+      },
+      {
+        "status": "running",
+        "stage": "validating_schema",
+        "timestamp": "2026-05-26T23:39:01.484720",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "status": "running",
+        "stage": "preparing_dataset",
+        "timestamp": "2026-05-26T23:39:01.500007",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-04T20:26:51.674105",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-05T23:19:13.114071",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-05T23:23:46.259104",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "status": "cancel_requested",
+        "stage": "cancellation_requested",
+        "timestamp": "2026-06-06T03:52:23.911262",
+        "message": "Cooperative cancellation requested for this run."
+      }
+    ],
+    "counters": {}
+  },
+  "events": [
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:38:49.406760",
+      "message": "training run created."
+    },
+    {
+      "status": "queued",
+      "stage": "queued",
+      "timestamp": "2026-05-26T23:38:49.450137",
+      "message": "Training run enqueued on amanaje:default."
+    },
+    {
+      "status": "running",
+      "stage": "resolving_context",
+      "timestamp": "2026-05-26T23:38:57.099813",
+      "message": "Resolving model, dataset, and optional study context."
+    },
+    {
+      "status": "running",
+      "stage": "training",
+      "timestamp": "2026-05-26T23:39:01.469421",
+      "message": "Training workflow started."
+    },
+    {
+      "status": "running",
+      "stage": "validating_schema",
+      "timestamp": "2026-05-26T23:39:01.484720",
+      "message": "Training preflight completed. Required dataset columns are available."
+    },
+    {
+      "status": "running",
+      "stage": "preparing_dataset",
+      "timestamp": "2026-05-26T23:39:01.500007",
+      "message": "Preparing dataset splits and feature encodings."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-04T20:26:51.674105",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-05T23:19:13.114071",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-05T23:23:46.259104",
+      "message": "Cooperative cancellation requested for this run."
+    },
+    {
+      "status": "cancel_requested",
+      "stage": "cancellation_requested",
+      "timestamp": "2026-06-06T03:52:23.911262",
+      "message": "Cooperative cancellation requested for this run."
+    }
+  ],
+  "terminal": {
+    "cap": 2000,
+    "next_index": 10,
+    "lines": [
+      {
+        "index": 0,
+        "timestamp": "2026-05-26T23:38:49.406760",
+        "stream": "system",
+        "stage": "queued",
+        "message": "training run created."
+      },
+      {
+        "index": 1,
+        "timestamp": "2026-05-26T23:38:49.450137",
+        "stream": "system",
+        "stage": "queued",
+        "message": "Training run enqueued on amanaje:default."
+      },
+      {
+        "index": 2,
+        "timestamp": "2026-05-26T23:38:57.099813",
+        "stream": "system",
+        "stage": "resolving_context",
+        "message": "Resolving model, dataset, and optional study context."
+      },
+      {
+        "index": 3,
+        "timestamp": "2026-05-26T23:39:01.469421",
+        "stream": "system",
+        "stage": "training",
+        "message": "Training workflow started."
+      },
+      {
+        "index": 4,
+        "timestamp": "2026-05-26T23:39:01.484720",
+        "stream": "system",
+        "stage": "validating_schema",
+        "message": "Training preflight completed. Required dataset columns are available."
+      },
+      {
+        "index": 5,
+        "timestamp": "2026-05-26T23:39:01.500007",
+        "stream": "system",
+        "stage": "preparing_dataset",
+        "message": "Preparing dataset splits and feature encodings."
+      },
+      {
+        "index": 6,
+        "timestamp": "2026-06-04T20:26:51.674105",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 7,
+        "timestamp": "2026-06-05T23:19:13.114071",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 8,
+        "timestamp": "2026-06-05T23:23:46.259104",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      },
+      {
+        "index": 9,
+        "timestamp": "2026-06-06T03:52:23.911262",
+        "stream": "system",
+        "stage": "cancellation_requested",
+        "message": "Cooperative cancellation requested for this run."
+      }
+    ]
+  },
+  "queue": {
+    "backend": "rq",
+    "job_id": "training_13d4c75b9966",
+    "cancelled": false,
+    "reason": "job_not_found"
+  },
+  "rerun_payload": {
+    "run_type": "training",
+    "model_id": 18,
+    "payload_data": {
+      "datasetId": 13,
+      "parameters": {
+        "epochs": 1
+      },
+      "inputType": "Manual",
+      "studyId": null
+    },
+    "parameters": {
+      "framework": "sklearn",
+      "model_type": "GradientBoosting",
+      "features_count": 23,
+      "epochs": 1,
+      "training_mode": "transfer",
+      "transfer_strategy": "auto"
+    }
+  },
+  "control": {
+    "cancel_requested": true,
+    "cancel_requested_at": "2026-06-06T03:52:23.900250"
+  }
+}

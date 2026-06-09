@@ -132,11 +132,13 @@ class LearningModel(ObjectModel):
     
 
 _ASSISTANT_MODEL_PARAMETER_FIELDS = (
+    "assistant_role",
     "provider_type",
     "runtime_kind",
     "base_url",
     "chat_endpoint",
     "health_url",
+    "embeddings_endpoint",
     "model_name",
     "model_version",
     "base_model_name",
@@ -157,6 +159,12 @@ _ASSISTANT_MODEL_PARAMETER_FIELDS = (
     "quantization",
     "generation_config",
     "max_context_tokens",
+    "max_sequence_tokens",
+    "embedding_dimension",
+    "pooling_strategy",
+    "query_instruction",
+    "document_instruction",
+    "normalize_embeddings",
     "prompt_template_version",
     "context_pack_version",
     "safety_profile_version",
@@ -183,11 +191,13 @@ class AssistantModel(LearningModel):
     reference_data: Optional[str] = "runtime_artifacts/assistant_datasets/interactions.jsonl"
     input_features: Optional[List[str]] = Field(default_factory=lambda: ["prompt", "context_pack", "target_type"])
     output_features: Optional[List[str]] = Field(default_factory=lambda: ["workflow_draft"])
+    assistant_role: Optional[str] = "generator"
     provider_type: Optional[str] = "openai_compatible"
     runtime_kind: Optional[str] = None
     base_url: Optional[str] = None
     chat_endpoint: Optional[str] = None
     health_url: Optional[str] = None
+    embeddings_endpoint: Optional[str] = None
     model_name: Optional[str] = None
     model_version: Optional[str] = None
     base_model_name: Optional[str] = None
@@ -208,6 +218,12 @@ class AssistantModel(LearningModel):
     quantization: Optional[Any] = None
     generation_config: Optional[Dict[str, Any]] = None
     max_context_tokens: Optional[int] = None
+    max_sequence_tokens: Optional[int] = None
+    embedding_dimension: Optional[int] = None
+    pooling_strategy: Optional[str] = None
+    query_instruction: Optional[str] = None
+    document_instruction: Optional[str] = None
+    normalize_embeddings: Optional[bool] = None
     prompt_template_version: Optional[str] = None
     context_pack_version: Optional[str] = None
     safety_profile_version: Optional[str] = None
@@ -233,7 +249,17 @@ class AssistantModel(LearningModel):
                 setattr(self, field_name, assistant_parameters[field_name])
             elif value is not None:
                 assistant_parameters[field_name] = value
-        assistant_parameters.setdefault("provider_type", self.provider_type or "openai_compatible")
+        assistant_role = str(assistant_parameters.get("assistant_role") or self.assistant_role or "generator").strip().lower()
+        if assistant_role not in {"generator", "embedding", "dual"}:
+            assistant_role = "generator"
+        assistant_parameters["assistant_role"] = assistant_role
+        if assistant_role == "embedding":
+            assistant_parameters.setdefault("provider_type", self.provider_type or "openai_compatible_embeddings")
+            assistant_parameters.setdefault("runtime_kind", self.runtime_kind or "embedding_hf_server")
+            assistant_parameters.setdefault("pooling_strategy", self.pooling_strategy or "mean")
+            assistant_parameters.setdefault("normalize_embeddings", True if self.normalize_embeddings is None else self.normalize_embeddings)
+        else:
+            assistant_parameters.setdefault("provider_type", self.provider_type or "openai_compatible")
         parameters["assistant"] = assistant_parameters
         self.parameters = parameters
         return self
@@ -246,7 +272,12 @@ class AssistantModel(LearningModel):
             value = data.pop(field_name, None)
             if value is not None:
                 assistant_parameters[field_name] = value
-        assistant_parameters.setdefault("provider_type", "openai_compatible")
+        assistant_role = str(assistant_parameters.get("assistant_role") or "generator").strip().lower()
+        assistant_parameters["assistant_role"] = assistant_role if assistant_role in {"generator", "embedding", "dual"} else "generator"
+        assistant_parameters.setdefault(
+            "provider_type",
+            "openai_compatible_embeddings" if assistant_parameters["assistant_role"] == "embedding" else "openai_compatible",
+        )
         parameters["assistant"] = assistant_parameters
         data["parameters"] = parameters
         data["model_type"] = "assistant_model"

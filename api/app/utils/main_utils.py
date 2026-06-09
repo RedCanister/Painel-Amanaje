@@ -1185,6 +1185,7 @@ def _list_plot_artifacts(
     dataset_id: Optional[int] = None,
     inference_id: Optional[int] = None,
     kind: Optional[str] = None,
+    limit: Optional[int] = None,
 ) -> list[dict[str, Any]]:
     return list_legacy_plot_artifacts(
         PLOT_ARTIFACT_DIR,
@@ -1193,6 +1194,7 @@ def _list_plot_artifacts(
         dataset_id=dataset_id,
         inference_id=inference_id,
         kind=kind,
+        limit=limit,
     )
 
 

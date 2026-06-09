@@ -49,6 +49,22 @@
     .assistant-alert.visible { display: block; }
     .assistant-empty,
     .helper-text { color: #6b7280; }
+    .assistant-runtime-gates {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 0.55rem;
+        margin-top: 0.75rem;
+    }
+    .assistant-gate {
+        border: 1px solid rgba(107, 114, 128, 0.28);
+        border-radius: 8px;
+        padding: 0.65rem 0.75rem;
+        background: rgba(255, 255, 255, 0.72);
+    }
+    .assistant-gate strong { display: block; color: var(--amanaje-text-strong); }
+    .assistant-gate span { color: #6b7280; font-size: 0.86rem; }
+    .assistant-gate.ready { border-color: rgba(22, 163, 74, 0.42); }
+    .assistant-gate.blocked { border-color: rgba(220, 38, 38, 0.38); }
 </style>
 {% endblock %}
 
@@ -62,6 +78,7 @@
             <button type="button" class="assistant-button primary" id="btnAssistantRefresh">Refresh</button>
         </div>
         <div id="assistantHeaderPills" class="assistant-pill-row"></div>
+        <div id="assistantRuntimeGates" class="assistant-runtime-gates"></div>
     </section>
 
     <div id="assistantAlert" class="assistant-alert"></div>
@@ -104,6 +121,10 @@
                     <label for="assistantModelSelect">Registered AssistantModel</label>
                     <select id="assistantModelSelect"><option value="">Configured active provider</option></select>
                 </div>
+                <div>
+                    <label for="assistantEmbeddingModelSelect">Embedding Body</label>
+                    <select id="assistantEmbeddingModelSelect"><option value="">Keyword/tag fallback</option></select>
+                </div>
                 <div class="assistant-actions">
                     <button type="button" class="assistant-button primary" id="btnAssistantModelTest">Test Model</button>
                     <button type="button" class="assistant-button" id="btnAssistantModelStatus">Model Status</button>
@@ -115,6 +136,11 @@
                     <button type="button" class="assistant-button" id="btnAssistantAttachDataset">Attach Latest Dataset</button>
                     <button type="button" class="assistant-button" id="btnAssistantTokenizeModel">Prepare Token Examples</button>
                     <button type="button" class="assistant-button" id="btnAssistantCurateModel">Curate Model Training</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingUseSession">Use Embedding For Session</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingActivate">Set Embedding Default</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingLoad">Load Embedding Runtime</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingStatus">Embedding Status</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingPrepare">Prepare Embedding Training</button>
                 </div>
             </div>
         </div>
@@ -125,9 +151,12 @@
                 <div><label for="assistantHfRepoId">Repository ID</label><input id="assistantHfRepoId" placeholder="organization/model-name"></div>
                 <div><label for="assistantHfRevision">Revision</label><input id="assistantHfRevision" placeholder="main"></div>
                 <div><label for="assistantHfDisplayName">Display Name</label><input id="assistantHfDisplayName" placeholder="Amanaje Assistant SLM"></div>
+                <div><label for="assistantHfRole">Assistant Role</label><select id="assistantHfRole"><option value="generator">Generator</option><option value="embedding">Embedding Body</option><option value="dual">Dual</option></select></div>
                 <div><label for="assistantHfBaseModelName">Base Model Name</label><input id="assistantHfBaseModelName" placeholder="organization/model-name"></div>
                 <div><label for="assistantHfDraftTypes">Draft Types</label><input id="assistantHfDraftTypes" placeholder="dataset_generation,model_generation,registry_object"></div>
                 <div><label for="assistantHfMaxContextTokens">Max Context Tokens</label><input type="number" id="assistantHfMaxContextTokens" min="512" value="4096"></div>
+                <div><label for="assistantHfEmbeddingDimension">Embedding Dimension</label><input type="number" id="assistantHfEmbeddingDimension" min="8" value="768"></div>
+                <div><label for="assistantHfPoolingStrategy">Pooling</label><select id="assistantHfPoolingStrategy"><option value="mean">Mean</option><option value="cls">CLS</option></select></div>
                 <div class="assistant-actions"><button type="button" class="assistant-button primary" id="btnAssistantImportHf">Import Hugging Face Model</button></div>
             </div>
         </div>
@@ -138,11 +167,14 @@
                 <div><label for="assistantPtBundleFile">Bundle Zip</label><input type="file" id="assistantPtBundleFile" accept=".zip"></div>
                 <div><label for="assistantPtBundlePath">Server Bundle Path</label><input id="assistantPtBundlePath" placeholder="/app/runtime_artifacts/assistant_models/my_bundle"></div>
                 <div><label for="assistantPtDisplayName">Display Name</label><input id="assistantPtDisplayName" placeholder="PyTorch Assistant"></div>
+                <div><label for="assistantPtRole">Assistant Role</label><select id="assistantPtRole"><option value="generator">Generator</option><option value="embedding">Embedding Body</option><option value="dual">Dual</option></select></div>
                 <div><label for="assistantPtModelName">Model Name</label><input id="assistantPtModelName" placeholder="amanaje-pytorch-assistant"></div>
                 <div><label for="assistantPtModelVersion">Model Version</label><input id="assistantPtModelVersion" placeholder="pytorch-import"></div>
                 <div><label for="assistantPtBaseModelName">Base Model Name</label><input id="assistantPtBaseModelName" placeholder="base/model"></div>
                 <div><label for="assistantPtDraftTypes">Draft Types</label><input id="assistantPtDraftTypes" placeholder="dataset_generation,model_generation,registry_object"></div>
                 <div><label for="assistantPtMaxContextTokens">Max Context Tokens</label><input type="number" id="assistantPtMaxContextTokens" min="512" value="4096"></div>
+                <div><label for="assistantPtEmbeddingDimension">Embedding Dimension</label><input type="number" id="assistantPtEmbeddingDimension" min="8" value="768"></div>
+                <div><label for="assistantPtPoolingStrategy">Pooling</label><select id="assistantPtPoolingStrategy"><option value="mean">Mean</option><option value="cls">CLS</option></select></div>
                 <div><label for="assistantPtTemperature">Temperature</label><input type="number" id="assistantPtTemperature" min="0" max="2" step="0.05" value="0.2"></div>
                 <div><label for="assistantPtMaxTokens">Max New Tokens</label><input type="number" id="assistantPtMaxTokens" min="128" value="1600"></div>
                 <div><label for="assistantPtDescription">Description</label><input id="assistantPtDescription" placeholder="Local PyTorch/HF assistant bundle"></div>
@@ -170,9 +202,12 @@
             <div class="assistant-form-grid">
                 <div><label for="assistantReferenceMaxFiles">Max files per sync</label><input type="number" id="assistantReferenceMaxFiles" min="1" max="1000" value="100"></div>
                 <div><label for="assistantReferenceQuery">Reference metadata search</label><input id="assistantReferenceQuery" placeholder="schema, registry, training, eval"></div>
+                <div><label for="assistantEmbeddingSearchQuery">Embedding search test</label><input id="assistantEmbeddingSearchQuery" placeholder="keyboard dataset examples"></div>
                 <div class="assistant-actions">
                     <button type="button" class="assistant-button primary" id="btnAssistantReferenceSync">Sync Repository</button>
                     <button type="button" class="assistant-button" id="btnAssistantReferenceSearch">Search References</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingIndexRebuild">Rebuild Embedding Index</button>
+                    <button type="button" class="assistant-button" id="btnAssistantEmbeddingSearch">Search Embedding Index</button>
                 </div>
             </div>
         </div>

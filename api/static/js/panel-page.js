@@ -1,5 +1,5 @@
 (function () {
-    const PANEL_OBJECTIVE = "Understand the current question through connected data, models, plots, simulations, metrics, and notes.";
+    const PANEL_OBJECTIVE = "Understand the active operation through connected data, models, plots, simulations, metrics, evidence, and notes.";
     const PANEL_MODE_STORAGE_KEY = "amanajePanelMode";
     const SOURCE_COLLECTIONS = {
         dataset: ["datasets"],
@@ -16,6 +16,17 @@
         metadata: ["datasets", "learning_models", "studies", "inferences", "code_models", "runs"],
         note: [],
         custom_json: [],
+    };
+    const RESOURCE_COLLECTIONS = ["inferences", "datasets", "learning_models", "plots", "studies", "runs", "code_models"];
+    const FOCUS_COLLECTIONS = new Set(["inferences", "datasets", "learning_models"]);
+    const KIND_FOR_COLLECTION = {
+        code_models: "metadata",
+        datasets: "dataset",
+        inferences: "inference",
+        learning_models: "learning_model",
+        plots: "plot",
+        runs: "metric",
+        studies: "study",
     };
 
     const state = {
@@ -168,7 +179,7 @@
             {
                 id: "objective_focus",
                 kind: "metadata",
-                title: "Objective",
+                title: "Operation Objective",
                 size: "full",
                 source: {},
                 settings: { mode: "objective" },
@@ -177,12 +188,12 @@
             {
                 id: "dash_visualization_studio",
                 kind: "dash_workspace",
-                title: "Dash Visualization Studio",
+                title: "Plotly Dash Workspace",
                 size: "full",
                 source: {},
                 settings: {
                     path: "/",
-                    description: "Interactive Dash workspace for plots, extensions, and panel visualizations.",
+                    description: "Interactive Plotly Dash workspace for visual tiles, Atlas extensions, and drilldown views.",
                 },
                 cache: {},
             },
@@ -223,6 +234,15 @@
                 cache: {},
             },
             {
+                id: "prediction_surface",
+                kind: "prediction",
+                title: "Prediction Surface",
+                size: "wide",
+                source: {},
+                settings: { variant: "simulation_summary" },
+                cache: {},
+            },
+            {
                 id: "interpretation_notes",
                 kind: "note",
                 title: "Interpretation Notes",
@@ -238,8 +258,8 @@
         const widgets = defaultWidgets();
         return {
             id: null,
-            name: "Amanaje Panel",
-            description: "Saved Painel Amanaje objective dashboard.",
+            name: "Atlas Prediction Review",
+            description: "Saved Operational Atlas panel workspace.",
             objective: PANEL_OBJECTIVE,
             tint: "amanaje",
             layout: { version: 1, columns: 12, density: "comfortable", order: widgets.map((widget) => widget.id) },
@@ -256,7 +276,7 @@
 
     function syncCurrentFromForm() {
         if (!state.current) return;
-        state.current.name = byId("panelDashboardName")?.value?.trim() || "Amanaje Panel";
+        state.current.name = byId("panelDashboardName")?.value?.trim() || "Atlas Prediction Review";
         state.current.objective = byId("panelObjective")?.value?.trim() || "";
         state.current.tint = "amanaje";
         state.current.widgets = currentWidgets().map((widget) => ({
@@ -355,7 +375,7 @@
     }
 
     function updateSourceOptions() {
-        const kind = byId("panelWidgetKind")?.value || "dataset";
+        const kind = byId("panelWidgetKind")?.value || "dash_workspace";
         const sourceSelect = byId("panelWidgetSource");
         const comparisonFields = byId("panelComparisonFields");
         if (!sourceSelect) return;
@@ -383,7 +403,7 @@
         if (filterSummary) {
             filterSummary.textContent = filters.column
                 ? `${filters.column}: ${filters.start || "start"} to ${filters.end || "end"}`
-                : "No display filter applied.";
+                : "No Atlas filter applied.";
         }
         if (byId("panelFilterColumn")) byId("panelFilterColumn").value = filters.column || "";
         if (byId("panelFilterStart")) byId("panelFilterStart").value = filters.start || "";
@@ -543,6 +563,54 @@
         if (byId("panelFilterEnd")) byId("panelFilterEnd").value = formatRangeValue(range, endValue);
     }
 
+    function resourceSearchText() {
+        return String(byId("panelResourceSearch")?.value || "").trim().toLowerCase();
+    }
+
+    function resourceMatchesSearch(collection, item, search) {
+        if (!search) return true;
+        const haystack = [
+            collectionLabel(collection),
+            itemTitle(item),
+            itemId(item),
+            item?.object_type,
+            item?.dataset_type,
+            item?.model_type,
+            item?.kind,
+            item?.status,
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(search);
+    }
+
+    function renderResourceInventory() {
+        const search = resourceSearchText();
+        const sections = RESOURCE_COLLECTIONS.map((collection) => {
+            const items = (state.context[collection] || []).filter((item) => resourceMatchesSearch(collection, item, search));
+            const visibleItems = items.slice(0, 14);
+            return `
+                <section class="panel-resource-group">
+                    <header>
+                        <span>${escapeHtml(collectionLabel(collection))}</span>
+                        <strong>${escapeHtml(items.length)}</strong>
+                    </header>
+                    <div class="panel-resource-items">
+                        ${visibleItems.length ? visibleItems.map((item) => {
+                            const value = sourceValue(collection, item);
+                            return `
+                                <button type="button" class="panel-resource-item" data-panel-resource-value="${escapeHtml(value)}" data-panel-resource-collection="${escapeHtml(collection)}">
+                                    <span>${escapeHtml(collectionLabel(collection))}</span>
+                                    <strong>${escapeHtml(itemTitle(item))}</strong>
+                                    <small>${escapeHtml(itemId(item) || item?.object_type || "artifact")}</small>
+                                </button>
+                            `;
+                        }).join("") : '<div class="panel-resource-empty">No matching resources.</div>'}
+                    </div>
+                </section>
+            `;
+        }).join("");
+        return `<div class="panel-resource-list" id="panelResourceList">${sections}</div>`;
+    }
+
     function renderContextSummary() {
         const target = byId("panelContextSummary");
         if (!target) return;
@@ -563,32 +631,83 @@
                     </div>
                 `).join("")}
             </div>
+            ${renderResourceInventory()}
         `;
+    }
+
+    function selectResourceFromRail(button) {
+        const value = button?.getAttribute?.("data-panel-resource-value") || "";
+        const collection = button?.getAttribute?.("data-panel-resource-collection") || "";
+        if (!value || !collection) return;
+
+        if (FOCUS_COLLECTIONS.has(collection)) {
+            const centerKind = byId("panelCenterKind");
+            if (centerKind) centerKind.value = collection;
+            updateCenterOptions();
+            const centerSource = byId("panelCenterSource");
+            if (centerSource) centerSource.value = value;
+            panelMetadata().center = parseSourceValue(value);
+        }
+
+        const targetKind = KIND_FOR_COLLECTION[collection];
+        const widgetKind = byId("panelWidgetKind");
+        if (targetKind && widgetKind) {
+            widgetKind.value = targetKind;
+            updateSourceOptions();
+            const widgetSource = byId("panelWidgetSource");
+            if (widgetSource && Array.from(widgetSource.options).some((option) => option.value === value)) {
+                widgetSource.value = value;
+            }
+        }
+
+        markDirty(true);
+        renderDashboard();
     }
 
     function renderDashboardSelect() {
         const select = byId("panelDashboardSelect");
         if (!select) return;
         if (!state.dashboards.length) {
-            select.innerHTML = '<option value="">Unsaved panel</option>';
+            select.innerHTML = '<option value="">Unsaved Atlas report</option>';
             return;
         }
         select.innerHTML = state.dashboards.map((dashboard) => `
-            <option value="${escapeHtml(dashboard.id)}">${escapeHtml(dashboard.name || "Amanaje Panel")}</option>
+            <option value="${escapeHtml(dashboard.id)}">${escapeHtml(dashboard.name || "Atlas Prediction Review")}</option>
         `).join("");
         if (state.current?.id) select.value = String(state.current.id);
+    }
+
+    function dashboardSummary(dashboard) {
+        return {
+            id: dashboard?.id,
+            name: dashboard?.name || "Atlas Prediction Review",
+            objective: dashboard?.objective || "",
+            tint: dashboard?.tint || "amanaje",
+            updated_at: dashboard?.date || dashboard?.updated_at || null,
+            widget_count: Array.isArray(dashboard?.widgets) ? dashboard.widgets.length : dashboard?.widget_count,
+        };
+    }
+
+    function upsertDashboardSummary(dashboard) {
+        const summary = dashboardSummary(dashboard);
+        if (!summary.id) return;
+        state.dashboards = [
+            summary,
+            ...state.dashboards.filter((item) => String(item.id) !== String(summary.id)),
+        ];
+        renderDashboardSelect();
     }
 
     function renderDashboard() {
         const dashboard = state.current || newLocalDashboard();
         const nameInput = byId("panelDashboardName");
         const objectiveInput = byId("panelObjective");
-        if (nameInput) nameInput.value = dashboard.name || "Amanaje Panel";
+        if (nameInput) nameInput.value = dashboard.name || "Atlas Prediction Review";
         if (objectiveInput) objectiveInput.value = dashboard.objective || "";
         const objectiveRun = byId("panelObjectiveRun");
         if (objectiveRun) objectiveRun.textContent = dashboard.objective || PANEL_OBJECTIVE;
-        byId("panelCanvasTitle").textContent = dashboard.name || "Saved Objective Dashboard";
-        byId("panelWidgetCount").textContent = `${currentWidgets().length} widgets`;
+        byId("panelCanvasTitle").textContent = dashboard.name || "Saved Atlas Report";
+        byId("panelWidgetCount").textContent = `${currentWidgets().length} tiles`;
         renderPanelFocus();
         renderWidgetDeck();
         renderDashboardSelect();
@@ -615,14 +734,14 @@
                     <div class="panel-widget-toolbar">
                         <div>
                             <span class="panel-widget-kind">${escapeHtml((widget.kind || "metadata").replace("_", " "))}</span>
-                            <h4 class="panel-widget-title">${escapeHtml(widget.title || "Widget")}</h4>
+                            <h4 class="panel-widget-title">${escapeHtml(widget.title || "Atlas Tile")}</h4>
                         </div>
                         <div class="panel-widget-actions" data-panel-edit-only="true">
                             <button type="button" data-panel-action="move-up" ${index === 0 ? "disabled" : ""}>Up</button>
                             <button type="button" data-panel-action="move-down" ${index === currentWidgets().length - 1 ? "disabled" : ""}>Down</button>
-                            <select data-panel-action="resize" aria-label="Widget size">
+                            <select data-panel-action="resize" aria-label="Tile size">
                                 ${["wide", "full"].map((option) => `
-                                    <option value="${option}" ${size === option ? "selected" : ""}>${option}</option>
+                                    <option value="${option}" ${size === option ? "selected" : ""}>${option === "full" ? "Full" : "Wide"}</option>
                                 `).join("")}
                             </select>
                             <button type="button" data-panel-action="remove">Remove</button>
@@ -637,7 +756,7 @@
     }
 
     function sourceEmpty(kind) {
-        return `<div class="panel-widget-empty">Select a ${escapeHtml(kind.replace("_", " "))} source, then save this panel.</div>`;
+        return `<div class="panel-widget-empty">Bind an Atlas ${escapeHtml(kind.replace("_", " "))} source, then save this report.</div>`;
     }
 
     function renderFacts(facts) {
@@ -720,7 +839,7 @@
                         ["Output", result.output_feature || summary.label],
                         ["Scenarios", scenarios.length || (result.series?.length ? 1 : 0)],
                     ])}
-                    <div style="margin-top:0.75rem;">${renderMetricGrid({
+                    <div class="panel-result-gap">${renderMetricGrid({
                         final_prediction: summary.final_prediction ?? result.primary_result?.value,
                         prediction_delta: summary.prediction_delta ?? result.primary_result?.delta,
                         step_count: summary.step_count ?? result.steps,
@@ -795,8 +914,8 @@
                 ["Shape", Array.isArray(item.shape) ? item.shape.join(" x ") : item.shape],
                 ["Features", Array.isArray(item.features_list) ? item.features_list.length : ""],
             ])}
-            <div class="panel-widget-actions" style="margin-top:0.75rem;">
-                <button type="button" data-panel-action="load-analysis">Load Analysis</button>
+            <div class="panel-widget-actions panel-widget-action-row">
+                <button type="button" data-panel-action="load-analysis">Load Evidence</button>
             </div>
             ${widget.cache?.analysis ? renderResultValue(widget.cache.analysis, "Dataset Analysis") : ""}
         `;
@@ -813,9 +932,9 @@
                 ["Tested", item.is_tested],
                 ["Deployed", item.is_deployed],
             ])}
-            <div style="margin-top:0.75rem;">${renderMetricGrid(item.metrics || {})}</div>
-            <div class="panel-widget-actions" style="margin-top:0.75rem;">
-                <button type="button" data-panel-action="load-analysis">Load Analysis</button>
+            <div class="panel-result-gap">${renderMetricGrid(item.metrics || {})}</div>
+            <div class="panel-widget-actions panel-widget-action-row">
+                <button type="button" data-panel-action="load-analysis">Load Evidence</button>
             </div>
             ${widget.cache?.analysis ? renderResultValue(widget.cache.analysis, "Model Analysis") : ""}
         `;
@@ -891,7 +1010,7 @@
 
     function renderSourcePreview(source = {}) {
         const item = findSource(source);
-        if (!item) return '<div class="panel-widget-empty">Choose a comparison source.</div>';
+        if (!item) return '<div class="panel-widget-empty">Choose an Atlas comparison source.</div>';
         if (source.collection === "plots") {
             if (item.kind === "legacy_image" && item.artifact?.url) {
                 return `<img class="panel-artifact-image" src="${escapeHtml(item.artifact.url)}" alt="${escapeHtml(item.title || "Plot artifact")}">`;
@@ -899,7 +1018,7 @@
             if (item.kind === "table") return renderTablePlot(item);
             if (item.figure) {
                 const src = `${dashboardUrl()}/embed?figure=${encodeURIComponent(encodeFigure(item.figure))}&title=${encodeURIComponent(item.title || "Plot")}`;
-                return `<iframe class="panel-plot-frame compact" src="${escapeHtml(src)}" loading="lazy" title="${escapeHtml(item.title || "Plot")}"></iframe>`;
+                return `<iframe class="panel-plot-frame preview" src="${escapeHtml(src)}" loading="lazy" title="${escapeHtml(item.title || "Plot")}"></iframe>`;
             }
             return renderSeries(item);
         }
@@ -938,8 +1057,8 @@
                 ${widget.settings?.description ? `<p class="panel-dash-caption">${escapeHtml(widget.settings.description)}</p>` : ""}
                 <iframe class="panel-dash-frame" src="${escapeHtml(src)}" loading="lazy" title="${escapeHtml(widget.title || "Dash workspace")}"></iframe>
                 <div class="panel-widget-actions panel-dash-actions">
-                    <a href="${escapeHtml(src)}" target="_blank" rel="noopener">Open Dash</a>
-                    <a href="${escapeHtml(dashUrlForPath("/extensions"))}" target="_blank" rel="noopener">Extensions</a>
+                    <a href="${escapeHtml(src)}" target="_blank" rel="noopener">Open Workspace</a>
+                    <a href="${escapeHtml(dashUrlForPath("/extensions"))}" target="_blank" rel="noopener">Atlas Extensions</a>
                 </div>
             </div>
         `;
@@ -995,8 +1114,8 @@
                 ["Model", item.learning_model_id],
                 ["Dataset", item.dataset_id],
             ])}
-            <div class="panel-widget-actions" style="margin-top:0.75rem;">
-                <button type="button" data-panel-action="run-simulation">Run Simulation</button>
+            <div class="panel-widget-actions panel-widget-action-row">
+                <button type="button" data-panel-action="run-simulation">Run Scenario</button>
             </div>
             ${result ? renderResultValue(result, "Simulation Result") : ""}
         `;
@@ -1040,8 +1159,8 @@
                         </div>
                     </div>
                 ` : '<div class="helper-text">A range slider appears after this column is found in saved widget results.</div>'}
-                <div class="panel-widget-actions" style="margin-top:0.75rem;">
-                    <button type="button" data-panel-action="apply-widget-filter">Apply Display Filter</button>
+                <div class="panel-widget-actions panel-widget-action-row">
+                    <button type="button" data-panel-action="apply-widget-filter">Apply Atlas Filter</button>
                     <button type="button" data-panel-action="clear-widget-filter">Clear Filter</button>
                 </div>
             </div>
@@ -1054,7 +1173,7 @@
         if (Array.isArray(configured) && configured.length) return renderMetricGrid(configured);
         if (item?.metrics) return renderMetricGrid(item.metrics);
         if (item?.result?.metrics) return renderMetricGrid(item.result.metrics);
-        return '<div class="panel-widget-empty">Add metrics in Configuration JSON or choose a model/run source.</div>';
+        return '<div class="panel-widget-empty">Add metrics in Advanced JSON or choose an Atlas model/run source.</div>';
     }
 
     function renderNote(widget) {
@@ -1062,7 +1181,7 @@
         if (!isEditMode()) {
             return text
                 ? `<div class="panel-run-note">${escapeHtml(text)}</div>`
-                : '<div class="panel-widget-empty">No interpretation notes yet.</div>';
+                : '<div class="panel-widget-empty">No Atlas interpretation notes yet.</div>';
         }
         return `
             <textarea data-panel-note="${escapeHtml(widget.id)}" placeholder="Write interpretation notes for this objective.">${escapeHtml(text)}</textarea>
@@ -1082,8 +1201,8 @@
         if (widget.settings?.mode === "objective") {
             return renderFacts([
                 ["Objective", state.current?.objective || PANEL_OBJECTIVE],
-                ["Widgets", currentWidgets().length],
-                ["Saved Panel", state.current?.id || "Unsaved"],
+                ["Tiles", currentWidgets().length],
+                ["Atlas Report", state.current?.id || "Unsaved"],
             ]);
         }
         const item = findSource(widget.source);
@@ -1139,7 +1258,7 @@
         syncCurrentFromForm();
         return {
             name: state.current.name,
-            description: state.current.description || "Saved Painel Amanaje objective dashboard.",
+            description: state.current.description || "Saved Operational Atlas panel workspace.",
             objective: state.current.objective,
             tint: "amanaje",
             layout: state.current.layout || {},
@@ -1159,10 +1278,11 @@
         const method = hasId ? "PUT" : "POST";
         const response = await fetchJson(url, { method, body: JSON.stringify(payload) });
         state.current = normalizeDashboard(response.dashboard);
-        await loadDashboards();
+        upsertDashboardSummary(state.current);
         markDirty(false);
         renderDashboard();
-        showStatus("Panel saved.", "success");
+        showStatus("Atlas report saved.", "success");
+        loadDashboards().catch((error) => showStatus(error.message, "error"));
     }
 
     async function deleteDashboard() {
@@ -1170,14 +1290,17 @@
             await loadDashboard("");
             return;
         }
+        const deletedId = state.current.id;
         await fetchJson(`/panel/dashboards/${encodeURIComponent(state.current.id)}`, { method: "DELETE" });
-        await loadDashboards();
+        state.dashboards = state.dashboards.filter((item) => String(item.id) !== String(deletedId));
+        renderDashboardSelect();
         if (state.dashboards.length) {
             await loadDashboard(state.dashboards[0].id);
         } else {
             await loadDashboard("");
         }
-        showStatus("Panel deleted.", "info");
+        loadDashboards().catch((error) => showStatus(error.message, "error"));
+        showStatus("Atlas report deleted.", "info");
     }
 
     function applyCenterObject() {
@@ -1267,14 +1390,14 @@
             const parsed = JSON.parse(raw);
             return parsed && typeof parsed === "object" ? parsed : {};
         } catch (error) {
-            showStatus(`Configuration JSON is invalid: ${error.message}`, "error");
+            showStatus(`Advanced JSON is invalid: ${error.message}`, "error");
             throw error;
         }
     }
 
     function addWidget() {
         if (!state.current) state.current = newLocalDashboard();
-        const kind = byId("panelWidgetKind")?.value || "metadata";
+        const kind = byId("panelWidgetKind")?.value || "dash_workspace";
         const source = parseSourceValue(byId("panelWidgetSource")?.value || "");
         const sourceItem = findSource(source);
         const fallbackTitle = sourceItem ? itemTitle(sourceItem) : kind.replace("_", " ");
@@ -1354,7 +1477,7 @@
         const modelId = source.learning_model_id || widget.source?.model_id;
         const datasetId = source.dataset_id || widget.source?.dataset_id;
         if (!modelId || !datasetId) {
-            showStatus("Simulation widgets need an inference source with a model and dataset.", "warning");
+            showStatus("Prediction tiles need an inference source with a model and dataset.", "warning");
             return;
         }
         const result = await fetchJson("/production/simulate", {
@@ -1435,7 +1558,12 @@
             deleteDashboard().catch((error) => showStatus(error.message, "error"));
         });
         byId("panelRefreshContext")?.addEventListener("click", () => {
-            loadContext().then(() => showStatus("Panel artifacts refreshed.", "success")).catch((error) => showStatus(error.message, "error"));
+            loadContext().then(() => showStatus("Atlas artifacts refreshed.", "success")).catch((error) => showStatus(error.message, "error"));
+        });
+        byId("panelResourceSearch")?.addEventListener("input", renderContextSummary);
+        byId("panelContextSummary")?.addEventListener("click", (event) => {
+            const resourceButton = event.target?.closest?.("[data-panel-resource-value]");
+            if (resourceButton) selectResourceFromRail(resourceButton);
         });
         byId("panelCenterKind")?.addEventListener("change", updateCenterOptions);
         byId("panelApplyCenter")?.addEventListener("click", applyCenterObject);
@@ -1460,7 +1588,7 @@
         byId("panelWidgetKind")?.addEventListener("change", updateSourceOptions);
         byId("panelDashboardName")?.addEventListener("input", () => {
             syncCurrentFromForm();
-            byId("panelCanvasTitle").textContent = state.current?.name || "Saved Objective Dashboard";
+            byId("panelCanvasTitle").textContent = state.current?.name || "Saved Atlas Report";
             markDirty(true);
         });
         byId("panelObjective")?.addEventListener("input", () => {
@@ -1496,7 +1624,7 @@
             setPanelMode(readPreferredPanelMode("edit"), { persist: false });
             renderDashboard();
             markDirty(true);
-            showStatus(error.message || "Unable to load panel workspace.", "error");
+            showStatus(error.message || "Unable to load Operational Atlas workspace.", "error");
         });
     });
 })();

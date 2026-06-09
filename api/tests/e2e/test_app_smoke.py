@@ -60,8 +60,8 @@ def _box_metrics(page, selector):
 
 
 def _goto_ready(page, path, selector="main.container"):
-    page.goto(path, wait_until="domcontentloaded")
-    page.locator(selector).wait_for(state="visible")
+    page.goto(path, wait_until="domcontentloaded", timeout=60000)
+    page.locator(selector).wait_for(state="visible", timeout=60000)
 
 
 def _wait_for_panel_workspace_ready(page):
@@ -145,6 +145,8 @@ def test_panel_workspace_saves_reloads_and_deletes_dashboard(page):
         """,
         arg=panel_name,
     )
+    page.locator("#panelDashboardSelect").select_option(label=panel_name)
+    expect(page.locator("#panelDashboardName")).to_have_value(panel_name)
 
     with page.expect_response(
         lambda response: "/panel/dashboards/" in response.url and response.request.method == "DELETE",
@@ -166,6 +168,10 @@ def test_panel_modes_sizes_and_dash_workspace_render(page):
     page.add_init_script("window.localStorage.removeItem('amanajePanelMode')")
     _goto_ready(page, "/panel")
     _wait_for_panel_workspace_ready(page)
+    expect(page.locator("h2", has_text="Panel Cockpit")).to_be_visible()
+    expect(page.locator(".panel-ribbon")).to_be_visible()
+    expect(page.locator(".panel-report-shell")).to_be_visible()
+    expect(page.locator("#panelWidgetKind option").first).to_have_text("Plotly Dash Workspace")
     page.locator("#panelModeRun").wait_for(state="visible")
 
     assert page.locator("#panelModeRun").count() == 1
@@ -175,12 +181,18 @@ def test_panel_modes_sizes_and_dash_workspace_render(page):
 
     page.locator("#panelModeEdit").click()
     page.locator("#panelNewDashboard").click()
+    expect(page.locator(".panel-data-rail")).to_be_visible()
+    expect(page.locator(".panel-inspector")).to_be_visible()
+    expect(page.locator("#panelResourceSearch")).to_be_visible()
+    expect(page.locator("#panelCenterKind")).to_be_visible()
+    expect(page.locator("#panelFilterColumn")).to_be_visible()
     expect(page.locator(".panel-dash-frame")).to_be_visible()
     assert page.locator(".panel-widget select[data-panel-action='resize'] option[value='compact']").count() == 0
     assert page.locator(".panel-widget select[data-panel-action='resize'] option[value='standard']").count() == 0
 
     page.locator("#panelModeRun").click()
     expect(page.locator(".panel-sidebar")).to_be_hidden()
+    expect(page.locator(".panel-inspector")).to_be_hidden()
     expect(page.locator("#panelNewDashboard")).to_be_hidden()
     expect(page.locator(".panel-widget-actions[data-panel-edit-only='true']").first).to_be_hidden()
     expect(page.locator("#panelObjectiveRun")).to_be_visible()
@@ -282,6 +294,7 @@ def test_training_global_context_controls_are_present(page):
 def test_production_global_context_controls_are_present(page):
     page.goto("/production", wait_until="domcontentloaded")
     page.locator("main.container").wait_for(state="visible")
+    assert page.locator(".panel-title", has_text="Prediction Review").count() == 1
     assert page.locator("#globalInferencePairId").count() == 1
     assert page.locator("#btnGlobalStartProduction").count() == 1
     assert page.locator("#btnGlobalRunSimulation").count() == 1
@@ -293,6 +306,8 @@ def test_production_global_context_controls_are_present(page):
     assert page.locator("#simulationFeatureControls").count() == 1
     assert page.locator("#simulationScenarios").count() == 1
     assert page.locator("#simulationFamilyPayload").count() == 1
+    expect(page.locator("#simulationScenario")).to_be_hidden()
+    expect(page.locator("#simulationResultDisplay")).to_have_value("summary")
 
 
 def test_production_interval_schedule_fields_follow_toggle(page):
@@ -354,7 +369,7 @@ def test_visualization_autoloads_plotly_frame_with_local_fallback(page):
     ],
 )
 def test_red_domain_workspaces_keep_styled_panels_and_controls(page, path, panel_selector, control_selectors):
-    page.goto(path, wait_until="networkidle")
+    _goto_ready(page, path)
 
     panel_style = _computed_style_snapshot(page, panel_selector)
     assert panel_style["borderRadius"] >= 14

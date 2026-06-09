@@ -1067,7 +1067,8 @@
             element.dataset.assistantSelectionBound = "true";
         }
         try {
-            const payload = await fetchJson("/assistant/models/list", {}, { source: "loadAssistantModelOptions" });
+            const role = options.role ? `?role=${encodeURIComponent(options.role)}` : "";
+            const payload = await fetchJson(`/assistant/models/list${role}`, {}, { source: "loadAssistantModelOptions" });
             const models = Array.isArray(payload.models) ? payload.models : [];
             element.insertAdjacentHTML(
                 "beforeend",
@@ -1094,7 +1095,14 @@
         if (selected) {
             window.localStorage?.setItem("amanajeAssistantModelId", selected);
         }
-        return selected ? { assistant_model_id: selected, provider: "auto" } : { provider: "auto" };
+        const embeddingSelected = window.localStorage?.getItem("amanajeAssistantEmbeddingModelId") || "";
+        const payload = selected ? { assistant_model_id: selected, provider: "auto" } : { provider: "auto" };
+        if (embeddingSelected) {
+            payload.embedding_model_id = embeddingSelected;
+            payload.embedding_provider = "auto";
+            payload.retrieval_policy = { mode: "assistant_embedding_body", limit: 8 };
+        }
+        return payload;
     }
 
     function applyGlobalSettings(settings = window.AmanajeSettings || {}) {

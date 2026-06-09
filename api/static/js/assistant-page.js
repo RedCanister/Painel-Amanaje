@@ -128,6 +128,10 @@
         return String(document.getElementById(selectId)?.value || "").trim();
     }
 
+    function selectedEmbeddingModelId() {
+        return String(document.getElementById("assistantEmbeddingModelSelect")?.value || "").trim();
+    }
+
     function assistantModelRequest(selectId) {
         return window.AmanajeUI?.getAssistantModelRequest?.(selectId) || { provider: "auto" };
     }
@@ -190,18 +194,43 @@
         const references = overview?.references?.repository || {};
         const runtime = overview?.runtime || {};
         const defaultModel = overview?.assistant_defaults?.global_default_model_id || "";
+        const defaultEmbedding = overview?.assistant_defaults?.global_default_embedding_model_id || "";
+        const models = Array.isArray(overview?.assistant_models?.models) ? overview.assistant_models.models : [];
+        const selectedModel = models.find((model) => String(model.id) === String(defaultModel)) || models[0] || {};
+        const providerConfigured = active !== "unknown" && Boolean(activeProvider.provider || activeProvider.type || activeProvider.enabled !== undefined);
+        const bundleReady = Boolean(selectedModel.bundle_status?.ready || overview?.assistant_models?.bundle_ready_count > 0);
+        const runtimeLoaded = Boolean(runtime.loaded || runtime.status === "loaded" || runtime.status === "ready");
+        const draftValidated = Boolean(state.currentReview?.approved || state.currentDraft?.draft_valid);
         const target = document.getElementById("assistantHeaderPills");
-        if (!target) return;
-        target.innerHTML = `
-            <span class="assistant-pill">Provider: ${escapeHtml(active)}</span>
-            <span class="assistant-pill">Fallback: ${escapeHtml(activeProvider.fallback_active ?? activeProvider.fallback_provider ?? "n/a")}</span>
-            <span class="assistant-pill">Model: ${escapeHtml(activeProvider.model_version || provider.model_version || "unversioned")}</span>
-            <span class="assistant-pill">Runtime: ${escapeHtml(runtime.status || "unknown")}</span>
-            <span class="assistant-pill">Default: ${escapeHtml(defaultModel || "none")}</span>
-            <span class="assistant-pill">AssistantModels: ${escapeHtml(overview?.assistant_models?.count ?? 0)}</span>
-            <span class="assistant-pill">Dataset: ${escapeHtml(dataset.dataset_hash ? "ready" : overview?.assistant_dataset?.status || "missing")}</span>
-            <span class="assistant-pill">References: ${escapeHtml(references.stored_reference_count ?? 0)}</span>
-        `;
+        if (target) {
+            target.innerHTML = `
+                <span class="assistant-pill">Provider: ${escapeHtml(active)}</span>
+                <span class="assistant-pill">Fallback: ${escapeHtml(activeProvider.fallback_active ?? activeProvider.fallback_provider ?? "n/a")}</span>
+                <span class="assistant-pill">Model: ${escapeHtml(activeProvider.model_version || selectedModel.model_version || provider.model_version || "unversioned")}</span>
+                <span class="assistant-pill">Runtime: ${escapeHtml(runtime.status || "unknown")}</span>
+                <span class="assistant-pill">Default: ${escapeHtml(defaultModel || "none")}</span>
+                <span class="assistant-pill">Embedding: ${escapeHtml(defaultEmbedding || "fallback")}</span>
+                <span class="assistant-pill">AssistantModels: ${escapeHtml(overview?.assistant_models?.count ?? 0)}</span>
+                <span class="assistant-pill">Embedding Index: ${escapeHtml(overview?.embedding_index?.status || "missing")}</span>
+                <span class="assistant-pill">Dataset: ${escapeHtml(dataset.dataset_hash ? "ready" : overview?.assistant_dataset?.status || "missing")}</span>
+                <span class="assistant-pill">References: ${escapeHtml(references.stored_reference_count ?? 0)}</span>
+            `;
+        }
+        const gates = document.getElementById("assistantRuntimeGates");
+        if (gates) {
+            const gate = (label, ready, detail) => `
+                <div class="assistant-gate ${ready ? "ready" : "blocked"}">
+                    <strong>${escapeHtml(label)}</strong>
+                    <span>${escapeHtml(detail)}</span>
+                </div>
+            `;
+            gates.innerHTML = [
+                gate("Provider Configured", providerConfigured, providerConfigured ? active : "No active provider"),
+                gate("Bundle Ready", bundleReady, bundleReady ? (selectedModel.name || "AssistantModel bundle ready") : "No ready bundle selected"),
+                gate("Runtime Loaded", runtimeLoaded, runtimeLoaded ? (runtime.model_name || runtime.status || "loaded") : (runtime.status || "unavailable")),
+                gate("Draft Validated", draftValidated, draftValidated ? "Latest draft passed review" : "No validated draft in this session"),
+            ].join("");
+        }
     }
 
     function renderOverview(overview) {
@@ -220,6 +249,9 @@
             metric("Ready Bundles", overview.assistant_models?.bundle_ready_count ?? 0),
             metric("Runtime", overview.runtime?.status || "unknown"),
             metric("Global Default", overview.assistant_defaults?.global_default_model_id || "none"),
+            metric("Embedding Default", overview.assistant_defaults?.global_default_embedding_model_id || "fallback"),
+            metric("Embedding Models", overview.assistant_models?.embedding_count ?? 0),
+            metric("Embedding Index", overview.embedding_index?.status || "missing"),
             metric("Dataset Records", dataset.record_count ?? 0),
             metric("Reference Count", refs.stored_reference_count ?? 0),
             metric("MLflow Status", mlflow.status || "unknown"),
@@ -260,6 +292,7 @@
                 { label: "ID", value: "id" },
                 { label: "Name", value: "name" },
                 { label: "Version", value: (row) => row.model_version || row.version || row.assistant_config?.model_version },
+                { label: "Role", value: (row) => row.assistant_config?.assistant_role || "generator" },
                 { label: "Provider", value: (row) => row.provider_config?.type || row.assistant_config?.runtime_type || row.provider },
                 { label: "Bundle", value: (row) => row.bundle_status?.status || row.assistant_config?.runtime_kind || "-" },
                 { label: "Dataset Hash", value: (row) => row.assistant_config?.training_dataset_hash || row.training_dataset_hash },
@@ -349,8 +382,13 @@
 
     async function refreshAssistantSelectors() {
         await Promise.all([
-            window.AmanajeUI?.loadAssistantModelOptions?.("assistantModelSelect"),
-            window.AmanajeUI?.loadAssistantModelOptions?.("assistantDraftModelSelect"),
+            window.AmanajeUI?.loadAssistantModelOptions?.("assistantModelSelect", { defaultLabel: "Configured active provider", role: "generator" }),
+            window.AmanajeUI?.loadAssistantModelOptions?.("assistantDraftModelSelect", { defaultLabel: "Configured active provider", role: "generator" }),
+            window.AmanajeUI?.loadAssistantModelOptions?.("assistantEmbeddingModelSelect", {
+                defaultLabel: "Keyword/tag fallback",
+                storageKey: "amanajeAssistantEmbeddingModelId",
+                role: "embedding",
+            }),
         ]);
     }
 
@@ -411,6 +449,44 @@
         showAlert(`AssistantModel ${action} completed.`);
     }
 
+    async function embeddingAction(action) {
+        const id = selectedEmbeddingModelId();
+        if (!id) {
+            showAlert("Select an embedding body first.", "error");
+            return;
+        }
+        const endpoints = {
+            status: { url: `/assistant/models/${encodeURIComponent(id)}/embedding/status`, method: "GET" },
+            runtimeLoad: { url: `/assistant/models/${encodeURIComponent(id)}/embedding/runtime/load`, method: "POST" },
+            activate: { url: `/assistant/models/${encodeURIComponent(id)}/embedding/activate`, method: "POST" },
+            prepare: { url: `/assistant/models/${encodeURIComponent(id)}/training/embedding/prepare`, method: "POST" },
+        };
+        const backgroundOperations = {
+            runtimeLoad: "embedding_runtime_load",
+            activate: "embedding_activate",
+            prepare: "embedding_training_prepare",
+        };
+        if (backgroundOperations[action]) {
+            setOutput("assistantModelActionOutput", `Queueing embedding ${action}...`);
+            await submitAssistantJob(
+                backgroundOperations[action],
+                { assistant_model_id: id },
+                "assistantModelActionOutput",
+                async (result) => {
+                    setOutput("assistantModelActionOutput", result);
+                    await refreshOverview();
+                    showAlert(`Embedding ${action} completed.`);
+                },
+            );
+            return;
+        }
+        const endpoint = endpoints[action];
+        setOutput("assistantModelActionOutput", `Running embedding ${action}...`);
+        const result = await fetchJson(endpoint.url, { method: endpoint.method });
+        setOutput("assistantModelActionOutput", result);
+        showAlert(`Embedding ${action} completed.`);
+    }
+
     async function useModelForSession() {
         const id = selectedModelId();
         if (!id) {
@@ -430,6 +506,21 @@
         showAlert("AssistantModel selected for this browser session.");
     }
 
+    async function useEmbeddingForSession() {
+        const id = selectedEmbeddingModelId();
+        if (!id) {
+            showAlert("Select an embedding body first.", "error");
+            return;
+        }
+        window.localStorage?.setItem("amanajeAssistantEmbeddingModelId", id);
+        setOutput("assistantModelActionOutput", {
+            status: "session_selected",
+            embedding_model_id: id,
+            storage_key: "amanajeAssistantEmbeddingModelId",
+        });
+        showAlert("Embedding body selected for this browser session.");
+    }
+
     async function importHuggingFaceModel() {
         const repoId = document.getElementById("assistantHfRepoId")?.value.trim();
         if (!repoId) {
@@ -444,9 +535,12 @@
             repo_id: repoId,
             revision: document.getElementById("assistantHfRevision")?.value.trim() || null,
             display_name: document.getElementById("assistantHfDisplayName")?.value.trim() || null,
+            assistant_role: document.getElementById("assistantHfRole")?.value || "generator",
             base_model_name: document.getElementById("assistantHfBaseModelName")?.value.trim() || repoId,
             supported_draft_types: draftTypes.length ? draftTypes : undefined,
             max_context_tokens: Number(document.getElementById("assistantHfMaxContextTokens")?.value || 4096),
+            embedding_dimension: Number(document.getElementById("assistantHfEmbeddingDimension")?.value || 768),
+            pooling_strategy: document.getElementById("assistantHfPoolingStrategy")?.value || "mean",
         };
         setOutput("assistantModelActionOutput", "Importing Hugging Face AssistantModel...");
         const result = await fetchJson("/assistant/models/import/huggingface", {
@@ -475,11 +569,14 @@
         }
         const fields = {
             display_name: "assistantPtDisplayName",
+            assistant_role: "assistantPtRole",
             model_name: "assistantPtModelName",
             model_version: "assistantPtModelVersion",
             base_model_name: "assistantPtBaseModelName",
             supported_draft_types: "assistantPtDraftTypes",
             max_context_tokens: "assistantPtMaxContextTokens",
+            embedding_dimension: "assistantPtEmbeddingDimension",
+            pooling_strategy: "assistantPtPoolingStrategy",
             temperature: "assistantPtTemperature",
             max_tokens: "assistantPtMaxTokens",
             description: "assistantPtDescription",
@@ -540,6 +637,39 @@
         showAlert("Reference metadata search completed.");
     }
 
+    async function rebuildEmbeddingIndex() {
+        const id = selectedEmbeddingModelId();
+        setOutput("assistantReferenceOutput", "Rebuilding embedding index...");
+        await submitAssistantJob(
+            "embedding_index_rebuild",
+            { assistant_model_id: id || null, limit: 2000 },
+            "assistantReferenceOutput",
+            async (result) => {
+                setOutput("assistantReferenceOutput", result);
+                await refreshOverview();
+                showAlert("Assistant embedding index rebuilt.");
+            },
+        );
+    }
+
+    async function searchEmbeddingIndex() {
+        const query = document.getElementById("assistantEmbeddingSearchQuery")?.value || document.getElementById("assistantReferenceQuery")?.value || "";
+        if (!query.trim()) {
+            showAlert("Write an embedding search query first.", "error");
+            return;
+        }
+        const result = await fetchJson("/assistant/embeddings/search", {
+            method: "POST",
+            body: JSON.stringify({
+                query,
+                assistant_model_id: selectedEmbeddingModelId() || null,
+                limit: 8,
+            }),
+        }, { allowError: true });
+        setOutput("assistantReferenceOutput", result);
+        showAlert(result.status === "error" ? "Embedding search needs an index first." : "Embedding search completed.", result.status === "error" ? "error" : "info");
+    }
+
     async function draftWorkflow() {
         const prompt = document.getElementById("assistantDraftPrompt")?.value.trim();
         if (!prompt) {
@@ -567,6 +697,7 @@
                 state.currentDraft = result.draft || null;
                 state.currentRunId = result.run_id || null;
                 state.currentReview = result.review || null;
+                renderHeaderPills(state.overview);
                 setOutput("assistantDraftOutput", result);
                 if (result.run_id) {
                     window.AmanajeUI?.watchRun?.(result.run_id, { source: "assistant-draft" });
@@ -729,6 +860,11 @@
         document.getElementById("btnAssistantRuntimeStatus")?.addEventListener("click", () => runAction(() => modelAction("runtimeStatus")));
         document.getElementById("btnAssistantUseSession")?.addEventListener("click", () => runAction(useModelForSession));
         document.getElementById("btnAssistantActivateModel")?.addEventListener("click", () => runAction(() => modelAction("activate")));
+        document.getElementById("btnAssistantEmbeddingUseSession")?.addEventListener("click", () => runAction(useEmbeddingForSession));
+        document.getElementById("btnAssistantEmbeddingActivate")?.addEventListener("click", () => runAction(() => embeddingAction("activate")));
+        document.getElementById("btnAssistantEmbeddingLoad")?.addEventListener("click", () => runAction(() => embeddingAction("runtimeLoad")));
+        document.getElementById("btnAssistantEmbeddingStatus")?.addEventListener("click", () => runAction(() => embeddingAction("status")));
+        document.getElementById("btnAssistantEmbeddingPrepare")?.addEventListener("click", () => runAction(() => embeddingAction("prepare")));
         document.getElementById("btnAssistantImportHf")?.addEventListener("click", () => runAction(importHuggingFaceModel));
         document.getElementById("btnAssistantImportPyTorch")?.addEventListener("click", () => runAction(importPyTorchModel));
         document.getElementById("btnAssistantAttachDataset")?.addEventListener("click", () => runAction(() => modelAction("attach")));
@@ -738,6 +874,8 @@
         document.getElementById("btnAssistantDatasetLatest")?.addEventListener("click", () => runAction(loadLatestDataset));
         document.getElementById("btnAssistantReferenceSync")?.addEventListener("click", () => runAction(syncReferences));
         document.getElementById("btnAssistantReferenceSearch")?.addEventListener("click", () => runAction(searchReferences));
+        document.getElementById("btnAssistantEmbeddingIndexRebuild")?.addEventListener("click", () => runAction(rebuildEmbeddingIndex));
+        document.getElementById("btnAssistantEmbeddingSearch")?.addEventListener("click", () => runAction(searchEmbeddingIndex));
         document.getElementById("btnAssistantDraft")?.addEventListener("click", () => runAction(draftWorkflow));
         document.getElementById("btnAssistantReview")?.addEventListener("click", () => runAction(reviewWorkflow));
         document.getElementById("btnAssistantApprove")?.addEventListener("click", () => runAction(approveWorkflow));

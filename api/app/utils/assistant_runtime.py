@@ -52,6 +52,7 @@ def assistant_runtime_config() -> dict[str, Any]:
         "base_url": assistant_runtime_base_url(),
         "admin_token_configured": bool(assistant_runtime_admin_token()),
         "chat_base_url": os.getenv("AMANAJE_SLM_BASE_URL", "").strip() or f"{assistant_runtime_base_url()}/v1",
+        "embedding_base_url": os.getenv("AMANAJE_EMBEDDING_BASE_URL", "").strip() or f"{assistant_runtime_base_url()}/v1",
     }
 
 
@@ -144,6 +145,39 @@ def assistant_model_runtime_payload(
     }
 
 
+def assistant_embedding_runtime_payload(
+    model_record: Any,
+    provider_config: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    assistant = _assistant_config(model_record)
+    provider = _as_mapping(provider_config)
+    extracted_dir = assistant.get("extracted_dir") or assistant.get("bundle_dir")
+    model_artifact_path = assistant.get("model_artifact_path") or _model_value(model_record, "path")
+    tokenizer_path = assistant.get("tokenizer_path")
+    if not extracted_dir and model_artifact_path:
+        candidate = Path(str(model_artifact_path))
+        extracted_dir = str(candidate.parent) if candidate.suffix else str(candidate)
+    return {
+        "assistant_model_id": _model_value(model_record, "id"),
+        "assistant_model_name": _model_value(model_record, "name"),
+        "model_name": str(provider.get("model_name") or assistant.get("model_name") or _model_value(model_record, "name") or "amanaje-embedding-body"),
+        "model_version": str(provider.get("model_version") or assistant.get("model_version") or _model_value(model_record, "version") or "unversioned"),
+        "bundle_dir": extracted_dir,
+        "extracted_dir": extracted_dir,
+        "model_artifact_path": model_artifact_path,
+        "tokenizer_path": tokenizer_path,
+        "device": assistant.get("device") or "auto",
+        "dtype": assistant.get("dtype") or "auto",
+        "max_context_tokens": int(assistant.get("max_context_tokens") or provider.get("max_context_tokens") or 512),
+        "max_sequence_tokens": int(assistant.get("max_sequence_tokens") or provider.get("max_sequence_tokens") or 512),
+        "embedding_dimension": int(assistant.get("embedding_dimension") or provider.get("embedding_dimension") or 128),
+        "pooling_strategy": str(assistant.get("pooling_strategy") or provider.get("pooling_strategy") or "mean"),
+        "normalize_embeddings": bool(assistant.get("normalize_embeddings", provider.get("normalize_embeddings", True))),
+        "trust_remote_code": bool(assistant.get("trust_remote_code") is True),
+        "provider_config": redact_assistant_provider_config(provider),
+    }
+
+
 def ensure_assistant_model_runtime_loaded(
     model_record: Any,
     provider_config: Mapping[str, Any] | None = None,
@@ -185,6 +219,79 @@ def unload_assistant_runtime_model(timeout: float = 15.0) -> dict[str, Any]:
     started_at = time.perf_counter()
     try:
         payload = _request_json("POST", "/admin/models/unload", timeout=timeout)
+        return {
+            "status": "unloaded",
+            "runtime": payload,
+            "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        }
+    except Exception as exc:
+        return {
+            "status": "unload_failed",
+            "error": str(exc),
+            "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        }
+
+
+def assistant_embedding_runtime_status(timeout: float = 5.0) -> dict[str, Any]:
+    started_at = time.perf_counter()
+    try:
+        payload = _request_json("GET", "/admin/embeddings/status", timeout=timeout)
+        status = "ok"
+        error = None
+    except Exception as exc:
+        payload = {}
+        status = "unavailable"
+        error = str(exc)
+    return {
+        "status": status,
+        "runtime": payload,
+        "config": assistant_runtime_config(),
+        "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        "error": error,
+    }
+
+
+def ensure_assistant_embedding_runtime_loaded(
+    model_record: Any,
+    provider_config: Mapping[str, Any] | None = None,
+    *,
+    timeout: float = 30.0,
+) -> dict[str, Any]:
+    target = assistant_embedding_runtime_payload(model_record, provider_config)
+    started_at = time.perf_counter()
+    try:
+        status = _request_json("GET", "/admin/embeddings/status", timeout=min(timeout, 10.0))
+        active = _as_mapping(status.get("active_model"))
+        if active.get("model_name") == target.get("model_name") and active.get("model_version") == target.get("model_version"):
+            return {
+                "status": "already_loaded",
+                "target_model": target.get("model_name"),
+                "target_version": target.get("model_version"),
+                "runtime": status,
+                "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+            }
+        loaded = _request_json("POST", "/admin/embeddings/load", target, timeout=timeout)
+        return {
+            "status": "loaded",
+            "target_model": target.get("model_name"),
+            "target_version": target.get("model_version"),
+            "runtime": loaded,
+            "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        }
+    except Exception as exc:
+        return {
+            "status": "load_failed",
+            "target_model": target.get("model_name"),
+            "target_version": target.get("model_version"),
+            "error": str(exc),
+            "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        }
+
+
+def unload_assistant_embedding_runtime_model(timeout: float = 15.0) -> dict[str, Any]:
+    started_at = time.perf_counter()
+    try:
+        payload = _request_json("POST", "/admin/embeddings/unload", timeout=timeout)
         return {
             "status": "unloaded",
             "runtime": payload,

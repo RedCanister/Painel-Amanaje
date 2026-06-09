@@ -1,0 +1,392 @@
+{
+    "summary": {
+        "feature_candidates": [
+            "NOME DA BASE: Atendimento de Diagnóstico por Imagem"
+        ],
+        "target_candidate": "Unnamed: 1",
+        "numeric_feature_count": 1,
+        "categorical_feature_count": 1,
+        "datetime_feature_count": 0
+    },
+    "manifest": {
+        "dataset_id": 48,
+        "dataset_name": "09_atendimento_de_diagnostico_por_imagem",
+        "table_name": "dataset_48_09_atendimento_de_diagnostico_por_imagem",
+        "shape": [
+            59,
+            2
+        ],
+        "columns": [
+            {
+                "name": "Unnamed: 1",
+                "dtype": "float64",
+                "family": "numeric",
+                "null_count": 59,
+                "null_ratio": 1.0,
+                "unique_count": 0,
+                "unique_ratio": 0.0,
+                "mixed_type": false,
+                "sample_types": [],
+                "high_cardinality": false,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            {
+                "name": "NOME DA BASE: Atendimento de Diagnóstico por Imagem",
+                "dtype": "object",
+                "family": "categorical",
+                "null_count": 25,
+                "null_ratio": 0.423729,
+                "unique_count": 32,
+                "unique_ratio": 0.542373,
+                "mixed_type": false,
+                "sample_types": [
+                    "str"
+                ],
+                "high_cardinality": true,
+                "datetime_confidence": 0.0,
+                "sample_values": [
+                    "DESCRIÇÃO DA BASE: Relação de Exames de Diagnósticos por Imagem",
+                    "PERÍODO DE REFERÊNCIA: Ano de 2023",
+                    null,
+                    "Relação de Exames de Diagnósticos por Imagem realizados no Huol em 2023",
+                    "BIOPSIA DE PROSTATA"
+                ]
+            }
+        ],
+        "preview_rows": [
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DESCRIÇÃO DA BASE: Relação de Exames de Diagnósticos por Imagem",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "PERÍODO DE REFERÊNCIA: Ano de 2023",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": null,
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "Relação de Exames de Diagnósticos por Imagem realizados no Huol em 2023",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "BIOPSIA DE PROSTATA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "BRONCOSCOPIA (BRONCOFIBROSCOPIA)",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "COLONOSCOPIA (COLOSCOPIA)",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DENSITOMETRIA OSSEA DUO ENERGETICA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DIAGNÓSTICO POR RADIOLOGIA (EXAMES DE DIAGNÓSTICO POR RADIOLOGIA (EXAMES DE RAIO X))",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DIAGNÓSTICO POR RESSONÂNCIA MAGNÉTICA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DIAGNÓSTICO POR TOMOGRAFIA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "DILATAÇÃO DE ESÔFAGO C/ OGIVAS SOB VISÃO ENDOSCÓPICA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ECOCARDIOGRAFIA DE STRESS (NOVO)",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ECOCARDIOGRAFIA TRANSESOFÁGICA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ECOCARDIOGRAFIA TRANSTORACICA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ELETROENCEFALOGRAMA EM VIGILIA E SONO ESPONTANEO",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ELETRONEUROMIOGRAMA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "ESOFAGOGASTRODUODENOSCOPIA (EDA) ENDOSCOPIA DIGESTIVA ALTA",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "MONITORAMENTO AMBULATORIAL DE PRESSÃO ARTERIAL (MAPA)",
+                "Unnamed: 1": null
+            },
+            {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "MONITORAMENTO PELO SISTEMA HOLTER 24 HS (3 CANAIS)",
+                "Unnamed: 1": null
+            }
+        ],
+        "available_edits": [
+            "rename_columns",
+            "cast_types",
+            "fill_missing_values",
+            "drop_columns",
+            "filter_rows",
+            "sort_by",
+            "limit_rows"
+        ],
+        "analysis": {
+            "rows": 59,
+            "columns": 2,
+            "column_names": [
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem",
+                "Unnamed: 1"
+            ],
+            "dtypes": {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": "object",
+                "Unnamed: 1": "float64"
+            },
+            "missing_values": 84,
+            "stats": {
+                "NOME DA BASE: Atendimento de Diagnóstico por Imagem": {
+                    "type": "categorical",
+                    "null_count": 25,
+                    "unique_values": 32,
+                    "sample_values": [
+                        "DESCRIÇÃO DA BASE: Relação de Exames de Diagnósticos por Imagem",
+                        "PERÍODO DE REFERÊNCIA: Ano de 2023",
+                        null,
+                        "Relação de Exames de Diagnósticos por Imagem realizados no Huol em 2023",
+                        "BIOPSIA DE PROSTATA"
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mode": "GLITTRE TEST"
+                },
+                "Unnamed: 1": {
+                    "type": "numeric",
+                    "null_count": 59,
+                    "unique_values": 0,
+                    "sample_values": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ],
+                    "mixed_type": false,
+                    "datetime_confidence": 0.0,
+                    "mean": NaN,
+                    "std": NaN,
+                    "min": NaN,
+                    "max": NaN
+                }
+            },
+            "path": "/app/runtime_artifacts/store/datasets/09_atendimento_de_diagnostico_por_imagem_c87dd4be.csv",
+            "profile": {
+                "numeric_columns": [
+                    "Unnamed: 1"
+                ],
+                "categorical_columns": [
+                    "NOME DA BASE: Atendimento de Diagnóstico por Imagem"
+                ],
+                "datetime_columns": [],
+                "recommended_target": "Unnamed: 1",
+                "recommended_inputs": [
+                    "NOME DA BASE: Atendimento de Diagnóstico por Imagem"
+                ]
+            },
+            "parser_report": {
+                "file_name": "09_atendimento_de_diagnostico_por_imagem_c87dd4be.csv",
+                "file_type": ".csv",
+                "supported_file_types": [
+                    ".csv",
+                    ".json",
+                    ".jsonl",
+                    ".parquet",
+                    ".tsv",
+                    ".txt",
+                    ".xls",
+                    ".xlsx"
+                ],
+                "capability_matrix": {
+                    ".csv": {
+                        "label": "CSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "UTF-8, UTF-8-SIG, cp1252, and latin-1 text decoding are attempted automatically."
+                        ]
+                    },
+                    ".tsv": {
+                        "label": "TSV",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Tab-delimited text is parsed with delimiter sniffing and low-memory safeguards."
+                        ]
+                    },
+                    ".txt": {
+                        "label": "Delimited Text",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Comma, tab, semicolon, and pipe delimiters are auto-detected when possible."
+                        ]
+                    },
+                    ".json": {
+                        "label": "JSON",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "List-of-records, dict-of-lists, and single-record payloads are normalized into tables."
+                        ]
+                    },
+                    ".jsonl": {
+                        "label": "JSON Lines",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Each non-empty line must contain one JSON object."
+                        ]
+                    },
+                    ".parquet": {
+                        "label": "Parquet",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Requires a parquet engine such as pyarrow or fastparquet in the runtime environment."
+                        ]
+                    },
+                    ".xlsx": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Requires an Excel engine such as openpyxl."
+                        ]
+                    },
+                    ".xls": {
+                        "label": "Excel",
+                        "register": true,
+                        "inspect": true,
+                        "train": true,
+                        "predict": true,
+                        "simulate": true,
+                        "monitor": true,
+                        "notes": [
+                            "Reads the first worksheet by default. Legacy .xls support depends on the available engine."
+                        ]
+                    }
+                },
+                "warnings": [],
+                "encoding": "utf-8-sig",
+                "loader": "csv",
+                "delimiter": ",",
+                "rows": 59,
+                "columns": 2,
+                "mixed_type_columns": []
+            },
+            "column_explorer": [
+                {
+                    "name": "Unnamed: 1",
+                    "dtype": "float64",
+                    "family": "numeric",
+                    "null_count": 59,
+                    "null_ratio": 1.0,
+                    "unique_count": 0,
+                    "unique_ratio": 0.0,
+                    "mixed_type": false,
+                    "sample_types": [],
+                    "high_cardinality": false,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "NOME DA BASE: Atendimento de Diagnóstico por Imagem",
+                    "dtype": "object",
+                    "family": "categorical",
+                    "null_count": 25,
+                    "null_ratio": 0.423729,
+                    "unique_count": 32,
+                    "unique_ratio": 0.542373,
+                    "mixed_type": false,
+                    "sample_types": [
+                        "str"
+                    ],
+                    "high_cardinality": true,
+                    "datetime_confidence": 0.0,
+                    "sample_values": [
+                        "DESCRIÇÃO DA BASE: Relação de Exames de Diagnósticos por Imagem",
+                        "PERÍODO DE REFERÊNCIA: Ano de 2023",
+                        null,
+                        "Relação de Exames de Diagnósticos por Imagem realizados no Huol em 2023",
+                        "BIOPSIA DE PROSTATA"
+                    ]
+                }
+            ],
+            "type_groups": {
+                "numeric": [
+                    "Unnamed: 1"
+                ],
+                "categorical": [
+                    "NOME DA BASE: Atendimento de Diagnóstico por Imagem"
+                ],
+                "datetime": []
+            },
+            "top_warnings": [
+                "Column 'NOME DA BASE: Atendimento de Diagnóstico por Imagem' has high cardinality and may need filtering or encoding."
+            ]
+        }
+    }
+}

@@ -1,38 +1,77 @@
 {% extends "base_template.html" %}
 
-{% block title %}Painel Amanaje Panel{% endblock %}
+{% block title %}Operational Atlas Panel - Painel Amanaje{% endblock %}
 
-{% block body_class %}panel-theme{% endblock %}
+{% block body_class %}panel-theme operation-atlas-theme{% endblock %}
 
 {% block content %}
-<div class="panel-page" id="panelPage" data-panel-page>
-
-    <section class="panel-hero">
-        <div class="panel-hero-copy">
-            <span class="workspace-eyebrow">Amanaje panel</span>
-            <h2>Painel Amanaje Panel</h2>
+<div class="panel-page panel-atlas-page" id="panelPage" data-panel-page>
+    <section class="panel-ribbon atlas-command-ribbon" aria-label="Operational Atlas command ribbon">
+        <div class="panel-ribbon-main">
+            <span class="workspace-eyebrow">Operational Atlas</span>
+            <h2>Panel Cockpit</h2>
             <div class="panel-focus-summary" id="panelFocusSummary">No focus object selected.</div>
-            <div class="panel-objective-field" data-panel-edit-only="true">
-                <label for="panelObjective">Objective</label>
-                <textarea id="panelObjective" rows="3" placeholder="What question, interest, or perspective should this panel represent?"></textarea>
-            </div>
             <div class="panel-objective-run" id="panelObjectiveRun"></div>
+            <div class="panel-objective-field" data-panel-edit-only="true">
+                <label for="panelObjective">Operation Objective</label>
+                <textarea id="panelObjective" rows="3" placeholder="What decision should this Atlas report support?"></textarea>
+            </div>
         </div>
 
-        <div class="panel-command-center">
+        <div class="panel-ribbon-fields" data-panel-edit-only="true">
+            <div class="form-group">
+                <label for="panelDashboardSelect">Saved Atlas Report</label>
+                <select id="panelDashboardSelect">
+                    <option value="">Loading Atlas reports...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="panelDashboardName">Atlas Report Name</label>
+                <input id="panelDashboardName" type="text" placeholder="Atlas Prediction Review">
+            </div>
+        </div>
+
+        <div class="panel-ribbon-actions">
             <div class="panel-mode-toggle" role="group" aria-label="Panel mode">
                 <button type="button" class="mode-button active" id="panelModeRun" data-panel-mode-button="run" aria-pressed="true">Run</button>
                 <button type="button" class="mode-button" id="panelModeEdit" data-panel-mode-button="edit" aria-pressed="false">Edit</button>
             </div>
-            <div class="form-group" data-panel-edit-only="true">
-                <label for="panelDashboardSelect">Saved Panel</label>
-                <select id="panelDashboardSelect">
-                    <option value="">Loading panels...</option>
-                </select>
+            <div class="panel-command-row">
+                <button type="button" class="btn btn-secondary" id="panelNewDashboard" data-panel-edit-only="true">New</button>
+                <button type="button" class="btn btn-primary" id="panelSaveDashboard" data-panel-edit-only="true">Save</button>
+                <button type="button" class="btn btn-ghost" id="panelRefreshContext">Refresh</button>
+                <button type="button" class="btn btn-danger" id="panelDeleteDashboard" data-panel-edit-only="true">Delete</button>
             </div>
-            <div class="panel-center-picker" data-panel-edit-only="true">
+            <div class="panel-save-state" data-panel-edit-only="true">
+                <span class="status-pill inactive" id="panelDirtyState">Clean</span>
+                <span class="panel-widget-count" id="panelWidgetCount">0 tiles</span>
+            </div>
+        </div>
+    </section>
+
+    <div id="statusMessage" class="statusMessage panel-status-line" role="status"></div>
+
+    <section class="panel-report-shell" aria-label="Operational Atlas report workspace">
+        <aside class="panel-data-rail panel-sidebar" id="panelDataRail" data-panel-edit-only="true" aria-label="Operational Atlas data rail">
+            <section class="panel-rail-section">
+                <div class="panel-section-heading">
+                    <span>Atlas Index</span>
+                    <h3>Resources</h3>
+                </div>
                 <div class="form-group">
-                    <label for="panelCenterKind">Focus</label>
+                    <label for="panelResourceSearch">Search Resources</label>
+                    <input id="panelResourceSearch" type="search" placeholder="Find datasets, plots, models, runs">
+                </div>
+                <div class="panel-context-summary" id="panelContextSummary">Loading artifacts...</div>
+            </section>
+
+            <section class="panel-rail-section">
+                <div class="panel-section-heading">
+                    <span>Focus Object</span>
+                    <h3>Active Context</h3>
+                </div>
+                <div class="form-group">
+                    <label for="panelCenterKind">Resource Type</label>
                     <select id="panelCenterKind">
                         <option value="inferences">Inference Pair</option>
                         <option value="learning_models">Model</option>
@@ -46,39 +85,106 @@
                     </select>
                 </div>
                 <div class="panel-command-row">
-                    <button type="button" class="btn btn-secondary" id="panelApplyCenter">Apply Focus</button>
+                    <button type="button" class="btn btn-secondary" id="panelApplyCenter">Apply Source</button>
                     <button type="button" class="btn btn-ghost" id="panelClearCenter">Clear</button>
                 </div>
-            </div>
-            <div class="panel-command-row">
-                <button type="button" class="btn btn-secondary" id="panelNewDashboard" data-panel-edit-only="true">New</button>
-                <button type="button" class="btn btn-primary" id="panelSaveDashboard" data-panel-edit-only="true">Save</button>
-                <button type="button" class="btn btn-ghost" id="panelRefreshContext">Refresh</button>
-                <button type="button" class="btn btn-danger" id="panelDeleteDashboard" data-panel-edit-only="true">Delete</button>
-            </div>
-            <div class="panel-save-state" data-panel-edit-only="true">
-                <span class="status-pill inactive" id="panelDirtyState">Clean</span>
-                <span class="panel-widget-count" id="panelWidgetCount">0 widgets</span>
-            </div>
-        </div>
-    </section>
+            </section>
+        </aside>
 
-    <div id="statusMessage" class="statusMessage panel-status-line" role="status"></div>
-
-    <section class="panel-builder">
-        <aside class="panel-sidebar" data-panel-edit-only="true">
-            <div class="panel-sidebar-section">
-                <h3>Panel Object</h3>
-                <div class="form-group">
-                    <label for="panelDashboardName">Name</label>
-                    <input id="panelDashboardName" type="text" placeholder="Amanaje Panel">
+        <main class="panel-canvas" aria-label="Operational Atlas report canvas">
+            <div class="panel-canvas-head">
+                <div>
+                    <span class="workspace-eyebrow">Atlas Canvas</span>
+                    <h3 id="panelCanvasTitle">Saved Atlas Report</h3>
+                </div>
+                <div class="panel-canvas-actions" data-panel-edit-only="true">
+                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedUp" hidden>Move Up</button>
+                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedDown" hidden>Move Down</button>
                 </div>
             </div>
 
-            <details class="panel-sidebar-section panel-atlas-section panel-filter-details" open>
+            <div class="panel-report-filter-strip" aria-label="Active report filters">
+                <span>Atlas Filter</span>
+                <strong id="panelFilterSummary">No Atlas filter applied.</strong>
+            </div>
+
+            <div id="panelEmptyState" class="panel-empty-state" hidden>
+                Add a Plotly Dash workspace, plot, metric tile, or filter control to build this Atlas report.
+            </div>
+
+            <div id="panelWidgetDeck" class="panel-widget-deck"></div>
+        </main>
+
+        <aside class="panel-inspector" id="panelInspector" data-panel-edit-only="true" aria-label="Operational Atlas inspector">
+            <section class="panel-inspector-section">
+                <div class="panel-section-heading">
+                    <span>Atlas Visual</span>
+                    <h3>Tile Builder</h3>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetKind">Atlas Visual Type</label>
+                    <select id="panelWidgetKind">
+                        <option value="dash_workspace">Plotly Dash Workspace</option>
+                        <option value="plot">Plotly Plot</option>
+                        <option value="metric">Metric Tile</option>
+                        <option value="comparison">Comparison Tile</option>
+                        <option value="filter_control">Filter Control</option>
+                        <option value="prediction">Prediction Surface</option>
+                        <option value="simulation">Scenario Comparison</option>
+                        <option value="dataset">Dataset Summary</option>
+                        <option value="learning_model">Model Summary</option>
+                        <option value="study">Study</option>
+                        <option value="inference">Inference</option>
+                        <option value="metadata">Metadata</option>
+                        <option value="note">Note</option>
+                        <option value="custom_json">Advanced JSON</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetSource">Atlas Source</label>
+                    <select id="panelWidgetSource">
+                        <option value="">No source</option>
+                    </select>
+                </div>
+                <div class="panel-comparison-fields" id="panelComparisonFields" hidden>
+                    <div class="form-group">
+                        <label for="panelComparisonSourceA">Compare A</label>
+                        <select id="panelComparisonSourceA">
+                            <option value="">Choose first source</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="panelComparisonSourceB">Compare B</label>
+                        <select id="panelComparisonSourceB">
+                            <option value="">Choose second source</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetTitle">Title</label>
+                    <input id="panelWidgetTitle" type="text" placeholder="Tile title">
+                </div>
+                <div class="form-group">
+                    <label for="panelWidgetSize">Size</label>
+                    <select id="panelWidgetSize">
+                        <option value="wide" selected>Wide</option>
+                        <option value="full">Full</option>
+                    </select>
+                </div>
+                <details class="panel-advanced-tile-config" open>
+                    <summary>Advanced JSON</summary>
+                    <div class="form-group">
+                        <label for="panelWidgetConfig">Settings</label>
+                        <textarea id="panelWidgetConfig" rows="6" placeholder='{"text": "", "metrics": []}'></textarea>
+                    </div>
+                </details>
+                <button type="button" class="btn btn-primary panel-add-button" id="panelAddWidget">Add Tile</button>
+            </section>
+
+            <details class="panel-inspector-section panel-filter-details" open>
                 <summary class="panel-filter-summary-row">
-                    <span>Display Filters</span>
-                    <span class="panel-filter-summary" id="panelFilterSummary">No display filter applied.</span>
+                    <span>Atlas Filters</span>
+                    <span>Configure</span>
                 </summary>
                 <div class="form-group">
                     <label for="panelFilterColumn">Column or Index</label>
@@ -110,90 +216,7 @@
                     <button type="button" class="btn btn-ghost" id="panelClearFilters">Clear</button>
                 </div>
             </details>
-
-            <div class="panel-sidebar-section">
-                <h3>Add Widget</h3>
-                <div class="form-group">
-                    <label for="panelWidgetKind">Type</label>
-                    <select id="panelWidgetKind">
-                        <option value="dataset">Dataset</option>
-                        <option value="dash_workspace">Dash Workspace</option>
-                        <option value="learning_model">Learning Model</option>
-                        <option value="plot">Plot</option>
-                        <option value="study">Study</option>
-                        <option value="inference">Inference</option>
-                        <option value="simulation">Simulation</option>
-                        <option value="prediction">Prediction</option>
-                        <option value="filter_control">Display Filter</option>
-                        <option value="comparison">Comparison</option>
-                        <option value="metric">Metric</option>
-                        <option value="metadata">Metadata</option>
-                        <option value="note">Note</option>
-                        <option value="custom_json">Custom JSON</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="panelWidgetSource">Source</label>
-                    <select id="panelWidgetSource">
-                        <option value="">No source</option>
-                    </select>
-                </div>
-                <div class="panel-comparison-fields" id="panelComparisonFields" hidden>
-                    <div class="form-group">
-                        <label for="panelComparisonSourceA">Compare A</label>
-                        <select id="panelComparisonSourceA">
-                            <option value="">Choose first source</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="panelComparisonSourceB">Compare B</label>
-                        <select id="panelComparisonSourceB">
-                            <option value="">Choose second source</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="panelWidgetTitle">Title</label>
-                    <input id="panelWidgetTitle" type="text" placeholder="Widget title">
-                </div>
-                <div class="form-group">
-                    <label for="panelWidgetSize">Size</label>
-                    <select id="panelWidgetSize">
-                        <option value="wide" selected>Wide</option>
-                        <option value="full">Full</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="panelWidgetConfig">Configuration JSON</label>
-                    <textarea id="panelWidgetConfig" rows="5" placeholder='{"text": "", "metrics": []}'></textarea>
-                </div>
-                <button type="button" class="btn btn-primary panel-add-button" id="panelAddWidget">Add Widget</button>
-            </div>
-
-            <div class="panel-sidebar-section">
-                <h3>Artifact Palette</h3>
-                <div class="panel-context-summary" id="panelContextSummary">Loading artifacts...</div>
-            </div>
         </aside>
-
-        <section class="panel-canvas" aria-label="Saved dashboard canvas">
-            <div class="panel-canvas-head">
-                <div>
-                    <span class="workspace-eyebrow">Canvas</span>
-                    <h3 id="panelCanvasTitle">Saved Objective Dashboard</h3>
-                </div>
-                <div class="panel-canvas-actions" data-panel-edit-only="true">
-                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedUp" hidden>Move Up</button>
-                    <button type="button" class="btn btn-secondary" id="panelMoveSelectedDown" hidden>Move Down</button>
-                </div>
-            </div>
-
-            <div id="panelEmptyState" class="panel-empty-state" hidden>
-                Add widgets from the palette to shape this panel.
-            </div>
-
-            <div id="panelWidgetDeck" class="panel-widget-deck"></div>
-        </section>
     </section>
 </div>
 {% endblock %}

@@ -56,11 +56,15 @@
     }
 
     function latestEvent(run) {
-        return run?.progress?.latest_event || run?.failure?.message || run?.error || "";
+        return run?.status_reason || run?.progress?.latest_event || run?.failure?.message || run?.error || "";
+    }
+
+    function runStatus(run) {
+        return String(run?.effective_status || run?.status || "queued");
     }
 
     function toneForRun(run) {
-        const status = String(run?.status || "queued");
+        const status = runStatus(run);
         if (status === "completed") return "completed";
         if (status === "failed" || status === "cancelled") return status;
         if (ACTIVE_STATUSES.has(status)) return status === "running" ? "running" : "queued";
@@ -142,7 +146,7 @@
                 <article class="operation-run-card ${toneForRun(run)}${active}" data-run-select="${escapeHtml(runId)}">
                     <div class="operation-run-main">
                         <strong>${escapeHtml(run.title || run.run_type || "operation")}</strong>
-                        <span class="pill">${escapeHtml(run.status || "queued")}</span>
+                        <span class="pill">${escapeHtml(runStatus(run))}</span>
                     </div>
                     <div class="operation-run-meta">
                         <code>${escapeHtml(runId)}</code>
@@ -184,7 +188,7 @@
             return;
         }
         el("operationsDetailTitle").textContent = run.title || run.run_type || run.run_id;
-        el("operationsDetailSubtitle").textContent = `${run.run_id} | ${run.status || "queued"} | ${queueName(run)} ${queuePosition(run)} | ${formatDate(run.updated_at || run.created_at)}`;
+        el("operationsDetailSubtitle").textContent = `${run.run_id} | ${runStatus(run)} | ${queueName(run)} ${queuePosition(run)} | ${formatDate(run.updated_at || run.created_at)}`;
         el("operationsDetailActions").innerHTML = renderRunActions(run);
         el("operationsDetailActions").querySelectorAll("[data-operation-action]").forEach((button) => {
             button.addEventListener("click", () => handleAction(button.dataset.runId, button.dataset.operationAction));
@@ -369,7 +373,7 @@
         state.terminalCursor = Number(payload.next_cursor || state.terminalCursor || 0);
         state.terminalLoaded = true;
         appendTerminalLines(payload.lines || [], reset);
-        el("operationsTerminalStatus").textContent = `${payload.run?.status || "loaded"} | next ${state.terminalCursor}`;
+        el("operationsTerminalStatus").textContent = `${runStatus(payload.run) || "loaded"} | next ${state.terminalCursor}`;
     }
 
     function renderAnalysis(payload) {
@@ -485,7 +489,7 @@
             renderWorkerHosts(state.workerRuntime);
             renderRecentFailures(state.runs);
             if (!state.selectedRunId || !state.runs.some((run) => String(run.run_id) === state.selectedRunId)) {
-                const firstActive = state.runs.find((run) => ACTIVE_STATUSES.has(String(run.status || "")));
+                const firstActive = state.runs.find((run) => ACTIVE_STATUSES.has(runStatus(run)));
                 state.selectedRunId = String((firstActive || state.runs[0] || {}).run_id || "");
                 state.selectedDetail = null;
                 state.terminalCursor = 0;
@@ -510,7 +514,7 @@
         if (state.terminalPollTimer) window.clearTimeout(state.terminalPollTimer);
         const live = el("operationsLiveToggle")?.checked;
         if (!live || document.hidden) return;
-        const hasActive = state.runs.some((run) => ACTIVE_STATUSES.has(String(run.status || "")));
+        const hasActive = state.runs.some((run) => ACTIVE_STATUSES.has(runStatus(run)));
         state.runPollTimer = window.setTimeout(() => loadRuns(), hasActive ? 3500 : 10000);
         if (state.selectedRunId && hasActive) {
             state.terminalPollTimer = window.setTimeout(() => loadTerminal(false).catch(showError), 2500);

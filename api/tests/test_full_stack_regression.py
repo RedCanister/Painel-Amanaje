@@ -495,7 +495,7 @@ def test_panel_template_focus_filter_and_comparison_controls_are_wired():
         'id="panelWidgetKind"',
         'id="panelComparisonFields"',
         'value="filter_control"',
-        'class="panel-sidebar-section panel-atlas-section panel-filter-details"',
+        'class="panel-inspector-section panel-filter-details"',
     ]:
         assert fragment in panel_template
 

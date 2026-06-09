@@ -65,6 +65,15 @@ from app.utils.assistant_bundles import (
     normalize_huggingface_assistant_directory,
     prepare_assistant_model_tokenization,
 )
+from app.utils.assistant_embeddings import (
+    assistant_embedding_model_config,
+    assistant_model_matches_role,
+    assistant_model_role,
+    embedding_index_status,
+    prepare_embedding_training_examples,
+    rebuild_embedding_index,
+    search_embedding_index,
+)
 from app.utils.assistant_provider import (
     assistant_model_to_provider_config,
     get_assistant_provider,
@@ -76,9 +85,12 @@ from app.utils.assistant_provider import (
 )
 from app.utils.assistant_safety import SAFETY_PROFILES, review_code_safety, review_workflow_draft
 from app.utils.assistant_runtime import (
+    assistant_embedding_runtime_status,
     assistant_runtime_config,
     assistant_runtime_status,
+    ensure_assistant_embedding_runtime_loaded,
     ensure_assistant_model_runtime_loaded,
+    unload_assistant_embedding_runtime_model,
     unload_assistant_runtime_model,
 )
 from app.utils.accelerators import get_torch_accelerator_status
@@ -130,6 +142,7 @@ ASSISTANT_MODEL_DIR = _utils.ASSISTANT_MODEL_DIR
 ASSISTANT_DATASET_DIR = _utils.ASSISTANT_DATASET_DIR
 ASSISTANT_EVAL_DIR = _utils.ASSISTANT_EVAL_DIR
 ASSISTANT_REFERENCE_DIR = ASSISTANT_DATASET_DIR / "references"
+ASSISTANT_EMBEDDING_DIR = _utils.RUNTIME_DIR / "assistant_embeddings"
 PRODUCTION_STATE = _utils.PRODUCTION_STATE
 ACCELERATOR_STATUS_CACHE: dict[str, Any] = {"expires_at": 0.0, "payload": None}
 SECRET_TRACEBACK_PATTERN = re.compile(
@@ -167,6 +180,19 @@ STORE_MANIFEST_DIR = STORE_ARTIFACT_DIR / "manifests"
 STORE_PROVIDERS_PATH = STORE_ARTIFACT_DIR / "providers.json"
 
 
+class AssistantEmbeddingIndexRequest(BaseModel):
+    assistant_model_id: Optional[int | str] = None
+    limit: int = 2_000
+    force: bool = False
+
+
+class AssistantEmbeddingSearchRequest(BaseModel):
+    query: str
+    assistant_model_id: Optional[int | str] = None
+    tags: list[str] = Field(default_factory=list)
+    limit: int = 8
+
+
 def _queue_unavailable_response(
     exc: QueueUnavailableError,
     *,
@@ -193,6 +219,10 @@ ASSISTANT_BACKGROUND_OPERATIONS = {
     "model_training_curate",
     "model_training_tokenize",
     "model_training_attach",
+    "embedding_index_rebuild",
+    "embedding_training_prepare",
+    "embedding_runtime_load",
+    "embedding_activate",
 }
 
 
@@ -230,6 +260,8 @@ async def _call_assistant_operation(operation: str, payload_data: Mapping[str, A
             return _json_response_payload(await assistant_draft(request_payload, db=db))
         if operation == "datasets_rebuild":
             return _json_response_payload(await assistant_datasets_rebuild(db=db))
+        if operation == "embedding_index_rebuild":
+            return _json_response_payload(await assistant_embeddings_index_rebuild(payload, db=db))
 
         assistant_model_id = payload.get("assistant_model_id") or payload.get("assistantModelId") or payload.get("model_id")
         if assistant_model_id in (None, ""):
@@ -245,6 +277,12 @@ async def _call_assistant_operation(operation: str, payload_data: Mapping[str, A
         if operation == "model_training_attach":
             rebuild = bool(payload.get("rebuild", False))
             return _json_response_payload(await assistant_model_attach_training_dataset(assistant_model_id, rebuild=rebuild, db=db))
+        if operation == "embedding_training_prepare":
+            return _json_response_payload(await assistant_model_prepare_embedding_training(assistant_model_id, db=db))
+        if operation == "embedding_runtime_load":
+            return _json_response_payload(await assistant_embedding_model_runtime_load(assistant_model_id, db=db))
+        if operation == "embedding_activate":
+            return _json_response_payload(await assistant_embedding_model_activate(assistant_model_id, db=db))
 
     raise ValueError(f"Unsupported assistant operation: {operation}")
 
@@ -369,8 +407,9 @@ def _normalize_upload_operation(operation_id: str) -> str:
     return aliases.get(normalized, normalized)
 
 
-PANEL_DEFAULT_OBJECTIVE = "Understand the current question through connected data, models, plots, simulations, metrics, and notes."
+PANEL_DEFAULT_OBJECTIVE = "Understand the active operation through connected data, models, plots, simulations, metrics, evidence, and notes."
 PANEL_WIDGET_KINDS = {
+    "comparison",
     "dataset",
     "dash_workspace",
     "learning_model",
@@ -447,7 +486,7 @@ def _default_panel_widgets() -> list[dict[str, Any]]:
         {
             "id": "objective_focus",
             "kind": "metadata",
-            "title": "Objective",
+            "title": "Operation Objective",
             "size": "full",
             "source": {},
             "settings": {"mode": "objective"},
@@ -455,12 +494,12 @@ def _default_panel_widgets() -> list[dict[str, Any]]:
         {
             "id": "dash_visualization_studio",
             "kind": "dash_workspace",
-            "title": "Dash Visualization Studio",
+            "title": "Plotly Dash Workspace",
             "size": "full",
             "source": {},
             "settings": {
                 "path": "/",
-                "description": "Interactive Dash workspace for plots, extensions, and panel visualizations.",
+                "description": "Interactive Dash workspace for plots, Atlas extensions, and panel visualizations.",
             },
         },
         {
@@ -494,6 +533,14 @@ def _default_panel_widgets() -> list[dict[str, Any]]:
             "size": "wide",
             "source": {},
             "settings": {"metrics": []},
+        },
+        {
+            "id": "prediction_surface",
+            "kind": "prediction",
+            "title": "Prediction Surface",
+            "size": "wide",
+            "source": {},
+            "settings": {"variant": "simulation_summary"},
         },
         {
             "id": "interpretation_notes",
@@ -582,12 +629,53 @@ def _panel_compact_object(obj: Any, extra: Mapping[str, Any] | None = None) -> d
     return _json_safe(payload)
 
 
+def _panel_limited_list(value: Any, limit: int = 20) -> list[Any]:
+    items = list(value or []) if isinstance(value, (list, tuple, set)) else []
+    return _json_safe(items[:limit])
+
+
+def _panel_limited_mapping(value: Any, limit: int = 16) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    items = list(value.items())[:limit]
+    return _json_safe(dict(items))
+
+
+def _panel_plot_summary(plot: Mapping[str, Any]) -> dict[str, Any]:
+    preferred_keys = (
+        "id",
+        "title",
+        "name",
+        "kind",
+        "type",
+        "domain",
+        "model_id",
+        "dataset_id",
+        "inference_id",
+        "run_id",
+        "artifact_path",
+        "path",
+        "url",
+        "updated_at",
+        "created_at",
+    )
+    return _json_safe({key: plot.get(key) for key in preferred_keys if key in plot})
+
+
+def _panel_run_summary(run: Mapping[str, Any]) -> dict[str, Any]:
+    summary = _utils.summarize_run_entry(run)
+    summary["context"] = _panel_limited_mapping(summary.get("context"), 12)
+    summary["parameters"] = _panel_limited_mapping(summary.get("parameters"), 12)
+    summary["metrics"] = _panel_limited_mapping(summary.get("metrics"), 12)
+    return _json_safe(summary)
+
+
 def _panel_payload_for_create(payload: PanelDashboardPayload) -> dict[str, Any]:
     widgets = _coerce_panel_widgets(payload.widgets) or _default_panel_widgets()
     name = (payload.name or "Amanaje Panel").strip() or "Amanaje Panel"
     return {
         "name": name,
-        "description": payload.description or "Saved Painel Amanaje objective dashboard.",
+        "description": payload.description or "Saved Operational Atlas objective report.",
         "object_type": "panel_dashboard",
         "size": 0.0,
         "path": f"panel://{_utils._slugify(name)}-{uuid.uuid4().hex[:8]}",
@@ -689,8 +777,8 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
     studies = await get_all_entries(db, StudyORM)
     inferences = await get_all_entries(db, InferenceORM)
     code_models = await get_all_entries(db, CodeORM)
-    plots = _list_plot_artifacts()[:80]
-    runs = _utils.list_run_entries(RUN_LEDGER_DIR, limit=60)
+    plots = _list_plot_artifacts(limit=30)
+    runs = _utils.list_run_entries(RUN_LEDGER_DIR, limit=30)
 
     return _utils._json_response(
         {
@@ -701,7 +789,8 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
                     {
                         "dataset_type": getattr(item, "dataset_type", None),
                         "shape": getattr(item, "shape", None),
-                        "features_list": getattr(item, "features_list", None),
+                        "features_list": _panel_limited_list(getattr(item, "features_list", None), 24),
+                        "feature_count": len(getattr(item, "features_list", None) or []),
                         "has_features": getattr(item, "has_features", None),
                     },
                 )
@@ -712,10 +801,10 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
                     item,
                     {
                         "model_type": getattr(item, "model_type", None),
-                        "metrics": getattr(item, "metrics", None) or {},
-                        "parameters": getattr(item, "parameters", None) or {},
-                        "input_features": getattr(item, "input_features", None),
-                        "output_features": getattr(item, "output_features", None),
+                        "metrics": _panel_limited_mapping(getattr(item, "metrics", None), 16),
+                        "parameters": _panel_limited_mapping(getattr(item, "parameters", None), 16),
+                        "input_features": _panel_limited_list(getattr(item, "input_features", None), 24),
+                        "output_features": _panel_limited_list(getattr(item, "output_features", None), 12),
                         "is_trained": getattr(item, "is_trained", None),
                         "is_tested": getattr(item, "is_tested", None),
                         "is_deployed": getattr(item, "is_deployed", None),
@@ -731,8 +820,8 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
                         "dataset_id": getattr(item, "dataset_id", None),
                         "sampler": getattr(item, "sampler", None),
                         "objective": getattr(item, "objective", None),
-                        "best_trial": getattr(item, "best_trial", None),
-                        "best_params": getattr(item, "best_params", None),
+                        "best_trial": _panel_limited_mapping(getattr(item, "best_trial", None), 12),
+                        "best_params": _panel_limited_mapping(getattr(item, "best_params", None), 16),
                     },
                 )
                 for item in studies
@@ -743,9 +832,9 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
                     {
                         "learning_model_id": getattr(item, "learning_model_id", None),
                         "dataset_id": getattr(item, "dataset_id", None),
-                        "input_features": getattr(item, "input_features", None),
-                        "output_features": getattr(item, "output_features", None),
-                        "inference_params": getattr(item, "inference_params", None) or {},
+                        "input_features": _panel_limited_list(getattr(item, "input_features", None), 24),
+                        "output_features": _panel_limited_list(getattr(item, "output_features", None), 12),
+                        "inference_params": _panel_limited_mapping(getattr(item, "inference_params", None), 18),
                     },
                 )
                 for item in inferences
@@ -754,16 +843,25 @@ async def panel_context(db: AsyncSession = Depends(get_db)) -> JSONResponse:
                 _panel_compact_object(
                     item,
                     {
-                        "variables": getattr(item, "variables", None) or {},
-                        "code": getattr(item, "code", None) or {},
+                        "variables": _panel_limited_mapping(getattr(item, "variables", None), 16),
+                        "code_keys": sorted(str(key) for key in (getattr(item, "code", None) or {}).keys())[:20]
+                        if isinstance(getattr(item, "code", None), Mapping)
+                        else [],
                     },
                 )
                 for item in code_models
             ],
-            "plots": _json_safe(plots),
-            "runs": _json_safe(runs),
+            "plots": [_panel_plot_summary(plot) for plot in plots if isinstance(plot, Mapping)],
+            "runs": [_panel_run_summary(run) for run in runs if isinstance(run, Mapping)],
             "widget_kinds": sorted(PANEL_WIDGET_KINDS),
             "widget_sizes": sorted(PANEL_WIDGET_SIZES),
+            "context_limits": {
+                "features": 24,
+                "metrics": 16,
+                "parameters": 16,
+                "plots": 30,
+                "runs": 30,
+            },
         }
     )
 
@@ -2200,6 +2298,15 @@ def _assistant_default_model_id() -> str | None:
     return str(value).strip() if value not in (None, "") else None
 
 
+def _assistant_default_embedding_model_id() -> str | None:
+    state = load_settings_state(_utils.SETTINGS_STATE_PATH)
+    assistant_state = state.get("assistant") if isinstance(state, Mapping) else {}
+    if not isinstance(assistant_state, Mapping):
+        return None
+    value = assistant_state.get("default_embedding_model_id")
+    return str(value).strip() if value not in (None, "") else None
+
+
 async def _resolve_default_assistant_model(db: AsyncSession) -> Any | None:
     default_id = _assistant_default_model_id()
     if not default_id:
@@ -2208,6 +2315,89 @@ async def _resolve_default_assistant_model(db: AsyncSession) -> Any | None:
         return await _get_assistant_model_record(db, default_id)
     except ValueError:
         return None
+
+
+async def _resolve_default_embedding_model(db: AsyncSession) -> Any | None:
+    default_id = _assistant_default_embedding_model_id()
+    if not default_id:
+        return None
+    try:
+        return await _get_assistant_model_record(db, default_id)
+    except ValueError:
+        return None
+
+
+def _assistant_embedding_index_dir() -> Path:
+    return ASSISTANT_EMBEDDING_DIR / "index"
+
+
+def _assistant_embedding_training_dir(assistant_model_id: int | str) -> Path:
+    return ASSISTANT_EMBEDDING_DIR / "training" / f"assistant_model_{assistant_model_id}"
+
+
+def _embedding_search_results_as_references(search_payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    references: list[dict[str, Any]] = []
+    for result in search_payload.get("results") or []:
+        if not isinstance(result, Mapping):
+            continue
+        reference_id = str(result.get("reference_id") or "")
+        references.append(
+            {
+                "reference_id": reference_id,
+                "source_type": str(result.get("source_type") or "embedding_search_result"),
+                "name": result.get("name") or reference_id or "Embedding Search Result",
+                "summary": result.get("summary") or "",
+                "trust_level": result.get("trust_level") or "project",
+                "content_hash": result.get("content_hash"),
+                "tags": list(result.get("tags") or []),
+                "metadata": {
+                    **dict(result.get("metadata") or {}),
+                    "embedding_score": result.get("score"),
+                    "embedding_retrieval_hash": search_payload.get("embedding_retrieval_hash"),
+                    "embedding_index_hash": search_payload.get("embedding_index_hash"),
+                },
+            }
+        )
+    return references
+
+
+async def _resolve_assistant_embedding_retrieval(
+    payload: AssistantDraftRequest,
+    db: AsyncSession,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    embedding_model_id = payload.embedding_model_id or _assistant_default_embedding_model_id()
+    embedding_model = None
+    if embedding_model_id not in (None, ""):
+        try:
+            embedding_model = await _get_assistant_model_record(db, embedding_model_id)
+        except ValueError:
+            embedding_model = None
+    query = _assistant_reference_query(payload)
+    tags = _assistant_reference_tags(payload)
+    limit = int(
+        dict(payload.retrieval_policy or {}).get("limit")
+        or payload.constraints.get("max_references")
+        or 8
+    )
+    if not query:
+        return {"status": "skipped", "reason": "empty_query", "embedding_model_id": embedding_model_id}, []
+    try:
+        result = search_embedding_index(
+            _assistant_embedding_index_dir(),
+            query,
+            embedding_model=embedding_model,
+            tags=tags,
+            limit=limit,
+        )
+    except Exception as exc:
+        return {
+            "status": "fallback",
+            "reason": str(exc),
+            "embedding_model_id": embedding_model_id,
+            "fallback": "keyword_tag_reference_pack",
+        }, []
+    result["embedding_model_id"] = result.get("embedding_model_id") or embedding_model_id
+    return result, _embedding_search_results_as_references(result)
 
 
 def _assistant_model_runtime_kind(model_record: Any, provider_config: Mapping[str, Any] | None = None) -> str:
@@ -2224,6 +2414,52 @@ def _assistant_model_runtime_kind(model_record: Any, provider_config: Mapping[st
 
 def _assistant_model_needs_runtime_load(model_record: Any, provider_config: Mapping[str, Any] | None = None) -> bool:
     return _assistant_model_runtime_kind(model_record, provider_config) == "pytorch_hf_server"
+
+
+def _assistant_embedding_model_needs_runtime_load(model_record: Any, provider_config: Mapping[str, Any] | None = None) -> bool:
+    return _assistant_model_runtime_kind(model_record, provider_config) == "embedding_hf_server"
+
+
+def _assistant_bundle_status_payload(model_record: Any) -> dict[str, Any]:
+    try:
+        return assistant_bundle_status_from_model(model_record)
+    except Exception as exc:
+        return {"ready": False, "status": "unavailable", "detail": str(exc)}
+
+
+def _assistant_runtime_loaded(
+    runtime_load_status: Mapping[str, Any] | None,
+    runtime_kind: str | None,
+) -> bool:
+    if runtime_kind and runtime_kind != "pytorch_hf_server":
+        return True
+    status = str((runtime_load_status or {}).get("status") or "").strip().lower()
+    return status in {"loaded", "already_loaded", "not_required"}
+
+
+def _assistant_model_runtime_contract(
+    model_record: Any,
+    provider_config: Mapping[str, Any],
+    *,
+    provider_name: str | None = None,
+    runtime_load_status: Mapping[str, Any] | None = None,
+    fallback_used: bool = False,
+    draft_valid: bool | None = None,
+) -> dict[str, Any]:
+    bundle_status = _assistant_bundle_status_payload(model_record)
+    runtime_kind = _assistant_model_runtime_kind(model_record, provider_config)
+    return {
+        "provider": provider_name or str(provider_config.get("provider_type") or provider_config.get("type") or "auto"),
+        "assistant_model_id": getattr(model_record, "id", None) if not isinstance(model_record, Mapping) else model_record.get("id"),
+        "assistant_model_name": getattr(model_record, "name", None) if not isinstance(model_record, Mapping) else model_record.get("name"),
+        "bundle_ready": bool(bundle_status.get("ready")),
+        "bundle_status": bundle_status,
+        "runtime_kind": runtime_kind or "external_or_configured_provider",
+        "runtime_loaded": _assistant_runtime_loaded(runtime_load_status, runtime_kind),
+        "runtime_load": _utils._json_payload(runtime_load_status),
+        "fallback_used": bool(fallback_used),
+        "draft_valid": draft_valid,
+    }
 
 
 def _safe_assistant_path_fragment(value: Any, fallback: str = "assistant_model") -> str:
@@ -2261,6 +2497,13 @@ def _assistant_route_catalog() -> list[dict[str, str]]:
         {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/curate", "operation": "Curate training records for one AssistantModel."},
         {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/dataset/attach", "operation": "Attach the latest assistant training dataset snapshot to one AssistantModel."},
         {"group": "Models", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/tokenize", "operation": "Prepare token-counted instruction JSONL examples from the canonical assistant training dataset."},
+        {"group": "Embeddings", "method": "POST", "path": "/assistant/embeddings/index/rebuild", "operation": "Build the local vector index for internal assistant references and project examples."},
+        {"group": "Embeddings", "method": "GET", "path": "/assistant/embeddings/index/status", "operation": "Inspect the assistant embedding index manifest and readiness."},
+        {"group": "Embeddings", "method": "POST", "path": "/assistant/embeddings/search", "operation": "Search the assistant embedding index and return compact ranked references."},
+        {"group": "Embeddings", "method": "POST", "path": "/assistant/models/{assistant_model_id}/embedding/activate", "operation": "Persist a registered AssistantModel as the global default embedding body."},
+        {"group": "Embeddings", "method": "GET", "path": "/assistant/models/{assistant_model_id}/embedding/status", "operation": "Inspect embedding body status, runtime, and index compatibility."},
+        {"group": "Embeddings", "method": "POST", "path": "/assistant/models/{assistant_model_id}/embedding/runtime/load", "operation": "Load a registered embedding body into assistant-server."},
+        {"group": "Embeddings", "method": "POST", "path": "/assistant/models/{assistant_model_id}/training/embedding/prepare", "operation": "Prepare query-positive-negative records for embedding fine-tuning outside FastAPI."},
         {"group": "Datasets", "method": "POST", "path": "/assistant/datasets/rebuild", "operation": "Materialize the redacted assistant training JSONL snapshot."},
         {"group": "Datasets", "method": "GET", "path": "/assistant/datasets/status", "operation": "Inspect assistant training dataset readiness and source snapshot."},
         {"group": "Datasets", "method": "GET", "path": "/assistant/datasets/latest", "operation": "Fetch the latest AssistantTrainingDatasetModel registry record."},
@@ -2286,6 +2529,9 @@ def _assistant_artifact_locations() -> list[dict[str, Any]]:
         "assistant_model_uploads": ASSISTANT_MODEL_DIR / "uploads",
         "assistant_model_bundles": ASSISTANT_MODEL_DIR / "bundles",
         "assistant_model_huggingface": ASSISTANT_MODEL_DIR / "huggingface",
+        "assistant_embeddings": ASSISTANT_EMBEDDING_DIR,
+        "assistant_embedding_index": ASSISTANT_EMBEDDING_DIR / "index",
+        "assistant_embedding_training": ASSISTANT_EMBEDDING_DIR / "training",
         "assistant_datasets": ASSISTANT_DATASET_DIR,
         "assistant_dataset_snapshots": ASSISTANT_DATASET_DIR / "snapshots",
         "assistant_tokenized_training": ASSISTANT_DATASET_DIR / "tokenized",
@@ -2327,6 +2573,9 @@ async def assistant_management_overview(db: AsyncSession = Depends(get_db)) -> J
     mlflow_health: dict[str, Any] = {}
     runtime_state: dict[str, Any] = {}
     default_model_id = _assistant_default_model_id()
+    default_embedding_model_id = _assistant_default_embedding_model_id()
+    embedding_runtime_state: dict[str, Any] = {}
+    embedding_index = embedding_index_status(ASSISTANT_EMBEDDING_DIR / "index")
 
     try:
         provider_status = get_assistant_provider_status()
@@ -2373,6 +2622,11 @@ async def assistant_management_overview(db: AsyncSession = Depends(get_db)) -> J
     except Exception as exc:
         LOGGER.exception("Assistant management runtime status failed.")
         errors["runtime_status"] = str(exc)
+    try:
+        embedding_runtime_state = assistant_embedding_runtime_status(timeout=2.0)
+    except Exception as exc:
+        LOGGER.exception("Assistant management embedding runtime status failed.")
+        errors["embedding_runtime_status"] = str(exc)
 
     return _utils._json_response(
         {
@@ -2380,8 +2634,11 @@ async def assistant_management_overview(db: AsyncSession = Depends(get_db)) -> J
             "generated_at": datetime.now().isoformat(),
             "provider_status": provider_status,
             "runtime": runtime_state,
+            "embedding_runtime": embedding_runtime_state,
+            "embedding_index": embedding_index,
             "assistant_defaults": {
                 "global_default_model_id": default_model_id,
+                "global_default_embedding_model_id": default_embedding_model_id,
                 "selection_order": [
                     "request_assistant_model_id",
                     "browser_session_model_id",
@@ -2389,9 +2646,17 @@ async def assistant_management_overview(db: AsyncSession = Depends(get_db)) -> J
                     "configured_active_provider",
                     "local_fallback",
                 ],
+                "embedding_selection_order": [
+                    "request_embedding_model_id",
+                    "browser_session_embedding_model_id",
+                    "global_default_embedding_model_id",
+                    "keyword_tag_reference_fallback",
+                ],
             },
             "assistant_models": {
                 "count": len(assistant_models),
+                "generator_count": sum(1 for model in assistant_models if assistant_model_matches_role(model, "generator")),
+                "embedding_count": sum(1 for model in assistant_models if assistant_model_matches_role(model, "embedding")),
                 "bundle_ready_count": sum(1 for model in assistant_models if (model.get("bundle_status") or {}).get("ready")),
                 "pytorch_bundle_count": sum(
                     1
@@ -2606,14 +2871,17 @@ async def assistant_datasets_status(db: AsyncSession = Depends(get_db)) -> JSONR
 
 
 @app.get("/assistant/models/list", response_class=JSONResponse)
-async def assistant_models_list(db: AsyncSession = Depends(get_db)) -> JSONResponse:
+async def assistant_models_list(role: str = "all", db: AsyncSession = Depends(get_db)) -> JSONResponse:
     try:
         models = await get_all_entries(db, AssistantORM)
+        filtered = [model for model in models if assistant_model_matches_role(model, role)]
         return _utils._json_response(
             {
                 "status": "ok",
-                "models": [_serialize_assistant_model(model) for model in models],
-                "count": len(models),
+                "role": role,
+                "models": [_serialize_assistant_model(model) for model in filtered],
+                "count": len(filtered),
+                "total_count": len(models),
             }
         )
     except Exception as exc:
@@ -2632,6 +2900,9 @@ async def assistant_model_import_huggingface(
             return _utils._json_error("A valid Hugging Face repo_id is required.", status_code=400)
         revision = str(payload.get("revision") or "").strip() or None
         display_name = str(payload.get("display_name") or payload.get("name") or repo_id.rsplit("/", 1)[-1]).strip()
+        assistant_role = str(payload.get("assistant_role") or "generator").strip().lower()
+        if assistant_role not in {"generator", "embedding", "dual"}:
+            assistant_role = "generator"
         try:
             from huggingface_hub import snapshot_download
         except ImportError as exc:
@@ -2651,15 +2922,28 @@ async def assistant_model_import_huggingface(
         if isinstance(supported_draft_types, str):
             supported_draft_types = [item.strip() for item in supported_draft_types.split(",") if item.strip()]
         metadata = {
+            "assistant_role": assistant_role,
             "repo_id": repo_id,
             "revision": revision,
             "display_name": display_name,
             "model_name": payload.get("model_name") or display_name,
             "model_version": payload.get("model_version") or revision or "huggingface-import",
             "base_model_name": payload.get("base_model_name") or repo_id,
+            "provider_type": payload.get("provider_type") or ("openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible"),
+            "runtime_kind": payload.get("runtime_kind") or ("embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server"),
             "supported_draft_types": supported_draft_types,
             "max_context_tokens": payload.get("max_context_tokens") or 4096,
-            "base_url": os.getenv("AMANAJE_SLM_BASE_URL") or "http://assistant-server:8080/v1",
+            "embedding_dimension": payload.get("embedding_dimension") or (768 if assistant_role == "embedding" else None),
+            "pooling_strategy": payload.get("pooling_strategy") or ("mean" if assistant_role == "embedding" else None),
+            "max_sequence_tokens": payload.get("max_sequence_tokens") or payload.get("max_context_tokens") or 512,
+            "query_instruction": payload.get("query_instruction"),
+            "document_instruction": payload.get("document_instruction"),
+            "normalize_embeddings": payload.get("normalize_embeddings", True),
+            "base_url": (
+                os.getenv("AMANAJE_EMBEDDING_BASE_URL")
+                if assistant_role == "embedding"
+                else os.getenv("AMANAJE_SLM_BASE_URL")
+            ) or "http://assistant-server:8080/v1",
             "generation_config": payload.get("generation_config") if isinstance(payload.get("generation_config"), Mapping) else {},
         }
         bundle = normalize_huggingface_assistant_directory(downloaded_path, metadata)
@@ -2682,6 +2966,7 @@ async def assistant_model_import_huggingface(
                         "when": datetime.now().isoformat(),
                         "repo_id": repo_id,
                         "revision": revision,
+                        "assistant_role": assistant_role,
                         "bundle_sha256": bundle.get("bundle_sha256"),
                     }
                 ],
@@ -2699,11 +2984,11 @@ async def assistant_model_import_huggingface(
                 "metrics": {
                     "status": "imported",
                     "bundle_status": "valid",
-                    "contract": "workflow_draft_json",
+                    "contract": "openai_embeddings" if assistant_role == "embedding" else "workflow_draft_json",
                 },
                 "reference_data": assistant_params.get("training_dataset_jsonl_path") or "",
-                "input_features": ["prompt", "context_pack", "target_type"],
-                "output_features": ["workflow_draft"],
+                "input_features": ["query", "document_text"] if assistant_role == "embedding" else ["prompt", "context_pack", "target_type"],
+                "output_features": ["embedding"] if assistant_role == "embedding" else ["workflow_draft"],
                 "is_trained": False,
                 "is_tested": False,
                 "is_deployed": False,
@@ -2744,17 +3029,33 @@ async def assistant_model_import_pytorch(
             or Path(bundle_path_value).name
             or "PyTorch AssistantModel"
         ).strip()
+        assistant_role = str(form.get("assistant_role") or "generator").strip().lower()
+        if assistant_role not in {"generator", "embedding", "dual"}:
+            assistant_role = "generator"
         supported_draft_types = form.get("supported_draft_types")
         if isinstance(supported_draft_types, str):
             supported_draft_types = [item.strip() for item in supported_draft_types.split(",") if item.strip()]
         metadata = {
+            "assistant_role": assistant_role,
             "display_name": display_name,
             "model_name": form.get("model_name") or display_name,
             "model_version": form.get("model_version") or "pytorch-import",
             "base_model_name": form.get("base_model_name") or display_name,
+            "provider_type": form.get("provider_type") or ("openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible"),
+            "runtime_kind": form.get("runtime_kind") or ("embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server"),
             "supported_draft_types": supported_draft_types,
             "max_context_tokens": form.get("max_context_tokens") or 4096,
-            "base_url": os.getenv("AMANAJE_SLM_BASE_URL") or "http://assistant-server:8080/v1",
+            "embedding_dimension": form.get("embedding_dimension") or (768 if assistant_role == "embedding" else None),
+            "pooling_strategy": form.get("pooling_strategy") or ("mean" if assistant_role == "embedding" else None),
+            "max_sequence_tokens": form.get("max_sequence_tokens") or form.get("max_context_tokens") or 512,
+            "query_instruction": form.get("query_instruction"),
+            "document_instruction": form.get("document_instruction"),
+            "normalize_embeddings": str(form.get("normalize_embeddings") or "true").strip().lower() not in {"0", "false", "no", "off"},
+            "base_url": (
+                os.getenv("AMANAJE_EMBEDDING_BASE_URL")
+                if assistant_role == "embedding"
+                else os.getenv("AMANAJE_SLM_BASE_URL")
+            ) or "http://assistant-server:8080/v1",
             "generation_config": {
                 "temperature": float(form.get("temperature") or 0.2),
                 "max_new_tokens": int(form.get("max_tokens") or 1600),
@@ -2800,12 +3101,30 @@ async def assistant_model_import_pytorch(
             return _utils._json_error("Provide a .zip bundle upload or a server-visible bundle_path.", status_code=400)
 
         assistant_params = dict(bundle.get("assistant_parameters") or {})
-        for key in ("model_name", "model_version", "base_model_name", "supported_draft_types", "max_context_tokens", "base_url", "generation_config"):
+        for key in (
+            "assistant_role",
+            "model_name",
+            "model_version",
+            "base_model_name",
+            "provider_type",
+            "runtime_kind",
+            "supported_draft_types",
+            "max_context_tokens",
+            "embedding_dimension",
+            "pooling_strategy",
+            "max_sequence_tokens",
+            "query_instruction",
+            "document_instruction",
+            "normalize_embeddings",
+            "base_url",
+            "generation_config",
+        ):
             value = metadata.get(key)
             if value not in (None, "", []):
                 assistant_params[key] = value
-        assistant_params["provider_type"] = "openai_compatible"
-        assistant_params["runtime_kind"] = "pytorch_hf_server"
+        assistant_params["assistant_role"] = assistant_role
+        assistant_params["provider_type"] = "openai_compatible_embeddings" if assistant_role == "embedding" else "openai_compatible"
+        assistant_params["runtime_kind"] = "embedding_hf_server" if assistant_role == "embedding" else "pytorch_hf_server"
 
         created = await create_entry(
             db,
@@ -2824,6 +3143,7 @@ async def assistant_model_import_pytorch(
                         "when": datetime.now().isoformat(),
                         "source": import_source,
                         "source_path": source_path,
+                        "assistant_role": assistant_role,
                         "bundle_sha256": bundle.get("bundle_sha256"),
                     }
                 ],
@@ -2840,11 +3160,11 @@ async def assistant_model_import_pytorch(
                 "metrics": {
                     "status": "imported",
                     "bundle_status": bundle.get("status"),
-                    "contract": "workflow_draft_json",
+                    "contract": "openai_embeddings" if assistant_role == "embedding" else "workflow_draft_json",
                 },
                 "reference_data": assistant_params.get("training_dataset_jsonl_path") or "",
-                "input_features": ["prompt", "context_pack", "target_type"],
-                "output_features": ["workflow_draft"],
+                "input_features": ["query", "document_text"] if assistant_role == "embedding" else ["prompt", "context_pack", "target_type"],
+                "output_features": ["embedding"] if assistant_role == "embedding" else ["workflow_draft"],
                 "is_trained": False,
                 "is_tested": False,
                 "is_deployed": False,
@@ -2922,6 +3242,7 @@ async def assistant_model_runtime_status(assistant_model_id: int | str, db: Asyn
     try:
         model_record = await _get_assistant_model_record(db, assistant_model_id)
         provider_config = assistant_model_to_provider_config(model_record)
+        runtime_contract = _assistant_model_runtime_contract(model_record, provider_config)
         return _utils._json_response(
             {
                 "status": "ok",
@@ -2929,6 +3250,7 @@ async def assistant_model_runtime_status(assistant_model_id: int | str, db: Asyn
                 "runtime": assistant_runtime_status(),
                 "runtime_kind": _assistant_model_runtime_kind(model_record, provider_config),
                 "runtime_load_supported": _assistant_model_needs_runtime_load(model_record, provider_config),
+                **runtime_contract,
             }
         )
     except ValueError as exc:
@@ -2944,19 +3266,31 @@ async def assistant_model_runtime_load(assistant_model_id: int | str, db: AsyncS
         model_record = await _get_assistant_model_record(db, assistant_model_id)
         provider_config = assistant_model_to_provider_config(model_record)
         if not _assistant_model_needs_runtime_load(model_record, provider_config):
+            runtime_contract = _assistant_model_runtime_contract(
+                model_record,
+                provider_config,
+                runtime_load_status={"status": "not_required"},
+            )
             return _utils._json_response(
                 {
                     "status": "not_required",
                     "assistant_model": _serialize_assistant_model(model_record),
                     "runtime_kind": _assistant_model_runtime_kind(model_record, provider_config) or "external_or_configured_provider",
+                    **runtime_contract,
                 }
             )
         result = ensure_assistant_model_runtime_loaded(model_record, provider_config)
+        runtime_contract = _assistant_model_runtime_contract(
+            model_record,
+            provider_config,
+            runtime_load_status=result,
+        )
         return _utils._json_response(
             {
                 "status": result.get("status"),
                 "assistant_model": _serialize_assistant_model(model_record),
                 "runtime_load": result,
+                **runtime_contract,
             }
         )
     except ValueError as exc:
@@ -2996,12 +3330,18 @@ async def assistant_model_activate(assistant_model_id: int | str, db: AsyncSessi
             if _assistant_model_needs_runtime_load(model_record, provider_config)
             else {"status": "not_required", "runtime_kind": _assistant_model_runtime_kind(model_record, provider_config)}
         )
+        runtime_contract = _assistant_model_runtime_contract(
+            model_record,
+            provider_config,
+            runtime_load_status=runtime_load,
+        )
         return _utils._json_response(
             {
                 "status": "activated",
                 "global_default_model_id": str(assistant_model_id),
                 "assistant_model": _serialize_assistant_model(model_record),
                 "runtime_load": runtime_load,
+                **runtime_contract,
             }
         )
     except ValueError as exc:
@@ -3010,6 +3350,167 @@ async def assistant_model_activate(assistant_model_id: int | str, db: AsyncSessi
         return _utils._json_response({"status": "error", "detail": str(exc), "errors": exc.errors}, status_code=400)
     except Exception as exc:
         LOGGER.exception("Assistant model activation failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/embedding/activate", response_class=JSONResponse)
+async def assistant_embedding_model_activate(assistant_model_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        update_settings_state({"assistant": {"default_embedding_model_id": assistant_model_id}}, _utils.SETTINGS_STATE_PATH)
+        provider_config = assistant_model_to_provider_config(model_record)
+        runtime_load = (
+            ensure_assistant_embedding_runtime_loaded(model_record, provider_config)
+            if _assistant_embedding_model_needs_runtime_load(model_record, provider_config)
+            else {"status": "not_required", "runtime_kind": _assistant_model_runtime_kind(model_record, provider_config)}
+        )
+        return _utils._json_response(
+            {
+                "status": "activated",
+                "global_default_embedding_model_id": str(assistant_model_id),
+                "assistant_model": _serialize_assistant_model(model_record),
+                "embedding_role": assistant_model_role(model_record),
+                "runtime_load": runtime_load,
+                "embedding_index": embedding_index_status(_assistant_embedding_index_dir()),
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except SettingsValidationError as exc:
+        return _utils._json_response({"status": "error", "detail": str(exc), "errors": exc.errors}, status_code=400)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding model activation failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/models/{assistant_model_id}/embedding/status", response_class=JSONResponse)
+async def assistant_embedding_model_status(assistant_model_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        provider_config = assistant_model_to_provider_config(model_record)
+        return _utils._json_response(
+            {
+                "status": "ok",
+                "assistant_model": _serialize_assistant_model(model_record),
+                "embedding_role": assistant_model_role(model_record),
+                "embedding_config": assistant_embedding_model_config(model_record, provider_config),
+                "runtime": assistant_embedding_runtime_status(timeout=2.0),
+                "runtime_load_supported": _assistant_embedding_model_needs_runtime_load(model_record, provider_config),
+                "embedding_index": embedding_index_status(_assistant_embedding_index_dir()),
+                "global_default_embedding_model_id": _assistant_default_embedding_model_id(),
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding model status failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/embedding/runtime/load", response_class=JSONResponse)
+async def assistant_embedding_model_runtime_load(assistant_model_id: int | str, db: AsyncSession = Depends(get_db)) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        provider_config = assistant_model_to_provider_config(model_record)
+        if not _assistant_embedding_model_needs_runtime_load(model_record, provider_config):
+            return _utils._json_response(
+                {
+                    "status": "not_required",
+                    "assistant_model": _serialize_assistant_model(model_record),
+                    "runtime_kind": _assistant_model_runtime_kind(model_record, provider_config) or "external_or_index_only",
+                }
+            )
+        result = ensure_assistant_embedding_runtime_loaded(model_record, provider_config)
+        return _utils._json_response(
+            {
+                "status": result.get("status"),
+                "assistant_model": _serialize_assistant_model(model_record),
+                "runtime_load": result,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding runtime load failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.post("/assistant/models/{assistant_model_id}/training/embedding/prepare", response_class=JSONResponse)
+async def assistant_model_prepare_embedding_training(
+    assistant_model_id: int | str,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        model_record = await _get_assistant_model_record(db, assistant_model_id)
+        reference_sync = sync_assistant_reference_repository(
+            ASSISTANT_REFERENCE_DIR,
+            source_paths=resolve_assistant_reference_source_paths(ASSISTANT_REFERENCE_DIR, base_dir=REPO_ROOT),
+            base_dir=REPO_ROOT,
+            max_files=1000,
+        )
+        project_examples = build_example_catalog(routes=app.routes, include_payloads=True)
+        manifest = prepare_embedding_training_examples(
+            ASSISTANT_DATASET_DIR,
+            ASSISTANT_REFERENCE_DIR,
+            _assistant_embedding_training_dir(assistant_model_id),
+            project_examples=project_examples,
+            embedding_model=model_record,
+        )
+        parameters = dict(getattr(model_record, "parameters", {}) or {})
+        assistant_config = dict(parameters.get("assistant") or {})
+        assistant_config.update(
+            {
+                "embedding_training_manifest": manifest.get("manifest_path"),
+                "embedding_training_examples_path": manifest.get("examples_path"),
+                "embedding_training_examples_hash": manifest.get("examples_hash"),
+                "embedding_training_record_count": manifest.get("record_count"),
+                "embedding_training_label_counts": manifest.get("label_counts"),
+                "embedding_training_ready_for_fine_tuning": manifest.get("ready_for_fine_tuning"),
+            }
+        )
+        parameters["assistant"] = assistant_config
+        updated = await update_entry(
+            db,
+            AssistantORM,
+            getattr(model_record, "id"),
+            {
+                "parameters": parameters,
+                "reference_data": manifest.get("examples_path") or getattr(model_record, "reference_data", None),
+                "history": _utils._append_history(
+                    getattr(model_record, "history", None),
+                    {
+                        "operation": "assistant_embedding_training_prepared",
+                        "when": datetime.now().isoformat(),
+                        "examples_hash": manifest.get("examples_hash"),
+                        "examples_path": manifest.get("examples_path"),
+                        "record_count": manifest.get("record_count"),
+                    },
+                ),
+            },
+        )
+        mlflow_tracking = log_assistant_mlflow_event(
+            "embedding_training_prepare",
+            evaluation={"evaluation_profile": "assistant-embedding-training-v1", "passed": bool(manifest.get("ready_for_fine_tuning"))},
+            artifact_paths={"examples_path": manifest.get("examples_path"), "manifest_path": manifest.get("manifest_path")},
+            extra_metrics={"embedding_training_records": float(manifest.get("record_count", 0) or 0)},
+        )
+        return _utils._json_response(
+            {
+                "status": "prepared",
+                "assistant_model": _serialize_assistant_model(updated),
+                "manifest": manifest,
+                "reference_sync": {
+                    "created_count": reference_sync.get("created_count"),
+                    "skipped_count": reference_sync.get("skipped_count"),
+                    "scanned": reference_sync.get("scanned"),
+                },
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding training preparation failed.")
         return _utils._json_error(str(exc), status_code=500)
 
 
@@ -3251,11 +3752,104 @@ async def assistant_model_attach_training_dataset(
         return _utils._json_error(str(exc), status_code=500)
 
 
+@app.post("/assistant/embeddings/index/rebuild", response_class=JSONResponse)
+async def assistant_embeddings_index_rebuild(
+    payload: dict[str, Any] = Body(default_factory=dict),
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        request_payload = AssistantEmbeddingIndexRequest.model_validate(payload)
+        embedding_model = None
+        if request_payload.assistant_model_id not in (None, ""):
+            embedding_model = await _get_assistant_model_record(db, request_payload.assistant_model_id)
+        elif _assistant_default_embedding_model_id():
+            embedding_model = await _resolve_default_embedding_model(db)
+        reference_sync = sync_assistant_reference_repository(
+            ASSISTANT_REFERENCE_DIR,
+            source_paths=resolve_assistant_reference_source_paths(ASSISTANT_REFERENCE_DIR, base_dir=REPO_ROOT),
+            base_dir=REPO_ROOT,
+            max_files=max(1, min(int(request_payload.limit or 2_000), 2_000)),
+        )
+        project_examples = build_example_catalog(routes=app.routes, include_payloads=True)
+        manifest = rebuild_embedding_index(
+            ASSISTANT_REFERENCE_DIR,
+            _assistant_embedding_index_dir(),
+            embedding_model=embedding_model,
+            project_examples=project_examples,
+            limit=max(1, min(int(request_payload.limit or 2_000), 2_000)),
+        )
+        mlflow_tracking = log_assistant_mlflow_event(
+            "embedding_index_rebuild",
+            evaluation={"evaluation_profile": "assistant-embedding-index-v1", "passed": True},
+            artifact_paths={
+                "vectors_path": manifest.get("vectors_path"),
+                "metadata_path": manifest.get("metadata_path"),
+                "manifest_path": manifest.get("manifest_path"),
+            },
+            extra_params={
+                "embedding_model_id": manifest.get("embedding_model_id"),
+                "embedding_model_version": manifest.get("embedding_model_version"),
+                "embedding_index_hash": manifest.get("index_hash"),
+            },
+            extra_metrics={"embedding_index_records": float(manifest.get("record_count", 0) or 0)},
+        )
+        return _utils._json_response(
+            {
+                "status": "rebuilt",
+                "manifest": manifest,
+                "reference_sync": {
+                    "created_count": reference_sync.get("created_count"),
+                    "skipped_count": reference_sync.get("skipped_count"),
+                    "scanned": reference_sync.get("scanned"),
+                },
+                "mlflow_tracking": mlflow_tracking,
+            }
+        )
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding index rebuild failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
+@app.get("/assistant/embeddings/index/status", response_class=JSONResponse)
+async def assistant_embeddings_index_status() -> JSONResponse:
+    return _utils._json_response({"status": "ok", "embedding_index": embedding_index_status(_assistant_embedding_index_dir())})
+
+
+@app.post("/assistant/embeddings/search", response_class=JSONResponse)
+async def assistant_embeddings_search(
+    payload: AssistantEmbeddingSearchRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    try:
+        embedding_model = None
+        assistant_model_id = payload.assistant_model_id or _assistant_default_embedding_model_id()
+        if assistant_model_id not in (None, ""):
+            embedding_model = await _get_assistant_model_record(db, assistant_model_id)
+        result = search_embedding_index(
+            _assistant_embedding_index_dir(),
+            payload.query,
+            embedding_model=embedding_model,
+            tags=payload.tags,
+            limit=payload.limit,
+        )
+        return _utils._json_response(result)
+    except ValueError as exc:
+        return _utils._json_error(str(exc), status_code=404)
+    except Exception as exc:
+        LOGGER.exception("Assistant embedding search failed.")
+        return _utils._json_error(str(exc), status_code=500)
+
+
 @app.get("/assistant/provider/status", response_class=JSONResponse)
 async def assistant_provider_status(run_eval: bool = False) -> JSONResponse:
     payload = get_assistant_provider_status()
     payload["runtime"] = assistant_runtime_status(timeout=2.0)
+    payload["embedding_runtime"] = assistant_embedding_runtime_status(timeout=2.0)
+    payload["embedding_index"] = embedding_index_status(_assistant_embedding_index_dir())
     payload["global_default_model_id"] = _assistant_default_model_id()
+    payload["global_default_embedding_model_id"] = _assistant_default_embedding_model_id()
     if run_eval:
         evaluation = run_assistant_golden_evals(get_assistant_provider)
         artifact_paths: dict[str, str] = {}
@@ -3396,6 +3990,8 @@ async def assistant_curate_training() -> JSONResponse:
 async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Depends(get_db)) -> JSONResponse:
     try:
         selected_assistant_model = None
+        selected_provider_config: dict[str, Any] | None = None
+        selected_runtime_contract: dict[str, Any] | None = None
         runtime_load_status: dict[str, Any] | None = None
         resolved_assistant_model_id = payload.assistant_model_id
         if resolved_assistant_model_id in (None, "") and str(payload.provider or "auto").strip().lower() in {"", "auto", "default", "active"}:
@@ -3406,39 +4002,136 @@ async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Dep
         if selected_assistant_model is None and resolved_assistant_model_id not in (None, ""):
             selected_assistant_model = await _get_assistant_model_record(db, resolved_assistant_model_id)
         if selected_assistant_model is not None:
-            provider_config = assistant_model_to_provider_config(selected_assistant_model, overrides=payload.provider_overrides)
-            if _assistant_model_needs_runtime_load(selected_assistant_model, provider_config):
-                runtime_load_status = ensure_assistant_model_runtime_loaded(selected_assistant_model, provider_config)
+            selected_provider_config = assistant_model_to_provider_config(selected_assistant_model, overrides=payload.provider_overrides)
+            if _assistant_model_needs_runtime_load(selected_assistant_model, selected_provider_config):
+                runtime_load_status = ensure_assistant_model_runtime_loaded(selected_assistant_model, selected_provider_config)
             provider = get_assistant_provider_for_model(
                 selected_assistant_model,
                 overrides=payload.provider_overrides,
             )
+            selected_runtime_contract = _assistant_model_runtime_contract(
+                selected_assistant_model,
+                selected_provider_config,
+                provider_name=provider.name,
+                runtime_load_status=runtime_load_status,
+            )
+            if not selected_runtime_contract["runtime_loaded"]:
+                return _utils._json_response(
+                    {
+                        "status": "runtime_unavailable",
+                        "detail": "Selected assistant model runtime is unavailable; draft was not generated.",
+                        **selected_runtime_contract,
+                    },
+                    status_code=503,
+                )
         else:
             provider = get_assistant_provider(payload.provider)
         reference_context = _assistant_reference_context()
-        selected_references = _resolve_assistant_reference_pack(payload)
+        embedding_retrieval, embedding_references = await _resolve_assistant_embedding_retrieval(payload, db)
+        embedding_scores = {
+            str(item.get("reference_id")): float(item.get("score") or 0)
+            for item in embedding_retrieval.get("results") or []
+            if isinstance(item, Mapping) and item.get("reference_id")
+        }
+        reference_payload = payload.model_copy(
+            update={
+                "context": {
+                    **dict(payload.context or {}),
+                    "content_references": [
+                        *embedding_references,
+                        *list(dict(payload.context or {}).get("content_references") or []),
+                    ],
+                    "embedding_retrieval": {
+                        "status": embedding_retrieval.get("status"),
+                        "embedding_model_id": embedding_retrieval.get("embedding_model_id") or payload.embedding_model_id,
+                        "embedding_model_version": embedding_retrieval.get("embedding_model_version"),
+                        "embedding_index_hash": embedding_retrieval.get("embedding_index_hash"),
+                        "embedding_retrieval_hash": embedding_retrieval.get("embedding_retrieval_hash"),
+                        "runtime_fallback": embedding_retrieval.get("runtime_fallback"),
+                        "selected_reference_scores": embedding_scores,
+                    },
+                }
+            },
+            deep=True,
+        )
+        selected_references = _resolve_assistant_reference_pack(reference_payload)
         assistant_model_payload = (
             _serialize_assistant_model(selected_assistant_model)
             if selected_assistant_model is not None
             else None
         )
-        provider_payload = payload.model_copy(
+        provider_payload = reference_payload.model_copy(
             update={
                 "provider": provider.name,
                 "context": {
-                    **dict(payload.context or {}),
+                    **dict(reference_payload.context or {}),
                     "assistant_model": assistant_model_payload,
                     "assistant_model_id": resolved_assistant_model_id,
                     "assistant_runtime_load": runtime_load_status,
                     "assistant_reference_snapshot": reference_context,
                     "content_references": selected_references,
+                    "embedding_retrieval": {
+                        "status": embedding_retrieval.get("status"),
+                        "embedding_model_id": embedding_retrieval.get("embedding_model_id") or payload.embedding_model_id,
+                        "embedding_model_version": embedding_retrieval.get("embedding_model_version"),
+                        "embedding_index_hash": embedding_retrieval.get("embedding_index_hash"),
+                        "embedding_retrieval_hash": embedding_retrieval.get("embedding_retrieval_hash"),
+                        "runtime_fallback": embedding_retrieval.get("runtime_fallback"),
+                        "selected_reference_scores": embedding_scores,
+                    },
                 }
             },
             deep=True,
         )
-        draft = provider.create_draft(provider_payload)
+        try:
+            draft = provider.create_draft(provider_payload)
+        except RuntimeError as exc:
+            if selected_assistant_model is not None and selected_provider_config is not None:
+                selected_runtime_contract = _assistant_model_runtime_contract(
+                    selected_assistant_model,
+                    selected_provider_config,
+                    provider_name=provider.name,
+                    runtime_load_status=runtime_load_status,
+                )
+                return _utils._json_response(
+                    {
+                        "status": "runtime_unavailable",
+                        "detail": str(exc),
+                        **selected_runtime_contract,
+                    },
+                    status_code=503,
+                )
+            raise
+        fallback_used = bool(draft.provider_metadata.get("fallback_provider"))
+        if selected_assistant_model is not None and fallback_used:
+            selected_runtime_contract = _assistant_model_runtime_contract(
+                selected_assistant_model,
+                selected_provider_config or assistant_model_to_provider_config(selected_assistant_model, overrides=payload.provider_overrides),
+                provider_name=provider.name,
+                runtime_load_status=runtime_load_status,
+                fallback_used=True,
+                draft_valid=False,
+            )
+            return _utils._json_response(
+                {
+                    "status": "runtime_unavailable",
+                    "detail": "Selected assistant model attempted to use a fallback provider; draft was discarded.",
+                    **selected_runtime_contract,
+                },
+                status_code=502,
+            )
         review = review_workflow_draft(draft)
         evaluation = evaluate_draft_contract(draft, review)
+        draft_valid = bool(evaluation.get("passed"))
+        if selected_assistant_model is not None and selected_provider_config is not None:
+            selected_runtime_contract = _assistant_model_runtime_contract(
+                selected_assistant_model,
+                selected_provider_config,
+                provider_name=provider.name,
+                runtime_load_status=runtime_load_status,
+                fallback_used=fallback_used,
+                draft_valid=draft_valid,
+            )
         artifact_paths = _persist_assistant_review_artifacts(draft, evaluation)
         training_example_path = None
         if not review.approved:
@@ -3474,8 +4167,15 @@ async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Dep
                 "requested_reference_ids": list(payload.reference_ids),
                 "selected_reference_ids": draft.provider_metadata.get("selected_reference_ids", []),
                 "reference_pack_hash": draft.provider_metadata.get("reference_pack_hash"),
+                "embedding_model_id": draft.provider_metadata.get("embedding_model_id"),
+                "embedding_model_version": draft.provider_metadata.get("embedding_model_version"),
+                "embedding_index_hash": draft.provider_metadata.get("embedding_index_hash"),
+                "embedding_retrieval_hash": draft.provider_metadata.get("embedding_retrieval_hash"),
                 "assistant_model_id": resolved_assistant_model_id,
                 "assistant_runtime_load": runtime_load_status,
+                "assistant_runtime_loaded": selected_runtime_contract.get("runtime_loaded") if selected_runtime_contract else None,
+                "assistant_fallback_used": fallback_used,
+                "assistant_draft_valid": draft_valid,
             },
             parameters={
                 "prompt": payload.prompt,
@@ -3487,6 +4187,8 @@ async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Dep
                 "safety_profile": draft.execution_profile,
                 "reference_count": len(selected_references),
                 "reference_selection": "automatic",
+                "embedding_reference_count": len(embedding_references),
+                "embedding_retrieval_status": embedding_retrieval.get("status"),
             },
             status="queued",
         )
@@ -3504,12 +4206,14 @@ async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Dep
                     "training_example_path": training_example_path,
                     "mlflow_tracking": mlflow_tracking,
                     "selected_references": selected_references,
+                    "embedding_retrieval": embedding_retrieval,
+                    "assistant_runtime": selected_runtime_contract,
                 },
                 "metrics": {
                     "assistant_latency_ms": draft.provider_metadata.get("latency_ms"),
                     "assistant_validation_passed": bool(review.approved),
                     "assistant_alignment_passed": bool(evaluation.get("passed")),
-                    "assistant_fallback_used": bool(draft.provider_metadata.get("fallback_provider")),
+                    "assistant_fallback_used": fallback_used,
                 },
             },
             event_message="Assistant draft created and reviewed.",
@@ -3524,6 +4228,14 @@ async def assistant_draft(payload: AssistantDraftRequest, db: AsyncSession = Dep
                 "artifact_paths": artifact_paths,
                 "mlflow_tracking": mlflow_tracking,
                 "runtime_load": runtime_load_status,
+                "provider": provider.name,
+                "assistant_model_id": resolved_assistant_model_id,
+                "bundle_ready": selected_runtime_contract.get("bundle_ready") if selected_runtime_contract else None,
+                "runtime_loaded": selected_runtime_contract.get("runtime_loaded") if selected_runtime_contract else None,
+                "fallback_used": fallback_used,
+                "draft_valid": draft_valid,
+                "assistant_runtime": selected_runtime_contract,
+                "embedding_retrieval": embedding_retrieval,
                 "ledger": run_entry,
             }
         )
@@ -4724,6 +5436,19 @@ def _is_active_run_status(status: Any) -> bool:
     return str(status or "queued") in {"queued", "running", "paused", "cancel_requested"}
 
 
+def _run_has_missing_queue_job(run: Mapping[str, Any]) -> bool:
+    queue_payload = run.get("queue") if isinstance(run.get("queue"), Mapping) else {}
+    return str((queue_payload or {}).get("reason") or "").strip().lower() == "job_not_found"
+
+
+def _is_orphaned_cancel_request(run: Mapping[str, Any]) -> bool:
+    return str(run.get("status") or "").strip().lower() == "cancel_requested" and _run_has_missing_queue_job(run)
+
+
+def _is_effectively_active_run(run: Mapping[str, Any]) -> bool:
+    return _is_active_run_status(run.get("status")) and not _is_orphaned_cancel_request(run)
+
+
 def _run_lookup_values(value: Any) -> list[str]:
     values: list[str] = []
     if isinstance(value, Mapping):
@@ -4787,15 +5512,16 @@ def _run_rerun_capability(run: Mapping[str, Any]) -> tuple[bool, str]:
 
 def _operation_action_capabilities(run: Mapping[str, Any]) -> dict[str, Any]:
     status = str(run.get("status") or "queued")
-    active = _is_active_run_status(status)
+    active = _is_effectively_active_run(run)
     can_rerun, rerun_reason = _run_rerun_capability(run)
+    orphaned = _is_orphaned_cancel_request(run)
     return {
-        "pause": status in {"queued", "running"},
-        "resume": status == "paused",
-        "cancel": status in {"queued", "running", "paused", "cancel_requested"},
+        "pause": active and status in {"queued", "running"},
+        "resume": active and status == "paused",
+        "cancel": (active and status in {"queued", "running", "paused", "cancel_requested"}) or orphaned,
         "rerun": (not active) and can_rerun,
         "analyze": True,
-        "rerun_reason": rerun_reason,
+        "rerun_reason": "The original RQ job is missing; rerun will create a fresh job." if orphaned else rerun_reason,
     }
 
 
@@ -4828,6 +5554,7 @@ def _enrich_operation_run(
     terminal_summary = dict(payload.get("terminal_summary") or {})
     terminal_summary.setdefault("line_count", len(_utils.build_run_terminal_lines(full_payload)))
     terminal_summary["next_index"] = dict(full_payload.get("terminal") or {}).get("next_index")
+    orphaned = _is_orphaned_cancel_request(full_payload)
     payload.update(
         {
             "title": _operation_title(payload),
@@ -4836,6 +5563,12 @@ def _enrich_operation_run(
             "actions": _operation_action_capabilities(full_payload),
             "terminal_summary": terminal_summary,
             "queue_diagnostics": queue_position,
+            "effective_status": "cancelled" if orphaned else str(full_payload.get("status") or payload.get("status") or "queued"),
+            "status_reason": (
+                "RQ job is no longer present; this cancellation request is orphaned and can be re-run."
+                if orphaned
+                else ""
+            ),
         }
     )
     return payload
@@ -4852,6 +5585,8 @@ def _run_matches_operation_query(run: Mapping[str, Any], query: str) -> bool:
             str(run.get("run_type") or ""),
             str(run.get("title") or ""),
             str(run.get("status") or ""),
+            str(run.get("effective_status") or ""),
+            str(run.get("status_reason") or ""),
             str(run.get("stage") or ""),
             str(run.get("compute_reason") or ""),
             str(progress.get("latest_event") or ""),
@@ -4938,7 +5673,7 @@ def _copy_rerun_payload(source_payload: Mapping[str, Any]) -> tuple[str, dict[st
 
 def _rerun_run(source_run_id: str, source_payload: Mapping[str, Any]) -> JSONResponse:
     status = str(source_payload.get("status") or "queued")
-    if _is_active_run_status(status):
+    if _is_effectively_active_run(source_payload):
         return _utils._json_error(
             f"Run is still {status}; wait until it finishes before re-running it.",
             status_code=400,
@@ -5086,14 +5821,20 @@ async def runs_control(run_id: str, action: str) -> JSONResponse:
         except QueueUnavailableError as exc:
             queue_result = {"backend": "rq", "cancelled": False, "error": str(exc), "error_code": exc.error_code}
         control_state.update({"cancel_requested": True, "cancel_requested_at": datetime.now().isoformat()})
-        if status in {"queued", "paused"} or (queue_result or {}).get("cancelled"):
+        queue_job_missing = str((queue_result or {}).get("reason") or "").strip().lower() == "job_not_found"
+        if status in {"queued", "paused"} or (queue_result or {}).get("cancelled") or queue_job_missing:
+            event_message = (
+                "Run closed because its RQ job is no longer present."
+                if queue_job_missing and status == "cancel_requested"
+                else "Run cancelled."
+            )
             updated = _utils.update_run_entry(
                 RUN_LEDGER_DIR,
                 run_id,
                 status="cancelled",
                 stage="cancelled",
                 merge={"control": control_state, "queue": queue_result or {}},
-                event_message="Run cancelled.",
+                event_message=event_message,
             )
         else:
             updated = _utils.update_run_entry(
@@ -5131,7 +5872,7 @@ async def operations_summary(limit: int = 12, run_ids: Optional[str] = None) -> 
     ]
     recent_runs = _utils.list_run_entries(RUN_LEDGER_DIR, limit=max(result_limit * 4, 40))
     watched_runs = _utils.list_run_entries(RUN_LEDGER_DIR, run_ids=parsed_run_ids, limit=50) if parsed_run_ids else []
-    active_runs = [run for run in recent_runs if _is_active_run_status(run.get("status"))]
+    active_runs = [run for run in recent_runs if _is_effectively_active_run(run)]
     recent_failures = [
         run
         for run in recent_runs
@@ -5207,6 +5948,8 @@ async def operations_runs(
             limit=limit,
         )
     ]
+    if active_only:
+        runs = [run for run in runs if _is_active_run_status(run.get("effective_status") or run.get("status"))]
     query = str(q or "").strip().lower()
     if query:
         runs = [run for run in runs if _run_matches_operation_query(run, query)]
@@ -6433,15 +7176,54 @@ async def production_simulate(request: Request, db: AsyncSession = Depends(get_d
         if model_record is None or dataset_record is None:
             return _utils._json_error("Select an inference pair, model, and dataset before simulating production.", status_code=400)
 
-        prepared, runtime_result = _prepare_runtime_execution(model_record, dataset_record)
-        simulation_summary = _utils._run_simulation_workbench(
-            payload_data,
-            prepared=prepared,
-            runtime_result=runtime_result,
-            model_record=model_record,
-            dataset_record=dataset_record,
-            inference_record=inference_record,
-        )
+        try:
+            prepared, runtime_result = _prepare_runtime_execution(model_record, dataset_record)
+            simulation_summary = _utils._run_simulation_workbench(
+                payload_data,
+                prepared=prepared,
+                runtime_result=runtime_result,
+                model_record=model_record,
+                dataset_record=dataset_record,
+                inference_record=inference_record,
+            )
+        except Exception as runtime_exc:
+            LOGGER.exception("Production simulation runtime failed.")
+            runtime_error_payload: dict[str, Any] = {}
+            if isinstance(runtime_exc, _utils.RuntimeArtifactDependencyError):
+                runtime_error_payload = runtime_exc.to_payload()
+            return _utils._json_error(
+                "Simulation runtime failed for the selected model and dataset context.",
+                status_code=400,
+                watch_context_id=_resolve_watch_context_id(
+                    payload_data,
+                    model_id=getattr(model_record, "id", None),
+                    dataset_id=getattr(dataset_record, "id", None),
+                    inference_id=getattr(inference_record, "id", None),
+                ),
+                error_code="simulation_runtime_error",
+                runtime_error=str(runtime_exc),
+                model_id=getattr(model_record, "id", None),
+                dataset_id=getattr(dataset_record, "id", None),
+                inference_id=getattr(inference_record, "id", None),
+                **runtime_error_payload,
+            )
+        simulation_scenarios = simulation_summary.get("scenarios") if isinstance(simulation_summary.get("scenarios"), list) else []
+        primary_scenario = simulation_scenarios[0] if simulation_scenarios else {}
+        changed_features = simulation_summary.get("changed_features") or primary_scenario.get("changed_features") or []
+        scenario_comparison = simulation_summary.get("scenario_comparison") or [
+            {
+                "name": scenario.get("name") or f"Scenario {index + 1}",
+                "final_prediction": (scenario.get("prediction_summary") or {}).get("final_prediction"),
+                "prediction_delta": (scenario.get("prediction_summary") or {}).get("prediction_delta"),
+                "step_count": (scenario.get("prediction_summary") or {}).get("step_count"),
+                "output_feature": scenario.get("output_feature") or simulation_summary.get("output_feature"),
+            }
+            for index, scenario in enumerate(simulation_scenarios)
+            if isinstance(scenario, Mapping)
+        ]
+        simulation_summary["plot_specs"] = simulation_summary.get("plot_specs") or simulation_summary.get("plots") or []
+        simulation_summary["scenario_comparison"] = scenario_comparison
+        simulation_summary["changed_features"] = changed_features
         PRODUCTION_STATE["simulation"] = simulation_summary
         output_features = simulation_summary.get("output_features") or []
         output_feature = simulation_summary.get("output_feature") or "prediction"
@@ -6523,7 +7305,12 @@ async def production_simulate(request: Request, db: AsyncSession = Depends(get_d
                 "watch_context_id": watch_id,
                 "output_features": output_features,
                 "output_feature": output_feature,
+                "primary_result": simulation_summary.get("primary_result") or {},
                 "prediction_summary": primary_summary,
+                "series": simulation_summary.get("series") or [],
+                "scenario_comparison": scenario_comparison,
+                "changed_features": changed_features,
+                "plot_specs": simulation_summary.get("plot_specs") or [],
                 "simulation": simulation_summary,
                 "production": {**PRODUCTION_STATE, "activity_log": _read_activity_log(limit=30)},
             }

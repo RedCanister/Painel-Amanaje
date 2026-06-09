@@ -27,6 +27,12 @@ class ChatCompletionRequest(BaseModel):
     response_format: dict[str, Any] | None = None
 
 
+class EmbeddingRequest(BaseModel):
+    model: str | None = None
+    input: str | list[str]
+    encoding_format: str | None = None
+
+
 class ModelLoadRequest(BaseModel):
     model_name: str
     model_version: str | None = None
@@ -40,9 +46,24 @@ class ModelLoadRequest(BaseModel):
     device: str = "auto"
     dtype: str = "auto"
     max_context_tokens: int | None = None
+    max_sequence_tokens: int | None = None
+    embedding_dimension: int | None = None
+    pooling_strategy: str = "mean"
+    normalize_embeddings: bool = True
 
 
 STATE: dict[str, Any] = {
+    "loaded": False,
+    "loading": False,
+    "error": None,
+    "manifest": {},
+    "tokenizer": None,
+    "model": None,
+    "active_model": None,
+    "loaded_at": None,
+}
+
+EMBEDDING_STATE: dict[str, Any] = {
     "loaded": False,
     "loading": False,
     "error": None,
@@ -121,6 +142,27 @@ def _release_loaded_model() -> None:
         pass
 
 
+def _release_loaded_embedding_model() -> None:
+    EMBEDDING_STATE.update(
+        {
+            "loaded": False,
+            "loading": False,
+            "error": None,
+            "manifest": {},
+            "tokenizer": None,
+            "model": None,
+            "active_model": None,
+            "loaded_at": None,
+        }
+    )
+    try:
+        import gc
+
+        gc.collect()
+    except Exception:
+        pass
+
+
 def _load_runtime(payload: ModelLoadRequest | None = None, *, force: bool = False) -> dict[str, Any]:
     requested_name = payload.model_name if payload is not None else os.getenv("ASSISTANT_MODEL_NAME", "assistant-model")
     if STATE["loaded"] and not force and (STATE.get("active_model") or {}).get("model_name") == requested_name:
@@ -178,8 +220,72 @@ def _load_runtime(payload: ModelLoadRequest | None = None, *, force: bool = Fals
     return _status_payload()
 
 
+def _load_embedding_runtime(payload: ModelLoadRequest | None = None, *, force: bool = False) -> dict[str, Any]:
+    requested_name = payload.model_name if payload is not None else os.getenv("ASSISTANT_EMBEDDING_MODEL_NAME", "assistant-embedding")
+    if EMBEDDING_STATE["loaded"] and not force and (EMBEDDING_STATE.get("active_model") or {}).get("model_name") == requested_name:
+        return _embedding_status_payload()
+
+    try:
+        EMBEDDING_STATE["loading"] = True
+        EMBEDDING_STATE["error"] = None
+        from transformers import AutoModel, AutoTokenizer
+
+        bundle_dir = _resolve_model_dir(payload)
+        manifest = _load_manifest(bundle_dir)
+        model_name = requested_name or manifest.get("model_name") or bundle_dir.name
+        device = (payload.device if payload is not None else os.getenv("ASSISTANT_DEVICE", manifest.get("device", "auto"))) or "auto"
+        device_map = "auto" if str(device).lower() == "auto" else None
+        tokenizer = AutoTokenizer.from_pretrained(bundle_dir, trust_remote_code=False)
+        model = AutoModel.from_pretrained(
+            bundle_dir,
+            device_map=device_map,
+            trust_remote_code=False,
+        )
+        EMBEDDING_STATE.update(
+            {
+                "loaded": True,
+                "loading": False,
+                "error": None,
+                "manifest": manifest,
+                "tokenizer": tokenizer,
+                "model": model,
+                "active_model": {
+                    "model_name": model_name,
+                    "model_version": (payload.model_version if payload else None) or manifest.get("model_version"),
+                    "bundle_dir": str(bundle_dir),
+                    "device": device,
+                    "dtype": payload.dtype if payload else os.getenv("ASSISTANT_DTYPE", manifest.get("dtype", "auto")),
+                    "max_context_tokens": payload.max_context_tokens if payload else manifest.get("max_context_tokens"),
+                    "max_sequence_tokens": payload.max_sequence_tokens if payload else manifest.get("max_sequence_tokens"),
+                    "embedding_dimension": payload.embedding_dimension if payload else manifest.get("embedding_dimension"),
+                    "pooling_strategy": payload.pooling_strategy if payload else manifest.get("pooling_strategy", "mean"),
+                    "normalize_embeddings": payload.normalize_embeddings if payload else manifest.get("normalize_embeddings", True),
+                },
+                "loaded_at": datetime.now().isoformat(),
+            }
+        )
+    except Exception as exc:
+        EMBEDDING_STATE.update({"loaded": False, "loading": False, "error": str(exc), "tokenizer": None, "model": None})
+        raise
+    return _embedding_status_payload()
+
+
 def _ensure_loaded() -> None:
     if STATE["loaded"]:
+        return
+
+
+def _ensure_embedding_loaded() -> None:
+    if EMBEDDING_STATE["loaded"]:
+        return
+    try:
+        _load_embedding_runtime(
+            ModelLoadRequest(
+                model_name=os.getenv("ASSISTANT_EMBEDDING_MODEL_NAME", "assistant-embedding"),
+                bundle_dir=str(_default_bundle_dir()),
+            )
+        )
+    except Exception:
         return
     try:
         _load_runtime(
@@ -231,6 +337,25 @@ def _status_payload() -> dict[str, Any]:
         "loaded_at": STATE.get("loaded_at"),
         "trust_remote_code": False,
         "one_active_model": True,
+        "embedding": _embedding_status_payload(),
+    }
+
+
+def _embedding_status_payload() -> dict[str, Any]:
+    active_model = EMBEDDING_STATE.get("active_model") or {}
+    manifest = EMBEDDING_STATE.get("manifest") or {}
+    return {
+        "status": "ready" if EMBEDDING_STATE["loaded"] else ("loading" if EMBEDDING_STATE["loading"] else "unavailable"),
+        "loaded": bool(EMBEDDING_STATE["loaded"]),
+        "loading": bool(EMBEDDING_STATE["loading"]),
+        "error": EMBEDDING_STATE["error"],
+        "active_model": active_model,
+        "model_name": active_model.get("model_name") or manifest.get("model_name") or os.getenv("ASSISTANT_EMBEDDING_MODEL_NAME"),
+        "model_version": active_model.get("model_version") or manifest.get("model_version"),
+        "bundle_dir": active_model.get("bundle_dir") or str(_default_bundle_dir()),
+        "loaded_at": EMBEDDING_STATE.get("loaded_at"),
+        "trust_remote_code": False,
+        "one_active_embedding_model": True,
     }
 
 
@@ -256,6 +381,25 @@ def admin_model_load(payload: ModelLoadRequest, _: None = Depends(_require_admin
 def admin_model_unload(_: None = Depends(_require_admin_token)) -> dict[str, Any]:
     _release_loaded_model()
     return _status_payload()
+
+
+@app.get("/admin/embeddings/status")
+def admin_embedding_status(_: None = Depends(_require_admin_token)) -> dict[str, Any]:
+    return _embedding_status_payload()
+
+
+@app.post("/admin/embeddings/load")
+def admin_embedding_load(payload: ModelLoadRequest, _: None = Depends(_require_admin_token)) -> dict[str, Any]:
+    try:
+        return _load_embedding_runtime(payload, force=True)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/admin/embeddings/unload")
+def admin_embedding_unload(_: None = Depends(_require_admin_token)) -> dict[str, Any]:
+    _release_loaded_embedding_model()
+    return _embedding_status_payload()
 
 
 @app.post("/v1/chat/completions")
@@ -309,4 +453,65 @@ def chat_completions(payload: ChatCompletionRequest) -> dict[str, Any]:
                 "finish_reason": "stop",
             }
         ],
+    }
+
+
+def _mean_pool(last_hidden_state, attention_mask):
+    import torch
+
+    mask = attention_mask.unsqueeze(-1).expand(last_hidden_state.size()).float()
+    masked = last_hidden_state * mask
+    summed = torch.sum(masked, dim=1)
+    counts = torch.clamp(mask.sum(dim=1), min=1e-9)
+    return summed / counts
+
+
+def _pool_embeddings(outputs, inputs, strategy: str):
+    last_hidden = getattr(outputs, "last_hidden_state", None)
+    if last_hidden is None and isinstance(outputs, (list, tuple)) and outputs:
+        last_hidden = outputs[0]
+    if last_hidden is None:
+        raise RuntimeError("Embedding model output did not include last_hidden_state.")
+    normalized_strategy = str(strategy or "mean").strip().lower()
+    if normalized_strategy == "cls":
+        return last_hidden[:, 0]
+    return _mean_pool(last_hidden, inputs["attention_mask"])
+
+
+@app.post("/v1/embeddings")
+def embeddings(payload: EmbeddingRequest) -> dict[str, Any]:
+    _ensure_embedding_loaded()
+    if not EMBEDDING_STATE["loaded"]:
+        raise HTTPException(status_code=503, detail=EMBEDDING_STATE["error"] or "Embedding model is not loaded.")
+
+    import torch
+
+    tokenizer = EMBEDDING_STATE["tokenizer"]
+    model = EMBEDDING_STATE["model"]
+    active_model = EMBEDDING_STATE.get("active_model") or {}
+    texts = payload.input if isinstance(payload.input, list) else [payload.input]
+    max_length = int(active_model.get("max_sequence_tokens") or active_model.get("max_context_tokens") or 512)
+    inputs = tokenizer(
+        [str(text) for text in texts],
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=max_length,
+    )
+    if hasattr(model, "device"):
+        inputs = {key: value.to(model.device) for key, value in inputs.items()}
+    with torch.no_grad():
+        outputs = model(**inputs)
+        pooled = _pool_embeddings(outputs, inputs, str(active_model.get("pooling_strategy") or "mean"))
+        if bool(active_model.get("normalize_embeddings", True)):
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+    vectors = pooled.detach().cpu().float().tolist()
+    return {
+        "object": "list",
+        "model": payload.model or active_model.get("model_name") or "assistant-embedding",
+        "data": [
+            {"object": "embedding", "embedding": vector, "index": index}
+            for index, vector in enumerate(vectors)
+        ],
+        "usage": {"prompt_tokens": 0, "total_tokens": 0},
     }

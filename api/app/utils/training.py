@@ -410,6 +410,22 @@ def _build_estimator(
     accepted_params: dict[str, Any] = {}
     valid_param_names: list[str] | None = None
 
+    if inspect.isclass(model_or_factory):
+        valid_param_set = _estimator_param_names(model_or_factory)
+        if random_state is not None and (valid_param_set is None or "random_state" in valid_param_set) and "random_state" not in estimator_params:
+            estimator_params["random_state"] = random_state
+        accepted_params, ignored_params, valid_param_names = _split_known_params(model_or_factory, estimator_params)
+        if ignored_params:
+            logger.warning("Ignoring invalid constructor parameters for %s: %s", model_or_factory, sorted(ignored_params))
+        estimator = model_or_factory(**accepted_params)
+        _attach_estimator_build_details(
+            estimator,
+            accepted_params=accepted_params,
+            ignored_params=ignored_params,
+            valid_param_names=valid_param_names,
+        )
+        return estimator
+
     if hasattr(model_or_factory, "fit"):
         if not clone_estimator:
             estimator = model_or_factory
@@ -444,22 +460,6 @@ def _build_estimator(
 
         if estimator_params and hasattr(estimator, "set_params"):
             accepted_params, ignored_params, valid_param_names = _apply_estimator_params(estimator, estimator_params)
-        _attach_estimator_build_details(
-            estimator,
-            accepted_params=accepted_params,
-            ignored_params=ignored_params,
-            valid_param_names=valid_param_names,
-        )
-        return estimator
-
-    if inspect.isclass(model_or_factory):
-        valid_param_set = _estimator_param_names(model_or_factory)
-        if random_state is not None and (valid_param_set is None or "random_state" in valid_param_set) and "random_state" not in estimator_params:
-            estimator_params["random_state"] = random_state
-        accepted_params, ignored_params, valid_param_names = _split_known_params(model_or_factory, estimator_params)
-        if ignored_params:
-            logger.warning("Ignoring invalid constructor parameters for %s: %s", model_or_factory, sorted(ignored_params))
-        estimator = model_or_factory(**accepted_params)
         _attach_estimator_build_details(
             estimator,
             accepted_params=accepted_params,

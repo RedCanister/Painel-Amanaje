@@ -249,7 +249,7 @@
         <div class="actions-row">
             <button type="button" class="btn btn-primary" id="btnGlobalStartProduction">Start Watch</button>
             <button type="button" class="btn btn-secondary" id="btnGlobalRefreshMonitoring">Refresh Monitoring</button>
-            <button type="button" class="btn btn-ghost" id="btnGlobalRunSimulation">Run Simulation</button>
+            <button type="button" class="btn btn-ghost" id="btnGlobalRunSimulation">Run Prediction</button>
         </div>
         <div id="watchlistResults" class="watch-grid"></div>
     </section>
@@ -332,8 +332,8 @@
     </section>
 
     <section class="panel" id="panel-simulation">
-        <h3 class="panel-title">Simulation Workbench</h3>
-        <p class="panel-subtitle">Explore trained models through controlled what-if inference, scenario comparison, feature overrides, and sensitivity checks.</p>
+        <h3 class="panel-title">Prediction Review</h3>
+        <p class="panel-subtitle">Review one baseline, the changed features, the prediction path, and the scenario comparison without exposing raw payload controls by default.</p>
 
         <div class="simulation-workbench">
             <div id="simulationContextStrip" class="simulation-context-strip">
@@ -344,15 +344,15 @@
             </div>
             <div id="simulationFamilyStrip" class="simulation-family-strip">
                 <div class="simulation-family-card">
-                    <strong>Model Family</strong>
-                    <span class="helper-text">Load context to resolve available simulation modes.</span>
+                    <strong>Prediction Profile</strong>
+                    <span class="helper-text">Load context to resolve available prediction modes.</span>
                 </div>
                 <div class="simulation-family-card">
                     <label for="simulationMode">Mode</label>
                     <select id="simulationMode">
-                        <option value="tabular_what_if">What-if Analysis</option>
+                        <option value="tabular_what_if">Prediction Review</option>
                     </select>
-                    <div id="simulationModeDescription" class="helper-text" style="margin-top:0.5rem;">The workbench will adapt controls to the selected model.</div>
+                    <div id="simulationModeDescription" class="helper-text" style="margin-top:0.5rem;">Controls adapt to the selected model and dataset.</div>
                     <div id="simulationReadiness" class="helper-text"></div>
                 </div>
             </div>
@@ -360,7 +360,7 @@
             <div class="layout-grid">
                 <div class="surface">
                     <div class="toolbar-row">
-                        <h4 style="margin:0;">What-if Controls</h4>
+                        <h4 style="margin:0;">Prediction Controls</h4>
                         <button type="button" class="btn btn-ghost" id="btnRefreshSimulationContext">Refresh Context</button>
                     </div>
                     <div class="inline-grid">
@@ -374,15 +374,15 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="simulationSteps">Steps</label>
+                            <label for="simulationSteps">Path Steps</label>
                             <input id="simulationSteps" type="number" min="1" max="120" value="12">
                         </div>
                         <div class="form-group">
-                            <label for="simulationAmplitude">Amplitude</label>
+                            <label for="simulationAmplitude">Feature Delta</label>
                             <input id="simulationAmplitude" type="number" step="0.01" min="0" value="0.05">
                         </div>
                         <div class="form-group">
-                            <label for="simulationTrend">Trend</label>
+                            <label for="simulationTrend">Direction</label>
                             <select id="simulationTrend">
                                 <option value="up">Upward</option>
                                 <option value="down">Downward</option>
@@ -390,42 +390,41 @@
                         </div>
                     </div>
 
-                    <h4>Key Feature Overrides</h4>
+                    <h4>Changed Features</h4>
                     <div id="simulationFeatureControls" class="feature-control-grid">
                         <div class="helper-text">Load a simulation context to expose editable feature controls.</div>
                     </div>
 
-                    <h4>Family Options</h4>
+                    <h4>Model Options</h4>
                     <div id="simulationFamilyControls" class="simulation-family-controls">
                         <div class="helper-text">Family-specific inference controls will appear after context is loaded.</div>
                     </div>
 
                     <div class="inline-grid" style="margin-top:1rem;">
                         <div class="form-group">
-                            <label for="simulationScenarioName">Scenario Name</label>
+                            <label for="simulationScenarioName">Scenario</label>
                             <input id="simulationScenarioName" type="text" value="Scenario">
                         </div>
                         <div class="form-group">
-                            <label for="simulationSensitivityFeatures">Sensitivity Features</label>
+                            <label for="simulationSensitivityFeatures">Sensitivity</label>
                             <input id="simulationSensitivityFeatures" type="text" placeholder="comma-separated features">
                         </div>
                     </div>
                     <label class="checkbox-row" for="simulationSensitivityEnabled">
                         <input id="simulationSensitivityEnabled" type="checkbox">
-                        Run sensitivity check
+                        Include sensitivity check
                     </label>
-
-                    <div class="form-group" style="margin-top:1rem;">
-                        <label for="simulationScenario">Scenario Overrides (JSON)</label>
-                        <textarea id="simulationScenario" spellcheck="false">{}</textarea>
-                    </div>
 
                     <div class="amanaje-collapsible simulation-advanced" data-collapsible-wrapper="true">
                         <div class="amanaje-collapse-header">
-                            <span class="amanaje-collapse-title">Advanced Simulation Payload</span>
+                            <span class="amanaje-collapse-title">Advanced Payload</span>
                             <button type="button" class="amanaje-collapse-toggle" data-collapsible-toggle="true" aria-expanded="false">Expand</button>
                         </div>
                         <div class="amanaje-collapse-body" hidden>
+                            <div class="form-group" style="margin-top:1rem;">
+                                <label for="simulationScenario">Scenario Overrides (JSON)</label>
+                                <textarea id="simulationScenario" spellcheck="false">{}</textarea>
+                            </div>
                             <div class="form-group">
                                 <label for="simulationScenarios">Named Scenarios (JSON Array)</label>
                                 <textarea id="simulationScenarios" spellcheck="false">[]</textarea>
@@ -450,30 +449,30 @@
                     </div>
 
                     <div class="actions-row" style="margin-top:1rem;">
-                        <button type="button" class="btn btn-primary" id="btnRunSimulation">Run Simulation</button>
+                        <button type="button" class="btn btn-primary" id="btnRunSimulation">Run Prediction</button>
                     </div>
                 </div>
 
                 <div class="surface">
                     <div class="toolbar-row">
-                        <h4>Inference Results</h4>
+                        <h4>Prediction</h4>
                         <div class="form-group">
                             <label for="simulationResultDisplay">Display</label>
                             <select id="simulationResultDisplay">
-                                <option value="all">All</option>
-                                <option value="summary">Summary</option>
+                                <option value="summary" selected>Overview</option>
+                                <option value="all">Full Review</option>
                                 <option value="table">Step Table</option>
-                                <option value="plots">Plot Deck</option>
+                                <option value="plots">Plotly Views</option>
                             </select>
                         </div>
                     </div>
-                    <div id="simulationResults">Run a simulation to inspect predicted future values.</div>
+                    <div id="simulationResults">Run a prediction review to inspect output, delta, and confidence/range.</div>
                 </div>
             </div>
 
             <div class="surface">
                 <h4>Scenario Comparison</h4>
-                <div id="simulationStepTable">The full simulation step table will appear here after a run.</div>
+                <div id="simulationStepTable">Scenario comparison appears here after a prediction run.</div>
             </div>
 
         </div>
@@ -1353,8 +1352,8 @@ function renderSimulationResults(simulation = {}) {
     const primaryResult = simulation.primary_result || {};
     const hasPrimaryValue = primaryResult.value !== undefined && primaryResult.value !== null && primaryResult.value !== '';
     if (!series.length && !hasPrimaryValue && !simulation.readiness && !simulation.recommendation && !simulation.unsupervised) {
-        document.getElementById('simulationResults').innerHTML = 'Run a simulation to inspect predicted future values.';
-        document.getElementById('simulationStepTable').innerHTML = 'The full simulation step table will appear here after a run.';
+        document.getElementById('simulationResults').innerHTML = 'Run a prediction review to inspect output, delta, and confidence/range.';
+        document.getElementById('simulationStepTable').innerHTML = 'Scenario comparison appears here after a prediction run.';
         return;
     }
 
@@ -1376,10 +1375,10 @@ function renderSimulationResults(simulation = {}) {
                 label: outputFeature,
                 value: primaryValue,
                 unit: simulation.family === 'recommendation' ? 'items' : 'prediction',
-                reference: 'final simulated step',
+                reference: 'final path step',
                 expected_range: simulation.family || simulation.task_type || 'model output',
                 direction: simulation.trend || 'scenario dependent',
-                explanation: `Primary output target emphasized for this simulation: ${outputFeature}.`
+                explanation: `Primary output target emphasized for this prediction review: ${outputFeature}.`
             },
             {
                 label: 'Delta',
@@ -1423,14 +1422,14 @@ function renderSimulationResults(simulation = {}) {
                 ${renderSensitivitySummary(simulation.sensitivity || {})}
             </div>
         </div>
-        ${renderPlotDeck(simulation.plots || [])}
+        ${renderPlotDeck(simulation.plot_specs || simulation.plots || [])}
     `;
     const displayMode = document.getElementById('simulationResultDisplay')?.value || 'all';
     const stepMarkup = `
         ${renderScenarioComparisonTable(simulation)}
         ${renderSimulationStepRows(simulation, outputFeature)}
     `;
-    const plotsMarkup = renderPlotDeck(simulation.plots || []) || '<div class="helper-text">No simulation plots were generated for this run.</div>';
+    const plotsMarkup = renderPlotDeck(simulation.plot_specs || simulation.plots || []) || '<div class="helper-text">No prediction path charts were generated for this run.</div>';
     const resultTabs = AmanajeUI.renderResultTabs
         ? AmanajeUI.renderResultTabs([
             { key: 'summary', label: 'Summary', content: summaryMarkup },
@@ -1449,14 +1448,14 @@ function renderSimulationResults(simulation = {}) {
 
     if (displayMode === 'summary') {
         document.getElementById('simulationResults').innerHTML = summaryMarkup;
-        document.getElementById('simulationStepTable').innerHTML = '<div class="helper-text">Step table hidden by the summary display mode.</div>';
+        document.getElementById('simulationStepTable').innerHTML = renderScenarioComparisonTable(simulation) || '<div class="helper-text">Scenario comparison appears after a prediction run.</div>';
     } else if (displayMode === 'table') {
         document.getElementById('simulationResults').innerHTML = `
             <div class="simulation-status-line">
                 <span class="pill">${escapeHtml(outputFeature)}</span>
                 <span class="pill">${escapeHtml(`${predictionSummary.step_count ?? simulation.steps ?? series.length} steps`)}</span>
             </div>
-            <div class="helper-text">Step table display mode is active for this simulation.</div>
+            <div class="helper-text">Step table display mode is active for this prediction review.</div>
         `;
         document.getElementById('simulationStepTable').innerHTML = stepMarkup;
     } else if (displayMode === 'plots') {
@@ -1722,7 +1721,7 @@ async function runSimulation() {
     }
 
     try {
-        document.getElementById('simulationResults').innerHTML = '<div class="alert alert-info">Running simulation...</div>';
+        document.getElementById('simulationResults').innerHTML = '<div class="alert alert-info">Running prediction review...</div>';
         const result = await fetchJson('/production/simulate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

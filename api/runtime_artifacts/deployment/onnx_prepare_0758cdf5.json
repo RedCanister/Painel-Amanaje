@@ -1,0 +1,15 @@
+{
+    "model_id": 5,
+    "dataset_id": 4,
+    "study_id": "6",
+    "framework": "pytorch",
+    "export_target": "onnx",
+    "parameters": {
+        "export_target": "onnx",
+        "framework": "onnx",
+        "base_framework": "pytorch",
+        "dynamic_axes": true,
+        "training_backend": "pytorch"
+    },
+    "prepared_at": "2026-06-05T23:23:28.592488"
+}

@@ -111,9 +111,11 @@ class OpenAICompatibleAssistantProvider:
         draft_type = request.target_type or _infer_draft_type(request)
         context_pack = build_assistant_context_pack(request, draft_type)
         model_version = str(self.config.get("model_version") or self.name)
+        allow_fallback = _coerce_provider_bool(self.config.get("allow_fallback"), True)
         cache_key = f"{self.name}:{model_version}:{context_pack.pack_hash}"
         cached = self._cache.get(cache_key)
-        if cached is not None:
+        cached_fallback = bool(cached.provider_metadata.get("fallback_provider")) if cached is not None else False
+        if cached is not None and (allow_fallback or not cached_fallback):
             self._set_status(
                 self.name,
                 available=True,
@@ -140,6 +142,17 @@ class OpenAICompatibleAssistantProvider:
 
         if draft is None:
             fallback_reason = fallback_reason or "No external SLM runtime is configured; using deterministic local fallback."
+            if not allow_fallback:
+                self._set_status(
+                    self.name,
+                    available=False,
+                    fallback_active=False,
+                    last_event="runtime_unavailable",
+                    context_pack_hash=context_pack.pack_hash,
+                    error=fallback_reason,
+                    latency_ms=(time.perf_counter() - started_at) * 1000,
+                )
+                raise RuntimeError(fallback_reason)
             draft = _create_local_draft(request, draft_type)
             self._set_status(
                 self.name,
@@ -334,6 +347,11 @@ def assistant_model_to_provider_config(
         or _model_mapping_value(model_record, "provider_type")
         or "openai_compatible"
     ).strip().lower()
+    assistant_role = str(merged.get("assistant_role") or "generator").strip().lower()
+    if assistant_role not in {"generator", "embedding", "dual"}:
+        assistant_role = "generator"
+    if assistant_role == "embedding" and provider_type in {"", "openai", "http", "openai_compatible", "embedding", "embeddings"}:
+        provider_type = "openai_compatible_embeddings"
     if provider_type in {"slm", "llm", "http", "openai"}:
         provider_type = "openai_compatible"
     model_name = (
@@ -356,15 +374,18 @@ def assistant_model_to_provider_config(
         **merged,
         "type": provider_type,
         "provider_type": provider_type,
+        "assistant_role": assistant_role,
         "enabled": _coerce_provider_bool(merged.get("enabled"), True),
         "base_url": base_url,
         "chat_endpoint": merged.get("chat_endpoint"),
+        "embeddings_endpoint": merged.get("embeddings_endpoint"),
         "health_url": merged.get("health_url"),
         "model_name": str(model_name),
         "model_version": str(model_version),
         "timeout_seconds": float(merged.get("timeout_seconds") or 20),
         "max_tokens": int(merged.get("max_tokens") or 1600),
         "temperature": float(temperature or 0.2),
+        "allow_fallback": _coerce_provider_bool(merged.get("allow_fallback"), False),
         "api_key": merged.get("api_key"),
         "api_key_env": merged.get("api_key_env"),
         "supports_json_mode": _coerce_provider_bool(merged.get("supports_json_mode"), True),
@@ -374,6 +395,7 @@ def assistant_model_to_provider_config(
         ),
         "supported_draft_types": list(
             merged.get("supported_draft_types")
+            or (["embedding_retrieval"] if assistant_role == "embedding" else None)
             or [
                 "dataset_generation",
                 "model_generation",
@@ -383,10 +405,18 @@ def assistant_model_to_provider_config(
                 "study",
             ]
         ),
+        "embedding_dimension": int(merged.get("embedding_dimension") or 128),
+        "pooling_strategy": str(merged.get("pooling_strategy") or "mean"),
+        "max_sequence_tokens": int(merged.get("max_sequence_tokens") or merged.get("max_context_tokens") or 512),
+        "query_instruction": merged.get("query_instruction"),
+        "document_instruction": merged.get("document_instruction"),
+        "normalize_embeddings": _coerce_provider_bool(merged.get("normalize_embeddings"), True),
         "capabilities": {
             "registry_backed": True,
             "assistant_model_id": _model_mapping_value(model_record, "id"),
             "assistant_model_name": _model_mapping_value(model_record, "name"),
+            "assistant_role": assistant_role,
+            "embedding_body": assistant_role in {"embedding", "dual"},
             "behavior_profile": behavior_profile,
             "reference_policy": dict(assistant_config.get("reference_policy") or {}),
             **dict(merged.get("capabilities") or {}),

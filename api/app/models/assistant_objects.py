@@ -34,6 +34,9 @@ class AssistantDraftRequest(BaseModel):
     target_type: Optional[str] = None
     provider: str = "auto"
     assistant_model_id: Optional[int | str] = None
+    embedding_model_id: Optional[int | str] = None
+    embedding_provider: Optional[str] = None
+    retrieval_policy: dict[str, Any] = Field(default_factory=dict)
     reference_ids: list[str] = Field(default_factory=list)
     context: dict[str, Any] = Field(default_factory=dict)
     constraints: dict[str, Any] = Field(default_factory=dict)
@@ -109,6 +112,12 @@ class AssistantContextPack(BaseModel):
     reference_pack_hash: str = ""
     selected_reference_ids: list[str] = Field(default_factory=list)
     reference_trust_levels: dict[str, str] = Field(default_factory=dict)
+    selected_reference_scores: dict[str, float] = Field(default_factory=dict)
+    embedding_model_id: Optional[int | str] = None
+    embedding_model_version: Optional[str] = None
+    embedding_index_hash: Optional[str] = None
+    embedding_retrieval_hash: Optional[str] = None
+    embedding_runtime_fallback: Optional[bool] = None
     compact_summary: str = ""
     pack_hash: str = ""
     created_at: datetime = Field(default_factory=datetime.now)
